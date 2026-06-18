@@ -1,0 +1,11 @@
+# QA / temporary artifacts
+qa_*.png
+qa_*.txt
+qa_*.py
+
+# Backup files
+*.orig
+
+# OS files
+.DS_Store
+Thumbs.db
