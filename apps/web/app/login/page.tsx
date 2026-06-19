@@ -1,6 +1,5 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
@@ -10,9 +9,9 @@ export default function LoginPage() {
     <div className="flex min-h-svh flex-col items-center justify-center bg-[#050914] p-6">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0b1021] p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-black text-white">Вход в 1Çatı</h1>
+          <h1 className="text-2xl font-black text-white">1Çatı Giriş</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Личный кабинет для клиентов и сотрудников Ataberk Estate
+            Ataberk Estate müşterileri ve çalışanları için müşteri paneli
           </p>
         </div>
 
@@ -24,13 +23,13 @@ export default function LoginPage() {
             <Input
               id="email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="siz@ornek.com"
               className="border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password" className="text-sm text-white">
-              Пароль
+              Şifre
             </Label>
             <Input
               id="password"
@@ -39,16 +38,16 @@ export default function LoginPage() {
               className="border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
             />
           </div>
-          <Button
+          <button
             type="submit"
-            className="w-full bg-[#f97316] text-white hover:bg-[#ea580c]"
+            className="w-full rounded-lg bg-[#f97316] px-4 py-2 text-base font-bold text-white transition-colors hover:bg-[#ea580c]"
           >
-            Войти
-          </Button>
+            Giriş Yap
+          </button>
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Авторизация через Supabase будет подключена после настройки проекта.
+          Supabase ile kimlik doğrulama, proje yapılandırması tamamlandığında etkinleştirilecektir.
         </p>
 
         <div className="mt-6 text-center">
@@ -56,7 +55,7 @@ export default function LoginPage() {
             href="/"
             className="text-xs text-muted-foreground hover:text-foreground"
           >
-            ← Вернуться на главную
+            ← Ana sayfaya dön
           </Link>
         </div>
       </div>

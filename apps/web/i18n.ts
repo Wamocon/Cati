@@ -1,8 +1,8 @@
 import { getRequestConfig } from "next-intl/server"
 
 export default getRequestConfig(async () => {
-  // Russian is the default and primary language for Ataberk's audience.
-  const locale = "ru"
+  // Turkish is the primary language for the modernised Ataberk landing page.
+  const locale = "tr"
 
   return {
     locale,

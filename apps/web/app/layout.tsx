@@ -12,9 +12,9 @@ const geist = Geist({
 })
 
 export const metadata = {
-  title: "Ataberk Estate — Недвижимость в Турции | 1Çatı CRM",
+  title: "Ataberk Estate — Türkiye'de Emlak | 1Çatı CRM",
   description:
-    "Продажа и аренда недвижимости в Турции от Ataberk Estate. 212 000+ объектов, 6 000+ сделок, 150 сотрудников. Теперь с платформой 1Çatı для управления объектами.",
+    "Ataberk Estate'ten Türkiye'de emlak satışı ve kiralama. 212.000+ ilan, 6.000+ işlem, 150 çalışan. Artık 1Çatı mülk yönetim platformu ile.",
 }
 
 export default async function RootLayout({
@@ -26,7 +26,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="ru"
+      lang="tr"
       className={cn("dark antialiased", geist.variable)}
       suppressHydrationWarning
     >

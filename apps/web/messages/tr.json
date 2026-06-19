@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "title": "Ataberk Estate — Türkiye'de Emlak | 1Çatı CRM",
+    "description": "Ataberk Estate'ten Türkiye'de emlak satışı ve kiralama. 212.000+ ilan, 6.000+ işlem, 150 çalışan. Artık 1Çatı mülk yönetim platformu ile."
+  },
+  "topBar": {
+    "phone": "+90 (549) 557 7 557",
+    "email": "info@ataberkestate.com",
+    "presentation": "Ataberk Estate Sunumu"
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "catalog": "Tüm İlanlar",
+    "about": "Hakkımızda",
+    "services": "Hizmetler",
+    "articles": "Makaleler",
+    "reviews": "Yorumlar",
+    "contacts": "İletişim",
+    "login": "Giriş Yap",
+    "portal": "Müşteri Paneli"
+  },
+  "hero": {
+    "headline": "Yönetilebilir bir Türkiye emlağı",
+    "subheadline": "Ataberk Estate, 212.000+ ilanı, 6.000+ işlemi ve 150 uzmanı tek bir 1Çatı platformunda birleştiriyor — ilk müşteri aramasından satış sonrası hizmete kadar.",
+    "ctaPrimary": "İlan Ara",
+    "ctaSecondary": "Nasıl Çalışır"
+  },
+  "stats": {
+    "objects": "veritabanındaki ilan",
+    "deals": "tamamlanan işlem",
+    "experience": "yıllık deneyim",
+    "employees": "çalışan",
+    "languages": "dil"
+  },
+  "problems": {
+    "title": "Türkiye'de emlak yönetimi neden zor",
+    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler.",
+    "leads": {
+      "title": "Müşteri adayları mesajlaşmalarda kayboluyor",
+      "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. Tek bir CRM olmadan, görüşme geçmişi personel değiştiğinde yok oluyor."
+    },
+    "admin": {
+      "title": "Zamanın %30-40'ı manuel idari işlere gidiyor",
+      "desc": "Yöneticiler günün neredeyse yarısını veri girişi, ödeme mutabakatı ve rapor hazırlığıyla geçiriyor; müşteriyle çalışmak yerine."
+    },
+    "tools": {
+      "title": "5-7 bağlantısız program",
+      "desc": "CRM, Excel, WhatsApp, e-posta, takvim ve bulut diskler birbiriyle konuşmuyor. Veriler çoğaltılıyor ve eskiyor."
+    },
+    "maintenance": {
+      "title": "Tamir talepleri sohbetlerde unutuluyor",
+      "desc": "Acil su kaçağı ile kozmetik bakım aynı önceliğe sahip. Öncesi/sonrası fotoğraf ve geçmiş yoksa maliklerle anlaşmazlık kaçınılmaz."
+    },
+    "compliance": {
+      "title": "Günlük kiralamada 1.000.000 ₺'ye varan cezalar",
+      "desc": "7464 sayılı Kanun, TÜRSAB lisansı, 24 saat içinde KBS/e-GUEST — uyumsuzluk yüz binlerce liraya mal oluyor."
+    },
+    "owners": {
+      "title": "Yabancı malikler şeffaflık istiyor",
+      "desc": "Saat ve dil farkı. Malikler fotoğraf raporları, net muhasebe ve mülkün güvende olduğu garantisi istiyor."
+    }
+  },
+  "solution": {
+    "title": "1Çatı — emlağın tek işletim sistemi",
+    "subtitle": "CRM, ilanlar, işlemler, kiralama, bakım talepleri, belgeler ve iletişim tek platformda.",
+    "items": {
+      "crm": "Adaylar, müşteriler ve malikler için tek CRM",
+      "listings": "Durum senkronizasyonlu ilan kataloğu",
+      "tickets": "Fotoğraflı ve videolu bakım talepleri",
+      "calendar": "Gezinti, işlem ve görev takvimi",
+      "documents": "TAPU, sözleşmeler, DASK için belge arşivi",
+      "reports": "Malikler için finansal raporlama",
+      "roles": "Roller: yönetici, müdür, danışman, muhasebeci, teknik, müşteri",
+      "languages": "Türkçe, Rusça, İngilizce, Almanca"
+    }
+  },
+  "services": {
+    "title": "Ataberk Estate Hizmetleri",
+    "subtitle": "İlan seçiminden satış sonrası hizmete kadar — alıcı ve malik için tam döngü.",
+    "buy": "Emlak alımı",
+    "sell": "Satış ve takas",
+    "rent": "Kiralama yönetimi",
+    "legal": "Hukuki danışmanlık ve TAPU",
+    "citizenship": "Vatandaşlık ve oturum izni",
+    "aftersales": "7/24 satış sonrası hizmet",
+    "tour": "Ücretsiz tanıtım turu",
+    "online": "Online ilan gezisi"
+  },
+  "howItWorks": {
+    "title": "Nasıl çalışırız",
+    "steps": {
+      "1": "Ataberk Estate'e başvurun",
+      "2": "Kişiselleştirilmiş ilan seçimi",
+      "3": "Türkiye'de ilan turu",
+      "4": "Rezervasyon ve due diligence",
+      "5": "Tapu dairesinde belge hazırlığı",
+      "6": "İşlem ve anahtar teslimi",
+      "7": "Satış sonrası hizmet"
+    }
+  },
+  "cta": {
+    "title": "Emlakınızı modern bir şirket gibi yönetmeye başlayın",
+    "subtitle": "1Çatı demosu talep edin veya Ataberk Estate müşterisiyseniz müşteri panelinize giriş yapın.",
+    "primary": "Arama Talep Et",
+    "secondary": "Panele Giriş Yap"
+  },
+  "footer": {
+    "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
+    "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate."
+  }
+}

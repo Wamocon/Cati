@@ -27,7 +27,7 @@ export function Hero() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#f97316] opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#f97316]" />
           </span>
-          1Çatı — новая платформа управления недвижимостью
+          1Çatı — yeni emlak yönetim platformu
         </motion.div>
 
         <motion.h1
@@ -78,29 +78,29 @@ export function Hero() {
         >
           <div className="grid gap-3 sm:grid-cols-4">
             <div className="rounded-xl bg-white/5 px-4 py-3 text-left">
-              <div className="text-xs text-muted-foreground">Город</div>
+              <div className="text-xs text-muted-foreground">Şehir</div>
               <div className="mt-1 flex items-center justify-between text-sm font-medium">
-                <span>Алания</span>
+                <span>Alanya</span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             <div className="rounded-xl bg-white/5 px-4 py-3 text-left">
-              <div className="text-xs text-muted-foreground">Тип</div>
+              <div className="text-xs text-muted-foreground">Tip</div>
               <div className="mt-1 flex items-center justify-between text-sm font-medium">
-                <span>Квартира</span>
+                <span>Daire</span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             <div className="rounded-xl bg-white/5 px-4 py-3 text-left">
-              <div className="text-xs text-muted-foreground">Бюджет</div>
+              <div className="text-xs text-muted-foreground">Bütçe</div>
               <div className="mt-1 flex items-center justify-between text-sm font-medium">
-                <span>до 100 000 €</span>
+                <span>100.000 €'ye kadar</span>
                 <ChevronDown className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             <Button className="h-auto bg-[#2563eb] text-white hover:bg-[#1d4ed8]">
               <Search className="mr-2 h-4 w-4" />
-              Найти
+              Ara
             </Button>
           </div>
         </motion.div>
