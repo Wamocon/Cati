@@ -1,227 +1,227 @@
 {
   "metadata": {
-    "title": "Ataberk Estate — Türkiye'de Emlak | 1Çatı CRM",
-    "description": "Ataberk Estate'ten Türkiye'de emlak satışı ve kiralama. 212.000+ ilan, 6.000+ işlem, 150 çalışan. Artık 1Çatı mülk yönetim platformu ile."
+    "title": "Ataberk Estate — Immobilien in der Türkei | 1Çatı CRM",
+    "description": "Kaufen und mieten Sie Immobilien in der Türkei mit Ataberk Estate. 212.000+ Anzeigen, 6.000+ Transaktionen, 150 Mitarbeiter. Jetzt mit der 1Çatı Immobilienverwaltungsplattform."
   },
   "topBar": {
     "phone": "+90 (549) 557 7 557",
     "email": "info@ataberkestate.com",
-    "presentation": "Ataberk Estate Sunumu"
+    "presentation": "Ataberk Estate Präsentation"
   },
   "nav": {
-    "home": "Ana Sayfa",
-    "catalog": "Tüm İlanlar",
-    "about": "Hakkımızda",
-    "services": "Hizmetler",
-    "articles": "Makaleler",
-    "reviews": "Yorumlar",
-    "contacts": "İletişim",
-    "login": "Giriş Yap",
-    "portal": "Müşteri Paneli"
+    "home": "Startseite",
+    "catalog": "Alle Anzeigen",
+    "about": "Über uns",
+    "services": "Dienstleistungen",
+    "articles": "Artikel",
+    "reviews": "Bewertungen",
+    "contacts": "Kontakt",
+    "login": "Anmelden",
+    "portal": "Kundenportal"
   },
   "hero": {
-    "badge": "yeni emlak yönetim platformu",
-    "headline": "Türkiye emlağını tek çatı altında yönetin",
-    "subheadline": "Ataberk Estate, 212.000+ ilanı, 6.000+ işlemi ve 150 uzmanı 1Çatı ile birleştiriyor — ilk aramadan satış sonrası hizmete kadar.",
-    "ctaPrimary": "İlan Ara",
-    "ctaSecondary": "Nasıl Çalışır",
-    "searchCity": "Şehir",
-    "searchType": "Tip",
-    "searchBudget": "Bütçe",
-    "typeApartment": "Daire",
-    "budgetValue": "100.000 €'ye kadar"
+    "badge": "neue Immobilienverwaltungsplattform",
+    "headline": "Türkische Immobilien unter einem Dach verwalten",
+    "subheadline": "Ataberk Estate vereint 212.000+ Anzeigen, 6.000+ Transaktionen und 150 Experten mit 1Çatı — von der ersten Suche bis zum After-Sales-Service.",
+    "ctaPrimary": "Anzeigen suchen",
+    "ctaSecondary": "So funktioniert's",
+    "searchCity": "Stadt",
+    "searchType": "Typ",
+    "searchBudget": "Budget",
+    "typeApartment": "Wohnung",
+    "budgetValue": "Bis zu 100.000 €"
   },
   "stats": {
-    "objects": "veritabanındaki ilan",
-    "deals": "tamamlanan işlem",
-    "experience": "yıllık deneyim",
-    "employees": "çalışan",
-    "languages": "dil"
+    "objects": "Anzeigen in der Datenbank",
+    "deals": "abgeschlossene Transaktionen",
+    "experience": "Jahre Erfahrung",
+    "employees": "Mitarbeiter",
+    "languages": "Sprachen"
   },
   "problems": {
-    "title": "Türkiye'de emlak yönetimi neden zor",
-    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler — özellikle 2026'daki yeni düzenlemelerle.",
+    "title": "Warum Immobilienmanagement in der Türkei schwierig ist",
+    "subtitle": "Die echten Zahlen und Prozesse, denen ein Property Manager täglich begegnet — besonders mit den Vorschriften 2026.",
     "leads": {
-      "title": "Müşteri adayları mesajlaşmalarda kayboluyor",
-      "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. 30 dakikadan sonra dönüşüm yüzde altmış düşüyor. Tek bir CRM olmadan geçmiş personel değiştiğinde yok oluyor."
+      "title": "Interessenten gehen in Messaging-Apps verloren",
+      "desc": "Ein Käufer schreibt gleichzeitig über WhatsApp, Instagram und die Website. Nach 30 Minuten sinkt die Conversion um 60%. Ohne ein einziges CRM verschwindet die Historie bei Personalwechsel."
     },
     "admin": {
-      "title": "Zamanın %30-40'ı manuel idari işlere gidiyor",
-      "desc": "Yöneticiler günün neredeyse yarısını veri girişi, ödeme mutabakatı ve rapor hazırlığıyla geçiriyor; müşteriyle çalışmak yerine."
+      "title": "30-40% der Zeit geht an manuelle Verwaltung",
+      "desc": "Manager verbringen fast den halben Tag mit Dateneingabe, Zahlungsabstimmung und Berichterstellung — statt mit Kunden zu arbeiten."
     },
     "tools": {
-      "title": "5-7 bağlantısız program",
-      "desc": "CRM, Excel, WhatsApp, e-posta, takvim ve bulut diskler birbiriyle konuşmuyor. Veriler çoğaltılıyor ve eskiyor."
+      "title": "5-7 getrennte Tools",
+      "desc": "CRM, Excel, WhatsApp, E-Mail, Kalender und Cloud-Laufwerke kommunizieren nicht miteinander. Daten werden dupliziert und veralten."
     },
     "maintenance": {
-      "title": "Tamir talepleri sohbetlerde unutuluyor",
-      "desc": "Acil su kaçağı ile kozmetik bakım aynı önceliğe sahip. Öncesi/sonrası fotoğraf ve geçmiş yoksa maliklerle anlaşmazlık kaçınılmaz."
+      "title": "Reparaturanfragen werden in Chats vergessen",
+      "desc": "Ein dringendes Leck und kosmetische Wartung haben dieselbe Priorität. Ohne Vorher/Nachher-Fotos und Historie sind Streitigkeiten mit Eigentümern unvermeidlich."
     },
     "compliance": {
-      "title": "Günlük kiralamada 1.000.000 ₺'ye varan cezalar",
-      "desc": "7464 sayılı Kanun, TÜRSAB lisansı, 24 saat içinde KBS/e-GUEST — uyumsuzluk yüz binlerce liraya mal oluyor."
+      "title": "Geldstrafen für Kurzzeitvermietung bis zu 1.000.000 ₺",
+      "desc": "Gesetz 7464, TÜRSAB-Lizenz, KBS/e-GUEST innerhalb von 24 Stunden — Nichteinhaltung kostet Hunderttausende Lira."
     },
     "owners": {
-      "title": "Yabancı malikler şeffaflık istiyor",
-      "desc": "Saat ve dil farkı. Malikler fotoğraf raporları, net muhasebe ve mülkün güvende olduğu garantisi istiyor."
+      "title": "Ausländische Eigentümer verlangen Transparenz",
+      "desc": "Zeitzonen und Sprachbarrieren. Eigentümer wünschen Fotoberichte, klare Buchhaltung und die Gewissheit, dass ihr Eigentum sicher ist."
     },
     "eids": {
-      "title": "EİDS yetkilendirmesi takibi zor",
-      "desc": "15 Şubat 2026'dan beri her satılık ilan Sahibinden/Hepsiemlak için e-Devlet yetkilendirmesi gerektiriyor. Malik yetki verip sonra aracıyı devre dışı bırakabiliyor."
+      "title": "EİDS-Autorisierungsnachverfolgung ist schwierig",
+      "desc": "Seit dem 15. Februar 2026 erfordert jede Immobilienanzeige auf Sahibinden/Hepsiemlak eine e-Devlet-Autorisierung. Der Eigentümer kann sie erteilen und später den Makler deaktivieren."
     },
     "fraud": {
-      "title": "Sahte TAPU ve sahte ilanlar",
-      "desc": "Gefälschte Tapu, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef — her işlemde due-diligence şart."
+      "title": "Gefälschte Grundbücher und gefälschte Anzeigen",
+      "desc": "Gefälschte Grundbücher, gefälschte Verträge und unbefugte Makler. Ausländische Käufer sind besonders gefährdet — Due Diligence ist in jeder Transaktion Pflicht."
     },
     "permits": {
-      "title": "Oturum izni kuralları sıkılaştı",
-      "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %25 yabancı kota sınırı. Her dosya farklı."
+      "title": "Aufenthaltsgenehmigungsregeln wurden verschärft",
+      "desc": "Mindestwert 200.000 $, von der SPK genehmigte Bewertung, Einkommens-/Versicherungsnachweise und eine 25%ige Ausländerkontingentgrenze in Antalya/Alanya. Jede Akte ist anders."
     }
   },
   "solution": {
-    "title": "1Çatı — emlağın tek işletim sistemi",
-    "subtitle": "CRM, ilanlar, işlemler, kiralama, bakım talepleri, belgeler ve uyumluluk tek platformda.",
+    "title": "1Çatı — das Betriebssystem für Immobilien",
+    "subtitle": "CRM, Anzeigen, Transaktionen, Vermietung, Wartungsanfragen, Dokumente und Compliance auf einer Plattform.",
     "items": {
-      "crm": "Adaylar, müşteriler ve malikler için tek CRM",
-      "listings": "Durum senkronizasyonlu ilan kataloğu",
-      "tickets": "Fotoğraflı ve videolu bakım talepleri",
-      "calendar": "Gezinti, işlem ve görev takvimi",
-      "documents": "TAPU, sözleşmeler, DASK için belge arşivi",
-      "reports": "Malikler için finansal raporlama",
-      "roles": "Roller: yönetici, müdür, danışman, muhasebeci, teknik, müşteri",
-      "languages": "Türkçe, Rusça, İngilizce, Almanca",
-      "eids": "EİDS yetkilendirme takibi ve son kullanma hatırlatıcıları",
-      "compliance": "TÜRSAB/e-GUEST ve KBS uyumluluk kontrol listesi",
-      "currency": "TRY/EUR/USD çoklu para birimi ve kazanç vergisi tahmini",
-      "offline": "Saha ekibi için offline talep girişi ve senkronizasyon"
+      "crm": "Ein CRM für Interessenten, Kunden und Eigentümer",
+      "listings": "Anzeigenkatalog mit Status-Synchronisation",
+      "tickets": "Wartungsanfragen mit Foto und Video",
+      "calendar": "Kalender für Besichtigungen, Transaktionen und Aufgaben",
+      "documents": "Dokumentenarchiv für Grundbücher, Verträge und DASK",
+      "reports": "Finanzberichte für Eigentümer",
+      "roles": "Rollen: Admin, Manager, Berater, Buchhalter, Techniker, Kunde",
+      "languages": "Türkisch, Russisch, Englisch, Deutsch",
+      "eids": "EİDS-Autorisierungsnachverfolgung und Ablauferinnerungen",
+      "compliance": "TÜRSAB/e-GUEST und KBS-Compliance-Checkliste",
+      "currency": "TRY/EUR/USD Multi-Währung und Gewinnsteuerschätzung",
+      "offline": "Offline-Erfassung und Synchronisation für Außenteams"
     }
   },
   "compliance": {
-    "title": "Türkiye'nin 2026 kuralları için tasarlandı",
-    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, yabancı alıcı kısıtlamaları ve döviz riskleri. MVP'de olanlar ve yol haritasındakiler açıkça ayrılmıştır.",
+    "title": "Entwickelt für die türkischen Vorschriften 2026",
+    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, Beschränkungen für ausländische Käufer und Währungsrisiken. MVP und Roadmap sind klar getrennt.",
     "items": {
       "eids": {
-        "title": "EİDS yetkilendirme takibi",
-        "desc": "Her ilan için e-Devlet yetki belgesi, durum ve bitiş tarihi. Otomatik hatırlatıcılar ve malik ile komisyon sözleşmesi bağlantısı.",
+        "title": "EİDS-Autorisierungsnachverfolgung",
+        "desc": "e-Devlet-Autorisierungsdokument, Status und Ablaufdatum für jede Anzeige. Automatische Erinnerungen und Verknüpfung zum Maklervertrag.",
         "tag": "MVP"
       },
       "dueDiligence": {
-        "title": "TAPU & sözleşme due-diligence",
-        "desc": "Satış öncesi zorunlu kontrol listesi: TAPU, DASK, imar, fotoğraf, yetki belgesi. Sadece yönetici 'sözleşmeye hazır' yapabilir.",
+        "title": "Grundbuch- & Vertragsdue Diligence",
+        "desc": "Verpflichtende Vorverkaufs-Checkliste: Grundbuch, DASK, Zonierung, Fotos, Autorisierungsdokument. Nur ein Manager kann 'vertragsbereit' markieren.",
         "tag": "MVP"
       },
       "residence": {
-        "title": "Oturum / vatandaşlık uygunluk rehberi",
-        "desc": "200.000 $ eşik, gelir/sigorta ve ilçe kota sınırı için ön kontrol. SPK ekspertiz değeri obje kartında saklanır.",
+        "title": "Leitfaden zur Aufenthalts-/Staatsbürgerschaftseignung",
+        "desc": "Vorprüfung für 200.000 $ Schwelle, Einkommen/Versicherung und Bezirkskontingent. Der SPK-Bewertungswert wird in der Objektkarte gespeichert.",
         "tag": "MVP"
       },
       "tax": {
-        "title": "Çoklu para birimi ve vergi tahmini",
-        "desc": "Alış/satış fiyatı TRY/EUR/USD olarak girilir. 5 yıllık kazanç vergisi için basit bir hesaplayıcı ve fiyat geçmişi.",
+        "title": "Multi-Währung und Steuerschätzung",
+        "desc": "Kauf-/Verkaufspreis in TRY/EUR/USD erfasst. Einfacher Rechner und Preishistorie für 5-Jahres-Gewinnsteuer.",
         "tag": "MVP"
       },
       "shortTerm": {
-        "title": "Otomatik KBS/e-GUEST raporlama",
-        "desc": "Kısa dönem kiralamada 24 saatlik bildirim süresi ve TÜRSAB lisansı takibi. Tam otomasyon resmi API mevcut olduğunda eklenecek.",
+        "title": "Automatische KBS/e-GUEST-Berichterstattung",
+        "desc": "24-Stunden-Meldezeit für Kurzzeitvermietung und TÜRSAB-Lizenzüberwachung. Volle Automatisierung folgt, sobald die offizielle API verfügbar ist.",
         "tag": "Roadmap"
       },
       "verification": {
-        "title": "Tapu doğrulama ve noter entegrasyonu",
-        "desc": "QR/barkod okuma ve zaman damgası. Resmi Tapu/Noter API'leri açıldığında otomatik doğrulama eklenecek.",
+        "title": "Grundbuchverifizierung und Notarintegration",
+        "desc": "QR/Barcode-Lesen und Zeitstempel. Automatische Verifizierung folgt, sobald offizielle Grundbuch-/Notar-APIs geöffnet sind.",
         "tag": "Roadmap"
       }
     }
   },
   "services": {
-    "title": "Ataberk Estate Hizmetleri",
-    "subtitle": "İlan seçiminden satış sonrası hizmete kadar — alıcı ve malik için tam döngü.",
-    "buy": "Emlak alımı",
-    "sell": "Satış ve takas",
-    "rent": "Kiralama yönetimi",
-    "legal": "Hukuki danışmanlık ve TAPU",
-    "citizenship": "Vatandaşlık ve oturum izni",
-    "aftersales": "7/24 satış sonrası hizmet",
-    "tour": "Ücretsiz tanıtım turu",
-    "online": "Online ilan gezisi",
-    "compliance": "EİDS ve uyumluluk danışmanlığı",
-    "tax": "Vergi ve döviz planlama",
-    "offline": "Saha ekibi mobil erişimi"
+    "title": "Ataberk Estate Dienstleistungen",
+    "subtitle": "Von der Anzeigenauswahl bis zum After-Sales-Service — der komplette Kreislauf für Käufer und Eigentümer.",
+    "buy": "Immobilienkauf",
+    "sell": "Verkauf und Tausch",
+    "rent": "Vermietungsmanagement",
+    "legal": "Rechtsberatung und Grundbuch",
+    "citizenship": "Staatsbürgerschaft und Aufenthaltserlaubnis",
+    "aftersales": "24/7 After-Sales-Service",
+    "tour": "Kostenlose Einführungstour",
+    "online": "Online-Immobilienbesichtigung",
+    "compliance": "EİDS und Compliance-Beratung",
+    "tax": "Steuer- und Währungsplanung",
+    "offline": "Mobiler Zugriff für Außenteams"
   },
   "howItWorks": {
-    "title": "Nasıl çalışırız",
+    "title": "So arbeiten wir",
     "steps": {
-      "1": "Ataberk Estate'e başvurun",
-      "2": "Kişiselleştirilmiş ilan seçimi",
-      "3": "Türkiye'de ilan turu",
-      "4": "Rezervasyon ve due diligence",
-      "5": "Tapu dairesinde belge hazırlığı",
-      "6": "İşlem ve anahtar teslimi",
-      "7": "Satış sonrası hizmet"
+      "1": "Bewerbung bei Ataberk Estate",
+      "2": "Personalisierte Anzeigenauswahl",
+      "3": "Immobilientour in der Türkei",
+      "4": "Reservierung und Due Diligence",
+      "5": "Dokumentenvorbereitung im Grundbuchamt",
+      "6": "Transaktion und Übergabe",
+      "7": "After-Sales-Service"
     }
   },
   "platformDemo": {
-    "title": "Platformu canlı önizleme",
-    "subtitle": "Aşağıdaki sekme simülasyonu, 1Çatı'nın günlük kullanımını gösterir. Veriler örnek amaçlıdır.",
+    "title": "Live-Plattform-Vorschau",
+    "subtitle": "Die folgende Tab-Simulation zeigt den täglichen Gebrauch von 1Çatı. Daten sind nur zur Demonstration.",
     "tabs": {
       "crm": "CRM",
-      "listings": "İlanlar",
-      "tickets": "Talepler",
-      "calendar": "Takvim"
+      "listings": "Anzeigen",
+      "tickets": "Tickets",
+      "calendar": "Kalender"
     },
     "crm": {
       "name": "CRM",
-      "columns": ["Aday", "Durum", "Kaynak", "Temsilci"],
+      "columns": ["Lead", "Status", "Quelle", "Makler"],
       "rows": [
-        ["Anna K. - Alanya daire", "Sıcak", "WhatsApp", "Mehmet"],
-        ["Sergey P. - Villa", "Yeni", "Web form", "Ayşe"],
-        ["Li W. - Yatırım", "Görüşme", "Referans", "Can"]
+        ["Anna K. - Alanya Wohnung", "Heiß", "WhatsApp", "Mehmet"],
+        ["Sergey P. - Villa", "Neu", "Webformular", "Ayşe"],
+        ["Li W. - Investition", "Meeting", "Empfehlung", "Can"]
       ]
     },
     "listings": {
-      "name": "İlanlar",
-      "columns": ["İlan", "Fiyat", "EİDS", "Durum"],
+      "name": "Anzeigen",
+      "columns": ["Anzeige", "Preis", "EİDS", "Status"],
       "rows": [
-        ["Villa #4021 - Kargıcak", "€ 420.000", "Onaylı", "Aktif"],
-        ["Daire #1847 - Mahmutlar", "€ 95.000", "Bekliyor", "Aktif"],
-        ["Penthouse #990 - Alanya", "€ 310.000", "Onaylı", "Rezerve"]
+        ["Villa #4021 - Kargıcak", "€ 420.000", "Genehmigt", "Aktiv"],
+        ["Wohnung #1847 - Mahmutlar", "€ 95.000", "Ausstehend", "Aktiv"],
+        ["Penthouse #990 - Alanya", "€ 310.000", "Genehmigt", "Reserviert"]
       ]
     },
     "tickets": {
-      "name": "Talepler",
-      "columns": ["Talep", "Öncelik", "Son Güncelleme"],
+      "name": "Tickets",
+      "columns": ["Anfrage", "Priorität", "Letzte Aktualisierung"],
       "rows": [
-        ["Su kaçağı - Villa #4021", "Yüksek", "2 saat önce"],
-        ["Klima bakımı - Daire #1847", "Orta", "Dün"],
-        ["Boyama - Penthouse #990", "Düşük", "3 gün önce"]
+        ["Wasserleck - Villa #4021", "Hoch", "vor 2 Stunden"],
+        ["Klima-Wartung - Whg #1847", "Mittel", "Gestern"],
+        ["Malerei - Penthouse #990", "Niedrig", "vor 3 Tagen"]
       ]
     },
     "calendar": {
-      "name": "Takvim",
-      "columns": ["Saat", "Etkinlik", "Yer"],
+      "name": "Kalender",
+      "columns": ["Zeit", "Termin", "Ort"],
       "rows": [
-        ["10:00", "Villa turu - Anna K.", "Kargıcak"],
-        ["14:00", "Tapu randevusu", "Alanya Tapu"],
-        ["16:30", "Bakım kontrolü", "Mahmutlar"]
+        ["10:00", "Villen-Tour - Anna K.", "Kargıcak"],
+        ["14:00", "Grundbuchtermin", "Alanya Tapu"],
+        ["16:30", "Wartungskontrolle", "Mahmutlar"]
       ]
     }
   },
   "cta": {
-    "title": "Emlak operasyonunuzu 2026 kurallarına göre yönetin",
-    "subtitle": "1Çatı demosu talep edin. EİDS, uyumluluk, CRM ve bakım yönetimini tek yerde görün.",
-    "primary": "Demo Talep Et",
-    "secondary": "Panele Giriş Yap"
+    "title": "Führen Sie Ihre Immobilienoperationen nach den Regeln 2026",
+    "subtitle": "Fordern Sie eine 1Çatı-Demo an. Sehen Sie EİDS, Compliance, CRM und Wartungsmanagement an einem Ort.",
+    "primary": "Demo anfordern",
+    "secondary": "Portal-Login"
   },
   "footer": {
-    "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
-    "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate.",
-    "description": "Türkiye'de emlak satışı ve yönetimi; yerel ve yabancı malikler için güvenilir çözüm ortağı.",
-    "companyTitle": "Şirket",
-    "company": ["Hakkımızda", "Ekibimiz", "Kariyer", "İletişim"],
+    "rights": "© 2026 Ataberk Estate. Alle Rechte vorbehalten.",
+    "confidential": "Vertraulich — WAMOCON GmbH & Ataberk Estate.",
+    "description": "Immobilienverkauf und -management in der Türkei; ein vertrauenswürdiger Partner für lokale und ausländische Eigentümer.",
+    "companyTitle": "Unternehmen",
+    "company": ["Über uns", "Unser Team", "Karriere", "Kontakt"],
     "catalogTitle": "Katalog",
-    "catalog": ["Tüm İlanlar", "Yeni Projeler", "Kiralık", "VIP İlanlar"],
-    "servicesTitle": "Hizmetler",
-    "services": ["Satın Alma", "Satış", "Kiralama Yönetimi", "Vatandaşlık"],
-    "legalTitle": "Yasal",
-    "legal": ["Gizlilik Politikası", "Kullanım Koşulları"]
+    "catalog": ["Alle Anzeigen", "Neue Projekte", "Zu mieten", "VIP-Anzeigen"],
+    "servicesTitle": "Dienstleistungen",
+    "services": ["Kauf", "Verkauf", "Vermietungsmanagement", "Staatsbürgerschaft"],
+    "legalTitle": "Rechtliches",
+    "legal": ["Datenschutz", "Nutzungsbedingungen"]
   }
 }
