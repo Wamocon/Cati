@@ -1,40 +1,33 @@
-import { NextIntlClientProvider } from "next-intl"
-import { getMessages } from "next-intl/server"
+import type { Metadata } from "next"
 import { Geist } from "next/font/google"
-
-import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import "./globals.css"
 
 const geist = Geist({
   subsets: ["latin", "cyrillic"],
   variable: "--font-sans",
 })
 
-export const metadata = {
-  title: "Ataberk Estate — Türkiye'de Emlak | 1Çatı CRM",
-  description:
-    "Ataberk Estate'ten Türkiye'de emlak satışı ve kiralama. 212.000+ ilan, 6.000+ işlem, 150 çalışan. Artık 1Çatı mülk yönetim platformu ile.",
+export const metadata: Metadata = {
+  title: "1Çatı - Ataberk Estate",
+  description: "Türkiye emlağını tek çatı altında yönetin.",
 }
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const messages = await getMessages()
-
   return (
     <html
-      lang="tr"
-      className={cn("dark antialiased", geist.variable)}
+      className={cn("antialiased", geist.variable)}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <NextIntlClientProvider messages={messages}>
-            {children}
-          </NextIntlClientProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
         </ThemeProvider>
       </body>
     </html>

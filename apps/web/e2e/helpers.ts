@@ -12,7 +12,10 @@ export async function screenshot(
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
   const fileName = `${testInfo.title.replace(/\s+/g, "_")}_${name}.png`
   const filePath = path.join(dir, fileName)
-  await page.screenshot({ path: filePath, fullPage: options?.fullPage ?? false })
+  await page.screenshot({
+    path: filePath,
+    fullPage: options?.fullPage ?? false,
+  })
   await testInfo.attach(name, { path: filePath, contentType: "image/png" })
   return filePath
 }

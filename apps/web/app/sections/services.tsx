@@ -47,15 +47,16 @@ export function Services() {
   ] as const
 
   return (
-    <section id="services" className="py-24">
+    <section id="services" className="border-y border-border bg-muted/30 py-24">
       <div className="container">
         <motion.div
-          initial={{ opacity: 1, y: 16 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             {t("title")}
           </h2>
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
@@ -67,16 +68,16 @@ export function Services() {
             return (
               <motion.div
                 key={key}
-                initial={{ opacity: 1, y: 16 }}
+                initial={{ opacity: 1, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.03 }}
-                className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#0b1021] p-4 transition-colors hover:border-white/20"
+                transition={{ delay: index * 0.03, duration: 0.5 }}
+                className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#f97316]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
                   <Icon className="h-5 w-5" />
                 </div>
-                <span className="text-sm font-semibold text-white">
+                <span className="text-sm font-semibold text-card-foreground">
                   {t(key)}
                 </span>
               </motion.div>

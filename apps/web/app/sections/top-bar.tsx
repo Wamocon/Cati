@@ -7,7 +7,7 @@ export function TopBar() {
   const t = useTranslations("topBar")
 
   return (
-    <div className="border-b border-white/5 bg-[#050914]/80 backdrop-blur-md">
+    <div className="border-b border-border bg-muted/50 backdrop-blur-md">
       <div className="container flex h-10 items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <a
@@ -29,7 +29,7 @@ export function TopBar() {
           href="https://www.ataberkestate.com/sites/default/files/ataberkestate.pdf"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 text-[#f97316] transition-colors hover:text-[#fb923c]"
+          className="flex items-center gap-1.5 font-medium text-primary transition-colors hover:text-primary/80"
         >
           <span>{t("presentation")}</span>
         </a>

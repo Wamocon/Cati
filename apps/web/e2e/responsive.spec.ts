@@ -8,11 +8,16 @@ test.describe("Responsive mobile checks", () => {
     collectConsoleIssues(page, issues)
   })
 
-  test("landing page is usable on small viewport", async ({ page }, testInfo) => {
-    await page.goto("/")
-    await expect(page.getByRole("heading", { name: /Yönetilebilir bir Türkiye emlağı/ })).toBeVisible()
+  test("landing page is usable on small viewport", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/tr")
+    await expect(
+      page.getByRole("heading", {
+        name: /Türkiye emlağını tek çatı altında yönetin/,
+      })
+    ).toBeVisible()
 
-    // Scroll through key sections and ensure no horizontal overflow
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
     await page.waitForTimeout(500)
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
@@ -24,8 +29,10 @@ test.describe("Responsive mobile checks", () => {
   })
 
   test("dashboard is usable on small viewport", async ({ page }, testInfo) => {
-    await page.goto("/dashboard")
-    await expect(page.getByRole("heading", { name: "Kontrol Paneli" })).toBeVisible()
+    await page.goto("/tr/dashboard")
+    await expect(
+      page.getByRole("heading", { name: "Kontrol Paneli" })
+    ).toBeVisible()
     await expect(page.getByText("Aktif İlanlar")).toBeVisible()
     await screenshot(page, testInfo, "mobile-dashboard", { fullPage: true })
     expect(issues).toEqual([])

@@ -1,11 +1,14 @@
 import { getRequestConfig } from "next-intl/server"
 
-export default getRequestConfig(async () => {
-  // Turkish is the primary language for the modernised Ataberk landing page.
-  const locale = "tr"
+export const locales = ["tr", "en", "de", "ru"] as const
+export const defaultLocale = "tr"
 
+export default getRequestConfig(async ({ locale }) => {
+  const safeLocale = locales.includes(locale as (typeof locales)[number])
+    ? locale
+    : defaultLocale
   return {
-    locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    locale: safeLocale as string,
+    messages: (await import(`./messages/${safeLocale}.json`)).default,
   }
 })

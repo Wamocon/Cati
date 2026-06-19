@@ -1,37 +1,37 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
-import Link from "next/link"
+import { Link } from "@/app/navigation"
 
 export function CTA() {
   const t = useTranslations("cta")
 
   return (
-    <section className="relative overflow-hidden py-24">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#f97316]/10 via-[#050914] to-[#2563eb]/10" />
-      <div className="container relative z-10">
+    <section id="contact" className="relative overflow-hidden py-24">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5" />
+      <div className="relative z-10 container">
         <motion.div
-          initial={{ opacity: 1, y: 16 }}
+          initial={{ opacity: 1, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-[#0b1021]/80 p-8 text-center backdrop-blur-md sm:p-12"
+          transition={{ duration: 0.6 }}
+          className="mx-auto max-w-3xl rounded-3xl border border-border bg-card p-8 text-center shadow-xl sm:p-12"
         >
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-black tracking-tight text-card-foreground sm:text-4xl">
             {t("title")}
           </h2>
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Button
-              size="lg"
-              className="bg-[#f97316] px-8 text-base font-bold text-white hover:bg-[#ea580c]"
+            <a
+              href="mailto:info@wamocon.com?subject=1Çatı Demo Talebi"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-primary px-8 text-base font-bold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t("primary")}
-            </Button>
+            </a>
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center rounded-lg border border-white/10 bg-background px-8 text-base font-medium text-foreground transition-colors hover:bg-white/5"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-8 text-base font-medium text-foreground transition-colors hover:bg-muted"
             >
               {t("secondary")}
             </Link>

@@ -20,10 +20,16 @@
     "portal": "Müşteri Paneli"
   },
   "hero": {
-    "headline": "Yönetilebilir bir Türkiye emlağı",
-    "subheadline": "Ataberk Estate, 212.000+ ilanı, 6.000+ işlemi ve 150 uzmanı tek bir 1Çatı platformunda birleştiriyor — ilk müşteri aramasından satış sonrası hizmete kadar.",
+    "badge": "yeni emlak yönetim platformu",
+    "headline": "Türkiye emlağını tek çatı altında yönetin",
+    "subheadline": "Ataberk Estate, 212.000+ ilanı, 6.000+ işlemi ve 150 uzmanı 1Çatı ile birleştiriyor — ilk aramadan satış sonrası hizmete kadar.",
     "ctaPrimary": "İlan Ara",
-    "ctaSecondary": "Nasıl Çalışır"
+    "ctaSecondary": "Nasıl Çalışır",
+    "searchCity": "Şehir",
+    "searchType": "Tip",
+    "searchBudget": "Bütçe",
+    "typeApartment": "Daire",
+    "budgetValue": "100.000 €'ye kadar"
   },
   "stats": {
     "objects": "veritabanındaki ilan",
@@ -151,6 +157,52 @@
       "5": "Tapu dairesinde belge hazırlığı",
       "6": "İşlem ve anahtar teslimi",
       "7": "Satış sonrası hizmet"
+    }
+  },
+  "platformDemo": {
+    "title": "Platformu canlı önizleme",
+    "subtitle": "Aşağıdaki sekme simülasyonu, 1Çatı'nın günlük kullanımını gösterir. Veriler örnek amaçlıdır.",
+    "tabs": {
+      "crm": "CRM",
+      "listings": "İlanlar",
+      "tickets": "Talepler",
+      "calendar": "Takvim"
+    },
+    "crm": {
+      "name": "CRM",
+      "columns": ["Aday", "Durum", "Kaynak", "Temsilci"],
+      "rows": [
+        ["Anna K. - Alanya daire", "Sıcak", "WhatsApp", "Mehmet"],
+        ["Sergey P. - Villa", "Yeni", "Web form", "Ayşe"],
+        ["Li W. - Yatırım", "Görüşme", "Referans", "Can"]
+      ]
+    },
+    "listings": {
+      "name": "İlanlar",
+      "columns": ["İlan", "Fiyat", "EİDS", "Durum"],
+      "rows": [
+        ["Villa #4021 - Kargıcak", "€ 420.000", "Onaylı", "Aktif"],
+        ["Daire #1847 - Mahmutlar", "€ 95.000", "Bekliyor", "Aktif"],
+        ["Penthouse #990 - Alanya", "€ 310.000", "Onaylı", "Rezerve"]
+      ]
+    },
+    "tickets": {
+      "name": "Talepler",
+      "columns": ["Talep", "Öncelik", "Son Güncelleme"],
+      "rows": [
+        ["Su kaçağı - Villa #4021", "Yüksek", "2 saat önce"],
+        ["Klima bakımı - Daire #1847", "Orta", "Dün"],
+        ["Boyama - Penthouse #990", "Düşük", "3 gün önce"]
+      ]
+    },
+    "calendar": {
+      "name": "Takvim",
+      "columns": ["Saat", "Etkinlik", "Yer"],
+      "rows": [
+        ["10:00", "Villa turu - Anna K.", "Kargıcak"],
+        ["14:00", "Tapu randevusu", "Alanya Tapu"],
+        ["16:30", "Bakım kontrolü", "Mahmutlar"]
+      ]
     }
   },
   "cta": {

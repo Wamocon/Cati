@@ -2,33 +2,29 @@
 
 import { motion, useInView } from "framer-motion"
 import { useTranslations } from "next-intl"
-import { useRef, useEffect, useState } from "react"
+import { useRef } from "react"
 
-function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
-  const ref = useRef(null)
+function StatNumber({
+  value,
+  suffix = "",
+}: {
+  value: number
+  suffix?: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true })
-  const [display, setDisplay] = useState(value)
-  const [hasAnimated, setHasAnimated] = useState(false)
-
-  useEffect(() => {
-    if (!isInView || hasAnimated) return
-    setHasAnimated(true)
-    const duration = 2000
-    const start = performance.now()
-    const animate = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setDisplay(Math.floor(eased * value))
-      if (progress < 1) requestAnimationFrame(animate)
-    }
-    requestAnimationFrame(animate)
-  }, [isInView, value, hasAnimated])
 
   return (
-    <span ref={ref}>
-      {display.toLocaleString("ru-RU")}
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0.5, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="text-3xl font-black text-foreground sm:text-4xl"
+    >
+      {value.toLocaleString("tr-TR").replace(/\./g, " ")}
       {suffix}
-    </span>
+    </motion.div>
   )
 }
 
@@ -44,21 +40,19 @@ export function Stats() {
   const t = useTranslations("stats")
 
   return (
-    <section className="border-y border-white/5 bg-[#0b1021] py-12">
+    <section data-testid="stats" className="border-y border-border bg-muted/30 py-12">
       <div className="container">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 1, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.1, duration: 0.5 }}
               className="text-center"
             >
-              <div className="text-3xl font-black text-white sm:text-4xl">
-                <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-              </div>
+              <StatNumber value={stat.value} suffix={stat.suffix} />
               <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
                 {t(stat.label)}
               </div>

@@ -50,15 +50,19 @@ export function SolutionGrid() {
   ] as const
 
   return (
-    <section data-testid="solution-grid" className="border-y border-white/5 bg-gradient-to-b from-[#050914] to-[#0b1021] py-24">
+    <section
+      data-testid="solution-grid"
+      className="border-y border-border bg-muted/30 py-24"
+    >
       <div className="container">
         <motion.div
-          initial={{ opacity: 1, y: 16 }}
+          initial={{ opacity: 1, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
           className="mx-auto max-w-2xl text-center"
         >
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl">
             {t("title")}
           </h2>
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
@@ -70,16 +74,16 @@ export function SolutionGrid() {
             return (
               <motion.div
                 key={key}
-                initial={{ opacity: 1, scale: 0.98 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 1, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.03 }}
-                className="rounded-2xl border border-white/10 bg-[#050914] p-5 transition-all hover:-translate-y-1 hover:border-[#2563eb]/30 hover:shadow-lg hover:shadow-[#2563eb]/5"
+                transition={{ delay: index * 0.03, duration: 0.5 }}
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-md"
               >
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/10 text-[#3b82f6]">
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <Icon className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-semibold text-white">
+                <p className="text-sm font-semibold text-card-foreground">
                   {t(`items.${key}`)}
                 </p>
               </motion.div>

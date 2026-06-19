@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import Link from "next/link"
+import { Link } from "@/app/navigation"
 
 export function Footer() {
   const t = useTranslations("footer")
@@ -14,15 +14,17 @@ export function Footer() {
   ] as const
 
   return (
-    <footer id="contacts" className="border-t border-white/5 bg-[#050914] py-16">
+    <footer id="contacts" className="border-t border-border bg-muted/30 py-16">
       <div className="container">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-[#f97316] to-[#ea580c] text-sm font-black text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground">
                 1Ç
               </div>
-              <span className="text-lg font-bold text-white">Ataberk Estate</span>
+              <span className="text-lg font-bold text-foreground">
+                Ataberk Estate
+              </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
               {t("description")}
@@ -37,7 +39,7 @@ export function Footer() {
             const items = t.raw(col.key) as string[]
             return (
               <div key={col.key}>
-                <h4 className="font-bold text-white">{col.title}</h4>
+                <h4 className="font-bold text-foreground">{col.title}</h4>
                 <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                   {items.map((label) => (
                     <li key={label}>
@@ -52,7 +54,7 @@ export function Footer() {
           })}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 text-xs text-muted-foreground sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-xs text-muted-foreground sm:flex-row">
           <p>{t("rights")}</p>
           <p>{t("confidential")}</p>
         </div>
