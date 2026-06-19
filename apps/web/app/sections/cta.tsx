@@ -13,7 +13,7 @@ export function CTA() {
       <div className="absolute inset-0 bg-gradient-to-br from-[#f97316]/10 via-[#050914] to-[#2563eb]/10" />
       <div className="container relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-[#0b1021]/80 p-8 text-center backdrop-blur-md sm:p-12"

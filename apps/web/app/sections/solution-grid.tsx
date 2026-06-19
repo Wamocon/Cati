@@ -41,7 +41,7 @@ export function SolutionGrid() {
     <section className="border-y border-white/5 bg-gradient-to-b from-[#050914] to-[#0b1021] py-24">
       <div className="container">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 1, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="mx-auto max-w-2xl text-center"
@@ -58,7 +58,7 @@ export function SolutionGrid() {
             return (
               <motion.div
                 key={key}
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 1, scale: 0.98 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.05 }}
