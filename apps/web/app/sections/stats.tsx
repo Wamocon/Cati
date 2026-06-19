@@ -7,10 +7,12 @@ import { useRef, useEffect, useState } from "react"
 function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true })
-  const [display, setDisplay] = useState(0)
+  const [display, setDisplay] = useState(value)
+  const [hasAnimated, setHasAnimated] = useState(false)
 
   useEffect(() => {
-    if (!isInView) return
+    if (!isInView || hasAnimated) return
+    setHasAnimated(true)
     const duration = 2000
     const start = performance.now()
     const animate = (now: number) => {
@@ -20,7 +22,7 @@ function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string
       if (progress < 1) requestAnimationFrame(animate)
     }
     requestAnimationFrame(animate)
-  }, [isInView, value])
+  }, [isInView, value, hasAnimated])
 
   return (
     <span ref={ref}>
