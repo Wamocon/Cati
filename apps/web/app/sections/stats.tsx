@@ -40,7 +40,10 @@ export function Stats() {
   const t = useTranslations("stats")
 
   return (
-    <section data-testid="stats" className="border-y border-border bg-muted/30 py-12">
+    <section
+      data-testid="stats"
+      className="border-y border-border bg-muted/30 py-12"
+    >
       <div className="container">
         <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
           {stats.map((stat, index) => (
@@ -53,7 +56,7 @@ export function Stats() {
               className="text-center"
             >
               <StatNumber value={stat.value} suffix={stat.suffix} />
-              <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+              <div className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
                 {t(stat.label)}
               </div>
             </motion.div>

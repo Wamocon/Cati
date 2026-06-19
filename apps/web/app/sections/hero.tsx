@@ -45,7 +45,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl font-black leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-6xl"
+            className="text-4xl leading-[1.1] font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl"
           >
             {t("headline")}
           </motion.h1>
@@ -87,15 +87,17 @@ export function Hero() {
           transition={{ duration: 0.7, delay: 0.4 }}
           className="mx-auto mt-14 max-w-5xl"
         >
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-primary/5 dark:shadow-black/40 sm:p-6">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-2xl shadow-primary/5 sm:p-6 dark:shadow-black/40">
             <div className="mb-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground">
                   1Ç
                 </div>
-                <span className="font-bold text-card-foreground">1Çatı Panel</span>
+                <span className="font-bold text-card-foreground">
+                  1Çatı Panel
+                </span>
               </div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold uppercase text-muted-foreground">
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground uppercase">
                 Live
               </span>
             </div>
@@ -133,28 +135,36 @@ export function Hero() {
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <div className="rounded-xl bg-muted px-4 py-3">
-                <div className="text-xs text-muted-foreground">{t("searchCity")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchCity")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>Alanya</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted px-4 py-3">
-                <div className="text-xs text-muted-foreground">{t("searchType")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchType")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>{t("typeApartment")}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted px-4 py-3">
-                <div className="text-xs text-muted-foreground">{t("searchBudget")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchBudget")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>{t("budgetValue")}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted px-4 py-3 lg:col-span-2">
-                <div className="text-xs text-muted-foreground">Son aktivite</div>
+                <div className="text-xs text-muted-foreground">
+                  Son aktivite
+                </div>
                 <div className="mt-1 truncate text-sm font-medium text-foreground">
                   EİDS yetkilendirmesi onaylandı — Villa #4021
                 </div>
