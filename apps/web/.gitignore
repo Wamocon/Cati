@@ -35,3 +35,8 @@ pnpm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# qa / e2e artifacts
+/qa/
+/playwright-report/
+/test-results/

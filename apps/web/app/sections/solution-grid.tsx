@@ -50,7 +50,7 @@ export function SolutionGrid() {
   ] as const
 
   return (
-    <section className="border-y border-white/5 bg-gradient-to-b from-[#050914] to-[#0b1021] py-24">
+    <section data-testid="solution-grid" className="border-y border-white/5 bg-gradient-to-b from-[#050914] to-[#0b1021] py-24">
       <div className="container">
         <motion.div
           initial={{ opacity: 1, y: 16 }}

@@ -25,7 +25,7 @@ export function ComplianceFeatures() {
   ] as const
 
   return (
-    <section className="py-24">
+    <section data-testid="compliance-features" className="py-24">
       <div className="container">
         <motion.div
           initial={{ opacity: 1, y: 16 }}

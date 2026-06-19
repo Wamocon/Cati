@@ -1,7 +1,5 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import Link from "next/link"
 
 export default function LoginPage() {
@@ -17,25 +15,25 @@ export default function LoginPage() {
 
         <form className="mt-8 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm text-white">
+            <label htmlFor="email" className="text-sm font-medium text-white">
               Email
-            </Label>
-            <Input
+            </label>
+            <input
               id="email"
               type="email"
               placeholder="siz@ornek.com"
-              className="border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-muted-foreground focus:border-[#f97316] focus:outline-none"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm text-white">
+            <label htmlFor="password" className="text-sm font-medium text-white">
               Şifre
-            </Label>
-            <Input
+            </label>
+            <input
               id="password"
               type="password"
               placeholder="••••••••"
-              className="border-white/10 bg-white/5 text-white placeholder:text-muted-foreground"
+              className="h-9 w-full rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-muted-foreground focus:border-[#f97316] focus:outline-none"
             />
           </div>
           <button

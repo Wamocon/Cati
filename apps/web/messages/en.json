@@ -161,6 +161,15 @@
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
-    "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate."
+    "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate.",
+    "description": "Türkiye'de emlak satışı ve yönetimi; yerel ve yabancı malikler için güvenilir çözüm ortağı.",
+    "companyTitle": "Şirket",
+    "company": ["Hakkımızda", "Ekibimiz", "Kariyer", "İletişim"],
+    "catalogTitle": "Katalog",
+    "catalog": ["Tüm İlanlar", "Yeni Projeler", "Kiralık", "VIP İlanlar"],
+    "servicesTitle": "Hizmetler",
+    "services": ["Satın Alma", "Satış", "Kiralama Yönetimi", "Vatandaşlık"],
+    "legalTitle": "Yasal",
+    "legal": ["Gizlilik Politikası", "Kullanım Koşulları"]
   }
 }
