@@ -17,7 +17,9 @@
     "reviews": "Bewertungen",
     "contacts": "Kontakt",
     "login": "Anmelden",
-    "portal": "Kundenportal"
+    "portal": "Kundenportal",
+    "platformSubtitle": "1Çatı Plattform",
+    "toggleMenu": "Menü umschalten"
   },
   "hero": {
     "badge": "neue Immobilienverwaltungsplattform",
@@ -29,7 +31,19 @@
     "searchType": "Typ",
     "searchBudget": "Budget",
     "typeApartment": "Wohnung",
-    "budgetValue": "Bis zu 100.000 €"
+    "budgetValue": "Bis zu 100.000 €",
+    "statLabels": {
+      "activeListings": "Aktive Inserate",
+      "leads": "Leads",
+      "openTickets": "Offene Tickets",
+      "transactions": "Transaktionen"
+    },
+    "badgeReturn": "Rendite",
+    "badgeListings": "Inserate in der Datenbank",
+    "previewTitle": "1Çatı Panel",
+    "previewStatus": "Live",
+    "previewActivityLabel": "Letzte Aktivität",
+    "previewActivityText": "EİDS-Autorisierung genehmigt — Villa #4021"
   },
   "stats": {
     "objects": "Anzeigen in der Datenbank",
@@ -67,7 +81,7 @@
     },
     "eids": {
       "title": "EİDS-Autorisierungsnachverfolgung ist schwierig",
-      "desc": "Seit dem 15. Februar 2026 erfordert jede Immobilienanzeige auf Sahibinden/Hepsiemlak eine e-Devlet-Autorisierung. Der Eigentümer kann sie erteilen und später den Makler deaktivieren."
+      "desc": "Seit dem 15. Februar 2026 erfordert jede Immobilienanzeige auf Sahibinden/Hepsiemlak eine e-Government-Autorisierung. Der Eigentümer kann sie erteilen und später den Makler deaktivieren."
     },
     "fraud": {
       "title": "Gefälschte Grundbücher und gefälschte Anzeigen",
@@ -76,7 +90,8 @@
     "permits": {
       "title": "Aufenthaltsgenehmigungsregeln wurden verschärft",
       "desc": "Mindestwert 200.000 $, von der SPK genehmigte Bewertung, Einkommens-/Versicherungsnachweise und eine 25%ige Ausländerkontingentgrenze in Antalya/Alanya. Jede Akte ist anders."
-    }
+    },
+    "sectionBadge": "Realität 2026"
   },
   "solution": {
     "title": "1Çatı — das Betriebssystem für Immobilien",
@@ -102,7 +117,7 @@
     "items": {
       "eids": {
         "title": "EİDS-Autorisierungsnachverfolgung",
-        "desc": "e-Devlet-Autorisierungsdokument, Status und Ablaufdatum für jede Anzeige. Automatische Erinnerungen und Verknüpfung zum Maklervertrag.",
+        "desc": "e-Government-Autorisierungsdokument, Status und Ablaufdatum für jede Anzeige. Automatische Erinnerungen und Verknüpfung zum Maklervertrag.",
         "tag": "MVP"
       },
       "dueDiligence": {
@@ -130,7 +145,8 @@
         "desc": "QR/Barcode-Lesen und Zeitstempel. Automatische Verifizierung folgt, sobald offizielle Grundbuch-/Notar-APIs geöffnet sind.",
         "tag": "Roadmap"
       }
-    }
+    },
+    "sectionBadge": "Compliance 2026"
   },
   "services": {
     "title": "Ataberk Estate Dienstleistungen",
@@ -281,7 +297,8 @@
     "title": "Führen Sie Ihre Immobilienoperationen nach den Regeln 2026",
     "subtitle": "Fordern Sie eine 1Çatı-Demo an. Sehen Sie EİDS, Compliance, CRM und Wartungsmanagement an einem Ort.",
     "primary": "Demo anfordern",
-    "secondary": "Portal-Login"
+    "secondary": "Portal-Login",
+    "mailSubject": "Anfrage 1Çatı Demo"
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. Alle Rechte vorbehalten.",
@@ -320,7 +337,7 @@
     "closeMenu": "Menü schließen",
     "openMenu": "Menü öffnen",
     "logout": "Abmelden",
-    "demoNotice": "Demo-Modus: Supabase-Authentifizierung ist nicht konfiguriert. Setzen Sie NEXT_PUBLIC_DEMO_ROLE, um eine andere Rolle zu testen.",
+    "demoNotice": "Demo-Modus: Supabase-Authentifizierung ist nicht konfiguriert. Wählen Sie auf der Login-Seite eine andere Rolle aus, um andere Berechtigungen zu testen.",
     "menu": {
       "listings": "Immobilien",
       "leads": "Leads",
@@ -352,7 +369,8 @@
       "airbnb": "Airbnb / Booking Sync",
       "kbs": "Automatische KBS/e-GUEST",
       "offline": "Offline-Feldmodus"
-    }
+    },
+    "signedInAs": "Angemeldet als {role}"
   },
   "roles": {
     "superAdmin": "Super Admin",
@@ -400,6 +418,11 @@
       "maintenance": "Techniker",
       "client": "Kunde / Eigentümer",
       "viewer": "Nur Lesezugriff"
-    }
+    },
+    "demoError": "Demo-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+    "demoDescription": "Wählen Sie unten eine Rolle aus, um das Dashboard mit diesem Berechtigungssatz zu testen."
+  },
+  "theme": {
+    "toggle": "Thema wechseln"
   }
 }

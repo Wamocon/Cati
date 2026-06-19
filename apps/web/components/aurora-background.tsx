@@ -9,9 +9,19 @@ interface AuroraBackgroundProps {
   showNoise?: boolean
 }
 
-export function AuroraBackground({ children, className, showNoise = true }: AuroraBackgroundProps) {
+export function AuroraBackground({
+  children,
+  className,
+  showNoise = true,
+}: AuroraBackgroundProps) {
   return (
-    <div className={cn("aurora-bg relative min-h-screen w-full", showNoise && "noise-overlay", className)}>
+    <div
+      className={cn(
+        "aurora-bg relative min-h-screen w-full",
+        showNoise && "noise-overlay",
+        className
+      )}
+    >
       <div className="relative z-10">{children}</div>
     </div>
   )

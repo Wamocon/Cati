@@ -3,17 +3,22 @@
 import { Menu, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion"
+import {
+  motion,
+  AnimatePresence,
+  useScroll,
+  useMotionValueEvent,
+} from "framer-motion"
 import { Link } from "@/app/navigation"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
   { label: "home", href: "#" },
-  { label: "catalog", href: "#catalog" },
+  { label: "catalog", href: "#services" },
   { label: "about", href: "#about" },
   { label: "services", href: "#services" },
-  { label: "reviews", href: "#reviews" },
+  { label: "reviews", href: "#how-it-works" },
   { label: "contacts", href: "#contacts" },
 ]
 
@@ -49,7 +54,7 @@ export function Navbar() {
         variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
         animate={hidden ? "hidden" : "visible"}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="fixed top-10 right-0 left-0 z-50 border-b border-border/50 glass"
+        className="glass fixed top-10 right-0 left-0 z-50 border-b border-border/50"
       >
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">
@@ -58,10 +63,12 @@ export function Navbar() {
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold leading-tight tracking-tight text-foreground">
+              <span className="text-sm leading-tight font-bold tracking-tight text-foreground">
                 Ataberk Estate
               </span>
-              <span className="text-[10px] font-medium text-muted-foreground">1Çatı Platform</span>
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {t("platformSubtitle")}
+              </span>
             </div>
           </Link>
 
@@ -95,9 +102,10 @@ export function Navbar() {
           </div>
 
           <button
+            data-testid="menu-toggle"
             className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground md:hidden"
             onClick={() => setOpen(!open)}
-            aria-label="Toggle menu"
+            aria-label={t("toggleMenu")}
           >
             <AnimatePresence mode="wait">
               {open ? (

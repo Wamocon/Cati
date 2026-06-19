@@ -56,7 +56,7 @@ export function Services() {
   return (
     <section id="services" className="relative border-y border-border/50 py-24">
       <div className="absolute inset-0 bg-muted/20" />
-      <div className="container relative z-10">
+      <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             {t("title")}
@@ -76,11 +76,16 @@ export function Services() {
                 transition={{ delay: index * 0.03, duration: 0.5 }}
                 className={spans[key] ?? ""}
               >
-                <GlassCard className="group flex h-full items-center gap-4 p-4" hover>
+                <GlassCard
+                  className="group flex h-full items-center gap-4 p-4"
+                  hover
+                >
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shadow-sm transition-transform group-hover:scale-110">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-card-foreground">{t(key)}</span>
+                  <span className="text-sm font-bold text-card-foreground">
+                    {t(key)}
+                  </span>
                 </GlassCard>
               </motion.div>
             )

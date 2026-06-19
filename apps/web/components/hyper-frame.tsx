@@ -75,12 +75,12 @@ export function HyperFrame({ className }: HyperFrameProps) {
             )}
             {/* Left side */}
             <div
-              className="absolute left-0 top-0 h-full w-8 origin-left -skew-y-12 bg-gradient-to-b from-primary/15 to-primary/5"
+              className="absolute top-0 left-0 h-full w-8 origin-left -skew-y-12 bg-gradient-to-b from-primary/15 to-primary/5"
               style={{ transform: "rotateY(-90deg) translateZ(0px)" }}
             />
             {/* Right side */}
             <div
-              className="absolute right-0 top-0 h-full w-8 origin-right skew-y-12 bg-gradient-to-b from-primary/10 to-transparent"
+              className="absolute top-0 right-0 h-full w-8 origin-right skew-y-12 bg-gradient-to-b from-primary/10 to-transparent"
               style={{ transform: "rotateY(90deg) translateZ(0px)" }}
             />
             {/* Top */}
@@ -96,7 +96,7 @@ export function HyperFrame({ className }: HyperFrameProps) {
             style={{ transform: "translateZ(15px)" }}
           >
             <div
-              className="absolute left-0 top-0 h-full w-6 origin-left -skew-y-12 bg-gradient-to-b from-accent/15 to-transparent"
+              className="absolute top-0 left-0 h-full w-6 origin-left -skew-y-12 bg-gradient-to-b from-accent/15 to-transparent"
               style={{ transform: "rotateY(-90deg)" }}
             />
             <div
@@ -113,9 +113,9 @@ export function HyperFrame({ className }: HyperFrameProps) {
         </div>
 
         {/* Corner accents */}
-        <div className="absolute -right-px -top-px h-16 w-16 overflow-hidden rounded-tr-3xl">
-          <div className="absolute right-0 top-0 h-px w-full bg-gradient-to-l from-primary/60 to-transparent" />
-          <div className="absolute right-0 top-0 h-full w-px bg-gradient-to-b from-primary/60 to-transparent" />
+        <div className="absolute -top-px -right-px h-16 w-16 overflow-hidden rounded-tr-3xl">
+          <div className="absolute top-0 right-0 h-px w-full bg-gradient-to-l from-primary/60 to-transparent" />
+          <div className="absolute top-0 right-0 h-full w-px bg-gradient-to-b from-primary/60 to-transparent" />
         </div>
         <div className="absolute -bottom-px -left-px h-16 w-16 overflow-hidden rounded-bl-3xl">
           <div className="absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-accent/60 to-transparent" />

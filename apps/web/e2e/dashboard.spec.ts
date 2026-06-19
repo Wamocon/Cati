@@ -39,7 +39,7 @@ test.describe("Dashboard portal", () => {
     page,
   }, testInfo) => {
     await page.goto("/tr/dashboard")
-    await expect(page.getByText("Müdür")).toBeVisible()
+    await expect(page.getByText("Müdür", { exact: true })).toBeVisible()
     await expect(page.getByText("Kullanıcılar & Roller")).toBeVisible()
     await expect(page.getByText("Ayarlar")).toBeVisible()
     await screenshot(page, testInfo, "03-dashboard-rbac-manager")

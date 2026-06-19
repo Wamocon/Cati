@@ -17,7 +17,9 @@
     "reviews": "Yorumlar",
     "contacts": "İletişim",
     "login": "Giriş Yap",
-    "portal": "Müşteri Paneli"
+    "portal": "Müşteri Paneli",
+    "platformSubtitle": "1Çatı Platform",
+    "toggleMenu": "Menüyü aç/kapat"
   },
   "hero": {
     "badge": "yeni emlak yönetim platformu",
@@ -29,7 +31,19 @@
     "searchType": "Tip",
     "searchBudget": "Bütçe",
     "typeApartment": "Daire",
-    "budgetValue": "100.000 €'ye kadar"
+    "budgetValue": "100.000 €'ye kadar",
+    "statLabels": {
+      "activeListings": "Aktif ilan",
+      "leads": "Adaylar",
+      "openTickets": "Açık talep",
+      "transactions": "İşlem"
+    },
+    "badgeReturn": "Yatırım getirisi",
+    "badgeListings": "Veritabanı ilan",
+    "previewTitle": "1Çatı Panel",
+    "previewStatus": "Canlı",
+    "previewActivityLabel": "Son aktivite",
+    "previewActivityText": "EİDS yetkilendirmesi onaylandı — Villa #4021"
   },
   "stats": {
     "objects": "veritabanındaki ilan",
@@ -71,12 +85,13 @@
     },
     "fraud": {
       "title": "Sahte TAPU ve sahte ilanlar",
-      "desc": "Gefälschte Tapu, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef — her işlemde due-diligence şart."
+      "desc": "Sahte TAPU, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef — her işlemde due-diligence şart."
     },
     "permits": {
       "title": "Oturum izni kuralları sıkılaştı",
       "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %25 yabancı kota sınırı. Her dosya farklı."
-    }
+    },
+    "sectionBadge": "2026 Gerçekliği"
   },
   "solution": {
     "title": "1Çatı — emlağın tek işletim sistemi",
@@ -130,7 +145,8 @@
         "desc": "QR/barkod okuma ve zaman damgası. Resmi Tapu/Noter API'leri açıldığında otomatik doğrulama eklenecek.",
         "tag": "Roadmap"
       }
-    }
+    },
+    "sectionBadge": "2026 Uyumluluk"
   },
   "services": {
     "title": "Ataberk Estate Hizmetleri",
@@ -281,7 +297,8 @@
     "title": "Emlak operasyonunuzu 2026 kurallarına göre yönetin",
     "subtitle": "1Çatı demosu talep edin. EİDS, uyumluluk, CRM ve bakım yönetimini tek yerde görün.",
     "primary": "Demo Talep Et",
-    "secondary": "Panele Giriş Yap"
+    "secondary": "Panele Giriş Yap",
+    "mailSubject": "1Çatı Demo Talebi"
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
@@ -320,7 +337,7 @@
     "closeMenu": "Menüyü kapat",
     "openMenu": "Menüyü aç",
     "logout": "Çıkış Yap",
-    "demoNotice": "Demo modu: Supabase kimlik doğrulaması yapılandırılmamış. Başka bir rolü önizlemek için NEXT_PUBLIC_DEMO_ROLE ayarlayın.",
+    "demoNotice": "Demo modu: Supabase kimlik doğrulaması yapılandırılmamış. Farklı yetkileri önizlemek için Giriş sayfasından başka bir rol seçin.",
     "menu": {
       "listings": "İlanlar",
       "leads": "Müşteri Adayları",
@@ -352,7 +369,8 @@
       "airbnb": "Airbnb / Booking Sync",
       "kbs": "Otomatik KBS/e-GUEST",
       "offline": "Offline Saha Modu"
-    }
+    },
+    "signedInAs": "{role} olarak giriş yapıldı"
   },
   "roles": {
     "superAdmin": "Süper Admin",
@@ -400,6 +418,11 @@
       "maintenance": "Teknisyen",
       "client": "Müşteri / Malik",
       "viewer": "Sadece Görüntüleyici"
-    }
+    },
+    "demoError": "Demo girişi başarısız oldu. Lütfen tekrar deneyin.",
+    "demoDescription": "Kontrol panelini o rolün yetki setiyle önizlemek için aşağıdan bir rol seçin."
+  },
+  "theme": {
+    "toggle": "Temayı değiştir"
   }
 }

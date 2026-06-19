@@ -17,7 +17,9 @@
     "reviews": "Reviews",
     "contacts": "Contact",
     "login": "Login",
-    "portal": "Client Portal"
+    "portal": "Client Portal",
+    "platformSubtitle": "1Çatı Platform",
+    "toggleMenu": "Toggle menu"
   },
   "hero": {
     "badge": "new real estate management platform",
@@ -29,7 +31,19 @@
     "searchType": "Type",
     "searchBudget": "Budget",
     "typeApartment": "Apartment",
-    "budgetValue": "Up to €100,000"
+    "budgetValue": "Up to €100,000",
+    "statLabels": {
+      "activeListings": "Active listings",
+      "leads": "Leads",
+      "openTickets": "Open tickets",
+      "transactions": "Transactions"
+    },
+    "badgeReturn": "Return on investment",
+    "badgeListings": "Database listings",
+    "previewTitle": "1Çatı Panel",
+    "previewStatus": "Live",
+    "previewActivityLabel": "Latest activity",
+    "previewActivityText": "EİDS authorization approved — Villa #4021"
   },
   "stats": {
     "objects": "listings in database",
@@ -76,7 +90,8 @@
     "permits": {
       "title": "Residence permit rules have tightened",
       "desc": "$200,000 minimum value, SPK-approved appraisal, income/insurance documents and a 25% foreign quota limit in Antalya/Alanya. Every file is different."
-    }
+    },
+    "sectionBadge": "2026 Reality"
   },
   "solution": {
     "title": "1Çatı — the operating system for real estate",
@@ -130,7 +145,8 @@
         "desc": "QR/barcode reading and timestamp. Automatic verification will be added once official Title Deed/Notary APIs are opened.",
         "tag": "Roadmap"
       }
-    }
+    },
+    "sectionBadge": "2026 Compliance"
   },
   "services": {
     "title": "Ataberk Estate Services",
@@ -281,7 +297,8 @@
     "title": "Run your real estate operations by the 2026 rules",
     "subtitle": "Request a 1Çatı demo. See EİDS, compliance, CRM and maintenance management in one place.",
     "primary": "Request Demo",
-    "secondary": "Login to Portal"
+    "secondary": "Login to Portal",
+    "mailSubject": "1Çatı Demo Request"
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. All rights reserved.",
@@ -320,7 +337,7 @@
     "closeMenu": "Close menu",
     "openMenu": "Open menu",
     "logout": "Sign out",
-    "demoNotice": "Demo mode: Supabase auth is not configured. Set NEXT_PUBLIC_DEMO_ROLE to preview another role.",
+    "demoNotice": "Demo mode: Supabase auth is not configured. Go back to Login and select another role to preview different permissions.",
     "menu": {
       "listings": "Listings",
       "leads": "Leads",
@@ -352,7 +369,8 @@
       "airbnb": "Airbnb / Booking Sync",
       "kbs": "Automatic KBS/e-GUEST",
       "offline": "Offline Field Mode"
-    }
+    },
+    "signedInAs": "Signed in as {role}"
   },
   "roles": {
     "superAdmin": "Super Admin",
@@ -400,6 +418,11 @@
       "maintenance": "Maintenance",
       "client": "Client / Owner",
       "viewer": "Read-only Viewer"
-    }
+    },
+    "demoError": "Demo sign-in failed. Please try again.",
+    "demoDescription": "Select a role below to preview the dashboard with that permission set."
+  },
+  "theme": {
+    "toggle": "Toggle theme"
   }
 }

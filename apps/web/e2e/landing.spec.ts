@@ -33,7 +33,9 @@ test.describe("Landing page journey", () => {
     await expect(
       page.getByText("EİDS yetkilendirmesi takibi zor")
     ).toBeVisible()
-    await expect(page.getByText("Sahte TAPU")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Sahte TAPU ve sahte ilanlar" })
+    ).toBeVisible()
     await expect(
       page.getByText("Oturum izni kuralları sıkılaştı")
     ).toBeVisible()
@@ -111,7 +113,7 @@ test.describe("Landing page journey", () => {
     await page.goto("/tr")
     let select = page.getByTestId("locale-switcher").filter({ visible: true })
     if (!(await select.isVisible())) {
-      await page.getByRole("button", { name: /toggle menu/i }).click()
+      await page.getByTestId("menu-toggle").click()
       select = page.getByTestId("locale-switcher").filter({ visible: true })
       await expect(select).toBeVisible()
     }
@@ -122,7 +124,7 @@ test.describe("Landing page journey", () => {
     // Switch again to ensure no double locale prefix (e.g. /en/en)
     select = page.getByTestId("locale-switcher").filter({ visible: true })
     if (!(await select.isVisible())) {
-      await page.getByRole("button", { name: /toggle menu/i }).click()
+      await page.getByTestId("menu-toggle").click()
       select = page.getByTestId("locale-switcher").filter({ visible: true })
       await expect(select).toBeVisible()
     }

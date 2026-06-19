@@ -157,7 +157,9 @@ const crud = (resource: Resource): Permission[] => [
   permission(resource, "delete"),
 ]
 
-const view = (resource: Resource): Permission[] => [permission(resource, "view")]
+const view = (resource: Resource): Permission[] => [
+  permission(resource, "view"),
+]
 
 // Canonical permission matrix. Keep in sync with:
 // - supabase/migrations/* RLS policies
@@ -398,7 +400,9 @@ export function getRolePermissions(role: Role): Permission[] {
   return rolePermissions[role] ?? []
 }
 
-export function getAccessibleResources(role: Role | null | undefined): Resource[] {
+export function getAccessibleResources(
+  role: Role | null | undefined
+): Resource[] {
   if (!isValidRole(role)) return []
   const seen = new Set<Resource>()
   for (const p of rolePermissions[role]) {
@@ -418,7 +422,9 @@ export function isManagerOrAbove(role: Role | null | undefined): boolean {
   return (def?.level ?? 0) >= 70
 }
 
-export function roleScope(role: Role | null | undefined): RoleDefinition["scope"] | null {
+export function roleScope(
+  role: Role | null | undefined
+): RoleDefinition["scope"] | null {
   if (!isValidRole(role)) return null
   return roleDefinitions.find((r) => r.key === role)?.scope ?? null
 }

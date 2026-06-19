@@ -12,7 +12,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="relative py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
-      <div className="container relative z-10">
+      <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             {t("title")}

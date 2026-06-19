@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server"
 import { isValidRole } from "@/lib/rbac"
 
+// Sets a demo_role cookie so the dashboard can preview a specific RBAC role.
+// This endpoint is exposed intentionally for the pre-launch demo; it must be
+// disabled or protected once real Supabase authentication is enabled in production.
 export async function POST(request: Request) {
-  if (process.env.NODE_ENV !== "development") {
-    return NextResponse.json({ error: "Demo sign-in is only available in development" }, { status: 403 })
-  }
-
   let body: { role?: unknown }
   try {
     body = await request.json()

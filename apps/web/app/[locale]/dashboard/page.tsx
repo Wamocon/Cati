@@ -23,7 +23,7 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Link } from "@/app/navigation"
 import { useUser } from "@/components/user-provider"
-import { hasPermission, type Resource } from "@/lib/rbac"
+import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
 
 interface MenuItem {
@@ -53,10 +53,30 @@ interface ModuleCard {
 }
 
 const modules: ModuleCard[] = [
-  { resource: "listings", labelKey: "activeListings", value: "0", hintKey: "twentyHint" },
-  { resource: "leads", labelKey: "openLeads", value: "0", hintKey: "leadsHint" },
-  { resource: "tickets", labelKey: "tickets", value: "0", hintKey: "ticketsHint" },
-  { resource: "deals", labelKey: "activeDeals", value: "0", hintKey: "dealsHint" },
+  {
+    resource: "listings",
+    labelKey: "activeListings",
+    value: "0",
+    hintKey: "twentyHint",
+  },
+  {
+    resource: "leads",
+    labelKey: "openLeads",
+    value: "0",
+    hintKey: "leadsHint",
+  },
+  {
+    resource: "tickets",
+    labelKey: "tickets",
+    value: "0",
+    hintKey: "ticketsHint",
+  },
+  {
+    resource: "deals",
+    labelKey: "activeDeals",
+    value: "0",
+    hintKey: "dealsHint",
+  },
 ]
 
 interface PlaceholderItem {
@@ -78,6 +98,10 @@ export default function DashboardPage() {
   const user = useUser()
   const t = useTranslations("dashboard")
   const roleT = useTranslations("roles")
+
+  const roleDef = roleDefinitions.find((r) => r.key === user.role)
+  const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
+  const roleLabel = roleT(roleLabelKey)
 
   const filteredMenu = menu.filter((item) =>
     hasPermission(user.role, item.resource, "view")
@@ -112,7 +136,9 @@ export default function DashboardPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground">
                 1Ç
               </div>
-              <span className="text-lg font-bold text-card-foreground">1Çatı</span>
+              <span className="text-lg font-bold text-card-foreground">
+                1Çatı
+              </span>
             </Link>
             <button
               className="text-muted-foreground md:hidden"
@@ -131,7 +157,9 @@ export default function DashboardPage() {
               <p className="truncate text-sm font-semibold text-card-foreground">
                 {user.full_name ?? user.email}
               </p>
-              <p className="truncate text-xs text-muted-foreground">{roleT(user.role)}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {roleLabel}
+              </p>
             </div>
           </div>
 
@@ -175,8 +203,13 @@ export default function DashboardPage() {
           <h1 className="text-xl font-black text-foreground">{t("title")}</h1>
         </div>
 
-        <h1 className="hidden text-3xl font-black text-foreground md:block">{t("title")}</h1>
+        <h1 className="hidden text-3xl font-black text-foreground md:block">
+          {t("title")}
+        </h1>
         <p className="mt-2 text-muted-foreground">{t("subtitle")}</p>
+        <p className="mt-1 text-sm font-medium text-primary">
+          {t("signedInAs", { role: roleLabel })}
+        </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {filteredModules.map((card) => (
@@ -184,8 +217,12 @@ export default function DashboardPage() {
               key={card.resource}
               className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
-              <div className="text-2xl font-black text-card-foreground">{card.value}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{t(`modules.${card.labelKey}`)}</div>
+              <div className="text-2xl font-black text-card-foreground">
+                {card.value}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {t(`modules.${card.labelKey}`)}
+              </div>
               <div className="mt-2 text-[10px] text-muted-foreground/70">
                 {t(`modules.${card.hintKey}`)}
               </div>
@@ -194,8 +231,12 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-10">
-          <h2 className="text-lg font-bold text-foreground">{t("roadmapTitle")}</h2>
-          <p className="text-sm text-muted-foreground">{t("roadmapSubtitle")}</p>
+          <h2 className="text-lg font-bold text-foreground">
+            {t("roadmapTitle")}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t("roadmapSubtitle")}
+          </p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {placeholders.map((item) => (
               <div

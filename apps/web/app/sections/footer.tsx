@@ -3,6 +3,13 @@
 import { useTranslations } from "next-intl"
 import { Link } from "@/app/navigation"
 
+const linkHrefs: Record<string, string[]> = {
+  company: ["#about", "#services", "#services", "#contacts"],
+  catalog: ["#services", "#services", "#services", "#services"],
+  services: ["#services", "#services", "#services", "#services"],
+  legal: ["#contacts", "#contacts"],
+}
+
 export function Footer() {
   const t = useTranslations("footer")
 
@@ -14,7 +21,10 @@ export function Footer() {
   ] as const
 
   return (
-    <footer id="contacts" className="relative border-t border-border/50 bg-muted/20 py-16">
+    <footer
+      id="contacts"
+      className="relative border-t border-border/50 bg-muted/20 py-16"
+    >
       <div className="container">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
@@ -22,7 +32,9 @@ export function Footer() {
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
                 1Ç
               </div>
-              <span className="text-lg font-bold text-foreground">Ataberk Estate</span>
+              <span className="text-lg font-bold text-foreground">
+                Ataberk Estate
+              </span>
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
               {t("description")}
@@ -35,13 +47,19 @@ export function Footer() {
 
           {columns.map((col) => {
             const items = t.raw(col.key) as string[]
+            const hrefs = linkHrefs[col.key]
             return (
               <div key={col.key}>
-                <h4 className="text-sm font-bold text-foreground">{col.title}</h4>
+                <h4 className="text-sm font-bold text-foreground">
+                  {col.title}
+                </h4>
                 <ul className="mt-4 space-y-2.5 text-sm text-muted-foreground">
-                  {items.map((label) => (
+                  {items.map((label, idx) => (
                     <li key={label}>
-                      <Link href="#" className="transition-colors hover:text-foreground">
+                      <Link
+                        href={hrefs[idx] ?? "#"}
+                        className="transition-colors hover:text-foreground"
+                      >
                         {label}
                       </Link>
                     </li>

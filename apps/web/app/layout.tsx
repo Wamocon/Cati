@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
+import { getTranslations } from "next-intl/server"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -9,9 +10,12 @@ const geist = Geist({
   variable: "--font-sans",
 })
 
-export const metadata: Metadata = {
-  title: "1Çatı - Ataberk Estate",
-  description: "Türkiye emlağını tek çatı altında yönetin.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata")
+  return {
+    title: t("title"),
+    description: t("description"),
+  }
 }
 
 export default function RootLayout({

@@ -53,7 +53,8 @@ export function KineticHeadline({
       viewport={{ once: true }}
     >
       {words.map((word, index) => {
-        const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
+        const isHighlight =
+          highlight && word.toLowerCase() === highlight.toLowerCase()
         return (
           <motion.span
             key={index}

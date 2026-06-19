@@ -3,10 +3,18 @@
 import { Button } from "@/components/ui/button"
 import { useTranslations } from "next-intl"
 import { motion } from "framer-motion"
-import { Search, ChevronDown, TrendingUp, Users, TicketCheck, Building2, Sparkles } from "lucide-react"
+import {
+  Search,
+  ChevronDown,
+  TrendingUp,
+  Users,
+  TicketCheck,
+  Building2,
+  Sparkles,
+} from "lucide-react"
 import Link from "next/link"
 import { KineticHeadline } from "@/components/kinetic-headline"
-import { HyperFrame } from "@/components/hyper-frame"
+import { BuildingIllustration } from "@/components/building-illustration"
 import { GlassCard } from "@/components/glass-card"
 import { cn } from "@/lib/utils"
 
@@ -14,10 +22,25 @@ export function Hero() {
   const t = useTranslations("hero")
 
   const stats = [
-    { icon: Building2, value: "212,298", label: "Aktif ilan", color: "text-primary" },
-    { icon: Users, value: "1,247", label: "Adaylar", color: "text-accent" },
-    { icon: TicketCheck, value: "89", label: "Açık talep", color: "text-teal-600" },
-    { icon: TrendingUp, value: "6,000+", label: "İşlem", color: "text-emerald-600" },
+    {
+      icon: Building2,
+      value: "212,298",
+      labelKey: "activeListings",
+      color: "text-primary",
+    },
+    { icon: Users, value: "1,247", labelKey: "leads", color: "text-accent" },
+    {
+      icon: TicketCheck,
+      value: "89",
+      labelKey: "openTickets",
+      color: "text-teal-600",
+    },
+    {
+      icon: TrendingUp,
+      value: "6,000+",
+      labelKey: "transactions",
+      color: "text-emerald-600",
+    },
   ]
 
   return (
@@ -87,51 +110,68 @@ export function Hero() {
               {stats.map((stat, index) => (
                 <GlassCard key={index} className="p-4" hover>
                   <stat.icon className={cn("h-5 w-5", stat.color)} />
-                  <div className="mt-2 text-xl font-black text-card-foreground">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
+                  <div className="mt-2 text-xl font-black text-card-foreground">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t(`statLabels.${stat.labelKey}`)}
+                  </div>
                 </GlassCard>
               ))}
             </motion.div>
           </div>
 
-          {/* Right 3D HyperFrame */}
+          {/* Right building illustration */}
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="relative hidden h-[420px] lg:block lg:h-[520px]"
           >
-            <HyperFrame className="h-full w-full" />
+            <BuildingIllustration className="h-full w-full" />
 
             {/* Floating badge */}
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -right-4 top-10 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-xl backdrop-blur-md dark:bg-card/80"
+              className="absolute top-10 -right-4 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-xl backdrop-blur-md dark:bg-card/80"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
                   <TrendingUp className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-card-foreground">+24%</div>
-                  <div className="text-xs text-muted-foreground">Yatırım getirisi</div>
+                  <div className="text-sm font-bold text-card-foreground">
+                    +24%
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("badgeReturn")}
+                  </div>
                 </div>
               </div>
             </motion.div>
 
             <motion.div
               animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              className="absolute -left-4 bottom-16 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-xl backdrop-blur-md dark:bg-card/80"
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+              className="absolute bottom-16 -left-4 rounded-2xl border border-border/60 bg-background/90 p-4 shadow-xl backdrop-blur-md dark:bg-card/80"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-card-foreground">212,298+</div>
-                  <div className="text-xs text-muted-foreground">Veritabanı ilan</div>
+                  <div className="text-sm font-bold text-card-foreground">
+                    212,298+
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {t("badgeListings")}
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -151,39 +191,49 @@ export function Hero() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground">
                   1Ç
                 </div>
-                <span className="font-bold text-card-foreground">1Çatı Panel</span>
+                <span className="font-bold text-card-foreground">
+                  {t("previewTitle")}
+                </span>
               </div>
               <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600 uppercase">
-                Live
+                {t("previewStatus")}
               </span>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
               <div className="rounded-xl bg-muted/70 px-4 py-3 dark:bg-muted/40">
-                <div className="text-xs text-muted-foreground">{t("searchCity")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchCity")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>Alanya</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted/70 px-4 py-3 dark:bg-muted/40">
-                <div className="text-xs text-muted-foreground">{t("searchType")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchType")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>{t("typeApartment")}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted/70 px-4 py-3 dark:bg-muted/40">
-                <div className="text-xs text-muted-foreground">{t("searchBudget")}</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("searchBudget")}
+                </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
                   <span>{t("budgetValue")}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <div className="rounded-xl bg-muted/70 px-4 py-3 sm:col-span-3 lg:col-span-2 dark:bg-muted/40">
-                <div className="text-xs text-muted-foreground">Son aktivite</div>
+                <div className="text-xs text-muted-foreground">
+                  {t("previewActivityLabel")}
+                </div>
                 <div className="mt-1 truncate text-sm font-medium text-foreground">
-                  EİDS yetkilendirmesi onaylandı — Villa #4021
+                  {t("previewActivityText")}
                 </div>
               </div>
             </div>
@@ -200,4 +250,3 @@ export function Hero() {
     </section>
   )
 }
-

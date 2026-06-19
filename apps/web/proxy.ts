@@ -11,14 +11,16 @@ const intlMiddleware = createIntlMiddleware({
 
 const publicRoutePrefixes = ["/login"]
 
-function getLocaleAndPath(pathname: string): { locale: string; pathWithoutLocale: string } {
+function getLocaleAndPath(pathname: string): {
+  locale: string
+  pathWithoutLocale: string
+} {
   const segments = pathname.split("/").filter(Boolean)
   const locale = locales.includes(segments[0] as (typeof locales)[number])
     ? segments[0]
     : defaultLocale
-  const pathWithoutLocale = locale === segments[0]
-    ? "/" + segments.slice(1).join("/")
-    : pathname
+  const pathWithoutLocale =
+    locale === segments[0] ? "/" + segments.slice(1).join("/") : pathname
   return { locale, pathWithoutLocale }
 }
 
@@ -64,7 +66,9 @@ export default async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { locale, pathWithoutLocale } = getLocaleAndPath(request.nextUrl.pathname)
+  const { locale, pathWithoutLocale } = getLocaleAndPath(
+    request.nextUrl.pathname
+  )
   const isProtected = pathWithoutLocale.startsWith("/dashboard")
   const isPublic = publicRoutePrefixes.some((prefix) =>
     pathWithoutLocale.startsWith(prefix)

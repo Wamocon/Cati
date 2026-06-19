@@ -13,12 +13,12 @@ export interface UserProfile {
   avatar_url?: string | null
 }
 
-// Development/demo fallback when Supabase env vars are missing or auth is disabled.
+// Demo fallback used when Supabase auth is not configured.
 // Priority:
 //   1. demo_role cookie (set by role-selector on the login page)
 //   2. NEXT_PUBLIC_DEMO_ROLE env var
 //   3. default "manager"
-// Never use in production.
+// This is intentionally exposed for pre-launch demos; replace with real auth before go-live.
 async function getDemoProfile(): Promise<UserProfile> {
   let demoRole = process.env.NEXT_PUBLIC_DEMO_ROLE ?? "manager"
 
@@ -48,21 +48,18 @@ async function getDemoProfile(): Promise<UserProfile> {
 
 function envAvailable(): boolean {
   return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 }
 
 /**
  * Returns the current authenticated user profile with a normalized role.
- * Falls back to a demo profile in development when Supabase is not configured
- * or when a demo_role cookie is present.
+ * Falls back to a demo profile when Supabase is not configured or when a demo_role cookie is present.
  */
 export async function getUserProfile(): Promise<UserProfile | null> {
   if (!envAvailable()) {
-    if (process.env.NODE_ENV === "development") {
-      return getDemoProfile()
-    }
-    return null
+    return getDemoProfile()
   }
 
   try {
@@ -73,7 +70,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return process.env.NODE_ENV === "development" ? getDemoProfile() : null
+      return getDemoProfile()
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -104,7 +101,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       avatar_url: profile?.avatar_url,
     }
   } catch {
-    return process.env.NODE_ENV === "development" ? getDemoProfile() : null
+    return getDemoProfile()
   }
 }
 

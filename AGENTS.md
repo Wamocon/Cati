@@ -82,7 +82,9 @@ Cati/
 - **Glassmorphism** über `.glass` Utility + `GlassCard`-Komponente.
 - **Aurora-Hintergründe** animierte, verschwommene Gradient-Kugeln (CSS-only, `prefers-reduced-motion` beachtet).
 - **Bento-Grid** Layouts für Problem-, Lösungs-, Service- und Compliance-Sektionen.
-- **3D HyperFrame** interaktives CSS-3D-Gebäude-Modell im Hero (`components/hyper-frame.tsx`), reagiert auf Mausbewegung.
+- **BuildingIllustration** realistische SVG-Gebäude-Illustration im Hero (`components/building-illustration.tsx`), themenfähig und animiert.
+- **DashboardPreview** SVG-Produktvorschau in der Platform-Demo (`components/dashboard-preview.tsx`).
+- **3D HyperFrame** (veraltet) wurde durch `BuildingIllustration` ersetzt.
 - **Kinetic Typography** animierte Wort-für-Wort-Überschriften (`components/kinetic-headline.tsx`).
 - **Scroll-Reveal** Eintrittsanimationen via `components/scroll-reveal.tsx`.
 - **Sticky Glass-Navbar** blendet sich beim Scrollen nach unten aus, beim Scrollen nach oben wieder ein.
@@ -144,14 +146,14 @@ npx serve apps/pitch            # Lokale Vorschau des Pitches
 - **RBAC** Rollenbasierte Zugriffssteuerung für alle Module definiert (`apps/web/lib/rbac.ts`) und in der Datenbank gespiegelt (`supabase/migrations/00000000000001_rbac.sql`).
 - **Route-Guards** über `apps/web/proxy.ts` (Next.js 16 Proxy): Session-Refresh, Locale-Routing und Weiterleitung nicht authentifizierter Benutzer von `/dashboard` zu `/login`.
 - **Dashboard** filtert Sidebar und KPI-Karten basierend auf der aktuellen Rolle (`useUser` / `UserProvider`).
-- **Demo-Anmeldung** in der Entwicklung: Login-Seite zeigt Buttons für alle 10 Rollen. Klick setzt ein `demo_role`-Cookie und leitet zum Dashboard weiter, um jede Rolle zu testen.
+- **Demo-Anmeldung** funktioniert auch ohne Supabase-Env-Vars: Login-Seite zeigt alle 10 Rollen mit Beschreibung. Klick setzt ein `demo_role`-Cookie und leitet zum Dashboard weiter, um jede Rolle zu testen. Sobald `NEXT_PUBLIC_SUPABASE_URL` + `ANON_KEY` gesetzt sind, wird echte Auth genutzt.
 - **Secrets** niemals committen (`.env*` ist in `.gitignore`).
 - **OAuth-Keys**, **Supabase service role key**, **Twilio**, **Cal.com**-Keys über Vercel Environment Variables injizieren.
 - **Twenty-AGPL:** Modifikationen bleiben im internen Betrieb des Mandanten; keine Distribution.
 
 ## Nächste Schritte (laufend)
 
-1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (für Demo: `NEXT_PUBLIC_DEMO_ROLE` in `.env.local`).
+1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Demo-Fallback deaktivieren, sobald echte Auth live ist.
 2. CRM-Datenmodell in Supabase/Twenty aufbauen (Properties, Leads, Tickets, Documents).
 3. Dashboard-Module mit echten Daten verbinden.
 4. MVP-Module für EİDS-Tracking, Compliance-Checklisten und Mehrwährung implementieren.

@@ -51,14 +51,14 @@ export function ProblemBento() {
   return (
     <section id="about" data-testid="problem-bento" className="relative py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
-      <div className="container relative z-10">
+      <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-extrabold tracking-widest text-primary uppercase">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            2026 Gerçekliği
+            {t("sectionBadge")}
           </span>
           <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
             {t("title")}
@@ -82,7 +82,9 @@ export function ProblemBento() {
                   <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shadow-sm shadow-primary/10 transition-transform group-hover:scale-110">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <h3 className="text-lg font-bold text-card-foreground">{t(`${key}.title`)}</h3>
+                  <h3 className="text-lg font-bold text-card-foreground">
+                    {t(`${key}.title`)}
+                  </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {t(`${key}.desc`)}
                   </p>

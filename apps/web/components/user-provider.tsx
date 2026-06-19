@@ -23,7 +23,9 @@ export function UserProvider({
   children: ReactNode
   initialUser: UserContextValue
 }) {
-  return <UserContext.Provider value={initialUser}>{children}</UserContext.Provider>
+  return (
+    <UserContext.Provider value={initialUser}>{children}</UserContext.Provider>
+  )
 }
 
 export function useUser(): UserContextValue {
