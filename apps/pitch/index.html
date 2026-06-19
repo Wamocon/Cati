@@ -34,6 +34,9 @@
     .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
     .btn-ghost:hover{background:rgba(255,255,255,.05)}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:26px}
+    .tag{display:inline-block;padding:4px 10px;border-radius:999px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.05em}
+    .tag-mvp{background:rgba(34,197,94,.12);color:var(--green)}
+    .tag-roadmap{background:rgba(249,115,22,.12);color:var(--orange)}
 
     /* Hero */
     .hero{position:relative;padding:120px 0 90px;overflow:hidden}
@@ -62,6 +65,12 @@
     .solution-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:flex-start;gap:14px}
     .solution-icon{color:var(--blue2);font-size:20px;flex-shrink:0}
     .solution-item p{font-size:14px;font-weight:700}
+
+    /* Compliance */
+    .compliance-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;margin-top:42px}
+    .compliance-card .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .compliance-card h3{font-size:18px;margin-bottom:8px}
+    .compliance-card p{font-size:14px;color:var(--text2)}
 
     /* Scope */
     .scope-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:42px}
@@ -133,13 +142,13 @@
   <div class="container">
     <div class="eyebrow"><span></span>The Reality</div>
     <h2 class="sec-title">Why property management in Turkey is hard</h2>
-    <p class="sec-desc">Real workflows and numbers that Ataberk Estate's managers face every day.</p>
+    <p class="sec-desc">Real workflows and numbers that Ataberk Estate's managers face every day — amplified by the new rules of 2026.</p>
 
     <div class="problems-grid">
       <div class="problem-card">
         <div class="problem-icon">💬</div>
         <h3>Leads disappear in messengers</h3>
-        <p>A buyer messages on WhatsApp, Instagram and the website at the same time. Without a single CRM, the conversation history is lost when the agent leaves.</p>
+        <p>A buyer messages on WhatsApp, Instagram and the website at the same time. After 30 minutes conversion drops by two-thirds. Without a single CRM, the history is lost when the agent leaves.</p>
       </div>
       <div class="problem-card">
         <div class="problem-icon">⏱</div>
@@ -166,6 +175,21 @@
         <h3>Foreign owners demand transparency</h3>
         <p>Time-zone and language gaps. Owners want photo reports, clear accounting and confidence that the property is safe.</p>
       </div>
+      <div class="problem-card">
+        <div class="problem-icon">📝</div>
+        <h3>EİDS authorization is hard to track</h3>
+        <p>Since 15 February 2026 every sale listing on Sahibinden/Hepsiemlak needs e-Devlet owner authorization. Owners may grant it and still sell directly, creating commission disputes.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🛡</div>
+        <h3>Fake TAPU and fake listings</h3>
+        <p>Forged title deeds, fake contracts and unauthorised agencies still happen. Foreign buyers are especially targeted, so every deal needs structured due diligence.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">🛂</div>
+        <h3>Residence rules are tightening</h3>
+        <p>$200,000 minimum property value, SPK-approved appraisal, income/insurance proof and 25% foreigner quota limits in Antalya/Alanya. Every file is different.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -174,7 +198,7 @@
   <div class="container">
     <div class="eyebrow"><span></span>The Solution</div>
     <h2 class="sec-title">1Çatı — one platform for the entire operation</h2>
-    <p class="sec-desc">Built on open-source Twenty CRM and extended with Supabase for auth, real-time data and storage.</p>
+    <p class="sec-desc">Built on open-source Twenty CRM and extended with Supabase for auth, real-time data and storage. Designed for Turkey's 2026 regulatory reality.</p>
 
     <div class="solution-list">
       <div class="solution-item"><div class="solution-icon">👥</div><p>Unified CRM for leads, clients and owners</p></div>
@@ -185,42 +209,68 @@
       <div class="solution-item"><div class="solution-icon">📊</div><p>Financial reporting for owners</p></div>
       <div class="solution-item"><div class="solution-icon">🛡</div><p>Role model: director, manager, agent, accountant, technician, client</p></div>
       <div class="solution-item"><div class="solution-icon">🌐</div><p>Turkish, Russian, English and German support</p></div>
+      <div class="solution-item"><div class="solution-icon">📝</div><p>EİDS authorization tracking with expiry alerts</p></div>
+      <div class="solution-item"><div class="solution-icon">✅</div><p>TÜRSAB / e-GUEST / KBS compliance checklist</p></div>
+      <div class="solution-item"><div class="solution-icon">💱</div><p>Multi-currency pricing and capital-gains estimator</p></div>
+      <div class="solution-item"><div class="solution-icon">📴</div><p>Offline field capture and background sync</p></div>
     </div>
   </div>
 </section>
 
 <section>
   <div class="container">
-    <div class="eyebrow"><span></span>Honest Scope</div>
-    <h2 class="sec-title">What 1Çatı can and cannot do right now</h2>
-    <p class="sec-desc">We do not oversell. The MVP delivers the core operating system; advanced communication and AI features follow in later phases.</p>
+    <div class="eyebrow"><span></span>Built for 2026 Regulation</div>
+    <h2 class="sec-title">Compliance and trust features</h2>
+    <p class="sec-desc">MVP modules are ready for the first release. Roadmap items become available as official APIs open or as the product matures.</p>
 
-    <div class="scope-grid">
-      <div class="card scope-card">
-        <h3><span class="yes">✓</span> Included in MVP</h3>
-        <ul>
-          <li><span class="yes">✓</span> Unified CRM for leads, clients and owners</li>
-          <li><span class="yes">✓</span> Property and listing management</li>
-          <li><span class="yes">✓</span> Maintenance ticketing with photos and video</li>
-          <li><span class="yes">✓</span> Team calendar and task management</li>
-          <li><span class="yes">✓</span> Document vault with upload and search</li>
-          <li><span class="yes">✓</span> Basic internal messaging</li>
-          <li><span class="yes">✓</span> Role-based access control</li>
-          <li><span class="yes">✓</span> Turkish, Russian, English and German UI</li>
-        </ul>
+    <div class="compliance-grid">
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">📝</div>
+          <span class="tag tag-mvp">MVP</span>
+        </div>
+        <h3>EİDS authorization tracking</h3>
+        <p>Attach e-Devlet authorization documents to each listing, track status and expiry, and get automatic reminders. Link to owner commission agreements.</p>
       </div>
-      <div class="card scope-card">
-        <h3><span class="no">○</span> On the Roadmap</h3>
-        <ul>
-          <li><span class="no">○</span> WhatsApp Business API integration</li>
-          <li><span class="no">○</span> In-app VoIP and video calls</li>
-          <li><span class="no">○</span> AI chatbot for lead qualification</li>
-          <li><span class="no">○</span> Airbnb / Booking.com calendar sync</li>
-          <li><span class="no">○</span> Automated KBS/e-GUEST reporting</li>
-          <li><span class="no">○</span> Owner and tenant mobile portals</li>
-          <li><span class="no">○</span> Offline ticket capture with sync</li>
-          <li><span class="no">○</span> Advanced analytics and forecasting</li>
-        </ul>
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">🛡</div>
+          <span class="tag tag-mvp">MVP</span>
+        </div>
+        <h3>TAPU & contract due diligence</h3>
+        <p>Mandatory checklist before a deal becomes "contract-ready": TAPU scan, DASK, zoning, photos, authority letter. Only managers can approve.</p>
+      </div>
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">🛂</div>
+          <span class="tag tag-mvp">MVP</span>
+        </div>
+        <h3>Residence & citizenship eligibility</h3>
+        <p>Pre-check based on $200k threshold, nationality and district quota rules. Store SPK-approved appraisal value on the property card.</p>
+      </div>
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">💱</div>
+          <span class="tag tag-mvp">MVP</span>
+        </div>
+        <h3>Multi-currency & tax estimator</h3>
+        <p>Track prices in TRY/EUR/USD, keep a transparent price history and estimate capital-gains tax based on holding period.</p>
+      </div>
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">⚠️</div>
+          <span class="tag tag-roadmap">Roadmap</span>
+        </div>
+        <h3>Automated KBS/e-GUEST reporting</h3>
+        <p>Track the 24-hour short-term rental reporting deadline and TÜRSAB licence status. Full automation once official APIs are available.</p>
+      </div>
+      <div class="card compliance-card">
+        <div class="card-head">
+          <div class="problem-icon">🔐</div>
+          <span class="tag tag-roadmap">Roadmap</span>
+        </div>
+        <h3>TAPU verification & notary timestamp</h3>
+        <p>QR/barcode scanning and timestamping. Automated verification when Tapu/Noter APIs open.</p>
       </div>
     </div>
   </div>
@@ -228,12 +278,55 @@
 
 <section style="background:var(--card);border-top:1px solid var(--border)">
   <div class="container">
+    <div class="eyebrow"><span></span>Honest Scope</div>
+    <h2 class="sec-title">What 1Çatı can and cannot do right now</h2>
+    <p class="sec-desc">We do not oversell. The MVP delivers the core operating system and the most important 2026 compliance trackers; advanced communication and AI features follow in later phases.</p>
+
+    <div class="scope-grid">
+      <div class="card scope-card">
+        <h3><span class="yes">✓</span> Included in MVP</h3>
+        <ul>
+          <li><span class="yes">✓</span> Unified CRM for leads, clients and owners</li>
+          <li><span class="yes">✓</span> Property and listing management</li>
+          <li><span class="yes">✓</span> EİDS authorization tracking with expiry alerts</li>
+          <li><span class="yes">✓</span> TAPU/contract due-diligence checklist</li>
+          <li><span class="yes">✓</span> TÜRSAB/e-GUEST/KBS compliance checklist</li>
+          <li><span class="yes">✓</span> Residence & citizenship eligibility helper</li>
+          <li><span class="yes">✓</span> Multi-currency fields and capital-gains estimator</li>
+          <li><span class="yes">✓</span> Maintenance ticketing with photos and video</li>
+          <li><span class="yes">✓</span> Team calendar and task management</li>
+          <li><span class="yes">✓</span> Document vault with upload and search</li>
+          <li><span class="yes">✓</span> Basic internal messaging</li>
+          <li><span class="yes">✓</span> Role-based access control</li>
+          <li><span class="yes">✓</span> Turkish, Russian, English and German UI</li>
+          <li><span class="yes">✓</span> Offline field ticket capture (PWA)</li>
+        </ul>
+      </div>
+      <div class="card scope-card">
+        <h3><span class="no">○</span> On the Roadmap</h3>
+        <ul>
+          <li><span class="no">○</span> WhatsApp Business API / Telegram integration</li>
+          <li><span class="no">○</span> In-app VoIP and video calls</li>
+          <li><span class="no">○</span> AI chatbot for lead qualification</li>
+          <li><span class="no">○</span> Airbnb / Booking.com calendar sync</li>
+          <li><span class="no">○</span> Automated KBS/e-GUEST reporting</li>
+          <li><span class="no">○</span> Owner and tenant mobile portals</li>
+          <li><span class="no">○</span> Advanced analytics and forecasting</li>
+          <li><span class="no">○</span> Automated TAPU verification via official APIs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
     <div class="eyebrow"><span></span>Architecture</div>
     <h2 class="sec-title">Open-source, extensible and self-hosted</h2>
     <p class="sec-desc">No per-user licence fees. Full data sovereignty. Modern stack that your development team can extend.</p>
 
     <div class="arch-flow">
-      <div class="arch-box"><h4>Next.js 15</h4><p>Landing page + CRM portal</p></div>
+      <div class="arch-box"><h4>Next.js 16</h4><p>Landing page + CRM portal</p></div>
       <div class="arch-box"><h4>Tailwind + shadcn/ui</h4><p>Modern UI components</p></div>
       <div class="arch-box"><h4>Supabase</h4><p>Auth, PostgreSQL, realtime, storage</p></div>
       <div class="arch-box"><h4>Twenty CRM</h4><p>Open-source CRM core</p></div>
@@ -242,7 +335,7 @@
   </div>
 </section>
 
-<section>
+<section style="background:var(--card);border-top:1px solid var(--border)">
   <div class="container">
     <div class="eyebrow"><span></span>Roadmap</div>
     <h2 class="sec-title">10-month implementation plan</h2>
@@ -258,13 +351,13 @@
       <div class="phase">
         <div class="phase-title">Phase 2</div>
         <h4>Core CRM</h4>
-        <p>Twenty integration, properties, tickets, calendar, multimedia capture</p>
+        <p>Twenty integration, properties, EİDS tracking, tickets, calendar, multimedia capture</p>
         <div class="phase-price">$22,000</div>
       </div>
       <div class="phase">
         <div class="phase-title">Phase 3</div>
         <h4>Communication</h4>
-        <p>Chat, WebRTC VoIP/video, E2E chats, offline sync</p>
+        <p>WhatsApp/Telegram bridge, chat, WebRTC VoIP/video, E2E chats, offline sync</p>
         <div class="phase-price">$25,000</div>
       </div>
       <div class="phase">

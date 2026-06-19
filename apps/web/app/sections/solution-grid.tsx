@@ -11,6 +11,10 @@ import {
   FileText,
   ShieldCheck,
   Languages,
+  FileCheck,
+  ClipboardCheck,
+  CircleDollarSign,
+  CloudOff,
 } from "lucide-react"
 
 const icons = {
@@ -22,6 +26,10 @@ const icons = {
   reports: FileText,
   roles: ShieldCheck,
   languages: Languages,
+  eids: FileCheck,
+  compliance: ClipboardCheck,
+  currency: CircleDollarSign,
+  offline: CloudOff,
 }
 
 export function SolutionGrid() {
@@ -35,6 +43,10 @@ export function SolutionGrid() {
     "reports",
     "roles",
     "languages",
+    "eids",
+    "compliance",
+    "currency",
+    "offline",
   ] as const
 
   return (
@@ -61,7 +73,7 @@ export function SolutionGrid() {
                 initial={{ opacity: 1, scale: 0.98 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
                 className="rounded-2xl border border-white/10 bg-[#050914] p-5 transition-all hover:-translate-y-1 hover:border-[#2563eb]/30 hover:shadow-lg hover:shadow-[#2563eb]/5"
               >
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#2563eb]/10 text-[#3b82f6]">

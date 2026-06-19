@@ -9,6 +9,9 @@ import {
   Wrench,
   ShieldAlert,
   Globe,
+  FileCheck,
+  ShieldX,
+  IdCard,
 } from "lucide-react"
 
 const icons = {
@@ -18,11 +21,24 @@ const icons = {
   maintenance: Wrench,
   compliance: ShieldAlert,
   owners: Globe,
+  eids: FileCheck,
+  fraud: ShieldX,
+  permits: IdCard,
 }
 
 export function ProblemBento() {
   const t = useTranslations("problems")
-  const keys = ["leads", "admin", "tools", "maintenance", "compliance", "owners"] as const
+  const keys = [
+    "leads",
+    "admin",
+    "tools",
+    "maintenance",
+    "compliance",
+    "owners",
+    "eids",
+    "fraud",
+    "permits",
+  ] as const
 
   return (
     <section id="about" className="py-24">
@@ -48,7 +64,7 @@ export function ProblemBento() {
                 initial={{ opacity: 1, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.05 }}
                 className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b1021] p-6 transition-colors hover:border-[#f97316]/30"
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#f97316]/10 text-[#f97316]">
@@ -60,7 +76,7 @@ export function ProblemBento() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {t(`${key}.desc`)}
                 </p>
-                <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-[#f97316]/5 blur-2xl transition-opacity group-hover:opacity-100 opacity-0" />
+                <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-[#f97316]/5 blur-2xl transition-opacity opacity-0 group-hover:opacity-100" />
               </motion.div>
             )
           })}

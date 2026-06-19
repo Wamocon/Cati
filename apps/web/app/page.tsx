@@ -4,6 +4,7 @@ import { Hero } from "./sections/hero"
 import { Stats } from "./sections/stats"
 import { ProblemBento } from "./sections/problem-bento"
 import { SolutionGrid } from "./sections/solution-grid"
+import { ComplianceFeatures } from "./sections/compliance-features"
 import { Services } from "./sections/services"
 import { HowItWorks } from "./sections/how-it-works"
 import { CTA } from "./sections/cta"
@@ -19,6 +20,7 @@ export default function HomePage() {
         <Stats />
         <ProblemBento />
         <SolutionGrid />
+        <ComplianceFeatures />
         <Services />
         <HowItWorks />
         <CTA />

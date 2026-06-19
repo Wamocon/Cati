@@ -6,40 +6,46 @@
 
 ## Projektübersicht
 
-Dieses Repository enthält nun **zwei klar getrennte Deliverables** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
+Dieses Repository enthält **zwei klar getrennte Deliverables** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
 
 1. **`apps/pitch/`** — Eine statische HTML-Verkaufspräsentation / das Angebot an den Kunden. Sie erklärt das CRM-System, visualisiert die Probleme türkischer Property Manager mit Zahlen/Daten/Fakten und bietet dann die Lösung. Sie sagt ehrlich, was das System aktuell kann und was noch auf der Roadmap liegt.
-2. **`apps/web/`** — Die eigentliche Next.js-15-Anwendung: eine modernisierte Ataberk-Landingpage mit integriertem Login/Auth sowie das CRM-Portal dahinter.
+2. **`apps/web/`** — Die eigentliche Next.js-Anwendung: eine modernisierte Ataberk-Landingpage (primär Türkisch) mit integriertem Login/Auth sowie dem CRM-Portal dahinter.
 
-- **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer, Verkäufer, Eigentümer)
+- **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer, Verkäufer, Eigentümer; lokale Betriebssprache Türkisch)
 - **Durchführung / Beratung:** WAMOCON GmbH
 - **Projektname:** 1Çatı — Property-Management-Plattform
 - **Mandanten-Website:** https://www.ataberkestate.com/
 - **Immobilienbestand:** 212.298+ Objekte in der Datenbank
+- **Live-Web-App:** https://cati-blond.vercel.app
+- **Live-Pitch:** https://cati-pitch.vercel.app
 - **CRM-Kern:** Twenty CRM (Open Source, AGPL-3.0)
 - **Auth & Datenbank:** Supabase (PostgreSQL, Auth, Realtime, Storage)
-- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+- **Frontend:** Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, shadcn/ui
 
 ## Repository-Struktur
 
 ```
 Cati/
 ├── apps/
-│   ├── pitch/              # Statisches HTML-Angebot / Pitch
+│   ├── pitch/              # Statisches HTML-Angebot / Pitch (englisch)
 │   │   ├── index.html
 │   │   └── assets/
-│   └── web/                # Next.js 15 App (Landingpage + CRM-Portal)
+│   └── web/                # Next.js App (Landingpage + CRM-Portal)
 │       ├── app/            # App Router
+│       │   ├── sections/   # Landingpage-Sektionen
+│       │   ├── dashboard/  # CRM-Portal-Platzhalter
+│       │   └── login/      # Auth-Login-Seite
 │       ├── components/     # React-Komponenten
-│       ├── lib/            # Hilfsfunktionen
-│       ├── hooks/          # Custom Hooks
+│       ├── lib/            # Hilfsfunktionen (Supabase, i18n)
+│       ├── messages/       # next-intl Übersetzungen (tr, en, de, ru)
 │       ├── public/         # Statische Assets
 │       └── package.json
 ├── packages/
 │   └── ui/                 # Optionale geteilte shadcn/ui-Komponenten
 ├── twenty/                 # Twenty CRM Self-Hosting (Docker Compose)
 ├── supabase/               # Supabase Migrations, Seed, RLS-Policies
-├── docs/                   # Architektur- und Workflow-Dokumentation
+├── docs/                   # Architektur- und Produktdokumentation
+│   └── product-roadmap.md  # Mapping realer Marktprobleme → Features
 ├── wmc_report.md           # Strategiepapier (bestehend)
 ├── WMC_Anforderung_1Çatı.docx
 ├── 1cati_strategiepapier.docx
@@ -50,25 +56,24 @@ Cati/
 
 ### `apps/pitch/index.html`
 - **Zweck:** Verkaufsdokument an Entscheider bei Ataberk Estate.
-- **Inhalt:** Problem → Lösung → Ehrlicher Scope. Kein Code, keine ausführbare App.
-- **Sprache:** Deutsch (wie bisher), kann aber bei Bedarf angepasst werden.
-- **Deployment:** Statisch auf Vercel, z. B. `https://cati-pitch.vercel.app`.
+- **Inhalt:** Problem → Marktrealität → Lösung → Ehrlicher Scope → Roadmap/Investment.
+- **Sprache:** Englisch (leicht verständlich für internationale Stakeholder).
+- **Deployment:** Statisch auf Vercel, `https://cati-pitch.vercel.app`.
 
 ### `apps/web/`
 - **Zweck:** Öffentliche Landingpage (transformierter Ataberk-Content) + geschütztes CRM-Portal.
-- **Primäre Sprache:** Russisch (Zielgruppe), später Türkisch/Englisch/Deutsch.
-- **Deployment:** Vercel, z. B. `https://cati-blond.vercel.app`.
+- **Primäre Sprache:** Türkisch (`tr`), mit Fallback-Kopien für `en`, `de`, `ru`.
+- **Deployment:** Vercel, `https://cati-blond.vercel.app`.
 
 ## Technologie-Stack
 
 ### Frontend
-- **Next.js 15** (App Router)
+- **Next.js 16** (App Router)
 - **React 19**
 - **TypeScript 5**
 - **Tailwind CSS v4**
 - **shadcn/ui** (Base-Nova-Preset)
-- **Framer Motion** + **GSAP ScrollTrigger** für Animationen
-- **React Three Fiber** (optional, selektiv für Hero-3D-Effekte)
+- **Framer Motion** für Animationen
 - **Lucide React** für Icons
 - **next-intl** für i18n
 
@@ -77,6 +82,7 @@ Cati/
 - **Supabase PostgreSQL** mit RLS
 - **Supabase Realtime** für Echtzeit-Updates
 - **Supabase Storage** für Dateien
+- **Supabase SSR** Helpers (`@supabase/ssr`)
 
 ### CRM-Kern
 - **Twenty CRM** (self-hosted via Docker Compose)
@@ -105,6 +111,9 @@ pnpm --filter cati-web dev      # Next.js Dev-Server
 pnpm --filter cati-web build    # Produktionsbuild
 pnpm --filter cati-web lint     # Linting
 pnpm --filter cati-web typecheck
+
+# apps/pitch
+npx serve apps/pitch            # Lokale Vorschau des Pitches
 ```
 
 ## Entwicklungskonventionen
@@ -116,7 +125,7 @@ pnpm --filter cati-web typecheck
 - **Server State:** TanStack Query / Server Actions.
 - **Client State:** Zustand bei Bedarf.
 - **Icons:** Lucide React.
-- **i18n:** Keys in Englisch, Übersetzungen in `messages/ru.json`, `messages/tr.json`, etc.
+- **i18n:** Keys in Englisch, Übersetzungen in `messages/*.json`. Primäre Sprache ist Türkisch (`tr.json`).
 
 ## Sicherheit
 
@@ -127,10 +136,10 @@ pnpm --filter cati-web typecheck
 
 ## Nächste Schritte (laufend)
 
-1. `apps/web` Landingpage mit Ataberk-Content aufbauen.
-2. Supabase-Auth in Landingpage integrieren.
-3. Dashboard-Shell und CRM-Module (Properties, Leads, Tickets, Calendar) implementieren.
-4. `apps/pitch/index.html` nach Problem → Lösung → Ehrlicher Scope neu schreiben.
+1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren.
+2. CRM-Datenmodell in Supabase/Twenty aufbauen (Properties, Leads, Tickets, Documents).
+3. Dashboard-Module mit echten Daten verbinden.
+4. MVP-Module für EİDS-Tracking, Compliance-Checklisten und Mehrwährung implementieren.
 5. Playwright-QA für jedes Release durchführen.
 
 ## Hinweis für Agenten

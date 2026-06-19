@@ -11,6 +11,9 @@ import {
   Headset,
   Plane,
   Video,
+  ClipboardCheck,
+  CircleDollarSign,
+  Smartphone,
 } from "lucide-react"
 
 const icons = {
@@ -22,6 +25,9 @@ const icons = {
   aftersales: Headset,
   tour: Plane,
   online: Video,
+  compliance: ClipboardCheck,
+  tax: CircleDollarSign,
+  offline: Smartphone,
 }
 
 export function Services() {
@@ -35,6 +41,9 @@ export function Services() {
     "aftersales",
     "tour",
     "online",
+    "compliance",
+    "tax",
+    "offline",
   ] as const
 
   return (
@@ -61,7 +70,7 @@ export function Services() {
                 initial={{ opacity: 1, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.03 }}
                 className="flex items-center gap-4 rounded-xl border border-white/10 bg-[#0b1021] p-4 transition-colors hover:border-white/20"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-[#f97316]">

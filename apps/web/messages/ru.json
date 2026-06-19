@@ -34,10 +34,10 @@
   },
   "problems": {
     "title": "Türkiye'de emlak yönetimi neden zor",
-    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler.",
+    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler — özellikle 2026'daki yeni düzenlemelerle.",
     "leads": {
       "title": "Müşteri adayları mesajlaşmalarda kayboluyor",
-      "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. Tek bir CRM olmadan, görüşme geçmişi personel değiştiğinde yok oluyor."
+      "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. 30 dakikadan sonra dönüşüm yüzde altmış düşüyor. Tek bir CRM olmadan geçmiş personel değiştiğinde yok oluyor."
     },
     "admin": {
       "title": "Zamanın %30-40'ı manuel idari işlere gidiyor",
@@ -58,11 +58,23 @@
     "owners": {
       "title": "Yabancı malikler şeffaflık istiyor",
       "desc": "Saat ve dil farkı. Malikler fotoğraf raporları, net muhasebe ve mülkün güvende olduğu garantisi istiyor."
+    },
+    "eids": {
+      "title": "EİDS yetkilendirmesi takibi zor",
+      "desc": "15 Şubat 2026'dan beri her satılık ilan Sahibinden/Hepsiemlak için e-Devlet yetkilendirmesi gerektiriyor. Malik yetki verip sonra aracıyı devre dışı bırakabiliyor."
+    },
+    "fraud": {
+      "title": "Sahte TAPU ve sahte ilanlar",
+      "desc": "Gefälschte Tapu, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef — her işlemde due-diligence şart."
+    },
+    "permits": {
+      "title": "Oturum izni kuralları sıkılaştı",
+      "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %25 yabancı kota sınırı. Her dosya farklı."
     }
   },
   "solution": {
     "title": "1Çatı — emlağın tek işletim sistemi",
-    "subtitle": "CRM, ilanlar, işlemler, kiralama, bakım talepleri, belgeler ve iletişim tek platformda.",
+    "subtitle": "CRM, ilanlar, işlemler, kiralama, bakım talepleri, belgeler ve uyumluluk tek platformda.",
     "items": {
       "crm": "Adaylar, müşteriler ve malikler için tek CRM",
       "listings": "Durum senkronizasyonlu ilan kataloğu",
@@ -71,7 +83,47 @@
       "documents": "TAPU, sözleşmeler, DASK için belge arşivi",
       "reports": "Malikler için finansal raporlama",
       "roles": "Roller: yönetici, müdür, danışman, muhasebeci, teknik, müşteri",
-      "languages": "Türkçe, Rusça, İngilizce, Almanca"
+      "languages": "Türkçe, Rusça, İngilizce, Almanca",
+      "eids": "EİDS yetkilendirme takibi ve son kullanma hatırlatıcıları",
+      "compliance": "TÜRSAB/e-GUEST ve KBS uyumluluk kontrol listesi",
+      "currency": "TRY/EUR/USD çoklu para birimi ve kazanç vergisi tahmini",
+      "offline": "Saha ekibi için offline talep girişi ve senkronizasyon"
+    }
+  },
+  "compliance": {
+    "title": "Türkiye'nin 2026 kuralları için tasarlandı",
+    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, yabancı alıcı kısıtlamaları ve döviz riskleri. MVP'de olanlar ve yol haritasındakiler açıkça ayrılmıştır.",
+    "items": {
+      "eids": {
+        "title": "EİDS yetkilendirme takibi",
+        "desc": "Her ilan için e-Devlet yetki belgesi, durum ve bitiş tarihi. Otomatik hatırlatıcılar ve malik ile komisyon sözleşmesi bağlantısı.",
+        "tag": "MVP"
+      },
+      "dueDiligence": {
+        "title": "TAPU & sözleşme due-diligence",
+        "desc": "Satış öncesi zorunlu kontrol listesi: TAPU, DASK, imar, fotoğraf, yetki belgesi. Sadece yönetici 'sözleşmeye hazır' yapabilir.",
+        "tag": "MVP"
+      },
+      "residence": {
+        "title": "Oturum / vatandaşlık uygunluk rehberi",
+        "desc": "200.000 $ eşik, gelir/sigorta ve ilçe kota sınırı için ön kontrol. SPK ekspertiz değeri obje kartında saklanır.",
+        "tag": "MVP"
+      },
+      "tax": {
+        "title": "Çoklu para birimi ve vergi tahmini",
+        "desc": "Alış/satış fiyatı TRY/EUR/USD olarak girilir. 5 yıllık kazanç vergisi için basit bir hesaplayıcı ve fiyat geçmişi.",
+        "tag": "MVP"
+      },
+      "shortTerm": {
+        "title": "Otomatik KBS/e-GUEST raporlama",
+        "desc": "Kısa dönem kiralamada 24 saatlik bildirim süresi ve TÜRSAB lisansı takibi. Tam otomasyon resmi API mevcut olduğunda eklenecek.",
+        "tag": "Roadmap"
+      },
+      "verification": {
+        "title": "Tapu doğrulama ve noter entegrasyonu",
+        "desc": "QR/barkod okuma ve zaman damgası. Resmi Tapu/Noter API'leri açıldığında otomatik doğrulama eklenecek.",
+        "tag": "Roadmap"
+      }
     }
   },
   "services": {
@@ -84,7 +136,10 @@
     "citizenship": "Vatandaşlık ve oturum izni",
     "aftersales": "7/24 satış sonrası hizmet",
     "tour": "Ücretsiz tanıtım turu",
-    "online": "Online ilan gezisi"
+    "online": "Online ilan gezisi",
+    "compliance": "EİDS ve uyumluluk danışmanlığı",
+    "tax": "Vergi ve döviz planlama",
+    "offline": "Saha ekibi mobil erişimi"
   },
   "howItWorks": {
     "title": "Nasıl çalışırız",
@@ -99,9 +154,9 @@
     }
   },
   "cta": {
-    "title": "Emlakınızı modern bir şirket gibi yönetmeye başlayın",
-    "subtitle": "1Çatı demosu talep edin veya Ataberk Estate müşterisiyseniz müşteri panelinize giriş yapın.",
-    "primary": "Arama Talep Et",
+    "title": "Emlak operasyonunuzu 2026 kurallarına göre yönetin",
+    "subtitle": "1Çatı demosu talep edin. EİDS, uyumluluk, CRM ve bakım yönetimini tek yerde görün.",
+    "primary": "Demo Talep Et",
     "secondary": "Panele Giriş Yap"
   },
   "footer": {
