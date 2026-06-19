@@ -6,137 +6,135 @@
 
 ## Projektübersicht
 
-Dieses Verzeichnis enthält **keinen ausführbaren Quellcode** und keine klassische Software-Build-Umgebung. Es handelt sich um ein **Dokumenten- und Angebotsrepository** für die geplante digitale Transformationsinitiative **„1Cat“** (auch: **„1Çatı Plattform“**).
+Dieses Repository enthält nun **zwei klar getrennte Deliverables** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
 
-- **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer und Verkäufer)
-- **Durchführung / Beratung:** WAMOCON GmbH, Digitale Transformationsberatung & Softwareentwicklung
-- **Projektname:** 1Cat - Property-Management-Plattform
-- ** aktuelle Website des Mandanten:** ataberkestate.com (statisches Marketing-Portal)
-- **Immobilienbestand des Mandanten:** 212.298+ Objekte in der Datenbank
-- **Dokumentenstatus:** Version 2.0 Final (Juni 2026)
+1. **`apps/pitch/`** — Eine statische HTML-Verkaufspräsentation / das Angebot an den Kunden. Sie erklärt das CRM-System, visualisiert die Probleme türkischer Property Manager mit Zahlen/Daten/Fakten und bietet dann die Lösung. Sie sagt ehrlich, was das System aktuell kann und was noch auf der Roadmap liegt.
+2. **`apps/web/`** — Die eigentliche Next.js-15-Anwendung: eine modernisierte Ataberk-Landingpage mit integriertem Login/Auth sowie das CRM-Portal dahinter.
 
-Ziel der Unterlagen ist die Begründung, Planung und Budgetierung einer integrierten Immobilienverwaltungsplattform mit Echtzeitkommunikation, CRM, Ticketing und Offline-Funktionalität.
+- **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer, Verkäufer, Eigentümer)
+- **Durchführung / Beratung:** WAMOCON GmbH
+- **Projektname:** 1Çatı — Property-Management-Plattform
+- **Mandanten-Website:** https://www.ataberkestate.com/
+- **Immobilienbestand:** 212.298+ Objekte in der Datenbank
+- **CRM-Kern:** Twenty CRM (Open Source, AGPL-3.0)
+- **Auth & Datenbank:** Supabase (PostgreSQL, Auth, Realtime, Storage)
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
 
-## Enthaltene Dateien
+## Repository-Struktur
 
-| Datei | Format | Inhalt |
-|-------|--------|--------|
-| `wmc_report.md` | Markdown | Strategiepapier „1Çatı Plattform“ mit Management-Zusammenfassung, Marktanalyse, Gap-Analyse, 10 MUST-Anforderungen, Architektur, Finanzmodell, Roadmap und Risikoanalyse |
-| `wmc_proposal.html` | HTML | Interaktive Verkaufspräsentation / Angebot mit Animationen, ROI-Rechner, Berechtigungsmatrix, Offline-Sync-Simulation und Architektur-Darstellung |
-| `1cati_strategiepapier.docx` | Microsoft Word | Vertrags-/Strategiepapier (gleicher oder ähnlicher Inhalt wie `wmc_report.md`) |
-| `WMC_Anforderung_1Çatı.docx` | Microsoft Word | Anforderungskatalog mit den 10 MUST-Anforderungen an die Plattform |
+```
+Cati/
+├── apps/
+│   ├── pitch/              # Statisches HTML-Angebot / Pitch
+│   │   ├── index.html
+│   │   └── assets/
+│   └── web/                # Next.js 15 App (Landingpage + CRM-Portal)
+│       ├── app/            # App Router
+│       ├── components/     # React-Komponenten
+│       ├── lib/            # Hilfsfunktionen
+│       ├── hooks/          # Custom Hooks
+│       ├── public/         # Statische Assets
+│       └── package.json
+├── packages/
+│   └── ui/                 # Optionale geteilte shadcn/ui-Komponenten
+├── twenty/                 # Twenty CRM Self-Hosting (Docker Compose)
+├── supabase/               # Supabase Migrations, Seed, RLS-Policies
+├── docs/                   # Architektur- und Workflow-Dokumentation
+├── wmc_report.md           # Strategiepapier (bestehend)
+├── WMC_Anforderung_1Çatı.docx
+├── 1cati_strategiepapier.docx
+└── AGENTS.md               # Diese Datei
+```
 
-## Wichtiger Hinweis: Kein Code-Repository
+## Wichtige Unterscheidung: Pitch vs. Produkt
 
-Im Gegensatz zu typischen Softwareprojekten fehlen hier folgende Artefakte vollständig:
+### `apps/pitch/index.html`
+- **Zweck:** Verkaufsdokument an Entscheider bei Ataberk Estate.
+- **Inhalt:** Problem → Lösung → Ehrlicher Scope. Kein Code, keine ausführbare App.
+- **Sprache:** Deutsch (wie bisher), kann aber bei Bedarf angepasst werden.
+- **Deployment:** Statisch auf Vercel, z. B. `https://cati-pitch.vercel.app`.
 
-- Keine `package.json`, `pyproject.toml`, `Cargo.toml`, `pom.xml`, `go.mod` oder ähnliche Manifestdateien
-- Kein Source-Code-Verzeichnis (`src/`, `app/`, `lib/` etc.)
-- Keine Build-, Test- oder CI/CD-Konfigurationen
-- Keine `Dockerfile`, `docker-compose.yml` oder Kubernetes-Manifeste
-- Keine Testdateien oder Test-Runner-Konfiguration
-- Keine `.env`-Dateien oder Secrets-Management
+### `apps/web/`
+- **Zweck:** Öffentliche Landingpage (transformierter Ataberk-Content) + geschütztes CRM-Portal.
+- **Primäre Sprache:** Russisch (Zielgruppe), später Türkisch/Englisch/Deutsch.
+- **Deployment:** Vercel, z. B. `https://cati-blond.vercel.app`.
 
-**Folge:** Es gibt keine ausführbaren Build-, Test- oder Deploy-Befehle. Jegliche weiteren Entwicklungsarbeiten müssten zunächst ein echtes Code-Repository auf Basis der hier dokumentierten Architekturentscheidungen anlegen.
+## Technologie-Stack
 
-## Geplanter Technologie-Stack (aus den Dokumenten extrahiert)
+### Frontend
+- **Next.js 15** (App Router)
+- **React 19**
+- **TypeScript 5**
+- **Tailwind CSS v4**
+- **shadcn/ui** (Base-Nova-Preset)
+- **Framer Motion** + **GSAP ScrollTrigger** für Animationen
+- **React Three Fiber** (optional, selektiv für Hero-3D-Effekte)
+- **Lucide React** für Icons
+- **next-intl** für i18n
 
-Die Unterlagen definieren eine **fünf-Schichten-Architektur** mit folgenden Technologie-Komponenten:
-
-### 1. Präsentationsschicht
-- **Next.js 15** als PWA-Grundgerüst
-- **Tailwind CSS**
-- **shadcn/ui**
-- **Framer Motion** (Animationen, laut HTML-Proposal)
-- Service Worker für Offline-Fähigkeit
-
-### 2. Kommunikationsschicht
-- **Socket.io** für Echtzeit-Chat
-- **WebRTC** für VoIP und Video
-- **Push API** / Firebase Cloud Messaging für Push-Benachrichtigungen
-- **Signal Protocol** für Ende-zu-Ende-verschlüsselte private Chats
-
-### 3. Geschäftslogikschicht
-- **Twenty CRM** (Open Source, AGPL-3.0) als CRM-Kern
-- **NocoBase** (Open Source, AGPL-3.0) als No-Code/Low-Code-Ebene
-- **Supabase** (PostgreSQL, Auth, Realtime, Storage, Edge Functions)
-- **OpenClaw KI-Chatbot**
-
-### 4. Daten- und Infrastrukturschicht
-- **PostgreSQL** (über Supabase)
+### Backend & Auth
+- **Supabase Auth** (Email/Passwort, Magic Link, Google OAuth, später TOTP-2FA)
+- **Supabase PostgreSQL** mit RLS
+- **Supabase Realtime** für Echtzeit-Updates
 - **Supabase Storage** für Dateien
-- **Redis** als Cache
-- **Docker / Kubernetes** als Deployment-Plattform
 
-### 5. Integrationsschicht
-- **Cal.com** für Kalender und Terminbuchung
-- **FullCalendar-React** für Kalenderdarstellung
-- **Twilio** für STUN/TURN-Server (WebRTC)
-- **Supabase Auth mit TOTP** für Zwei-Faktor-Authentifizierung
-- **Plausible + Mixpanel** für Analytics (Phase 4)
+### CRM-Kern
+- **Twenty CRM** (self-hosted via Docker Compose)
+- Erweiterung um Property-Management-Objekte: `Property`, `Unit`, `Lead`, `Opportunity`, `Lease`, `Booking`, `MaintenanceTicket`, `Contractor`, `Document`, `Appointment`, `Message`
 
-## Die 10 MUST-Anforderungen
+### Testing & QA
+- **Vitest** für Unit-Tests
+- **Playwright** für E2E-Tests und visuelle QA (Screenshots, Console-Logs)
+- **Lighthouse** für Performance, A11y, SEO
 
-1. Integriertes CRM (Twenty CRM + Supabase PostgreSQL)
-2. Zentrale Kommunikation (Chat / VoIP / Video)
-3. Ticketsystem mit Statusverfolgung
-4. Multimediale Ticketerfassung (Text, Sprache, Foto, Video)
-5. App-interne Telefonie (WebRTC P2P + Twilio)
-6. Rollen- & Rechtekonzept (6 Rollen, Supabase RLS + NocoBase RBAC)
-7. Kalender & Terminmanagement (Cal.com + FullCalendar)
-8. Private geschlossene Chats (Signal Protocol E2E)
-9. Offline-Erfassung + Synchronisation (Service Worker + IndexedDB + Background Sync)
-10. Web-UI mit 2FA (Next.js PWA + Supabase Auth TOTP)
+### Deployment
+- **Vercel** für beide Apps
+- **Turborepo** / `pnpm workspaces` für das Monorepo
 
-## Implementierungs-Roadmap (geplant)
+## Build-Befehle
 
-| Phase | Zeitraum | Budget | Inhalt |
-|-------|----------|--------|--------|
-| Phase 1: Grundlage | Monat 1-2 | $18.000 | Supabase-Setup, Auth mit 2FA, 6-Rollen-System, PWA-Grundgerüst, Docker, CI/CD |
-| Phase 2: Core CRM | Monat 3-4.5 | $22.000 | Twenty CRM-Integration, Immobilien-Objekte, Ticketsystem, Kalender, Multimedia-Erfassung |
-| Phase 3: Kommunikation | Monat 4.5-7 | $25.000 | Socket.io-Chat, WebRTC VoIP/Video, E2E-Chats, Offline-Sync |
-| Phase 4: Intelligenz | Monat 7-9 | $15.000 | OpenClaw KI-Chatbot, Analytics, Automatisierungsworkflows, E-Mail-Marketing |
-| Phase 5: Launch | Monat 9-10 | $10.000 | UAT, Penetration Testing, Performance-Optimierung, Schulung, Go-Live |
-| **Gesamt** | **10 Monate** | **$90.000** | |
+```bash
+# Root
+pnpm install          # Alle Workspaces installieren
+pnpm dev              # Alle Apps im Dev-Modus starten
+pnpm build            # Alle Apps bauen
+pnpm test             # Alle Tests ausführen
 
-## Lizenz- und Kostenhinweise
+# apps/web
+pnpm --filter cati-web dev      # Next.js Dev-Server
+pnpm --filter cati-web build    # Produktionsbuild
+pnpm --filter cati-web lint     # Linting
+pnpm --filter cati-web typecheck
+```
 
-- **Twenty CRM:** AGPL-3.0, Self-hosted kostenlos (nur Infrastruktur), Cloud $9/User/Monat
-- **NocoBase:** AGPL-3.0
-- **Supabase:** Apache 2.0
+## Entwicklungskonventionen
 
-Der Vergleich in den Dokumenten positioniert die Eigenentwicklung ($90.000 initial, $0 Lizenz) gegen proprietäre Lösungen ($200.000+ initial, $50.000-$100.000/Jahr Lizenz).
+- **TypeScript-Codestyle:** Strict, explizite Typen, keine `any` ohne Begründung.
+- **Komponenten:** Server Components by default; Client Components nur bei Bedarf (`"use client"`).
+- **Styling:** Tailwind-Utility-Klassen; keine Inline-Styles außer für dynamische Werte.
+- **Forms:** React Hook Form + Zod.
+- **Server State:** TanStack Query / Server Actions.
+- **Client State:** Zustand bei Bedarf.
+- **Icons:** Lucide React.
+- **i18n:** Keys in Englisch, Übersetzungen in `messages/ru.json`, `messages/tr.json`, etc.
 
-## Sicherheits- und Datenschutzaspekte (geplant)
+## Sicherheit
 
-- **Row Level Security (RLS)** in Supabase PostgreSQL für datenbankseitige Berechtigungen
-- **Supabase Auth mit TOTP** für Zwei-Faktor-Authentifizierung
-- **Signal Protocol** für Ende-zu-Ende-verschlüsselte Chats
-- **Penetration Testing** als expliziter Bestandteil von Phase 5
-- Vertraulichkeit: Alle Dokumente sind als „STRICTLY CONFIDENTIAL“ markiert und ausschließlich für WAMOCON GmbH und Ataberk Estate bestimmt.
+- **RLS** in Supabase für alle Benutzerdaten aktivieren.
+- **Secrets** niemals committen (`.env*` ist in `.gitignore`).
+- **OAuth-Keys**, **Supabase service role key**, **Twilio**, **Cal.com**-Keys über Vercel Environment Variables injizieren.
+- **Twenty-AGPL:** Modifikationen bleiben im internen Betrieb des Mandanten; keine Distribution.
 
-## Entwicklungskonventionen (noch nicht anwendbar)
+## Nächste Schritte (laufend)
 
-Da kein Quellcode existiert, können hier noch keine konkreten Code-Style-Guidelines, Teststrategien oder Deployment-Prozesse dokumentiert werden. Bei Beginn der Implementierung sollten folgende Punkte basierend auf dem geplanten Stack definiert werden:
-
-- TypeScript-Codestyle für Next.js / React
-- API-Konventionen für GraphQL/REST (Twenty CRM) und Supabase Auto-API
-- Testpyramide: Unit-Tests (Jest/Vitest), Integrationstests gegen Supabase, E2E-Tests (Playwright)
-- CI/CD-Pipeline für Docker-Builds und Deployment
-- Secrets-Management für Supabase-, Twilio- und Cal.com-Schlüssel
-
-## Nächste Schritte (laut Strategiepapier)
-
-1. Freigabe Phase-1-Budget ($18.000)
-2. Bereitstellung: Domain, Server-Zugang, Ataberk Estate API
-3. Benennung technischer und geschäftlicher Ansprechpartner
-4. Kickoff-Termin innerhalb von 7 Tagen nach Freigabe
+1. `apps/web` Landingpage mit Ataberk-Content aufbauen.
+2. Supabase-Auth in Landingpage integrieren.
+3. Dashboard-Shell und CRM-Module (Properties, Leads, Tickets, Calendar) implementieren.
+4. `apps/pitch/index.html` nach Problem → Lösung → Ehrlicher Scope neu schreiben.
+5. Playwright-QA für jedes Release durchführen.
 
 ## Hinweis für Agenten
 
-Wenn du als KI-Agent in diesem Verzeichnis arbeitest, beachte:
-
-- **Nicht löschen oder veröffentlichen:** Die Inhalte sind vertraulich.
-- **Keine Build-Befehle ausführen:** Es gibt nichts zu bauen, zu testen oder zu deployen.
-- **Quelle der Wahrheit:** `wmc_report.md` und `wmc_proposal.html` enthalten den vollständigen aktuellen Planungsstand. Die `.docx`-Dateien sind vermutlich redaktionelle Varianten oder Anlagen.
-- **Bei Implementierungsbeginn:** Ein echtes Code-Repository muss neu aufgesetzt werden. Verwende dieses Verzeichnis dann als Anforderungs- und Architekturquelle, nicht als Vorlage für Dateistruktur oder Build-Prozess.
+- Nicht löschen oder veröffentlichen — Inhalte sind vertraulich.
+- Änderungen an `AGENTS.md` müssen bei Architektur- oder Strukturänderungen nachgeführt werden.
+- Vor größeren Architekturentscheidungen einen Plan erstellen und absegnen lassen.

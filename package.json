@@ -1,0 +1,20 @@
+{
+  "name": "cati",
+  "private": true,
+  "version": "2.0.0",
+  "description": "1Çatı Property Management Platform — pitch + Next.js CRM application",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
