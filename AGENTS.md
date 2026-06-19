@@ -44,8 +44,9 @@ Cati/
 │   └── ui/                 # Optionale geteilte shadcn/ui-Komponenten
 ├── twenty/                 # Twenty CRM Self-Hosting (Docker Compose)
 ├── supabase/               # Supabase Migrations, Seed, RLS-Policies
-├── docs/                   # Architektur- und Produktdokumentation
-│   └── product-roadmap.md  # Mapping realer Marktprobleme → Features
+├── docs/                   # Architektur-, Produkt- und QA-Dokumentation
+│   ├── product-roadmap.md  # Mapping realer Marktprobleme → Features
+│   └── qa-report-*.md      # Playwright QA-Berichte inkl. Screenshots
 ├── wmc_report.md           # Strategiepapier (bestehend)
 ├── WMC_Anforderung_1Çatı.docx
 ├── 1cati_strategiepapier.docx
@@ -90,7 +91,7 @@ Cati/
 
 ### Testing & QA
 - **Vitest** für Unit-Tests
-- **Playwright** für E2E-Tests und visuelle QA (Screenshots, Console-Logs)
+- **Playwright** für E2E-Tests und visuelle QA (siehe `apps/web/e2e/`)
 - **Lighthouse** für Performance, A11y, SEO
 
 ### Deployment
@@ -140,7 +141,7 @@ npx serve apps/pitch            # Lokale Vorschau des Pitches
 2. CRM-Datenmodell in Supabase/Twenty aufbauen (Properties, Leads, Tickets, Documents).
 3. Dashboard-Module mit echten Daten verbinden.
 4. MVP-Module für EİDS-Tracking, Compliance-Checklisten und Mehrwährung implementieren.
-5. Playwright-QA für jedes Release durchführen.
+5. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen und QA-Bericht in `docs/` pflegen.
 
 ## Hinweis für Agenten
 
