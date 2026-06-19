@@ -88,7 +88,7 @@
       "calendar": "Gezinti, işlem ve görev takvimi",
       "documents": "TAPU, sözleşmeler, DASK için belge arşivi",
       "reports": "Malikler için finansal raporlama",
-      "roles": "Roller: yönetici, müdür, danışman, muhasebeci, teknik, müşteri",
+      "roles": "Roles: Süper Admin, Şirket Admini, Müdür, Satış Danışmanı, İlan Danışmanı, Property Manager, Muhasebeci, Teknisyen, Müşteri / Malik, Sadece Görüntüleyici",
       "languages": "Türkçe, Rusça, İngilizce, Almanca",
       "eids": "EİDS yetkilendirme takibi ve son kullanma hatırlatıcıları",
       "compliance": "TÜRSAB/e-GUEST ve KBS uyumluluk kontrol listesi",
@@ -170,38 +170,110 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": ["Aday", "Durum", "Kaynak", "Temsilci"],
+      "columns": [
+        "Aday",
+        "Durum",
+        "Kaynak",
+        "Temsilci"
+      ],
       "rows": [
-        ["Anna K. - Alanya daire", "Sıcak", "WhatsApp", "Mehmet"],
-        ["Sergey P. - Villa", "Yeni", "Web form", "Ayşe"],
-        ["Li W. - Yatırım", "Görüşme", "Referans", "Can"]
+        [
+          "Anna K. - Alanya daire",
+          "Sıcak",
+          "WhatsApp",
+          "Mehmet"
+        ],
+        [
+          "Sergey P. - Villa",
+          "Yeni",
+          "Web form",
+          "Ayşe"
+        ],
+        [
+          "Li W. - Yatırım",
+          "Görüşme",
+          "Referans",
+          "Can"
+        ]
       ]
     },
     "listings": {
       "name": "İlanlar",
-      "columns": ["İlan", "Fiyat", "EİDS", "Durum"],
+      "columns": [
+        "İlan",
+        "Fiyat",
+        "EİDS",
+        "Durum"
+      ],
       "rows": [
-        ["Villa #4021 - Kargıcak", "€ 420.000", "Onaylı", "Aktif"],
-        ["Daire #1847 - Mahmutlar", "€ 95.000", "Bekliyor", "Aktif"],
-        ["Penthouse #990 - Alanya", "€ 310.000", "Onaylı", "Rezerve"]
+        [
+          "Villa #4021 - Kargıcak",
+          "€ 420.000",
+          "Onaylı",
+          "Aktif"
+        ],
+        [
+          "Daire #1847 - Mahmutlar",
+          "€ 95.000",
+          "Bekliyor",
+          "Aktif"
+        ],
+        [
+          "Penthouse #990 - Alanya",
+          "€ 310.000",
+          "Onaylı",
+          "Rezerve"
+        ]
       ]
     },
     "tickets": {
       "name": "Talepler",
-      "columns": ["Talep", "Öncelik", "Son Güncelleme"],
+      "columns": [
+        "Talep",
+        "Öncelik",
+        "Son Güncelleme"
+      ],
       "rows": [
-        ["Su kaçağı - Villa #4021", "Yüksek", "2 saat önce"],
-        ["Klima bakımı - Daire #1847", "Orta", "Dün"],
-        ["Boyama - Penthouse #990", "Düşük", "3 gün önce"]
+        [
+          "Su kaçağı - Villa #4021",
+          "Yüksek",
+          "2 saat önce"
+        ],
+        [
+          "Klima bakımı - Daire #1847",
+          "Orta",
+          "Dün"
+        ],
+        [
+          "Boyama - Penthouse #990",
+          "Düşük",
+          "3 gün önce"
+        ]
       ]
     },
     "calendar": {
       "name": "Takvim",
-      "columns": ["Saat", "Etkinlik", "Yer"],
+      "columns": [
+        "Saat",
+        "Etkinlik",
+        "Yer"
+      ],
       "rows": [
-        ["10:00", "Villa turu - Anna K.", "Kargıcak"],
-        ["14:00", "Tapu randevusu", "Alanya Tapu"],
-        ["16:30", "Bakım kontrolü", "Mahmutlar"]
+        [
+          "10:00",
+          "Villa turu - Anna K.",
+          "Kargıcak"
+        ],
+        [
+          "14:00",
+          "Tapu randevusu",
+          "Alanya Tapu"
+        ],
+        [
+          "16:30",
+          "Bakım kontrolü",
+          "Mahmutlar"
+        ]
       ]
     }
   },
@@ -216,12 +288,118 @@
     "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate.",
     "description": "Türkiye'de emlak satışı ve yönetimi; yerel ve yabancı malikler için güvenilir çözüm ortağı.",
     "companyTitle": "Şirket",
-    "company": ["Hakkımızda", "Ekibimiz", "Kariyer", "İletişim"],
+    "company": [
+      "Hakkımızda",
+      "Ekibimiz",
+      "Kariyer",
+      "İletişim"
+    ],
     "catalogTitle": "Katalog",
-    "catalog": ["Tüm İlanlar", "Yeni Projeler", "Kiralık", "VIP İlanlar"],
+    "catalog": [
+      "Tüm İlanlar",
+      "Yeni Projeler",
+      "Kiralık",
+      "VIP İlanlar"
+    ],
     "servicesTitle": "Hizmetler",
-    "services": ["Satın Alma", "Satış", "Kiralama Yönetimi", "Vatandaşlık"],
+    "services": [
+      "Satın Alma",
+      "Satış",
+      "Kiralama Yönetimi",
+      "Vatandaşlık"
+    ],
     "legalTitle": "Yasal",
-    "legal": ["Gizlilik Politikası", "Kullanım Koşulları"]
+    "legal": [
+      "Gizlilik Politikası",
+      "Kullanım Koşulları"
+    ]
+  },
+  "dashboard": {
+    "title": "Kontrol Paneli",
+    "subtitle": "Twenty ve Supabase'e bağlı CRM panosu olacak. Aşağıdaki kartlar rolünüze göre sunulan MVP modüllerini gösterir.",
+    "closeMenu": "Menüyü kapat",
+    "openMenu": "Menüyü aç",
+    "logout": "Çıkış Yap",
+    "demoNotice": "Demo modu: Supabase kimlik doğrulaması yapılandırılmamış. Başka bir rolü önizlemek için NEXT_PUBLIC_DEMO_ROLE ayarlayın.",
+    "menu": {
+      "listings": "İlanlar",
+      "leads": "Müşteri Adayları",
+      "tickets": "Talepler",
+      "calendar": "Takvim",
+      "eids_compliance": "EİDS & Uyumluluk",
+      "finance": "Finans & Döviz",
+      "documents": "Belgeler",
+      "reports": "Raporlar",
+      "users": "Kullanıcılar & Roller",
+      "settings": "Ayarlar"
+    },
+    "modules": {
+      "activeListings": "Aktif İlanlar",
+      "openLeads": "Açık Adaylar",
+      "tickets": "Bakım Talepleri",
+      "activeDeals": "Devam Eden İşlemler",
+      "twentyHint": "Twenty + Supabase bağlantısı sonrası",
+      "leadsHint": "Lead yönetimi",
+      "ticketsHint": "Fotoğraflı ticketlar",
+      "dealsHint": "Satış / kiralama pipeline"
+    },
+    "roadmapTitle": "Yol Haritası Modülleri",
+    "roadmapSubtitle": "Bu özellikler sonraki fazlarda eklenecek; arayüzde yerleri hazır.",
+    "roadmap": {
+      "whatsapp": "WhatsApp / Telegram Entegrasyonu",
+      "voip": "In-app VoIP & Video Görüşme",
+      "ai": "AI Lead Asistanı",
+      "airbnb": "Airbnb / Booking Sync",
+      "kbs": "Otomatik KBS/e-GUEST",
+      "offline": "Offline Saha Modu"
+    }
+  },
+  "roles": {
+    "superAdmin": "Süper Admin",
+    "companyAdmin": "Şirket Admini",
+    "manager": "Müdür",
+    "salesConsultant": "Satış Danışmanı",
+    "listingAgent": "İlan Danışmanı",
+    "propertyManager": "Property Manager",
+    "accountant": "Muhasebeci",
+    "maintenance": "Teknisyen",
+    "client": "Müşteri / Malik",
+    "viewer": "Sadece Görüntüleyici",
+    "descriptions": {
+      "superAdmin": "Platform operatörü. Şirketleri, genel ayarları ve faturalandırmayı yönetir.",
+      "companyAdmin": "Şirket sahibi/yöneticisi. Kullanıcılara, finansa ve ayarlara tam erişim.",
+      "manager": "Ofis/şube müdürü. İlan ve işlem onaylar, ekibi yönetir.",
+      "salesConsultant": "Alıcı/kiracı danışmanı. Adayları, gezintileri ve teklifleri yönetir.",
+      "listingAgent": "İlan danışmanı. İlan oluşturur, malikleri ve EİDS belgelerini yönetir.",
+      "propertyManager": "Kiralama/property manager. Kiracıları, bakımı ve kiralama işlemlerini yönetir.",
+      "accountant": "Finans sorumlusu. Faturaları, komisyonları ve malik raporlarını yönetir.",
+      "maintenance": "Teknisyen. Kendine atanmış bakım taleplerini görür ve günceller.",
+      "client": "Harici malik veya alıcı. Sadece kendi mülk ve belgelerini görür.",
+      "viewer": "Sadece görüntüleyen stajyer veya sekreter. Veriyi görür ama düzenleyemez."
+    }
+  },
+  "login": {
+    "title": "1Çatı Giriş",
+    "subtitle": "Ataberk Estate müşterileri ve çalışanları için müşteri paneli",
+    "email": "Email",
+    "emailPlaceholder": "siz@ornek.com",
+    "password": "Şifre",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Giriş Yap",
+    "authNote": "Supabase ile kimlik doğrulama, proje yapılandırması tamamlandığında etkinleştirilecektir.",
+    "backHome": "← Ana sayfaya dön",
+    "demoTitle": "Demo olarak dene",
+    "roles": {
+      "super_admin": "Süper Admin",
+      "company_admin": "Şirket Admini",
+      "manager": "Müdür",
+      "sales_consultant": "Satış Danışmanı",
+      "listing_agent": "İlan Danışmanı",
+      "property_manager": "Property Manager",
+      "accountant": "Muhasebeci",
+      "maintenance": "Teknisyen",
+      "client": "Müşteri / Malik",
+      "viewer": "Sadece Görüntüleyici"
+    }
   }
 }

@@ -37,4 +37,15 @@ test.describe("Login page", () => {
     await page.getByRole("link", { name: "← Ana sayfaya dön" }).click()
     await expect(page).toHaveURL(/\/tr/)
   })
+
+  test("demo role buttons sign in and filter dashboard", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/tr/login")
+    await page.getByRole("button", { name: "Teknisyen" }).click()
+    await expect(page).toHaveURL(/\/tr\/dashboard/)
+    await expect(page.getByText("Teknisyen")).toBeVisible()
+    await expect(page.getByRole("link", { name: "Talepler" })).toBeVisible()
+    await screenshot(page, testInfo, "04-login-demo-role")
+  })
 })

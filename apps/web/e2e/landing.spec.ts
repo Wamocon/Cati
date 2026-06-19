@@ -116,7 +116,18 @@ test.describe("Landing page journey", () => {
       await expect(select).toBeVisible()
     }
     await select.selectOption("en")
-    await expect(page).toHaveURL(/\/en/)
+    await expect(page).toHaveURL("/en")
     await screenshot(page, testInfo, "13-locale-en")
+
+    // Switch again to ensure no double locale prefix (e.g. /en/en)
+    select = page.getByTestId("locale-switcher").filter({ visible: true })
+    if (!(await select.isVisible())) {
+      await page.getByRole("button", { name: /toggle menu/i }).click()
+      select = page.getByTestId("locale-switcher").filter({ visible: true })
+      await expect(select).toBeVisible()
+    }
+    await select.selectOption("de")
+    await expect(page).toHaveURL("/de")
+    await screenshot(page, testInfo, "14-locale-de")
   })
 })

@@ -1,8 +1,9 @@
 "use client"
 
-import { motion, useInView } from "framer-motion"
+import { motion, useInView, useSpring, useTransform } from "framer-motion"
 import { useTranslations } from "next-intl"
-import { useRef } from "react"
+import { useRef, useEffect } from "react"
+import { GlassCard } from "@/components/glass-card"
 
 function StatNumber({
   value,
@@ -12,17 +13,27 @@ function StatNumber({
   suffix?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true })
+  const isInView = useInView(ref, { once: true, margin: "-50px" })
+  const spring = useSpring(0, { duration: 2500, bounce: 0 })
+  const display = useTransform(spring, (current) =>
+    Math.floor(current).toLocaleString("tr-TR").replace(/\./g, " ")
+  )
+
+  useEffect(() => {
+    if (isInView) {
+      spring.set(value)
+    }
+  }, [isInView, spring, value])
 
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0.5, scale: 0.95 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      initial={{ opacity: 0, y: 12 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="text-3xl font-black text-foreground sm:text-4xl"
     >
-      {value.toLocaleString("tr-TR").replace(/\./g, " ")}
+      <motion.span>{display}</motion.span>
       {suffix}
     </motion.div>
   )
@@ -40,25 +51,24 @@ export function Stats() {
   const t = useTranslations("stats")
 
   return (
-    <section
-      data-testid="stats"
-      className="border-y border-border bg-muted/30 py-12"
-    >
-      <div className="container">
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-5">
+    <section data-testid="stats" className="relative py-16">
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30" />
+      <div className="container relative z-10">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 1, y: 16 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-              className="text-center"
+              transition={{ delay: index * 0.08, duration: 0.5 }}
             >
-              <StatNumber value={stat.value} suffix={stat.suffix} />
-              <div className="mt-1 text-xs tracking-wider text-muted-foreground uppercase">
-                {t(stat.label)}
-              </div>
+              <GlassCard className="flex flex-col items-center justify-center py-6 text-center" hover>
+                <StatNumber value={stat.value} suffix={stat.suffix} />
+                <div className="mt-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                  {t(stat.label)}
+                </div>
+              </GlassCard>
             </motion.div>
           ))}
         </div>

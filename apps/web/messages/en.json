@@ -88,7 +88,7 @@
       "calendar": "Viewings, transactions and task calendar",
       "documents": "Document archive for title deeds, contracts and DASK",
       "reports": "Financial reporting for owners",
-      "roles": "Roles: admin, manager, consultant, accountant, technician, client",
+      "roles": "Roles: Super Admin, Company Admin, Manager, Sales Consultant, Listing Agent, Property Manager, Accountant, Maintenance Technician, Client / Owner, Read-only Viewer",
       "languages": "Turkish, Russian, English, German",
       "eids": "EİDS authorization tracking and expiry reminders",
       "compliance": "TÜRSAB/e-GUEST and KBS compliance checklist",
@@ -170,38 +170,110 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": ["Lead", "Status", "Source", "Agent"],
+      "columns": [
+        "Lead",
+        "Status",
+        "Source",
+        "Agent"
+      ],
       "rows": [
-        ["Anna K. - Alanya apartment", "Hot", "WhatsApp", "Mehmet"],
-        ["Sergey P. - Villa", "New", "Web form", "Ayşe"],
-        ["Li W. - Investment", "Meeting", "Referral", "Can"]
+        [
+          "Anna K. - Alanya apartment",
+          "Hot",
+          "WhatsApp",
+          "Mehmet"
+        ],
+        [
+          "Sergey P. - Villa",
+          "New",
+          "Web form",
+          "Ayşe"
+        ],
+        [
+          "Li W. - Investment",
+          "Meeting",
+          "Referral",
+          "Can"
+        ]
       ]
     },
     "listings": {
       "name": "Listings",
-      "columns": ["Listing", "Price", "EİDS", "Status"],
+      "columns": [
+        "Listing",
+        "Price",
+        "EİDS",
+        "Status"
+      ],
       "rows": [
-        ["Villa #4021 - Kargıcak", "€ 420,000", "Approved", "Active"],
-        ["Apartment #1847 - Mahmutlar", "€ 95,000", "Pending", "Active"],
-        ["Penthouse #990 - Alanya", "€ 310,000", "Approved", "Reserved"]
+        [
+          "Villa #4021 - Kargıcak",
+          "€ 420,000",
+          "Approved",
+          "Active"
+        ],
+        [
+          "Apartment #1847 - Mahmutlar",
+          "€ 95,000",
+          "Pending",
+          "Active"
+        ],
+        [
+          "Penthouse #990 - Alanya",
+          "€ 310,000",
+          "Approved",
+          "Reserved"
+        ]
       ]
     },
     "tickets": {
       "name": "Tickets",
-      "columns": ["Request", "Priority", "Last Update"],
+      "columns": [
+        "Request",
+        "Priority",
+        "Last Update"
+      ],
       "rows": [
-        ["Water leak - Villa #4021", "High", "2 hours ago"],
-        ["AC maintenance - Apt #1847", "Medium", "Yesterday"],
-        ["Painting - Penthouse #990", "Low", "3 days ago"]
+        [
+          "Water leak - Villa #4021",
+          "High",
+          "2 hours ago"
+        ],
+        [
+          "AC maintenance - Apt #1847",
+          "Medium",
+          "Yesterday"
+        ],
+        [
+          "Painting - Penthouse #990",
+          "Low",
+          "3 days ago"
+        ]
       ]
     },
     "calendar": {
       "name": "Calendar",
-      "columns": ["Time", "Event", "Location"],
+      "columns": [
+        "Time",
+        "Event",
+        "Location"
+      ],
       "rows": [
-        ["10:00", "Villa tour - Anna K.", "Kargıcak"],
-        ["14:00", "Title deed appointment", "Alanya Tapu"],
-        ["16:30", "Maintenance check", "Mahmutlar"]
+        [
+          "10:00",
+          "Villa tour - Anna K.",
+          "Kargıcak"
+        ],
+        [
+          "14:00",
+          "Title deed appointment",
+          "Alanya Tapu"
+        ],
+        [
+          "16:30",
+          "Maintenance check",
+          "Mahmutlar"
+        ]
       ]
     }
   },
@@ -216,12 +288,118 @@
     "confidential": "Confidential — WAMOCON GmbH & Ataberk Estate.",
     "description": "Real estate sales and management in Turkey; a trusted partner for local and foreign owners.",
     "companyTitle": "Company",
-    "company": ["About Us", "Our Team", "Careers", "Contact"],
+    "company": [
+      "About Us",
+      "Our Team",
+      "Careers",
+      "Contact"
+    ],
     "catalogTitle": "Catalogue",
-    "catalog": ["All Listings", "New Projects", "For Rent", "VIP Listings"],
+    "catalog": [
+      "All Listings",
+      "New Projects",
+      "For Rent",
+      "VIP Listings"
+    ],
     "servicesTitle": "Services",
-    "services": ["Purchase", "Sale", "Rental Management", "Citizenship"],
+    "services": [
+      "Purchase",
+      "Sale",
+      "Rental Management",
+      "Citizenship"
+    ],
     "legalTitle": "Legal",
-    "legal": ["Privacy Policy", "Terms of Use"]
+    "legal": [
+      "Privacy Policy",
+      "Terms of Use"
+    ]
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "This will become the CRM dashboard connected to Twenty and Supabase. The cards below show the MVP modules available to your role.",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "logout": "Sign out",
+    "demoNotice": "Demo mode: Supabase auth is not configured. Set NEXT_PUBLIC_DEMO_ROLE to preview another role.",
+    "menu": {
+      "listings": "Listings",
+      "leads": "Leads",
+      "tickets": "Tickets",
+      "calendar": "Calendar",
+      "eids_compliance": "EİDS & Compliance",
+      "finance": "Finance & Currency",
+      "documents": "Documents",
+      "reports": "Reports",
+      "users": "Users & Roles",
+      "settings": "Settings"
+    },
+    "modules": {
+      "activeListings": "Active Listings",
+      "openLeads": "Open Leads",
+      "tickets": "Maintenance Tickets",
+      "activeDeals": "Active Deals",
+      "twentyHint": "Twenty + Supabase connection pending",
+      "leadsHint": "Lead management",
+      "ticketsHint": "Photo/video tickets",
+      "dealsHint": "Sale / rental pipeline"
+    },
+    "roadmapTitle": "Roadmap Modules",
+    "roadmapSubtitle": "These features will be added in later phases; their UI placeholders are ready.",
+    "roadmap": {
+      "whatsapp": "WhatsApp / Telegram Integration",
+      "voip": "In-app VoIP & Video",
+      "ai": "AI Lead Assistant",
+      "airbnb": "Airbnb / Booking Sync",
+      "kbs": "Automatic KBS/e-GUEST",
+      "offline": "Offline Field Mode"
+    }
+  },
+  "roles": {
+    "superAdmin": "Super Admin",
+    "companyAdmin": "Company Admin",
+    "manager": "Manager",
+    "salesConsultant": "Sales Consultant",
+    "listingAgent": "Listing Agent",
+    "propertyManager": "Property Manager",
+    "accountant": "Accountant",
+    "maintenance": "Maintenance Technician",
+    "client": "Client / Owner",
+    "viewer": "Read-only Viewer",
+    "descriptions": {
+      "superAdmin": "Platform operator. Manages companies, global settings and billing.",
+      "companyAdmin": "Company owner/director. Full access to users, finance and settings.",
+      "manager": "Office/branch manager. Approves listings and deals, manages the team.",
+      "salesConsultant": "Buyer/renter consultant. Manages leads, viewings and offers.",
+      "listingAgent": "Listing consultant. Creates listings, manages owners and EİDS documents.",
+      "propertyManager": "Rental/property manager. Handles tenants, maintenance and rental deals.",
+      "accountant": "Finance controller. Manages invoices, commissions and owner reports.",
+      "maintenance": "Technician. Views and updates assigned maintenance tickets.",
+      "client": "External owner or buyer. Sees only their own properties and documents.",
+      "viewer": "Read-only intern or secretary. Can view but not edit data."
+    }
+  },
+  "login": {
+    "title": "1Çatı Login",
+    "subtitle": "Client portal for Ataberk Estate customers and staff",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Sign in",
+    "authNote": "Supabase authentication will be enabled once project configuration is complete.",
+    "backHome": "← Back to home",
+    "demoTitle": "Try demo as",
+    "roles": {
+      "super_admin": "Super Admin",
+      "company_admin": "Company Admin",
+      "manager": "Manager",
+      "sales_consultant": "Sales Consultant",
+      "listing_agent": "Listing Agent",
+      "property_manager": "Property Manager",
+      "accountant": "Accountant",
+      "maintenance": "Maintenance",
+      "client": "Client / Owner",
+      "viewer": "Read-only Viewer"
+    }
   }
 }

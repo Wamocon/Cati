@@ -88,7 +88,7 @@
       "calendar": "Kalender für Besichtigungen, Transaktionen und Aufgaben",
       "documents": "Dokumentenarchiv für Grundbücher, Verträge und DASK",
       "reports": "Finanzberichte für Eigentümer",
-      "roles": "Rollen: Admin, Manager, Berater, Buchhalter, Techniker, Kunde",
+      "roles": "Roles: Super Admin, Firmenadmin, Manager, Vertriebsberater, Listing Agent, Property Manager, Buchhalter, Techniker, Kunde / Eigentümer, Nur Lesezugriff",
       "languages": "Türkisch, Russisch, Englisch, Deutsch",
       "eids": "EİDS-Autorisierungsnachverfolgung und Ablauferinnerungen",
       "compliance": "TÜRSAB/e-GUEST und KBS-Compliance-Checkliste",
@@ -170,38 +170,110 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": ["Lead", "Status", "Quelle", "Makler"],
+      "columns": [
+        "Lead",
+        "Status",
+        "Quelle",
+        "Makler"
+      ],
       "rows": [
-        ["Anna K. - Alanya Wohnung", "Heiß", "WhatsApp", "Mehmet"],
-        ["Sergey P. - Villa", "Neu", "Webformular", "Ayşe"],
-        ["Li W. - Investition", "Meeting", "Empfehlung", "Can"]
+        [
+          "Anna K. - Alanya Wohnung",
+          "Heiß",
+          "WhatsApp",
+          "Mehmet"
+        ],
+        [
+          "Sergey P. - Villa",
+          "Neu",
+          "Webformular",
+          "Ayşe"
+        ],
+        [
+          "Li W. - Investition",
+          "Meeting",
+          "Empfehlung",
+          "Can"
+        ]
       ]
     },
     "listings": {
       "name": "Anzeigen",
-      "columns": ["Anzeige", "Preis", "EİDS", "Status"],
+      "columns": [
+        "Anzeige",
+        "Preis",
+        "EİDS",
+        "Status"
+      ],
       "rows": [
-        ["Villa #4021 - Kargıcak", "€ 420.000", "Genehmigt", "Aktiv"],
-        ["Wohnung #1847 - Mahmutlar", "€ 95.000", "Ausstehend", "Aktiv"],
-        ["Penthouse #990 - Alanya", "€ 310.000", "Genehmigt", "Reserviert"]
+        [
+          "Villa #4021 - Kargıcak",
+          "€ 420.000",
+          "Genehmigt",
+          "Aktiv"
+        ],
+        [
+          "Wohnung #1847 - Mahmutlar",
+          "€ 95.000",
+          "Ausstehend",
+          "Aktiv"
+        ],
+        [
+          "Penthouse #990 - Alanya",
+          "€ 310.000",
+          "Genehmigt",
+          "Reserviert"
+        ]
       ]
     },
     "tickets": {
       "name": "Tickets",
-      "columns": ["Anfrage", "Priorität", "Letzte Aktualisierung"],
+      "columns": [
+        "Anfrage",
+        "Priorität",
+        "Letzte Aktualisierung"
+      ],
       "rows": [
-        ["Wasserleck - Villa #4021", "Hoch", "vor 2 Stunden"],
-        ["Klima-Wartung - Whg #1847", "Mittel", "Gestern"],
-        ["Malerei - Penthouse #990", "Niedrig", "vor 3 Tagen"]
+        [
+          "Wasserleck - Villa #4021",
+          "Hoch",
+          "vor 2 Stunden"
+        ],
+        [
+          "Klima-Wartung - Whg #1847",
+          "Mittel",
+          "Gestern"
+        ],
+        [
+          "Malerei - Penthouse #990",
+          "Niedrig",
+          "vor 3 Tagen"
+        ]
       ]
     },
     "calendar": {
       "name": "Kalender",
-      "columns": ["Zeit", "Termin", "Ort"],
+      "columns": [
+        "Zeit",
+        "Termin",
+        "Ort"
+      ],
       "rows": [
-        ["10:00", "Villen-Tour - Anna K.", "Kargıcak"],
-        ["14:00", "Grundbuchtermin", "Alanya Tapu"],
-        ["16:30", "Wartungskontrolle", "Mahmutlar"]
+        [
+          "10:00",
+          "Villen-Tour - Anna K.",
+          "Kargıcak"
+        ],
+        [
+          "14:00",
+          "Grundbuchtermin",
+          "Alanya Tapu"
+        ],
+        [
+          "16:30",
+          "Wartungskontrolle",
+          "Mahmutlar"
+        ]
       ]
     }
   },
@@ -216,12 +288,118 @@
     "confidential": "Vertraulich — WAMOCON GmbH & Ataberk Estate.",
     "description": "Immobilienverkauf und -management in der Türkei; ein vertrauenswürdiger Partner für lokale und ausländische Eigentümer.",
     "companyTitle": "Unternehmen",
-    "company": ["Über uns", "Unser Team", "Karriere", "Kontakt"],
+    "company": [
+      "Über uns",
+      "Unser Team",
+      "Karriere",
+      "Kontakt"
+    ],
     "catalogTitle": "Katalog",
-    "catalog": ["Alle Anzeigen", "Neue Projekte", "Zu mieten", "VIP-Anzeigen"],
+    "catalog": [
+      "Alle Anzeigen",
+      "Neue Projekte",
+      "Zu mieten",
+      "VIP-Anzeigen"
+    ],
     "servicesTitle": "Dienstleistungen",
-    "services": ["Kauf", "Verkauf", "Vermietungsmanagement", "Staatsbürgerschaft"],
+    "services": [
+      "Kauf",
+      "Verkauf",
+      "Vermietungsmanagement",
+      "Staatsbürgerschaft"
+    ],
     "legalTitle": "Rechtliches",
-    "legal": ["Datenschutz", "Nutzungsbedingungen"]
+    "legal": [
+      "Datenschutz",
+      "Nutzungsbedingungen"
+    ]
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Hier entsteht das CRM-Dashboard, das mit Twenty und Supabase verbunden ist. Die Karten unten zeigen die MVP-Module, die für Ihre Rolle verfügbar sind.",
+    "closeMenu": "Menü schließen",
+    "openMenu": "Menü öffnen",
+    "logout": "Abmelden",
+    "demoNotice": "Demo-Modus: Supabase-Authentifizierung ist nicht konfiguriert. Setzen Sie NEXT_PUBLIC_DEMO_ROLE, um eine andere Rolle zu testen.",
+    "menu": {
+      "listings": "Immobilien",
+      "leads": "Leads",
+      "tickets": "Tickets",
+      "calendar": "Kalender",
+      "eids_compliance": "EİDS & Compliance",
+      "finance": "Finanzen & Währung",
+      "documents": "Dokumente",
+      "reports": "Berichte",
+      "users": "Benutzer & Rollen",
+      "settings": "Einstellungen"
+    },
+    "modules": {
+      "activeListings": "Aktive Inserate",
+      "openLeads": "Offene Leads",
+      "tickets": "Wartungstickets",
+      "activeDeals": "Laufende Transaktionen",
+      "twentyHint": "Twenty + Supabase-Verbindung ausstehend",
+      "leadsHint": "Lead-Management",
+      "ticketsHint": "Tickets mit Foto/Video",
+      "dealsHint": "Verkaufs-/Miet-Pipeline"
+    },
+    "roadmapTitle": "Roadmap-Module",
+    "roadmapSubtitle": "Diese Funktionen werden in späteren Phasen hinzugefügt; die UI-Platzhalter sind bereit.",
+    "roadmap": {
+      "whatsapp": "WhatsApp / Telegram Integration",
+      "voip": "In-App VoIP & Video",
+      "ai": "AI Lead Assistant",
+      "airbnb": "Airbnb / Booking Sync",
+      "kbs": "Automatische KBS/e-GUEST",
+      "offline": "Offline-Feldmodus"
+    }
+  },
+  "roles": {
+    "superAdmin": "Super Admin",
+    "companyAdmin": "Firmenadmin",
+    "manager": "Manager",
+    "salesConsultant": "Vertriebsberater",
+    "listingAgent": "Listing Agent",
+    "propertyManager": "Property Manager",
+    "accountant": "Buchhalter",
+    "maintenance": "Techniker",
+    "client": "Kunde / Eigentümer",
+    "viewer": "Nur Lesezugriff",
+    "descriptions": {
+      "superAdmin": "Plattformbetreiber. Verwaltet Unternehmen, globale Einstellungen und Abrechnung.",
+      "companyAdmin": "Firmeninhaber/Geschäftsführer. Voller Zugriff auf Benutzer, Finanzen und Einstellungen.",
+      "manager": "Büro-/Filialleiter. Genehmigt Inserate und Transaktionen, führt das Team.",
+      "salesConsultant": "Käufer-/Mieterberater. Verwaltet Leads, Besichtigungen und Angebote.",
+      "listingAgent": "Listing-Agent. Erstellt Inserate, verwaltet Eigentümer und EİDS-Dokumente.",
+      "propertyManager": "Rental/Property Manager. Verwaltet Mieter, Wartung und Miettransaktionen.",
+      "accountant": "Finanzverantwortlicher. Verwaltet Rechnungen, Provisionen und Eigentümerberichte.",
+      "maintenance": "Techniker. Sieht und aktualisiert zugewiesene Wartungstickets.",
+      "client": "Externer Eigentümer oder Käufer. Sieht nur eigene Immobilien und Dokumente.",
+      "viewer": "Praktikant oder Sekretär mit Lesezugriff. Kann Daten sehen, aber nicht bearbeiten."
+    }
+  },
+  "login": {
+    "title": "1Çatı Login",
+    "subtitle": "Kundenportal für Ataberk Estate Kunden und Mitarbeiter",
+    "email": "E-Mail",
+    "emailPlaceholder": "sie@beispiel.de",
+    "password": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Anmelden",
+    "authNote": "Die Supabase-Authentifizierung wird nach Abschluss der Projektkonfiguration aktiviert.",
+    "backHome": "← Zurück zur Startseite",
+    "demoTitle": "Als Demo testen",
+    "roles": {
+      "super_admin": "Super Admin",
+      "company_admin": "Firmenadmin",
+      "manager": "Manager",
+      "sales_consultant": "Vertriebsberater",
+      "listing_agent": "Listing Agent",
+      "property_manager": "Property Manager",
+      "accountant": "Buchhalter",
+      "maintenance": "Techniker",
+      "client": "Kunde / Eigentümer",
+      "viewer": "Nur Lesezugriff"
+    }
   }
 }

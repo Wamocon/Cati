@@ -7,7 +7,7 @@ export function TopBar() {
   const t = useTranslations("topBar")
 
   return (
-    <div className="border-b border-border bg-muted/50 backdrop-blur-md">
+    <div className="fixed top-0 right-0 left-0 z-50 border-b border-border/50 bg-muted/60 backdrop-blur-md">
       <div className="container flex h-10 items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-4">
           <a

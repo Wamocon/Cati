@@ -36,7 +36,7 @@ Cati/
 │       │   ├── dashboard/  # CRM-Portal-Platzhalter
 │       │   └── login/      # Auth-Login-Seite
 │       ├── components/     # React-Komponenten
-│       ├── lib/            # Hilfsfunktionen (Supabase, i18n)
+│       ├── lib/            # Hilfsfunktionen (Supabase, i18n, RBAC)
 │       ├── messages/       # next-intl Übersetzungen (tr, en, de, ru)
 │       ├── public/         # Statische Assets
 │       └── package.json
@@ -76,7 +76,16 @@ Cati/
 - **shadcn/ui** (Base-Nova-Preset)
 - **Framer Motion** für Animationen
 - **Lucide React** für Icons
-- **next-intl** für i18n
+- **next-intl** für i18n (Locale-Switcher baut die Ziel-URL manuell aus der aktuellen URL, um Doppel-Locale-Probleme wie `/en/en` zu vermeiden)
+
+### Design-System (Premium UI)
+- **Glassmorphism** über `.glass` Utility + `GlassCard`-Komponente.
+- **Aurora-Hintergründe** animierte, verschwommene Gradient-Kugeln (CSS-only, `prefers-reduced-motion` beachtet).
+- **Bento-Grid** Layouts für Problem-, Lösungs-, Service- und Compliance-Sektionen.
+- **3D HyperFrame** interaktives CSS-3D-Gebäude-Modell im Hero (`components/hyper-frame.tsx`), reagiert auf Mausbewegung.
+- **Kinetic Typography** animierte Wort-für-Wort-Überschriften (`components/kinetic-headline.tsx`).
+- **Scroll-Reveal** Eintrittsanimationen via `components/scroll-reveal.tsx`.
+- **Sticky Glass-Navbar** blendet sich beim Scrollen nach unten aus, beim Scrollen nach oben wieder ein.
 
 ### Backend & Auth
 - **Supabase Auth** (Email/Passwort, Magic Link, Google OAuth, später TOTP-2FA)
@@ -84,6 +93,7 @@ Cati/
 - **Supabase Realtime** für Echtzeit-Updates
 - **Supabase Storage** für Dateien
 - **Supabase SSR** Helpers (`@supabase/ssr`)
+- **RBAC** Rollen- und Rechtesystem (`apps/web/lib/rbac.ts`, `apps/web/lib/auth.ts`)
 
 ### CRM-Kern
 - **Twenty CRM** (self-hosted via Docker Compose)
@@ -131,17 +141,22 @@ npx serve apps/pitch            # Lokale Vorschau des Pitches
 ## Sicherheit
 
 - **RLS** in Supabase für alle Benutzerdaten aktivieren.
+- **RBAC** Rollenbasierte Zugriffssteuerung für alle Module definiert (`apps/web/lib/rbac.ts`) und in der Datenbank gespiegelt (`supabase/migrations/00000000000001_rbac.sql`).
+- **Route-Guards** über `apps/web/proxy.ts` (Next.js 16 Proxy): Session-Refresh, Locale-Routing und Weiterleitung nicht authentifizierter Benutzer von `/dashboard` zu `/login`.
+- **Dashboard** filtert Sidebar und KPI-Karten basierend auf der aktuellen Rolle (`useUser` / `UserProvider`).
+- **Demo-Anmeldung** in der Entwicklung: Login-Seite zeigt Buttons für alle 10 Rollen. Klick setzt ein `demo_role`-Cookie und leitet zum Dashboard weiter, um jede Rolle zu testen.
 - **Secrets** niemals committen (`.env*` ist in `.gitignore`).
 - **OAuth-Keys**, **Supabase service role key**, **Twilio**, **Cal.com**-Keys über Vercel Environment Variables injizieren.
 - **Twenty-AGPL:** Modifikationen bleiben im internen Betrieb des Mandanten; keine Distribution.
 
 ## Nächste Schritte (laufend)
 
-1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren.
+1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (für Demo: `NEXT_PUBLIC_DEMO_ROLE` in `.env.local`).
 2. CRM-Datenmodell in Supabase/Twenty aufbauen (Properties, Leads, Tickets, Documents).
 3. Dashboard-Module mit echten Daten verbinden.
 4. MVP-Module für EİDS-Tracking, Compliance-Checklisten und Mehrwährung implementieren.
-5. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen und QA-Bericht in `docs/` pflegen.
+5. Server Actions / API-Routen mit rollenbasierten Prüfungen (`hasPermission`) absichern.
+6. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen und QA-Bericht in `docs/` pflegen.
 
 ## Hinweis für Agenten
 
