@@ -1,19 +1,29 @@
-import { Button } from "@/components/ui/button"
+import { TopBar } from "./sections/top-bar"
+import { Navbar } from "./sections/navbar"
+import { Hero } from "./sections/hero"
+import { Stats } from "./sections/stats"
+import { ProblemBento } from "./sections/problem-bento"
+import { SolutionGrid } from "./sections/solution-grid"
+import { Services } from "./sections/services"
+import { HowItWorks } from "./sections/how-it-works"
+import { CTA } from "./sections/cta"
+import { Footer } from "./sections/footer"
 
-export default function Page() {
+export default function HomePage() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <>
+      <TopBar />
+      <Navbar />
+      <main>
+        <Hero />
+        <Stats />
+        <ProblemBento />
+        <SolutionGrid />
+        <Services />
+        <HowItWorks />
+        <CTA />
+      </main>
+      <Footer />
+    </>
   )
 }
