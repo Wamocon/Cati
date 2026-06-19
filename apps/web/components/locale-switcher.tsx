@@ -1,9 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
-import { useParams } from "next/navigation"
-import { useRouter, usePathname } from "@/app/navigation"
-import { locales } from "@/app/navigation"
+import { usePathname } from "next/navigation"
+import { useLocale } from "next-intl"
+import { useRouter, locales } from "@/app/navigation"
 import { Globe } from "lucide-react"
 
 const labels: Record<string, string> = {
@@ -14,15 +14,19 @@ const labels: Record<string, string> = {
 }
 
 export function LocaleSwitcher() {
-  const params = useParams()
-  const currentLocale = (params?.locale as string) || "tr"
+  const currentLocale = useLocale()
   const router = useRouter()
   const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
 
   function onSelect(value: string) {
     startTransition(() => {
-      router.replace(pathname, { locale: value })
+      // Strip the current locale prefix so next-intl can prepend the new one.
+      const pathWithoutLocale = pathname.replace(
+        new RegExp(`^/${currentLocale}(?=/|$)`),
+        ""
+      )
+      router.replace(pathWithoutLocale || "/", { locale: value })
     })
   }
 
