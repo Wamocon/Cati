@@ -62,9 +62,9 @@ export default async function proxy(request: NextRequest) {
     },
   })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: claimsData, error: claimsError } =
+    await supabase.auth.getClaims()
+  const isAuthenticated = Boolean(claimsData?.claims?.sub && !claimsError)
 
   const { locale, pathWithoutLocale } = getLocaleAndPath(
     request.nextUrl.pathname
@@ -74,11 +74,11 @@ export default async function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith(prefix)
   )
 
-  if (isProtected && !user) {
+  if (isProtected && !isAuthenticated) {
     return NextResponse.redirect(signInUrl(locale, request))
   }
 
-  if (isPublic && user && pathWithoutLocale === "/login") {
+  if (isPublic && isAuthenticated && pathWithoutLocale === "/login") {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
   }
 

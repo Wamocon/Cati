@@ -1,0 +1,32 @@
+import { useTranslations } from "next-intl"
+import { Link } from "@/app/navigation"
+
+export default function TermsPage() {
+  const t = useTranslations("terms")
+
+  return (
+    <main id="main" className="container max-w-3xl py-16">
+      <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
+        ← Home
+      </Link>
+      <h1 className="mt-6 text-3xl font-black text-foreground">{t("title")}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">{t("updated")}</p>
+      <p className="mt-6 text-muted-foreground">{t("intro")}</p>
+
+      <section className="mt-10 space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{t("useTitle")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("useText")}</p>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{t("liabilityTitle")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("liabilityText")}</p>
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{t("contactTitle")}</h2>
+          <p className="mt-2 text-muted-foreground">{t("contactText")}</p>
+        </div>
+      </section>
+    </main>
+  )
+}

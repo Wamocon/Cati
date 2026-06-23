@@ -4,10 +4,10 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/app/navigation"
 
 const linkHrefs: Record<string, string[]> = {
-  company: ["#about", "#services", "#services", "#contacts"],
+  company: ["/about", "/pitch", "#services", "#services", "#contacts"],
   catalog: ["#services", "#services", "#services", "#services"],
   services: ["#services", "#services", "#services", "#services"],
-  legal: ["#contacts", "#contacts"],
+  legal: ["/privacy", "/terms"],
 }
 
 export function Footer() {

@@ -21,7 +21,7 @@ export function CTA() {
             <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <a
-                href={`mailto:info@wamocon.com?subject=${encodeURIComponent(t("mailSubject"))}`}
+                href={`mailto:info@ataberkestate.com?subject=${encodeURIComponent(t("mailSubject"))}`}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-8 text-base font-bold text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
               >
                 {t("primary")}

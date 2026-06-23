@@ -48,6 +48,7 @@
 }
 
 :root {
+    --font-sans: "Aptos", "Segoe UI", system-ui, sans-serif;
     --background: #FDFBF7;
     --foreground: #1C1917;
     --card: #FFFFFF;
@@ -118,6 +119,34 @@
   }
   ::selection {
     background-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  }
+}
+
+/* Skip-to-content link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  z-index: 100;
+  padding: 8px 16px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Respect user motion preferences globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

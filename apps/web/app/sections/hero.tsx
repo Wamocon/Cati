@@ -24,20 +24,25 @@ export function Hero() {
   const stats = [
     {
       icon: Building2,
-      value: "212,298",
+      value: t("statValues.activeListings"),
       labelKey: "activeListings",
       color: "text-primary",
     },
-    { icon: Users, value: "1,247", labelKey: "leads", color: "text-accent" },
+    {
+      icon: Users,
+      value: t("statValues.leads"),
+      labelKey: "leads",
+      color: "text-accent",
+    },
     {
       icon: TicketCheck,
-      value: "89",
+      value: t("statValues.openTickets"),
       labelKey: "openTickets",
       color: "text-teal-600",
     },
     {
       icon: TrendingUp,
-      value: "6,000+",
+      value: t("statValues.transactions"),
       labelKey: "transactions",
       color: "text-emerald-600",
     },
@@ -142,7 +147,7 @@ export function Hero() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-card-foreground">
-                    +24%
+                    {t("badgeReturnValue")}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {t("badgeReturn")}
@@ -167,7 +172,7 @@ export function Hero() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-card-foreground">
-                    212,298+
+                    {t("badgeListingsValue")}
                   </div>
                   <div className="text-xs text-muted-foreground">
                     {t("badgeListings")}
@@ -206,7 +211,7 @@ export function Hero() {
                   {t("searchCity")}
                 </div>
                 <div className="mt-1 flex items-center justify-between text-sm font-medium text-foreground">
-                  <span>Alanya</span>
+                  <span>{t("previewCity")}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>

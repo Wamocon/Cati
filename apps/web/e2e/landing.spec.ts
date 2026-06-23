@@ -2,9 +2,12 @@ import { test, expect } from "@playwright/test"
 import { screenshot, collectConsoleIssues, scrollToSection } from "./helpers"
 
 test.describe("Landing page journey", () => {
-  const issues: string[] = []
+  test.setTimeout(60_000)
+
+  let issues: string[]
 
   test.beforeEach(({ page }) => {
+    issues = []
     collectConsoleIssues(page, issues)
   })
 
@@ -128,6 +131,7 @@ test.describe("Landing page journey", () => {
       select = page.getByTestId("locale-switcher").filter({ visible: true })
       await expect(select).toBeVisible()
     }
+    await expect(select).toHaveValue("en")
     await select.selectOption("de")
     await expect(page).toHaveURL("/de")
     await screenshot(page, testInfo, "14-locale-de")

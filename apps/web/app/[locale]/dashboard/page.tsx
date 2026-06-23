@@ -1,259 +1,249 @@
 "use client"
 
+import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import {
   Building2,
   Users,
   TicketCheck,
-  CalendarDays,
-  LogOut,
+  TrendingUp,
+  AlertTriangle,
   FileCheck,
-  CircleDollarSign,
-  CloudOff,
-  MessageSquare,
-  BarChart3,
-  Menu,
-  X,
-  FileText,
-  UserCog,
-  Settings,
-  ShieldCheck,
-  AlertCircle,
+  CalendarDays,
+  RefreshCw,
+  Sparkles,
+  Zap,
+  type LucideIcon,
 } from "lucide-react"
-import { useState } from "react"
-import { useTranslations } from "next-intl"
-import { Link } from "@/app/navigation"
 import { useUser } from "@/components/user-provider"
-import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
+import { useDemoData } from "@/hooks/use-demo-data"
+import { roleDefinitions } from "@/lib/rbac"
+import { Card3D } from "@/components/3d-card"
+import { AnimatedCounter } from "@/components/animated-counter"
+import { StatusBadge } from "@/components/status-badge"
+import { SyncBadge } from "@/components/sync-badge"
+import { LineChart } from "@/components/charts/line-chart"
+import { PieChart } from "@/components/charts/pie-chart"
+import { GlassCard } from "@/components/glass-card"
 import { cn } from "@/lib/utils"
 
-interface MenuItem {
-  resource: Resource
-  href: string
-  icon: React.ElementType
+interface DashboardAlert {
+  icon: LucideIcon
+  text: string
+  variant: "warning" | "danger"
 }
 
-const menu: MenuItem[] = [
-  { resource: "listings", href: "#", icon: Building2 },
-  { resource: "leads", href: "#", icon: Users },
-  { resource: "tickets", href: "#", icon: TicketCheck },
-  { resource: "calendar", href: "#", icon: CalendarDays },
-  { resource: "eids_compliance", href: "#", icon: FileCheck },
-  { resource: "finance", href: "#", icon: CircleDollarSign },
-  { resource: "documents", href: "#", icon: FileText },
-  { resource: "reports", href: "#", icon: BarChart3 },
-  { resource: "users", href: "#", icon: UserCog },
-  { resource: "settings", href: "#", icon: Settings },
-]
-
-interface ModuleCard {
-  resource: Resource
-  labelKey: string
-  value: string
-  hintKey: string
-}
-
-const modules: ModuleCard[] = [
-  {
-    resource: "listings",
-    labelKey: "activeListings",
-    value: "0",
-    hintKey: "twentyHint",
-  },
-  {
-    resource: "leads",
-    labelKey: "openLeads",
-    value: "0",
-    hintKey: "leadsHint",
-  },
-  {
-    resource: "tickets",
-    labelKey: "tickets",
-    value: "0",
-    hintKey: "ticketsHint",
-  },
-  {
-    resource: "deals",
-    labelKey: "activeDeals",
-    value: "0",
-    hintKey: "dealsHint",
-  },
-]
-
-interface PlaceholderItem {
-  labelKey: string
-  icon: React.ElementType
-}
-
-const placeholders: PlaceholderItem[] = [
-  { labelKey: "whatsapp", icon: MessageSquare },
-  { labelKey: "voip", icon: Users },
-  { labelKey: "ai", icon: BarChart3 },
-  { labelKey: "airbnb", icon: CalendarDays },
-  { labelKey: "kbs", icon: FileCheck },
-  { labelKey: "offline", icon: CloudOff },
-]
-
-export default function DashboardPage() {
-  const [mobileOpen, setMobileOpen] = useState(false)
+export default function DashboardHomePage() {
   const user = useUser()
-  const t = useTranslations("dashboard")
+  const homeT = useTranslations("dashboardHome")
   const roleT = useTranslations("roles")
+  const { loading, summary, leadSources, monthlyRevenue, activities, lastUpdated, refresh, refreshing } = useDemoData()
 
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
 
-  const filteredMenu = menu.filter((item) =>
-    hasPermission(user.role, item.resource, "view")
-  )
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">{homeT("loading")}</p>
+      </div>
+    )
+  }
 
-  const filteredModules = modules.filter((item) =>
-    hasPermission(user.role, item.resource, "view")
-  )
+  const kpis = [
+    { icon: Building2, label: homeT("kpi.activeListings"), value: summary.activeListings, suffix: ` / ${summary.totalListings}`, color: "text-primary" },
+    { icon: Users, label: homeT("kpi.openLeads"), value: summary.openLeads, suffix: ` (${summary.hotLeads} sıcak)`, color: "text-accent" },
+    { icon: TicketCheck, label: homeT("kpi.openTickets"), value: summary.openTickets, suffix: summary.urgentTickets > 0 ? ` (${summary.urgentTickets} acil)` : "", color: "text-teal-600" },
+    { icon: TrendingUp, label: homeT("kpi.activeDeals"), value: summary.activeDeals, suffix: ` (${summary.dealsWonThisMonth} kapanan)`, color: "text-emerald-600" },
+  ]
 
-  const isDemo = user.email === "demo@cati.local"
+  const alerts: DashboardAlert[] = [
+    ...(summary.eidsPending > 0
+      ? [
+          {
+            icon: AlertTriangle,
+            text: homeT("alerts.eidsPending", { count: summary.eidsPending }),
+            variant: "warning" as const,
+          },
+        ]
+      : []),
+    ...(summary.eidsExpiring > 0
+      ? [
+          {
+            icon: FileCheck,
+            text: homeT("alerts.eidsExpiring", { count: summary.eidsExpiring }),
+            variant: "danger" as const,
+          },
+        ]
+      : []),
+    ...(summary.urgentTickets > 0
+      ? [
+          {
+            icon: TicketCheck,
+            text: homeT("alerts.urgentTickets", { count: summary.urgentTickets }),
+            variant: "danger" as const,
+          },
+        ]
+      : []),
+  ]
 
   return (
-    <div className="flex min-h-svh bg-background">
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform border-r border-border bg-card transition-transform duration-200 md:relative md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <div className="flex h-full flex-col p-6">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground">
-                1Ç
-              </div>
-              <span className="text-lg font-bold text-card-foreground">
-                1Çatı
-              </span>
-            </Link>
-            <button
-              className="text-muted-foreground md:hidden"
-              onClick={() => setMobileOpen(false)}
-              aria-label={t("closeMenu")}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-muted/50 p-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-card-foreground">
-                {user.full_name ?? user.email}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {roleLabel}
-              </p>
-            </div>
-          </div>
-
-          <nav className="mt-6 space-y-1">
-            {filteredMenu.map((item) => (
-              <a
-                key={item.resource}
-                href={item.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <item.icon className="h-4 w-4" />
-                {t(`menu.${item.resource}`)}
-              </a>
-            ))}
-          </nav>
-
-          <div className="mt-auto space-y-2">
-            {isDemo && (
-              <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{t("demoNotice")}</span>
-              </div>
-            )}
-            <button className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
-              <LogOut className="h-4 w-4" />
-              {t("logout")}
-            </button>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-foreground md:text-3xl">{homeT("title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {homeT("subtitle", { role: roleLabel })}
+          </p>
         </div>
-      </aside>
-
-      <main className="flex-1 p-6 md:p-8">
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex flex-wrap items-center gap-3">
+          <SyncBadge lastSync={lastUpdated} />
           <button
-            onClick={() => setMobileOpen(true)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground"
-            aria-label={t("openMenu")}
+            onClick={refresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted disabled:opacity-50"
           >
-            <Menu className="h-5 w-5" />
+            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+            {homeT("refresh")}
           </button>
-          <h1 className="text-xl font-black text-foreground">{t("title")}</h1>
         </div>
+      </div>
 
-        <h1 className="hidden text-3xl font-black text-foreground md:block">
-          {t("title")}
-        </h1>
-        <p className="mt-2 text-muted-foreground">{t("subtitle")}</p>
-        <p className="mt-1 text-sm font-medium text-primary">
-          {t("signedInAs", { role: roleLabel })}
-        </p>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {filteredModules.map((card) => (
-            <div
-              key={card.resource}
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {alerts.map((alert, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border px-4 py-3 text-sm",
+                alert.variant === "warning"
+                  ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                  : "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+              )}
             >
-              <div className="text-2xl font-black text-card-foreground">
-                {card.value}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                {t(`modules.${card.labelKey}`)}
-              </div>
-              <div className="mt-2 text-[10px] text-muted-foreground/70">
-                {t(`modules.${card.hintKey}`)}
-              </div>
-            </div>
+              <alert.icon className="h-5 w-5 shrink-0" />
+              {alert.text}
+            </motion.div>
           ))}
         </div>
+      )}
 
-        <div className="mt-10">
-          <h2 className="text-lg font-bold text-foreground">
-            {t("roadmapTitle")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {t("roadmapSubtitle")}
-          </p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {placeholders.map((item) => (
-              <div
-                key={item.labelKey}
-                className="flex items-center gap-4 rounded-xl border border-dashed border-border bg-card/50 p-4 opacity-70"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                  <item.icon className="h-4 w-4" />
+      {/* KPIs */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map((kpi) => (
+          <Card3D key={kpi.label}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</p>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <AnimatedCounter value={kpi.value} className="text-3xl font-black text-card-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">{kpi.suffix}</span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  {t(`roadmap.${item.labelKey}`)}
-                </span>
               </div>
-            ))}
+              <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl bg-muted", kpi.color)}>
+                <kpi.icon className="h-5 w-5" />
+              </div>
+            </div>
+          </Card3D>
+        ))}
+      </div>
+
+      {/* Charts row */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card3D innerClassName="lg:col-span-2" className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-card-foreground">{homeT("charts.revenue")}</h3>
+              <p className="text-xs text-muted-foreground">{homeT("charts.revenueSubtitle")}</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-emerald-600">
+              <TrendingUp className="h-4 w-4" />
+              +12%
+            </div>
           </div>
+          <LineChart
+            data={monthlyRevenue.map((d) => ({ label: d.label, value: d.value }))}
+            formatValue={(v) => `${(v / 1000).toFixed(0)}k €`}
+            height={220}
+          />
+        </Card3D>
+
+        <Card3D>
+          <h3 className="mb-1 text-sm font-bold text-card-foreground">{homeT("charts.leadSources")}</h3>
+          <p className="mb-4 text-xs text-muted-foreground">{homeT("charts.leadSourcesSubtitle")}</p>
+          <PieChart data={leadSources} size={180} />
+        </Card3D>
+      </div>
+
+      {/* Bottom grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Recent activity */}
+        <Card3D className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-card-foreground">{homeT("activity.title")}</h3>
+            <StatusBadge variant="accent">{homeT("activity.live")}</StatusBadge>
+          </div>
+          <ul className="space-y-3">
+            {activities.slice(0, 6).map((activity, i) => (
+              <motion.li
+                key={activity.id}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.06 }}
+                className="flex items-start gap-3 rounded-xl border border-border/50 bg-muted/30 p-3"
+              >
+                <div className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", activity.iconColor)} />
+                <div className="flex-1">
+                  <p className="text-sm text-foreground">{activity.message}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {activity.actor} • {new Date(activity.createdAt).toLocaleDateString("tr-TR")}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ul>
+        </Card3D>
+
+        {/* Quick actions / AI promo */}
+        <div className="space-y-4">
+          <GlassCard glow className="relative overflow-hidden p-5">
+            <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
+            <div className="relative">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Sparkles className="h-5 w-5" />
+              </div>
+              <h3 className="mt-3 text-sm font-bold text-card-foreground">{homeT("ai.title")}</h3>
+              <p className="mt-1 text-xs text-muted-foreground">{homeT("ai.description")}</p>
+            </div>
+          </GlassCard>
+
+          <Card3D>
+            <h3 className="mb-3 text-sm font-bold text-card-foreground">{homeT("quickActions.title")}</h3>
+            <div className="space-y-2">
+              {[
+                { icon: CalendarDays, label: homeT("quickActions.viewing") },
+                { icon: FileCheck, label: homeT("quickActions.eids") },
+                { icon: Zap, label: homeT("quickActions.campaign") },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  className="flex w-full items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-left text-sm text-foreground transition-colors hover:border-primary hover:bg-primary/5"
+                >
+                  <action.icon className="h-4 w-4 text-primary" />
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </Card3D>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

@@ -12,6 +12,7 @@
     "home": "Главная",
     "catalog": "Все объявления",
     "about": "О нас",
+    "pitch": "Pitch Deck",
     "services": "Услуги",
     "articles": "Статьи",
     "reviews": "Отзывы",
@@ -24,7 +25,7 @@
   "hero": {
     "badge": "новая платформа управления недвижимостью",
     "headline": "Управляйте турецкой недвижимостью под одной крышей",
-    "subheadline": "Ataberk Estate объединяет 212 000+ объявлений, 6 000+ сделок и 150 экспертов с 1Çatı — от первого поиска до послепродажного обслуживания.",
+    "subheadline": "Ataberk Estate объединяет 10 000+ активных объявлений, 212 000+ записей в базе, 6 000+ сделок и 150 экспертов с 1Çatı — от первого поиска до послепродажного обслуживания.",
     "ctaPrimary": "Искать объявления",
     "ctaSecondary": "Как это работает",
     "searchCity": "Город",
@@ -43,7 +44,16 @@
     "previewTitle": "1Çatı Panel",
     "previewStatus": "Live",
     "previewActivityLabel": "Последняя активность",
-    "previewActivityText": "Авторизация EİDS одобрена — Villa #4021"
+    "previewActivityText": "Авторизация EİDS одобрена — Villa #4021",
+    "badgeReturnValue": "+24%",
+    "badgeListingsValue": "212 000+",
+    "previewCity": "Аланья",
+    "statValues": {
+      "activeListings": "10 000+",
+      "leads": "1 247",
+      "openTickets": "89",
+      "transactions": "6 000+"
+    }
   },
   "stats": {
     "objects": "объявлений в базе",
@@ -307,6 +317,7 @@
     "companyTitle": "Компания",
     "company": [
       "О нас",
+      "Pitch Deck",
       "Команда",
       "Карьера",
       "Контакты"
@@ -370,7 +381,11 @@
       "kbs": "Автоматическая отчётность KBS/e-GUEST",
       "offline": "Офлайн-режим для полевой работы"
     },
-    "signedInAs": "Вошли как {role}"
+    "signedInAs": "Вошли как {role}",
+    "comingSoon": "Скоро",
+    "recentActivity": "Последняя активность",
+    "permissionsTitle": "Ваш доступ",
+    "permissionsSubtitle": "Модули, видимые для вашей роли"
   },
   "roles": {
     "superAdmin": "Супер-админ",
@@ -420,9 +435,349 @@
       "viewer": "Только просмотр"
     },
     "demoError": "Не удалось войти в демо-режим. Попробуйте ещё раз.",
-    "demoDescription": "Выберите роль ниже, чтобы открыть панель с соответствующими правами доступа."
+    "demoDescription": "Выберите роль ниже, чтобы открыть панель с соответствующими правами доступа.",
+    "authReady": "Supabase authentication is active. Sign in with your email and password.",
+    "authError": "Sign-in failed. Check your credentials and try again.",
+    "demoUnavailable": "Demo sign-in is disabled while real Supabase authentication is active."
   },
   "theme": {
     "toggle": "Переключить тему"
+  },
+  "privacy": {
+    "title": "Политика конфиденциальности",
+    "updated": "Последнее обновление: июнь 2026",
+    "intro": "Ataberk Estate и WAMOCON GmbH стремятся защищать ваши персональные данные. В этом документе описано, какие данные мы собираем, как используем и какие у вас есть права.",
+    "dataTitle": "Какие данные мы собираем",
+    "dataText": "Мы собираем контактные данные, предпочтения в недвижимости, документы, необходимые для сделок (копии паспортов, сканы TAPU), а также данные об использовании платформы.",
+    "useTitle": "Как мы используем данные",
+    "useText": "Данные используются для предоставления риелторских услуг, управления объектами, соблюдения требований турецкого законодательства и улучшения платформы.",
+    "rightsTitle": "Ваши права",
+    "rightsText": "Вы можете запросить доступ, исправление или удаление своих персональных данных, связавшись с info@ataberkestate.com."
+  },
+  "terms": {
+    "title": "Условия использования",
+    "updated": "Последнее обновление: июнь 2026",
+    "intro": "Получая доступ к платформе 1Çatı, вы соглашаетесь с этими условиями. Платформа предоставляется WAMOCON GmbH от имени Ataberk Estate.",
+    "useTitle": "Допустимое использование",
+    "useText": "Пользователи должны предоставлять достоверную информацию, надежно хранить учётные данные и использовать платформу только в законных целях недвижимости и управления объектами.",
+    "liabilityTitle": "Ответственность",
+    "liabilityText": "Платформа помогает принимать решения, но не заменяет юридические, налоговые или инвестиционные консультации. Ataberk Estate и WAMOCON не несут ответственности за решения, принятые на основе данных платформы.",
+    "contactTitle": "Контакт",
+    "contactText": "По вопросам об этих условиях обращайтесь на info@ataberkestate.com."
+  },
+  "about": {
+    "title": "О Ataberk Estate",
+    "p1": "Ataberk Estate — компания по продаже и управлению недвижимостью, обслуживающая местных и международных покупателей в Аланье, Анталье и регионе с 2014 года: продажа, аренда и послепродажное обслуживание.",
+    "p2": "Платформа 1Çatı объединяет операционный опыт Ataberk Estate с экспертизой WAMOCON GmbH в цифровой трансформации, чтобы управлять всеми процессами недвижимости под одной крышей."
+  },
+  "reviews": {
+    "title": "Отзывы клиентов",
+    "intro": "Примеры отзывов, собранных в ходе демонстрации.",
+    "items": {
+      "0": {
+        "quote": "Теперь сообщения клиентов и заявки на обслуживание в одном месте. Мы работаем как команда намного быстрее.",
+        "author": "Мехмет Й.",
+        "role": "Руководитель отдела продаж"
+      },
+      "1": {
+        "quote": "Как собственник, я сразу вижу ежемесячные отчёты и статус TAPU — огромное облегчение.",
+        "author": "Елена С.",
+        "role": "Собственница"
+      },
+      "2": {
+        "quote": "Больше не нужна отдельная таблица для отслеживания авторизаций EİDS.",
+        "author": "Айше К.",
+        "role": "Агент по объектам"
+      }
+    }
+  },
+  "dataTable": {
+    "search": "Search...",
+    "count": "{count} records",
+    "empty": "No results found"
+  },
+  "dashboardHome": {
+    "loading": "Preparing dashboard...",
+    "title": "Dashboard",
+    "subtitle": "Live operations summary for {role}",
+    "refresh": "Refresh",
+    "kpi": {
+      "activeListings": "Active Listings",
+      "openLeads": "Open Leads",
+      "openTickets": "Maintenance Tickets",
+      "activeDeals": "Active Deals"
+    },
+    "alerts": {
+      "eidsPending": "{count} EİDS authorizations pending",
+      "eidsExpiring": "{count} EİDS authorizations expiring soon",
+      "urgentTickets": "{count} urgent maintenance tickets"
+    },
+    "charts": {
+      "revenue": "Monthly revenue trend",
+      "revenueSubtitle": "Last 12 months, EUR",
+      "leadSources": "Lead sources",
+      "leadSourcesSubtitle": "WhatsApp, social and web mix"
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "live": "Live"
+    },
+    "ai": {
+      "title": "1Çatı AI assistant",
+      "description": "Suggests priority leads, EİDS risks and maintenance actions by role."
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "viewing": "Schedule viewing",
+      "eids": "Start EİDS check",
+      "campaign": "Create lead campaign"
+    }
+  },
+  "aiAssistant": {
+    "open": "Open AI assistant",
+    "close": "Close AI assistant",
+    "subtitle": "Answers with demo data",
+    "welcome": "Hello {role}. Which operation should we speed up today?",
+    "placeholder": "Ask about leads, EİDS, maintenance or revenue...",
+    "send": "Send"
+  },
+  "dashboardModules": {
+    "listings": {
+      "loading": "Loading listings...",
+      "title": "Listings",
+      "subtitle": "Manage portfolio, price, EİDS and publication status.",
+      "stats": {
+        "total": "Total",
+        "active": "Active",
+        "reserved": "Reserved"
+      },
+      "columns": {
+        "title": "Listing",
+        "city": "Area",
+        "type": "Type",
+        "price": "Price",
+        "status": "Status",
+        "eids": "EİDS"
+      },
+      "types": {
+        "apartment": "Apartment",
+        "villa": "Villa",
+        "penthouse": "Penthouse",
+        "land": "Land",
+        "commercial": "Commercial"
+      },
+      "status": {
+        "active": "Active",
+        "reserved": "Reserved",
+        "sold": "Sold",
+        "rented": "Rented",
+        "inactive": "Inactive"
+      },
+      "eids": {
+        "authorized": "Authorized",
+        "pending": "Pending",
+        "expiring": "Expiring",
+        "revoked": "Revoked",
+        "not_required": "Not required"
+      }
+    },
+    "leads": {
+      "loading": "Loading leads...",
+      "title": "Leads",
+      "subtitle": "Track source, temperature, budget and assigned consultant.",
+      "stats": {
+        "total": "Total",
+        "hot": "Hot",
+        "new": "New"
+      },
+      "columns": {
+        "name": "Lead",
+        "source": "Source",
+        "status": "Status",
+        "budget": "Budget",
+        "interest": "Interest",
+        "score": "Score",
+        "agent": "Agent"
+      },
+      "sources": {
+        "whatsapp": "WhatsApp",
+        "instagram": "Instagram",
+        "website": "Website",
+        "referral": "Referral",
+        "office": "Office"
+      },
+      "status": {
+        "new": "New",
+        "hot": "Hot",
+        "warm": "Warm",
+        "cold": "Cold",
+        "converted": "Converted"
+      }
+    },
+    "tickets": {
+      "loading": "Loading tickets...",
+      "title": "Maintenance Tickets",
+      "subtitle": "Track priority, status, assigned technician and proof photos.",
+      "stats": {
+        "total": "Total",
+        "open": "Open",
+        "urgent": "Urgent"
+      },
+      "columns": {
+        "title": "Ticket",
+        "property": "Property",
+        "priority": "Priority",
+        "status": "Status",
+        "assigned": "Assigned",
+        "photos": "Photos"
+      },
+      "priorities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "urgent": "Urgent"
+      },
+      "status": {
+        "open": "Open",
+        "in_progress": "In progress",
+        "waiting_parts": "Waiting parts",
+        "resolved": "Resolved",
+        "closed": "Closed"
+      }
+    },
+    "calendar": {
+      "title": "Calendar",
+      "subtitle": "Coordinate viewings, title-deed, EİDS and maintenance appointments.",
+      "today": "Today",
+      "events": "events",
+      "upcoming": "Upcoming",
+      "types": {
+        "viewing": "Viewing",
+        "task": "Task",
+        "meeting": "Meeting",
+        "maintenance": "Maintenance"
+      },
+      "upcoming1": "Villa viewing",
+      "upcoming2": "Maintenance visit",
+      "upcoming3": "Team meeting"
+    },
+    "compliance": {
+      "loading": "Loading compliance records...",
+      "title": "EİDS & Compliance",
+      "subtitle": "Track authorization status, expiry dates and owner-level risks.",
+      "stats": {
+        "tracked": "Tracked",
+        "pending": "Pending",
+        "expiring": "Expiring"
+      },
+      "columns": {
+        "property": "Property",
+        "owner": "Owner",
+        "status": "Status",
+        "expires": "Expires",
+        "authorized": "Authorized"
+      },
+      "status": {
+        "authorized": "Authorized",
+        "pending": "Pending",
+        "expiring": "Expiring",
+        "revoked": "Revoked",
+        "not_required": "Not required"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "subtitle": "Keep title deeds, DASK, contracts, identity and EİDS paperwork together.",
+      "stats": {
+        "total": "Total",
+        "tapu": "TAPU",
+        "contracts": "Contracts",
+        "eids": "EİDS"
+      },
+      "types": {
+        "tapu": "TAPU",
+        "insurance": "DASK",
+        "contract": "Contract",
+        "eids": "EİDS",
+        "identity": "Identity"
+      }
+    },
+    "finance": {
+      "loading": "Loading finance...",
+      "title": "Finance & Currency",
+      "subtitle": "Monitor revenue, commission, expenses and closed deals.",
+      "stats": {
+        "revenue": "Revenue",
+        "commission": "Commission",
+        "closedDeals": "Closed Deals"
+      },
+      "chartTitle": "Monthly revenue",
+      "columns": {
+        "month": "Month",
+        "revenue": "Revenue",
+        "commission": "Commission",
+        "expenses": "Expenses",
+        "deals": "Deals"
+      }
+    },
+    "reports": {
+      "loading": "Preparing reports...",
+      "title": "Reports",
+      "subtitle": "Pipeline, revenue and compliance outputs.",
+      "charts": {
+        "pipeline": "Pipeline distribution",
+        "revenue": "Revenue distribution"
+      },
+      "generatedReports": "Generated reports"
+    },
+    "users": {
+      "loading": "Loading users...",
+      "title": "Users & Roles",
+      "subtitle": "Manage team access and role-based permissions.",
+      "stats": {
+        "total": "Total users"
+      },
+      "columns": {
+        "name": "Name",
+        "role": "Role",
+        "office": "Office",
+        "phone": "Phone",
+        "deals": "Active Deals"
+      },
+      "roles": {
+        "super_admin": "Super Admin",
+        "company_admin": "Company Admin",
+        "manager": "Manager",
+        "sales_consultant": "Sales Consultant",
+        "listing_agent": "Listing Agent",
+        "property_manager": "Property Manager",
+        "accountant": "Accountant",
+        "maintenance": "Maintenance",
+        "client": "Client / Owner",
+        "viewer": "Read-only Viewer"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Notification, security, language and appearance preferences.",
+      "configure": "Configure",
+      "version": "Version",
+      "notifications": {
+        "title": "Notifications",
+        "desc": "Manage EİDS, lead and maintenance reminders."
+      },
+      "security": {
+        "title": "Security",
+        "desc": "Control sessions, 2FA and role policies."
+      },
+      "language": {
+        "title": "Language",
+        "desc": "TR, EN, DE and RU interface preferences."
+      },
+      "appearance": {
+        "title": "Appearance",
+        "desc": "Choose light, dark or system theme."
+      }
+    }
   }
 }

@@ -53,9 +53,9 @@ function StatNumber({
 const stats = [
   { value: 212298, label: "objects" },
   { value: 6000, label: "deals", suffix: "+" },
-  { value: 17, label: "experience" },
+  { value: 12, label: "experience" },
   { value: 150, label: "employees" },
-  { value: 9, label: "languages" },
+  { value: 4, label: "languages" },
 ]
 
 export function Stats() {

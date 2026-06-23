@@ -12,6 +12,7 @@
     "home": "Ana Sayfa",
     "catalog": "Tüm İlanlar",
     "about": "Hakkımızda",
+    "pitch": "1Çatı Sunumu",
     "services": "Hizmetler",
     "articles": "Makaleler",
     "reviews": "Yorumlar",
@@ -24,7 +25,7 @@
   "hero": {
     "badge": "yeni emlak yönetim platformu",
     "headline": "Türkiye emlağını tek çatı altında yönetin",
-    "subheadline": "Ataberk Estate, 212.000+ ilanı, 6.000+ işlemi ve 150 uzmanı 1Çatı ile birleştiriyor — ilk aramadan satış sonrası hizmete kadar.",
+    "subheadline": "Ataberk Estate, 10.000+ aktif ilanı, 212.000+ veritabanı kaydını, 6.000+ işlemi ve 150 uzmanı 1Çatı ile birleştiriyor — ilk aramadan satış sonrası hizmete kadar.",
     "ctaPrimary": "İlan Ara",
     "ctaSecondary": "Nasıl Çalışır",
     "searchCity": "Şehir",
@@ -43,7 +44,16 @@
     "previewTitle": "1Çatı Panel",
     "previewStatus": "Canlı",
     "previewActivityLabel": "Son aktivite",
-    "previewActivityText": "EİDS yetkilendirmesi onaylandı — Villa #4021"
+    "previewActivityText": "EİDS yetkilendirmesi onaylandı — Villa #4021",
+    "badgeReturnValue": "+24%",
+    "badgeListingsValue": "212.298+",
+    "previewCity": "Alanya",
+    "statValues": {
+      "activeListings": "10.000+",
+      "leads": "1.247",
+      "openTickets": "89",
+      "transactions": "6.000+"
+    }
   },
   "stats": {
     "objects": "veritabanındaki ilan",
@@ -307,6 +317,7 @@
     "companyTitle": "Şirket",
     "company": [
       "Hakkımızda",
+      "1Çatı Sunumu",
       "Ekibimiz",
       "Kariyer",
       "İletişim"
@@ -370,7 +381,11 @@
       "kbs": "Otomatik KBS/e-GUEST",
       "offline": "Offline Saha Modu"
     },
-    "signedInAs": "{role} olarak giriş yapıldı"
+    "signedInAs": "{role} olarak giriş yapıldı",
+    "comingSoon": "Yakında",
+    "recentActivity": "Son aktivite",
+    "permissionsTitle": "Erişiminiz",
+    "permissionsSubtitle": "Rolünüze göre görünen modüller"
   },
   "roles": {
     "superAdmin": "Süper Admin",
@@ -420,9 +435,349 @@
       "viewer": "Sadece Görüntüleyici"
     },
     "demoError": "Demo girişi başarısız oldu. Lütfen tekrar deneyin.",
-    "demoDescription": "Kontrol panelini o rolün yetki setiyle önizlemek için aşağıdan bir rol seçin."
+    "demoDescription": "Kontrol panelini o rolün yetki setiyle önizlemek için aşağıdan bir rol seçin.",
+    "authReady": "Supabase kimlik doğrulaması etkin. E-posta ve şifrenizle giriş yapabilirsiniz.",
+    "authError": "Giriş başarısız. Bilgileri kontrol edip tekrar deneyin.",
+    "demoUnavailable": "Demo girişi gerçek Supabase kimlik doğrulaması etkin olduğunda kapalıdır."
   },
   "theme": {
     "toggle": "Temayı değiştir"
+  },
+  "privacy": {
+    "title": "Gizlilik Politikası",
+    "updated": "Son güncelleme: Haziran 2026",
+    "intro": "Ataberk Estate ve WAMOCON GmbH kişisel verilerinizi korumaya kararlıdır. Bu politika hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar.",
+    "dataTitle": "Topladığımız veriler",
+    "dataText": "İletişim bilgileri, mülk tercihleri, işlemler için gerekli belgeler (pasaport kopyası, TAPU taraması vb.) ve platform kullanım verileri tolanır.",
+    "useTitle": "Verileri nasıl kullanıyoruz",
+    "useText": "Veriler, emlak hizmetleri sunmak, mülk yönetimi yapmak, Türk yasal gerekliliklerine uymak ve platformu geliştirmek için kullanılır.",
+    "rightsTitle": "Haklarınız",
+    "rightsText": "Kişisel verilerinize erişim, düzeltme veya silme talebinde bulunmak için info@ataberkestate.com adresine başvurabilirsiniz."
+  },
+  "terms": {
+    "title": "Kullanım Koşulları",
+    "updated": "Son güncelleme: Haziran 2026",
+    "intro": "1Çatı platformuna erişerek bu koşulları kabul etmiş sayılırsınız. Platform, WAMOCON GmbH tarafından Ataberk Estate adına sağlanmaktadır.",
+    "useTitle": "Kabul edilebilir kullanım",
+    "useText": "Kullanıcılar doğru bilgi vermeli, giriş bilgilerini güvenli tutmalı ve platformu yalnızca yasal emlak ve mülk yönetimi amaçlarıyla kullanmalıdır.",
+    "liabilityTitle": "Sorumluluk",
+    "liabilityText": "Platform karar almayı destekler ancak hukuki, vergi veya yatırım tavsiyesinin yerini tutmaz. Ataberk Estate ve WAMOCON, platform verilerine dayalı kararlardan sorumlu değildir.",
+    "contactTitle": "İletişim",
+    "contactText": "Bu koşullar hakkında sorularınız için info@ataberkestate.com adresine yazabilirsiniz."
+  },
+  "about": {
+    "title": "Ataberk Estate Hakkında",
+    "p1": "Ataberk Estate, 2014'ten bu yana Alanya, Antalya ve çevresinde yerel ve uluslararası alıcılara emlak satışı, kiralama ve satış sonrası hizmet sunan bir emlak ve mülk yönetimi şirketidir.",
+    "p2": "1Çatı platformu, Ataberk Estate'in operasyonel birikimini WAMOCON GmbH'nin dijital dönüşüm uzmanlığıyla birleştirerek tüm emlak süreçlerini tek çatı altında yönetmeyi amaçlar."
+  },
+  "reviews": {
+    "title": "Müşteri Yorumları",
+    "intro": "Demo sürecinde alınan ilk geri bildirimlerden örnek yorumlar.",
+    "items": {
+      "0": {
+        "quote": "Artık müşteri mesajları ve bakım talepleri tek yerde. Ekip olarak çok daha hızlı hareket ediyoruz.",
+        "author": "Mehmet Y.",
+        "role": "Satış Müdürü"
+      },
+      "1": {
+        "quote": "Malik olarak aylık raporları ve tapu durumunu anlık görebilmek büyük rahatlık.",
+        "author": "Elena S.",
+        "role": "Mülk Sahibi"
+      },
+      "2": {
+        "quote": "EİDS yetkilendirmelerini takip etmek için ayrı bir tablo kullanmaktan kurtulduk.",
+        "author": "Ayşe K.",
+        "role": "İlan Danışmanı"
+      }
+    }
+  },
+  "dataTable": {
+    "search": "Ara...",
+    "count": "{count} kayıt",
+    "empty": "Sonuç bulunamadı"
+  },
+  "dashboardHome": {
+    "loading": "Kontrol paneli hazırlanıyor...",
+    "title": "Kontrol Paneli",
+    "subtitle": "{role} rolü için canlı operasyon özeti",
+    "refresh": "Yenile",
+    "kpi": {
+      "activeListings": "Aktif İlanlar",
+      "openLeads": "Açık Adaylar",
+      "openTickets": "Bakım Talepleri",
+      "activeDeals": "Devam Eden İşlemler"
+    },
+    "alerts": {
+      "eidsPending": "{count} EİDS yetkilendirmesi bekliyor",
+      "eidsExpiring": "{count} EİDS yetkisi yakında bitiyor",
+      "urgentTickets": "{count} acil bakım talebi var"
+    },
+    "charts": {
+      "revenue": "Aylık gelir trendi",
+      "revenueSubtitle": "Son 12 ay, EUR bazında",
+      "leadSources": "Aday kaynakları",
+      "leadSourcesSubtitle": "WhatsApp, sosyal medya ve web dağılımı"
+    },
+    "activity": {
+      "title": "Son Aktivite",
+      "live": "Canlı"
+    },
+    "ai": {
+      "title": "1Çatı AI asistanı",
+      "description": "Rolünüze göre öncelikli aday, EİDS riski ve bakım aksiyonu önerir."
+    },
+    "quickActions": {
+      "title": "Hızlı İşlemler",
+      "viewing": "Yeni gezinti planla",
+      "eids": "EİDS kontrolü başlat",
+      "campaign": "Aday kampanyası oluştur"
+    }
+  },
+  "aiAssistant": {
+    "open": "AI asistanını aç",
+    "close": "AI asistanını kapat",
+    "subtitle": "Demo verileriyle yanıtlar",
+    "welcome": "Merhaba {role}. Bugün hangi operasyonu hızlandıralım?",
+    "placeholder": "Adaylar, EİDS, bakım veya gelir hakkında sorun...",
+    "send": "Gönder"
+  },
+  "dashboardModules": {
+    "listings": {
+      "loading": "İlanlar yükleniyor...",
+      "title": "İlanlar",
+      "subtitle": "Portföy, fiyat, EİDS ve yayın durumunu yönetin.",
+      "stats": {
+        "total": "Toplam",
+        "active": "Aktif",
+        "reserved": "Rezerve"
+      },
+      "columns": {
+        "title": "İlan",
+        "city": "Bölge",
+        "type": "Tip",
+        "price": "Fiyat",
+        "status": "Durum",
+        "eids": "EİDS"
+      },
+      "types": {
+        "apartment": "Daire",
+        "villa": "Villa",
+        "penthouse": "Penthouse",
+        "land": "Arsa",
+        "commercial": "Ticari"
+      },
+      "status": {
+        "active": "Aktif",
+        "reserved": "Rezerve",
+        "sold": "Satıldı",
+        "rented": "Kiralandı",
+        "inactive": "Pasif"
+      },
+      "eids": {
+        "authorized": "Onaylı",
+        "pending": "Bekliyor",
+        "expiring": "Yakında bitiyor",
+        "revoked": "İptal",
+        "not_required": "Gerekmez"
+      }
+    },
+    "leads": {
+      "loading": "Adaylar yükleniyor...",
+      "title": "Müşteri Adayları",
+      "subtitle": "Kaynak, sıcaklık, bütçe ve sorumlu danışmanı takip edin.",
+      "stats": {
+        "total": "Toplam",
+        "hot": "Sıcak",
+        "new": "Yeni"
+      },
+      "columns": {
+        "name": "Aday",
+        "source": "Kaynak",
+        "status": "Durum",
+        "budget": "Bütçe",
+        "interest": "İlgi",
+        "score": "Skor",
+        "agent": "Danışman"
+      },
+      "sources": {
+        "whatsapp": "WhatsApp",
+        "instagram": "Instagram",
+        "website": "Web sitesi",
+        "referral": "Referans",
+        "office": "Ofis"
+      },
+      "status": {
+        "new": "Yeni",
+        "hot": "Sıcak",
+        "warm": "Ilık",
+        "cold": "Soğuk",
+        "converted": "Dönüştü"
+      }
+    },
+    "tickets": {
+      "loading": "Talepler yükleniyor...",
+      "title": "Bakım Talepleri",
+      "subtitle": "Öncelik, durum, sorumlu teknisyen ve kanıt fotoğraflarını izleyin.",
+      "stats": {
+        "total": "Toplam",
+        "open": "Açık",
+        "urgent": "Acil"
+      },
+      "columns": {
+        "title": "Talep",
+        "property": "Mülk",
+        "priority": "Öncelik",
+        "status": "Durum",
+        "assigned": "Atanan",
+        "photos": "Fotoğraf"
+      },
+      "priorities": {
+        "low": "Düşük",
+        "medium": "Orta",
+        "high": "Yüksek",
+        "urgent": "Acil"
+      },
+      "status": {
+        "open": "Açık",
+        "in_progress": "İşlemde",
+        "waiting_parts": "Parça bekliyor",
+        "resolved": "Çözüldü",
+        "closed": "Kapalı"
+      }
+    },
+    "calendar": {
+      "title": "Takvim",
+      "subtitle": "Gezinti, tapu, EİDS ve bakım randevularını koordine edin.",
+      "today": "Bugün",
+      "events": "etkinlik",
+      "upcoming": "Yaklaşan",
+      "types": {
+        "viewing": "Gezinti",
+        "task": "Görev",
+        "meeting": "Toplantı",
+        "maintenance": "Bakım"
+      },
+      "upcoming1": "Villa gezintisi",
+      "upcoming2": "Bakım ziyareti",
+      "upcoming3": "Ekip toplantısı"
+    },
+    "compliance": {
+      "loading": "Uyumluluk kayıtları yükleniyor...",
+      "title": "EİDS & Uyumluluk",
+      "subtitle": "Yetki durumu, bitiş tarihi ve malik bazlı riskleri izleyin.",
+      "stats": {
+        "tracked": "Takipte",
+        "pending": "Bekleyen",
+        "expiring": "Biten"
+      },
+      "columns": {
+        "property": "Mülk",
+        "owner": "Malik",
+        "status": "Durum",
+        "expires": "Bitiş",
+        "authorized": "Yetki Tarihi"
+      },
+      "status": {
+        "authorized": "Onaylı",
+        "pending": "Bekliyor",
+        "expiring": "Yakında bitiyor",
+        "revoked": "İptal",
+        "not_required": "Gerekmez"
+      }
+    },
+    "documents": {
+      "title": "Belgeler",
+      "subtitle": "TAPU, DASK, sözleşme, kimlik ve EİDS evrakını tek yerde tutun.",
+      "stats": {
+        "total": "Toplam",
+        "tapu": "TAPU",
+        "contracts": "Sözleşme",
+        "eids": "EİDS"
+      },
+      "types": {
+        "tapu": "TAPU",
+        "insurance": "DASK",
+        "contract": "Sözleşme",
+        "eids": "EİDS",
+        "identity": "Kimlik"
+      }
+    },
+    "finance": {
+      "loading": "Finans verileri yükleniyor...",
+      "title": "Finans & Döviz",
+      "subtitle": "Gelir, komisyon, gider ve kapanan işlemleri izleyin.",
+      "stats": {
+        "revenue": "Gelir",
+        "commission": "Komisyon",
+        "closedDeals": "Kapanan İşlem"
+      },
+      "chartTitle": "Aylık gelir",
+      "columns": {
+        "month": "Ay",
+        "revenue": "Gelir",
+        "commission": "Komisyon",
+        "expenses": "Gider",
+        "deals": "İşlem"
+      }
+    },
+    "reports": {
+      "loading": "Raporlar hazırlanıyor...",
+      "title": "Raporlar",
+      "subtitle": "Pipeline, gelir ve uyumluluk çıktıları.",
+      "charts": {
+        "pipeline": "Pipeline dağılımı",
+        "revenue": "Gelir dağılımı"
+      },
+      "generatedReports": "Üretilen raporlar"
+    },
+    "users": {
+      "loading": "Kullanıcılar yükleniyor...",
+      "title": "Kullanıcılar & Roller",
+      "subtitle": "Ekip erişimi ve rol bazlı izinleri yönetin.",
+      "stats": {
+        "total": "Toplam kullanıcı"
+      },
+      "columns": {
+        "name": "Ad",
+        "role": "Rol",
+        "office": "Ofis",
+        "phone": "Telefon",
+        "deals": "Aktif İşlem"
+      },
+      "roles": {
+        "super_admin": "Süper Admin",
+        "company_admin": "Şirket Admini",
+        "manager": "Müdür",
+        "sales_consultant": "Satış Danışmanı",
+        "listing_agent": "İlan Danışmanı",
+        "property_manager": "Property Manager",
+        "accountant": "Muhasebeci",
+        "maintenance": "Teknisyen",
+        "client": "Müşteri / Malik",
+        "viewer": "Sadece Görüntüleyici"
+      }
+    },
+    "settings": {
+      "title": "Ayarlar",
+      "subtitle": "Bildirim, güvenlik, dil ve görünüm tercihleri.",
+      "configure": "Yapılandır",
+      "version": "Sürüm",
+      "notifications": {
+        "title": "Bildirimler",
+        "desc": "EİDS, aday ve bakım hatırlatmalarını yönetin."
+      },
+      "security": {
+        "title": "Güvenlik",
+        "desc": "Oturum, 2FA ve rol politikalarını kontrol edin."
+      },
+      "language": {
+        "title": "Dil",
+        "desc": "TR, EN, DE ve RU arayüz tercihleri."
+      },
+      "appearance": {
+        "title": "Görünüm",
+        "desc": "Açık, koyu veya sistem temasını seçin."
+      }
+    }
   }
 }

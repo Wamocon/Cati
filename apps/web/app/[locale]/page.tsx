@@ -24,7 +24,7 @@ export default function HomePage() {
           <div className="absolute top-[60%] -left-[10%] h-[500px] w-[500px] rounded-full bg-primary/[0.03] blur-[100px]" />
           <div className="absolute right-1/4 bottom-[5%] h-[500px] w-[500px] rounded-full bg-accent/[0.025] blur-[100px]" />
         </div>
-        <main className="relative z-10">
+        <main id="main" className="relative z-10">
           <Hero />
           <Stats />
           <ProblemBento />

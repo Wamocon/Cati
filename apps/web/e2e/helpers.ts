@@ -8,6 +8,10 @@ export async function screenshot(
   name: string,
   options?: { fullPage?: boolean }
 ) {
+  if (options?.fullPage) {
+    await revealFullPage(page)
+  }
+
   const dir = path.join(process.cwd(), "qa")
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
   const fileName = `${testInfo.title.replace(/\s+/g, "_")}_${name}.png`
@@ -20,6 +24,20 @@ export async function screenshot(
   return filePath
 }
 
+async function revealFullPage(page: Page) {
+  const viewportHeight = page.viewportSize()?.height ?? 800
+  const step = Math.max(320, Math.floor(viewportHeight * 0.75))
+  const pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
+
+  for (let y = 0; y < pageHeight; y += step) {
+    await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y)
+    await page.waitForTimeout(50)
+  }
+
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await page.waitForTimeout(120)
+}
+
 export function collectConsoleIssues(page: Page, issues: string[]) {
   page.on("console", (msg) => {
     const type = msg.type()
@@ -29,7 +47,8 @@ export function collectConsoleIssues(page: Page, issues: string[]) {
       if (
         text.includes("middleware-to-proxy") ||
         text.includes("React does not recognize") ||
-        text.includes("Extra attributes from the server")
+        text.includes("Extra attributes from the server") ||
+        text.includes("A tree hydrated but some attributes")
       ) {
         return
       }

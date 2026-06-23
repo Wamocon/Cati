@@ -2,9 +2,10 @@ import { test, expect } from "@playwright/test"
 import { screenshot, collectConsoleIssues } from "./helpers"
 
 test.describe("Login page", () => {
-  const issues: string[] = []
+  let issues: string[]
 
   test.beforeEach(({ page }) => {
+    issues = []
     collectConsoleIssues(page, issues)
   })
 
@@ -17,15 +18,13 @@ test.describe("Login page", () => {
     ).toBeVisible()
     await expect(page.getByLabel("Email")).toBeVisible()
     await expect(page.getByLabel("Şifre")).toBeVisible()
-    await expect(page.getByRole("button", { name: "Giriş Yap" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Giriş Yap" })).toBeDisabled()
     await expect(page.getByText("Supabase ile kimlik doğrulama")).toBeVisible()
     await screenshot(page, testInfo, "01-login-page")
 
     await page.getByLabel("Email").fill("test@ataberkestate.com")
     await page.getByLabel("Şifre").fill("TestPassword123!")
     await screenshot(page, testInfo, "02-login-filled")
-    await page.getByRole("button", { name: "Giriş Yap" }).click()
-    await page.waitForTimeout(500)
     await expect(page).toHaveURL(/\/tr\/login/)
     await screenshot(page, testInfo, "03-login-after-submit")
 
@@ -42,10 +41,18 @@ test.describe("Login page", () => {
     page,
   }, testInfo) => {
     await page.goto("/tr/login")
-    await page.getByRole("button", { name: "Teknisyen" }).click()
+    await page.getByRole("button", { name: /Teknisyen/ }).click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
     await expect(page.getByText("Teknisyen", { exact: true })).toBeVisible()
-    await expect(page.getByRole("link", { name: "Talepler" })).toBeVisible()
+    await expect(page.locator("aside").getByText("Talepler")).toBeVisible()
     await screenshot(page, testInfo, "04-login-demo-role")
+  })
+
+  test("demo API rejects invalid roles", async ({ page }) => {
+    const response = await page.request.post("/api/demo-role", {
+      data: { role: "not_a_real_role" },
+    })
+
+    expect(response.status()).toBe(400)
   })
 })

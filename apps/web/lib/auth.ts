@@ -46,19 +46,24 @@ async function getDemoProfile(): Promise<UserProfile> {
   }
 }
 
-function envAvailable(): boolean {
+export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 }
 
+export function isDemoAuthEnabled(): boolean {
+  return !isSupabaseConfigured() || process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true"
+}
+
 /**
  * Returns the current authenticated user profile with a normalized role.
- * Falls back to a demo profile when Supabase is not configured or when a demo_role cookie is present.
+ * Falls back to a demo profile only when Supabase is not configured, unless
+ * NEXT_PUBLIC_ENABLE_DEMO_AUTH=true is explicitly set for a staging demo.
  */
 export async function getUserProfile(): Promise<UserProfile | null> {
-  if (!envAvailable()) {
+  if (!isSupabaseConfigured()) {
     return getDemoProfile()
   }
 
@@ -70,7 +75,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return getDemoProfile()
+      return isDemoAuthEnabled() ? getDemoProfile() : null
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -101,7 +106,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       avatar_url: profile?.avatar_url,
     }
   } catch {
-    return getDemoProfile()
+    return isDemoAuthEnabled() ? getDemoProfile() : null
   }
 }
 

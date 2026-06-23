@@ -1,14 +1,8 @@
 import type { Metadata } from "next"
-import { Geist } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { getTranslations } from "next-intl/server"
 import { cn } from "@/lib/utils"
 import "./globals.css"
-
-const geist = Geist({
-  subsets: ["latin", "cyrillic"],
-  variable: "--font-sans",
-})
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata")
@@ -25,11 +19,12 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      className={cn("antialiased", geist.variable)}
+      className={cn("antialiased")}
       suppressHydrationWarning
       data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
+        <a href="#main" className="skip-link">Skip to content</a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           {children}
         </ThemeProvider>

@@ -32,8 +32,10 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="h-auto w-full"
-        aria-hidden="true"
+        role="img"
+        aria-labelledby="dash-title"
       >
+        <title id="dash-title">CRM dashboard preview</title>
         <defs>
           <linearGradient
             id="property-img"
@@ -45,12 +47,12 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           >
             <stop
               offset="0%"
-              stopColor="hsl(var(--primary))"
+              stopColor="var(--primary)"
               stopOpacity="0.25"
             />
             <stop
               offset="100%"
-              stopColor="hsl(var(--accent))"
+              stopColor="var(--accent)"
               stopOpacity="0.15"
             />
           </linearGradient>
@@ -63,7 +65,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="140"
           height="400"
           rx="8"
-          fill="hsl(var(--muted))"
+          fill="var(--muted)"
           opacity="0.5"
         />
         <rect
@@ -72,7 +74,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="100"
           height="8"
           rx="4"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.25"
         />
         <rect
@@ -81,7 +83,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="80"
           height="6"
           rx="3"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.25"
         />
         <rect
@@ -90,7 +92,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="90"
           height="6"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
         <rect
@@ -99,7 +101,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="70"
           height="6"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
         <rect
@@ -108,7 +110,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="85"
           height="6"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
 
@@ -119,7 +121,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="180"
           height="14"
           rx="6"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.1"
         />
         <rect
@@ -128,7 +130,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="120"
           height="8"
           rx="4"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
 
@@ -139,8 +141,8 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="130"
           height="70"
           rx="10"
-          fill="hsl(var(--card))"
-          stroke="hsl(var(--border))"
+          fill="var(--card)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
         <rect
@@ -149,7 +151,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="60"
           height="10"
           rx="4"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.12"
         />
         <rect
@@ -158,7 +160,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="40"
           height="16"
           rx="3"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.35"
         />
 
@@ -168,8 +170,8 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="130"
           height="70"
           rx="10"
-          fill="hsl(var(--card))"
-          stroke="hsl(var(--border))"
+          fill="var(--card)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
         <rect
@@ -178,7 +180,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="60"
           height="10"
           rx="4"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.12"
         />
         <rect
@@ -187,7 +189,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="40"
           height="16"
           rx="3"
-          fill="hsl(var(--accent))"
+          fill="var(--accent)"
           opacity="0.4"
         />
 
@@ -197,8 +199,8 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="130"
           height="70"
           rx="10"
-          fill="hsl(var(--card))"
-          stroke="hsl(var(--border))"
+          fill="var(--card)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
         <rect
@@ -207,7 +209,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="60"
           height="10"
           rx="4"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.12"
         />
         <rect
@@ -216,7 +218,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="40"
           height="16"
           rx="3"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.35"
         />
 
@@ -227,8 +229,8 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="430"
           height="96"
           rx="12"
-          fill="hsl(var(--card))"
-          stroke="hsl(var(--border))"
+          fill="var(--card)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
         <rect
@@ -245,7 +247,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="160"
           height="10"
           rx="4"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.15"
         />
         <rect
@@ -254,7 +256,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="100"
           height="8"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
         <rect
@@ -263,7 +265,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="80"
           height="8"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.15"
         />
         <rect
@@ -272,7 +274,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="56"
           height="18"
           rx="8"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.2"
         />
         <rect
@@ -281,7 +283,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="46"
           height="10"
           rx="4"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.5"
         />
 
@@ -292,8 +294,8 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="430"
           height="96"
           rx="12"
-          fill="hsl(var(--card))"
-          stroke="hsl(var(--border))"
+          fill="var(--card)"
+          stroke="var(--border)"
           strokeWidth="1"
         />
         <rect
@@ -310,7 +312,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="140"
           height="10"
           rx="4"
-          fill="hsl(var(--foreground))"
+          fill="var(--foreground)"
           opacity="0.15"
         />
         <rect
@@ -319,7 +321,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="110"
           height="8"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.2"
         />
         <rect
@@ -328,7 +330,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="90"
           height="8"
           rx="3"
-          fill="hsl(var(--muted-foreground))"
+          fill="var(--muted-foreground)"
           opacity="0.15"
         />
         <rect
@@ -337,7 +339,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="56"
           height="18"
           rx="8"
-          fill="hsl(var(--accent))"
+          fill="var(--accent)"
           opacity="0.2"
         />
         <rect
@@ -346,7 +348,7 @@ export function DashboardPreview({ className }: DashboardPreviewProps) {
           width="46"
           height="10"
           rx="4"
-          fill="hsl(var(--accent))"
+          fill="var(--accent)"
           opacity="0.6"
         />
       </svg>

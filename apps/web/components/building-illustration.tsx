@@ -18,8 +18,11 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-full"
-        aria-hidden="true"
+        role="img"
+        aria-labelledby="building-title building-desc"
       >
+        <title id="building-title">Modern residential tower illustration</title>
+        <desc id="building-desc">A modern apartment tower with balconies, a swimming pool, palm trees and sun.</desc>
         <defs>
           <linearGradient
             id="building-sky"
@@ -31,12 +34,12 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
           >
             <stop
               offset="0%"
-              stopColor="hsl(var(--primary))"
+              stopColor="var(--primary)"
               stopOpacity="0.12"
             />
             <stop
               offset="60%"
-              stopColor="hsl(var(--background))"
+              stopColor="var(--background)"
               stopOpacity="0"
             />
           </linearGradient>
@@ -72,12 +75,12 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
           >
             <stop
               offset="0%"
-              stopColor="hsl(var(--primary))"
+              stopColor="var(--primary)"
               stopOpacity="0.55"
             />
             <stop
               offset="100%"
-              stopColor="hsl(var(--primary))"
+              stopColor="var(--primary)"
               stopOpacity="0.25"
             />
           </linearGradient>
@@ -97,7 +100,7 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
               dx="0"
               dy="16"
               stdDeviation="20"
-              floodColor="hsl(var(--foreground))"
+              floodColor="var(--foreground)"
               floodOpacity="0.08"
             />
           </filter>
@@ -117,7 +120,7 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
         {/* Ground / landscaped podium */}
         <path
           d="M120 560 Q400 540 680 560 L680 600 Q400 620 120 600 Z"
-          fill="hsl(var(--muted))"
+          fill="var(--muted)"
           opacity="0.5"
         />
 
@@ -201,7 +204,7 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
                 height={40}
                 rx={5}
                 fill="url(#window-glass)"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 strokeWidth="0.5"
                 strokeOpacity="0.4"
               />
@@ -330,21 +333,21 @@ export function BuildingIllustration({ className }: BuildingIllustrationProps) {
           cx="180"
           cy="160"
           r="4"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.4"
         />
         <circle
           cx="620"
           cy="200"
           r="3"
-          fill="hsl(var(--accent))"
+          fill="var(--accent)"
           opacity="0.4"
         />
         <circle
           cx="160"
           cy="380"
           r="3"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           opacity="0.3"
         />
       </motion.svg>

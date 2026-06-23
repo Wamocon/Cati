@@ -16,9 +16,10 @@ import { LocaleSwitcher } from "@/components/locale-switcher"
 const navItems = [
   { label: "home", href: "#" },
   { label: "catalog", href: "#services" },
-  { label: "about", href: "#about" },
+  { label: "about", href: "/about" },
+  { label: "pitch", href: "/pitch" },
   { label: "services", href: "#services" },
-  { label: "reviews", href: "#how-it-works" },
+  { label: "reviews", href: "/reviews" },
   { label: "contacts", href: "#contacts" },
 ]
 
@@ -72,7 +73,7 @@ export function Navbar() {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm md:flex">
+          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm lg:flex">
             {navItems.map((item) => (
               <Link
                 key={item.label}
@@ -84,7 +85,7 @@ export function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden items-center gap-2 lg:flex">
             <LocaleSwitcher />
             <ThemeToggle />
             <Link
@@ -103,7 +104,7 @@ export function Navbar() {
 
           <button
             data-testid="menu-toggle"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground md:hidden"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground lg:hidden"
             onClick={() => setOpen(!open)}
             aria-label={t("toggleMenu")}
           >
@@ -140,7 +141,7 @@ export function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl md:hidden"
+            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl lg:hidden"
           >
             <div className="container flex h-full flex-col pt-28 pb-8">
               <nav className="flex flex-1 flex-col gap-2">

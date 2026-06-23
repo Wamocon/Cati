@@ -2,9 +2,10 @@ import { test, expect } from "@playwright/test"
 import { screenshot, collectConsoleIssues } from "./helpers"
 
 test.describe("Responsive mobile checks", () => {
-  const issues: string[] = []
+  let issues: string[]
 
   test.beforeEach(({ page }) => {
+    issues = []
     collectConsoleIssues(page, issues)
   })
 
