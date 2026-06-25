@@ -22,10 +22,17 @@ npx supabase status
 Copy the `API URL` and `anon key` from `npx supabase status` into `apps/web/.env.local` or the root `.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<copy-from-status>
 NEXT_PUBLIC_ENABLE_DEMO_AUTH=true
 ```
+
+The repository uses a non-default local port range to avoid collisions with other Supabase projects:
+
+- API: `55321`
+- Database: `55322`
+- Studio: `55323`
+- Mailpit/Inbucket: `55324`
 
 Then run the web app:
 

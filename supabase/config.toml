@@ -5,22 +5,22 @@ project_id = "cati-platform"
 
 [api]
 enabled = true
-port = 54321
+port = 55321
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
+port = 55322
 major_version = 15
 
 [studio]
 enabled = true
-port = 54323
+port = 55323
 
 [inbucket]
 enabled = true
-port = 54324
+port = 55324
 
 [auth]
 enabled = true
