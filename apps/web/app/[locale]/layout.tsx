@@ -1,11 +1,6 @@
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
 import { locales } from "../../i18n"
-import { MotionProvider } from "@/components/motion-provider"
-
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }))
-}
 
 export default async function LocaleLayout({
   children,
@@ -14,13 +9,22 @@ export default async function LocaleLayout({
   children: React.ReactNode
   params: Promise<{ locale: string }>
 }) {
-  // Validate the dynamic segment is awaited so Next.js can resolve the route.
-  void (await params)
-  const messages = await getMessages()
+  const { locale: rawLocale } = await params
+  type Locale = (typeof locales)[number]
+  const locale: Locale = locales.includes(rawLocale as Locale)
+    ? (rawLocale as Locale)
+    : "tr"
+  const messages = await getMessages({ locale })
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <MotionProvider>{children}</MotionProvider>
+    <NextIntlClientProvider
+      formats={{}}
+      locale={locale}
+      messages={messages}
+      now={new Date("2026-06-25T09:00:00+03:00")}
+      timeZone="Europe/Istanbul"
+    >
+      {children}
     </NextIntlClientProvider>
   )
 }

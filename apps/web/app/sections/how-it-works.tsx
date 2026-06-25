@@ -10,7 +10,7 @@ export function HowItWorks() {
   const steps = [1, 2, 3, 4, 5, 6, 7] as const
 
   return (
-    <section id="how-it-works" className="relative py-24">
+    <section id="how-it-works" className="relative py-16 md:py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
@@ -19,7 +19,7 @@ export function HowItWorks() {
           </h2>
         </ScrollReveal>
 
-        <div className="mt-14">
+        <div className="mt-10 md:mt-14">
           <div className="relative">
             <div className="absolute top-7 left-0 hidden h-0.5 w-full bg-gradient-to-r from-primary via-accent to-teal-500 md:block" />
             <div className="grid gap-6 md:grid-cols-7">

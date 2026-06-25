@@ -1,0 +1,14 @@
+flowchart TD
+  A[Manager command center] --> B[Finance and debt control]
+  A --> C[Service desk and workforce control]
+  A --> D[Booking, move-in and checkout control]
+  E[Resident and owner PWA] --> F[Balance, payment, documents and requests]
+  G[Staff PWA] --> H[Assigned work, SLA, notes and media proof]
+  I[Accountant workspace] --> J[Ledger, reconciliation, statements and exports]
+  B --> K[Audit and reporting layer]
+  C --> K
+  D --> K
+  F --> K
+  H --> K
+  J --> K
+  K --> L[AI briefing and recommendations]

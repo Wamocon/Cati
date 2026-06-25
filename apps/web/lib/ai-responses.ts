@@ -1,16 +1,14 @@
-// Deterministic AI response generator for the 1Çatı demo assistant.
-// No real LLM is called; responses are synthesized from mock data.
+// Deterministic AI response generator for the 1Çatı site-management demo.
+// No external LLM is called in this demo; answers are synthesized from local mock data.
 
 import { Role } from "./rbac"
 import {
-  deals,
-  eidsRecords,
-  financialHistory,
-  getDashboardSummary,
-  leads,
-  properties,
-  tickets,
-} from "./demo-data"
+  bookings,
+  formatTry,
+  getDebtAccounts,
+  getSummary,
+  serviceTickets,
+} from "./site-management-data"
 
 export type AiSuggestion = {
   id: string
@@ -20,50 +18,50 @@ export type AiSuggestion = {
 
 export function getAiSuggestions(role: Role): AiSuggestion[] {
   const common: AiSuggestion[] = [
-    { id: "summary", label: "Günlük özet", prompt: "Give me a daily summary of the business." },
-    { id: "hot-leads", label: "Sıcak adaylar", prompt: "Which leads should I prioritize today?" },
-    { id: "eids-risk", label: "EİDS riskleri", prompt: "Show me EİDS compliance risks." },
+    { id: "summary", label: "Günlük özet", prompt: "Give me today's site operations summary." },
+    { id: "debt-risk", label: "Borç riski", prompt: "Which flats need debt action today?" },
+    { id: "service-priority", label: "Servis önceliği", prompt: "Prioritize service tickets by SLA and debt status." },
   ]
 
   const roleSpecific: Record<Role, AiSuggestion[]> = {
     super_admin: [
-      { id: "team-performance", label: "Ekip performansı", prompt: "Analyze team performance this month." },
-      { id: "revenue-forecast", label: "Gelir tahmini", prompt: "Forecast revenue for next month." },
+      { id: "portfolio-health", label: "Portföy sağlığı", prompt: "Analyze the full 769-flat portfolio health." },
+      { id: "automation", label: "Otomasyon fırsatı", prompt: "Which workflows should be automated next?" },
     ],
     company_admin: [
-      { id: "revenue-forecast", label: "Gelir tahmini", prompt: "Forecast revenue for next month." },
-      { id: "top-agents", label: "En iyi danışmanlar", prompt: "Who are the top performing agents?" },
+      { id: "portfolio-health", label: "Portföy sağlığı", prompt: "Analyze the full 769-flat portfolio health." },
+      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
     ],
     manager: [
-      { id: "top-agents", label: "En iyi danışmanlar", prompt: "Who are the top performing agents?" },
-      { id: "pipeline", label: "Pipeline durumu", prompt: "What is the current sales pipeline status?" },
+      { id: "operations", label: "Operasyon planı", prompt: "Create today's operations plan." },
+      { id: "access-control", label: "Erişim kontrolü", prompt: "Show restricted access risks." },
     ],
     sales_consultant: [
-      { id: "property-match", label: "Mülk eşleştir", prompt: "Find matching properties for hot leads." },
-      { id: "follow-up", label: "Takip planı", prompt: "Create a follow-up plan for my leads." },
+      { id: "resident-followup", label: "Sakin takibi", prompt: "Which residents should be contacted today?" },
+      { id: "booking", label: "Rezervasyon", prompt: "Show booking and move-in priorities." },
     ],
     listing_agent: [
-      { id: "expiring-eids", label: "Biten yetkiler", prompt: "Which EİDS authorizations expire this week?" },
-      { id: "new-listing", label: "Yeni ilan fırsatı", prompt: "Suggest new listing opportunities." },
+      { id: "flat-readiness", label: "Daire hazırlığı", prompt: "Which flats are ready or blocked?" },
+      { id: "booking", label: "Rezervasyon", prompt: "Show booking and move-in priorities." },
     ],
     property_manager: [
-      { id: "urgent-tickets", label: "Acil talepler", prompt: "List urgent maintenance tickets." },
-      { id: "occupancy", label: "Doluluk oranı", prompt: "What is the current occupancy rate?" },
+      { id: "service-priority", label: "Servis önceliği", prompt: "Prioritize service tickets by SLA and debt status." },
+      { id: "checkout", label: "Çıkış kontrolü", prompt: "Which check-outs need deposit review?" },
     ],
     accountant: [
-      { id: "commission", label: "Komisyon raporu", prompt: "Summarize commission report." },
-      { id: "expenses", label: "Gider analizi", prompt: "Analyze monthly expenses." },
+      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
+      { id: "legal", label: "Yasal takip", prompt: "Which flats should move to legal follow-up?" },
     ],
     maintenance: [
-      { id: "urgent-tickets", label: "Acil talepler", prompt: "List urgent maintenance tickets." },
-      { id: "today", label: "Bugünkü işler", prompt: "What are my tasks for today?" },
+      { id: "route", label: "Teknik rota", prompt: "Build the technician route for today." },
+      { id: "blocked", label: "Blokeli servis", prompt: "Which service tickets are blocked by debt?" },
     ],
     client: [
-      { id: "my-property", label: "Mülküm durumu", prompt: "What is the status of my property?" },
-      { id: "documents", label: "Belgelerim", prompt: "Show my pending documents." },
+      { id: "my-flat", label: "Daire durumu", prompt: "What is the status of my flat?" },
+      { id: "payments", label: "Ödemelerim", prompt: "Show my payments and open service requests." },
     ],
     viewer: [
-      { id: "summary", label: "Özet", prompt: "Give me a business summary." },
+      { id: "summary", label: "Özet", prompt: "Give me today's site operations summary." },
     ],
   }
 
@@ -72,110 +70,67 @@ export function getAiSuggestions(role: Role): AiSuggestion[] {
 
 export function generateAiResponse(prompt: string, role: Role): string {
   const lower = prompt.toLowerCase()
-  const summary = getDashboardSummary()
+  const summary = getSummary()
+  const debtAccounts = getDebtAccounts()
+  const legalAccounts = debtAccounts.filter((account) => account.paymentStatus === "legal")
+  const blockedTickets = serviceTickets.filter((ticket) => ticket.debtBlocked)
+  const overdueTickets = serviceTickets.filter((ticket) => ticket.slaHoursRemaining < 0)
+  const checkoutBookings = bookings.filter((booking) => booking.status === "checkout_today" || booking.status === "deposit_review")
 
-  if (lower.includes("daily summary") || lower.includes("günlük özet") || lower.includes("özet")) {
-    return `Bugün ${summary.activeListings} aktif ilan, ${summary.openLeads} açık aday (${summary.hotLeads} sıcak), ${summary.openTickets} açık bakım talebi ve ${summary.activeDeals} devam eden işlem var. Bu ay ${summary.dealsWonThisMonth} satış tamamlandı ve tahmini gelir ${summary.revenueThisMonthEur.toLocaleString("tr-TR")} €.`
+  if (lower.includes("summary") || lower.includes("özet") || lower.includes("operations")) {
+    return `Bugün ${summary.totalFlats} daire yönetimde, doluluk %${summary.occupancyRate}. Açık borç ${formatTry(summary.totalDebtTry)}, ${summary.openTickets} açık servis talebi, ${summary.overdueTickets} SLA dışı talep ve ${summary.checkoutsToday} check-out var. İlk öncelik borç kısıtı, SLA dışı servis ve depozito kontrolü.`
   }
 
-  if (lower.includes("hot lead") || lower.includes("sıcak aday") || lower.includes("prioritize")) {
-    const hot = leads
-      .filter((l) => l.status === "hot")
+  if (lower.includes("debt") || lower.includes("borç") || lower.includes("cash") || lower.includes("collection")) {
+    const topAccounts = debtAccounts
       .slice(0, 3)
-      .map((l) => `${l.name} (${l.interest}, bütçe ${l.budgetEur.toLocaleString("tr-TR")} €)`)
+      .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
       .join("; ")
-    return hot
-      ? `Bugün öncelikli adaylar: ${hot}. Bu adaylar son 7 günde aktif iletişimde ve yüksek skora sahip.`
-      : "Şu anda sıcak aday bulunmuyor. Daha fazla potansiyel oluşturmak için Instagram ve WhatsApp kampanyalarınızı artırabilirsiniz."
+    return `Tahsilat önceliği: ${topAccounts}. Toplam açık borç ${formatTry(summary.totalDebtTry)}. 90+ gün borçta ${legalAccounts.length} hesap var; bu hesaplarda erişim kısıtı ve yasal takip hazırlığı önerilir.`
   }
 
-  if (lower.includes("eids") || lower.includes("yetki") || lower.includes("risk")) {
-    const expiring = eidsRecords.filter((e) => e.status === "expiring").length
-    const pending = eidsRecords.filter((e) => e.status === "pending").length
-    return `EİDS durumu: ${pending} bekleyen yetkilendirme ve ${expiring} yakında bitecek yetki var. Bekleyenleri maliklerle iletişime geçerek çözmek, bitişleri yenilemek önemli.`
-  }
-
-  if (lower.includes("team performance") || lower.includes("performans") || lower.includes("top agent")) {
-    const agentStats = deals.reduce<Record<string, number>>((acc, deal) => {
-      acc[deal.agent] = (acc[deal.agent] || 0) + deal.commissionEur
-      return acc
-    }, {})
-    const sorted = Object.entries(agentStats)
-      .sort((a, b) => b[1] - a[1])
+  if (lower.includes("service") || lower.includes("ticket") || lower.includes("sla") || lower.includes("servis")) {
+    const urgent = overdueTickets
       .slice(0, 3)
-      .map(([name, comm]) => `${name} (${comm.toLocaleString("tr-TR")} €)`)
-      .join(", ")
-    return `Bu ay en çok komisyon üreten danışmanlar: ${sorted}. Performansı artırmak için sıcak adayları bu ekip üyelerine yönlendirmek faydalı olabilir.`
-  }
-
-  if (lower.includes("forecast") || lower.includes("tahmin") || lower.includes("revenue")) {
-    const expected = Math.round(summary.revenueThisMonthEur * 1.12)
-    return `Mevcut pipeline'a göre gelecek ay tahmini gelir ${expected.toLocaleString("tr-TR")} €. Bu, %12 büyüme öngörüyor. Müzakere aşamasındaki ${summary.activeDeals} işlem kritik.`
-  }
-
-  if (lower.includes("pipeline") || lower.includes("satış durumu")) {
-    const stageCounts = deals.reduce<Record<string, number>>((acc, d) => {
-      acc[d.stage] = (acc[d.stage] || 0) + 1
-      return acc
-    }, {})
-    return `Pipeline: ${stageCounts.new || 0} yeni, ${stageCounts.contacted || 0} iletişimde, ${stageCounts.viewing || 0} gezinti, ${stageCounts.offer || 0} teklif, ${stageCounts.negotiation || 0} müzakere. Kapatma olasılığı yüksek teklifleri hızlandırın.`
-  }
-
-  if (lower.includes("property match") || lower.includes("eşleştir")) {
-    const match = properties
-      .filter((p) => p.status === "active" && p.priceEur <= 300000)
-      .slice(0, 3)
-      .map((p) => p.title)
+      .map((ticket) => `${ticket.flatNumber} ${ticket.title} (${ticket.slaHoursRemaining} saat)`)
       .join("; ")
-    return `Sıcak aday bütçelerine uygun aktif mülkler: ${match}. Bu mülkler 300.000 € altında ve hemen gösterime hazır.`
+    return urgent
+      ? `Servis önceliği: ${urgent}. Borç blokeli ${blockedTickets.length} talep finans onayı bekliyor; teknisyen yönlendirmeden önce ödeme durumu kontrol edilmeli.`
+      : "Şu anda SLA dışı servis talebi yok. Günlük teknik rota açık taleplerin maliyet ve lokasyonuna göre planlanabilir."
   }
 
-  if (lower.includes("follow-up") || lower.includes("takip")) {
-    const followUps = leads
-      .filter((l) => l.status === "warm" || l.status === "hot")
-      .slice(0, 3)
-      .map((l) => `${l.name} — ${l.source} üzerinden son iletişim ${new Date(l.lastContact).toLocaleDateString("tr-TR")}`)
+  if (lower.includes("access") || lower.includes("erişim") || lower.includes("restricted")) {
+    return `${summary.restrictedAccess} dairede erişim kısıtı görünüyor. AI önerisi: önce yasal takipteki borçlu daireler, sonra check-in öncesi bekleyen erişim kodları kontrol edilmeli.`
+  }
+
+  if (lower.includes("booking") || lower.includes("check") || lower.includes("rezervasyon") || lower.includes("depozito")) {
+    const queue = checkoutBookings
+      .map((booking) => `${booking.flatNumber} ${booking.guestName} (${formatTry(booking.depositTry)})`)
       .join("; ")
-    return `Bugünkü takip planı: ${followUps}. Her birine kişiselleştirilmiş mesaj göndermek dönüşümü artırır.`
+    return queue
+      ? `Bugünkü rezervasyon/depozito kuyruğu: ${queue}. Check-out fotoğrafı, temizlik onayı ve hasar kesintisi kapanmadan depozito iadesi yapılmamalı.`
+      : "Bugün depozito incelemesi bekleyen kritik çıkış yok. Yaklaşan girişler için kimlik, ödeme ve erişim kodu ön kontrolü yapılabilir."
   }
 
-  if (lower.includes("urgent") || lower.includes("acil") || lower.includes("ticket")) {
-    const urgent = tickets.filter((t) => t.priority === "urgent" && t.status !== "closed" && t.status !== "resolved").length
-    return `Şu anda ${urgent} acil bakım talebi açık. Bu taleplere öncelik vermek mülk sahibi memnuniyetini korur.`
+  if (lower.includes("route") || lower.includes("technical") || lower.includes("teknik")) {
+    const route = serviceTickets
+      .filter((ticket) => ticket.status !== "closed" && ticket.status !== "resolved" && !ticket.debtBlocked)
+      .slice(0, 4)
+      .map((ticket) => `${ticket.flatNumber} - ${ticket.category}`)
+      .join("; ")
+    return `Bugünkü teknik rota önerisi: ${route}. Borç blokeli işler ayrıldı; önce SLA riski olan ve ödeme onayı tamamlanan talepler kapatılmalı.`
   }
 
-  if (lower.includes("occupancy") || lower.includes("doluluk")) {
-    return `Mevcut kiralama portföyünde doluluk oranı %${summary.occupancyRate}. Boşta kalan mülkleri listeleyerek doldurma kampanyası başlatılabilir.`
-  }
-
-  if (lower.includes("commission") || lower.includes("komisyon")) {
-    const totalCommission = deals.filter((d) => d.stage === "closed_won").reduce((sum, d) => sum + d.commissionEur, 0)
-    return `Kapanan işlemlerden toplam komisyon ${totalCommission.toLocaleString("tr-TR")} €. Pipeline'daki işlemlerle birlikte tahmini toplam komisyon ${(totalCommission * 1.4).toLocaleString("tr-TR")} €.`
-  }
-
-  if (lower.includes("expense") || lower.includes("gider")) {
-    const totalExpenses = financialHistory.reduce((sum, f) => sum + f.expensesTry, 0)
-    return `Son 12 ayda toplam işletme gideri ${totalExpenses.toLocaleString("tr-TR")} ₺. En büyük kalemler bakım, pazarlama ve personel.`
-  }
-
-  if (lower.includes("my property") || lower.includes("mülküm")) {
-    return "Mülkünüz aktif olarak yönetiliyor. Son 30 günde 2 gezinti düzenlendi ve bakım talebi bulunmuyor. Aylık rapor hazır."
-  }
-
-  if (lower.includes("document") || lower.includes("belge")) {
-    return "Bekleyen belgeleriniz: DASK poliçesi yenilemesi ve güncel tapu fotokopisi. Belgeler yüklendikteninde işlem süreci devam edecek."
-  }
-
-  if (lower.includes("today") || lower.includes("bugünkü")) {
-    return `Bugün 3 bakım ziyareti planlandı: Villa #1021 klima, Daire #1847 elektrik, Penthouse #990 boya. Tüm malzemeler stokta mevcut.`
+  if (lower.includes("automation") || lower.includes("otomasyon")) {
+    return "En yüksek otomasyon getirisi üç akışta: aidat gecikme hatırlatmaları, borç durumuna göre erişim kodu kontrolü, check-out sonrası depozito ve hasar kapama. Bu üç akış operasyon süresini ciddi azaltır."
   }
 
   const roleContext =
     role === "client"
-      ? "Malik portalında kendi mülk, belge ve raporlarınıza odaklanabilirsiniz."
+      ? "Sakin portalında kendi daireniz, ödeme durumunuz, servis talepleriniz ve belgeleriniz görünür."
       : role === "maintenance"
-        ? "Teknisyen rolünde öncelik bakım talepleri ve saha takvimidir."
-        : "Rolünüze göre erişebildiğiniz modüllerle devam edebilirsiniz."
+        ? "Teknisyen rolünde sadece servis kuyruğu, SLA, fotoğraf kanıtı ve saha notları öne çıkar."
+        : "Rolünüze göre daire, finans, servis, rezervasyon ve rapor modülleri önceliklendirilir."
 
-  return `Bu konuda size yardımcı olabilirim. Mevcut verilere göre ${summary.activeListings} aktif ilan ve ${summary.openLeads} açık aday var. ${roleContext}`
+  return `Bu konuda yardımcı olabilirim. Mevcut veride ${summary.totalFlats} daire, ${summary.openTickets} açık servis talebi ve ${formatTry(summary.totalDebtTry)} açık borç var. ${roleContext}`
 }

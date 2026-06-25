@@ -7,6 +7,7 @@ import { Sparkles, Send, X, Bot, User } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import { getAiSuggestions, generateAiResponse } from "@/lib/ai-responses"
 import { cn } from "@/lib/utils"
+import { clientProfile } from "@/lib/client-context"
 
 interface Message {
   id: string
@@ -51,9 +52,22 @@ export function AiAssistant() {
     setInput("")
     setTyping(true)
 
-    // Simulate LLM latency for realism
-    await new Promise((resolve) => setTimeout(resolve, 900))
-    const response = generateAiResponse(text, user.role)
+    let response = generateAiResponse(text, user.role)
+    try {
+      const result = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, role: user.role }),
+      })
+      if (result.ok) {
+        const payload = (await result.json()) as { reply?: unknown }
+        if (typeof payload.reply === "string" && payload.reply.trim()) {
+          response = payload.reply
+        }
+      }
+    } catch {
+      response = generateAiResponse(text, user.role)
+    }
     messageIdRef.current += 1
     const assistantMsg: Message = {
       id: `a-${messageIdRef.current}`,
@@ -74,8 +88,8 @@ export function AiAssistant() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl shadow-primary/30",
-          "bg-gradient-to-br from-primary to-teal-600 text-primary-foreground",
+          "fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl shadow-primary/30 ring-1 ring-white/20",
+          "bg-gradient-to-br from-primary via-teal-500 to-emerald-400 text-primary-foreground",
           open && "hidden"
         )}
         aria-label={t("open")}
@@ -90,17 +104,19 @@ export function AiAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="fixed right-4 bottom-4 z-50 flex w-[min(420px,92vw)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+            className="premium-surface fixed right-4 bottom-4 z-50 flex w-[min(440px,92vw)] flex-col overflow-hidden rounded-xl shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-border bg-gradient-to-r from-primary/10 to-teal-500/10 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-amber-500/10 px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]">
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">1Çatı AI</p>
-                  <p className="text-[10px] text-muted-foreground">{t("subtitle")}</p>
+                  <p className="text-sm font-bold text-foreground">1Çatı AI - {clientProfile.clientName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Yerel AI + {clientProfile.pilotProject} bağlamı
+                  </p>
                 </div>
               </div>
               <button

@@ -62,7 +62,7 @@ export function Stats() {
   const t = useTranslations("stats")
 
   return (
-    <section data-testid="stats" className="relative py-16">
+    <section data-testid="stats" className="relative py-12 md:py-16">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30" />
       <div className="relative z-10 container">
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5 [&>*:last-child]:col-span-2 md:[&>*:last-child]:col-span-1">

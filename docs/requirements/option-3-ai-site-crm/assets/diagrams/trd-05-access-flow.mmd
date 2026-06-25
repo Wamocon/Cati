@@ -1,0 +1,13 @@
+flowchart TD
+  A[Business event: move-in, checkout, debt restriction] --> B[Restriction/access service evaluates]
+  B --> C[Create access action request]
+  C --> D{Approval required?}
+  D -->|Yes| E[Manager/Admin approval]
+  D -->|No| F[Send to integration adapter]
+  E --> F
+  F --> G[Vendor API / manual export]
+  G --> H{Success?}
+  H -->|Yes| I[Update access status]
+  H -->|No| J[Retry queue and alert]
+  I --> K[Audit log]
+  J --> K

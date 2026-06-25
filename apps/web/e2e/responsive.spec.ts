@@ -32,9 +32,9 @@ test.describe("Responsive mobile checks", () => {
   test("dashboard is usable on small viewport", async ({ page }, testInfo) => {
     await page.goto("/tr/dashboard")
     await expect(
-      page.getByRole("heading", { name: "Kontrol Paneli" })
+      page.getByRole("heading", { name: "Ataberk Estate Premium CRM Merkezi" })
     ).toBeVisible()
-    await expect(page.getByText("Aktif İlanlar")).toBeVisible()
+    await expect(page.getByText("Toplam Daire").first()).toBeVisible()
     await screenshot(page, testInfo, "mobile-dashboard", { fullPage: true })
     expect(issues).toEqual([])
   })

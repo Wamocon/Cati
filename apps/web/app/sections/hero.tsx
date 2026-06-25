@@ -49,7 +49,7 @@ export function Hero() {
   ]
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background pt-28 pb-16 md:pt-36 md:pb-24">
+    <section className="relative min-h-[calc(100svh-104px)] overflow-hidden bg-background pt-20 pb-12 sm:pt-24 sm:pb-16 md:pt-36 md:pb-24">
       {/* Aurora ambient background */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-[10%] left-1/2 h-[800px] w-[900px] -translate-x-1/2 rounded-full bg-primary/6 blur-[120px]" />
@@ -188,7 +188,7 @@ export function Hero() {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mx-auto mt-16 max-w-5xl"
+          className="mx-auto mt-10 max-w-5xl sm:mt-14 md:mt-16"
         >
           <GlassCard glow className="p-4 sm:p-6">
             <div className="mb-5 flex items-center justify-between">

@@ -1,0 +1,15 @@
+flowchart TD
+  A[Accrual posted] --> B[Balance updated from ledger]
+  B --> C[Payment due date monitored]
+  C --> D{Payment received?}
+  D -->|Yes| E[Reconcile payment]
+  E --> F[Clear or reduce debt]
+  D -->|No| G[Debt created]
+  G --> H[Reminder notification]
+  H --> I{Debt threshold exceeded?}
+  I -->|No| J[Continue monitoring]
+  I -->|Yes| K[Apply restrictions]
+  K --> L[Block paid services]
+  K --> M[Block booking if threshold applies]
+  K --> N[Flag or disable access if configured]
+  N --> O[Notify user and manager]

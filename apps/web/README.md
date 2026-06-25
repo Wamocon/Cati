@@ -1,21 +1,47 @@
-# Next.js template
+# Cati Web App
 
-This is a Next.js template with shadcn/ui.
+This is the Next.js application for the Cati CRM pilot. It contains the public product pages, login flow, role-aware dashboard, AI API route, site-management modules, and Playwright tests.
 
-## Adding components
+## Main Areas
 
-To add components to your app, run the following command:
+- `app/[locale]`: localized public pages and protected CRM routes
+- `app/api`: demo-role, AI chat and site-management status APIs
+- `components`: shared UI, charts, cards, dashboard simulations and assistant components
+- `e2e`: Playwright coverage for landing, login, pitch, dashboard and responsive checks
+- `lib`: AI response helpers, local AI adapter, client context and site-management demo data
+
+## Development
 
 ```bash
-npx shadcn@latest add button
+pnpm install
+pnpm --dir apps/web dev -- -p 3100
 ```
 
-This will place the ui components in the `components` directory.
+Open `http://localhost:3100/tr/dashboard`.
 
-## Using components
+## Environment
 
-To use the components in your app, import them as follows:
+Copy `.env.example` to `.env.local` and fill local values. Never commit `.env.local`.
 
-```tsx
-import { Button } from "@/components/ui/button";
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+AI_API_URL=
+AI_API_KEY=
+AI_CHAT_COMPLETIONS_PATH=/chat/completions
+```
+
+## Quality
+
+```bash
+pnpm --dir apps/web typecheck
+pnpm --dir apps/web lint
+pnpm --dir apps/web build
+pnpm --dir apps/web test:e2e -- --project=chromium
+```
+
+For phase 6-9 browser QA from the repository root:
+
+```bash
+pnpm phase:06-09
 ```

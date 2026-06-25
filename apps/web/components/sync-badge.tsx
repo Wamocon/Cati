@@ -36,7 +36,7 @@ export function SyncBadge({ lastSync, className }: SyncBadgeProps) {
       ) : (
         <Cloud className="h-3.5 w-3.5 text-sky-500" />
       )}
-      <span>{syncing ? "Twenty CRM senkronize ediliyor" : `Twenty CRM senkronize — ${timeText}`}</span>
+      <span>{syncing ? "CRM + yerel AI senkronize ediliyor" : `CRM + yerel AI güncel - ${timeText}`}</span>
       {!syncing && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
     </div>
   )

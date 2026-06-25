@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import { Link } from "@/app/navigation"
+import { CatiLogoMark } from "@/components/cati-logo"
 
 const linkHrefs: Record<string, string[]> = {
   company: ["/about", "/pitch", "#services", "#services", "#contacts"],
@@ -23,15 +24,13 @@ export function Footer() {
   return (
     <footer
       id="contacts"
-      className="relative border-t border-border/50 bg-muted/20 py-16"
+      className="relative border-t border-border/50 bg-muted/20 py-12 md:py-16"
     >
       <div className="container">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
             <Link href="/" className="group flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-                1Ç
-              </div>
+              <CatiLogoMark className="shadow-lg shadow-primary/20 transition-transform group-hover:scale-105" />
               <span className="text-lg font-bold text-foreground">
                 Ataberk Estate
               </span>

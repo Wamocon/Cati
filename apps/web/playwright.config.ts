@@ -1,9 +1,12 @@
 import { defineConfig, devices } from "@playwright/test"
 
-const nextDevCommand =
+const useProductionServer = process.env.PLAYWRIGHT_SERVER_MODE === "production"
+const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "true"
+const nextMode = useProductionServer ? "start" : "dev"
+const nextServerCommand =
   process.platform === "win32"
-    ? "node_modules\\.bin\\next.CMD dev -p 3100"
-    : "node_modules/.bin/next dev -p 3100"
+    ? `cmd /c npm run ${nextMode} -- -p 3100`
+    : `npm run ${nextMode} -- -p 3100`
 
 export default defineConfig({
   testDir: "./e2e",
@@ -23,9 +26,9 @@ export default defineConfig({
     { name: "mobile-chrome", use: { ...devices["Pixel 5"] } },
   ],
   webServer: {
-    command: nextDevCommand,
+    command: nextServerCommand,
     url: "http://localhost:3100",
-    reuseExistingServer: false,
+    reuseExistingServer,
     timeout: 120_000,
   },
 })

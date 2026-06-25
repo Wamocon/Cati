@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860">
+  <defs>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 Z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" rx="18" fill="#FFFFFF"/>
+  <rect x="34" y="30" width="1332" height="800" rx="24" fill="#F8FAFC" stroke="#CBD5E1"/>
+<text x="70" y="82" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="31" font-weight="850" fill="#111827">Management-Mindmap: Gesamtzusammenhang</text>
+<text x="70" y="116" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="19" font-weight="550" fill="#64748B">Alle Kernbereiche greifen auf dieselbe Daten-, Rollen- und Prüfbasis zu.</text>
+<path d="M700,430 C700,430 700,220 700,220" fill="none" stroke="#2563EB" stroke-width="5" stroke-linecap="round"/><rect x="550" y="145" width="300" height="150" rx="18" fill="#DBEAFE" stroke="#2563EB" filter="url(#softShadow)"/>
+<text x="572" y="183" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#2563EB">Bewohner und</text>
+<text x="572" y="211" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#2563EB">Eigentümer</text>
+<text x="572" y="253" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Portal, Zahlungen,</text>
+<text x="572" y="274" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Anfragen</text><path d="M700,430 C905,430 905,260 1110,260" fill="none" stroke="#16A34A" stroke-width="5" stroke-linecap="round"/><rect x="960" y="185" width="300" height="150" rx="18" fill="#DCFCE7" stroke="#16A34A" filter="url(#softShadow)"/>
+<text x="982" y="223" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#16A34A">Finanzen</text>
+<text x="982" y="265" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Aidat, Salden, Mahnungen</text><path d="M700,430 C910,430 910,555 1120,555" fill="none" stroke="#0F766E" stroke-width="5" stroke-linecap="round"/><rect x="970" y="480" width="300" height="150" rx="18" fill="#CCFBF1" stroke="#0F766E" filter="url(#softShadow)"/>
+<text x="992" y="518" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#0F766E">Servicebereich</text>
+<text x="992" y="560" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Anfragen, Serviceziele,</text>
+<text x="992" y="581" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Nachweise</text><path d="M700,430 C700,430 700,735 700,735" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/><rect x="550" y="660" width="300" height="150" rx="18" fill="#FEF3C7" stroke="#F59E0B" filter="url(#softShadow)"/>
+<text x="572" y="698" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#F59E0B">Buchungen</text>
+<text x="572" y="740" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Räume, Einzug, Auszug</text><path d="M700,430 C490,430 490,555 280,555" fill="none" stroke="#E11D48" stroke-width="5" stroke-linecap="round"/><rect x="130" y="480" width="300" height="150" rx="18" fill="#FFE4E6" stroke="#E11D48" filter="url(#softShadow)"/>
+<text x="152" y="518" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#E11D48">Sicherheit</text>
+<text x="152" y="560" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Rollen, KVKK, Prüfspur</text><path d="M700,430 C487,430 487,260 275,260" fill="none" stroke="#7C3AED" stroke-width="5" stroke-linecap="round"/><rect x="125" y="185" width="300" height="150" rx="18" fill="#EDE9FE" stroke="#7C3AED" filter="url(#softShadow)"/>
+<text x="147" y="223" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="23" font-weight="800" fill="#7C3AED">KI Assistenz</text>
+<text x="147" y="265" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="17" font-weight="550" fill="#334155">Zusammenfassung, Triage</text>
+<circle cx="700" cy="430" r="122" fill="#111827" filter="url(#softShadow)"/>
+<circle cx="700" cy="430" r="104" fill="#1E293B"/>
+<text x="700" y="420" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="42" font-weight="900" fill="#FFFFFF">1Çatı</text>
+<text x="700" y="460" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="20" font-weight="600" fill="#E2E8F0">ein Betriebssystem für</text>
+<text x="700" y="485" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="20" font-weight="600" fill="#E2E8F0">Wohnanlagen</text>
+</svg>

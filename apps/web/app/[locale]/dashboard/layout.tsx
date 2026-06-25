@@ -5,6 +5,7 @@ import { redirect } from "@/app/navigation"
 import { locales, defaultLocale } from "@/i18n"
 import { DashboardSidebar } from "./dashboard-sidebar"
 import { AiAssistant } from "@/components/ai-assistant"
+import { DashboardCommandRibbon } from "@/components/dashboard-command-ribbon"
 
 export default async function DashboardLayout({
   children,
@@ -25,9 +26,10 @@ export default async function DashboardLayout({
 
   return (
     <UserProvider initialUser={profile!}>
-      <div className="flex min-h-svh bg-background">
+      <div className="dashboard-shell flex min-h-svh bg-background">
         <DashboardSidebar />
         <main id="main" className="flex-1 overflow-x-hidden p-4 pt-16 md:p-6 lg:p-8">
+          <DashboardCommandRibbon />
           {children}
         </main>
       </div>

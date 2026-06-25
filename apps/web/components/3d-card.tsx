@@ -43,8 +43,8 @@ export function Card3D({ children, className, innerClassName, glow = true }: Car
     >
       <div
         className={cn(
-          "relative transform-gpu rounded-2xl border border-border bg-card p-5 shadow-sm transition-transform duration-200 ease-out will-change-transform",
-          glow && "before:pointer-events-none before:absolute before:inset-0 before:rounded-2xl before:opacity-0 before:transition-opacity before:duration-300 group-hover:before:opacity-100",
+          "premium-surface relative transform-gpu rounded-xl p-5 transition-transform duration-200 ease-out will-change-transform",
+          glow && "before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:opacity-0 before:transition-opacity before:duration-300 group-hover:before:opacity-100",
           innerClassName
         )}
         style={{
@@ -54,9 +54,9 @@ export function Card3D({ children, className, innerClassName, glow = true }: Car
       >
         {glow && (
           <div
-            className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
             style={{
-              background: `radial-gradient(circle at ${50 + rotateY * 5}% ${50 - rotateX * 5}%, color-mix(in srgb, var(--primary) 12%, transparent), transparent 60%)`,
+              background: `radial-gradient(circle at ${50 + rotateY * 5}% ${50 - rotateX * 5}%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 62%)`,
             }}
           />
         )}

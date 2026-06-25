@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0F172A" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 Z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" rx="18" fill="#FFFFFF"/>
+  <rect x="34" y="30" width="1332" height="710" rx="24" fill="#FFFFFF" stroke="#CBD5E1"/>
+<text x="70" y="86" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="34" font-weight="850" fill="#111827">Betriebsmodell: vom Anliegen zur steuerbaren Leistung</text>
+<text x="70" y="120" text-anchor="start" font-family="Arial Narrow, Arial, sans-serif" font-size="20" font-weight="550" fill="#64748B">Die Plattform verbindet Nutzer, Prozesse, Kontrolle und Auswertung in einem Arbeitsfluss.</text>
+<rect x="78" y="170" width="278" height="430" rx="22" fill="#DBEAFE" stroke="#2563EB" filter="url(#softShadow)"/>
+<text x="217" y="220" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="27" font-weight="850" fill="#2563EB">Nutzergruppen</text>
+<rect x="108" y="242" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#2563EB" opacity="0.98"/>
+<text x="217" y="270" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Bewohner</text>
+<rect x="108" y="300" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#2563EB" opacity="0.98"/>
+<text x="217" y="328" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Eigentümer</text>
+<rect x="108" y="358" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#2563EB" opacity="0.98"/>
+<text x="217" y="386" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Verwaltung</text>
+<rect x="108" y="416" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#2563EB" opacity="0.98"/>
+<text x="217" y="444" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Technik</text>
+<rect x="108" y="474" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#2563EB" opacity="0.98"/>
+<text x="217" y="502" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Buchhaltung</text>
+<line x1="366" y1="385" x2="382" y2="385" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="398" y="170" width="278" height="430" rx="22" fill="#CCFBF1" stroke="#0F766E" filter="url(#softShadow)"/>
+<text x="537" y="220" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="27" font-weight="850" fill="#0F766E">Kernmodule</text>
+<rect x="428" y="242" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#0F766E" opacity="0.98"/>
+<text x="537" y="270" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Portal</text>
+<rect x="428" y="300" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#0F766E" opacity="0.98"/>
+<text x="537" y="328" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Finanzen</text>
+<rect x="428" y="358" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#0F766E" opacity="0.98"/>
+<text x="537" y="386" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Servicebereich</text>
+<rect x="428" y="416" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#0F766E" opacity="0.98"/>
+<text x="537" y="444" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Buchungen</text>
+<rect x="428" y="474" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#0F766E" opacity="0.98"/>
+<text x="537" y="502" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Dokumente</text>
+<line x1="686" y1="385" x2="702" y2="385" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="718" y="170" width="278" height="430" rx="22" fill="#FEF3C7" stroke="#F59E0B" filter="url(#softShadow)"/>
+<text x="857" y="220" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="27" font-weight="850" fill="#F59E0B">Steuerung</text>
+<rect x="748" y="242" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#F59E0B" opacity="0.98"/>
+<text x="857" y="270" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Rollen und Rechte</text>
+<rect x="748" y="300" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#F59E0B" opacity="0.98"/>
+<text x="857" y="328" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Freigaben</text>
+<rect x="748" y="358" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#F59E0B" opacity="0.98"/>
+<text x="857" y="386" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Benachrichtigungen</text>
+<rect x="748" y="416" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#F59E0B" opacity="0.98"/>
+<text x="857" y="444" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Berichte</text>
+<rect x="748" y="474" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#F59E0B" opacity="0.98"/>
+<text x="857" y="502" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">KI Hinweise</text>
+<line x1="1006" y1="385" x2="1022" y2="385" stroke="#475569" stroke-width="4" marker-end="url(#arrow)"/>
+<rect x="1038" y="170" width="278" height="430" rx="22" fill="#FFE4E6" stroke="#E11D48" filter="url(#softShadow)"/>
+<text x="1177" y="220" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="27" font-weight="850" fill="#E11D48">Kontrollbasis</text>
+<rect x="1068" y="242" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#E11D48" opacity="0.98"/>
+<text x="1177" y="270" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Prüfprotokoll</text>
+<rect x="1068" y="300" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#E11D48" opacity="0.98"/>
+<text x="1177" y="328" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">KVKK-Regeln</text>
+<rect x="1068" y="358" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#E11D48" opacity="0.98"/>
+<text x="1177" y="386" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Datenqualität</text>
+<rect x="1068" y="416" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#E11D48" opacity="0.98"/>
+<text x="1177" y="444" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Datensicherung</text>
+<rect x="1068" y="474" width="218" height="42" rx="12" fill="#FFFFFF" stroke="#E11D48" opacity="0.98"/>
+<text x="1177" y="502" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="18" font-weight="750" fill="#111827">Überwachung</text>
+<rect x="190" y="650" width="1020" height="48" rx="16" fill="#F1F5F9" stroke="#CBD5E1"/>
+<text x="700" y="681" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="20" font-weight="700" fill="#334155">Ziel: weniger manuelle Abstimmung, klare Verantwortlichkeiten, belastbare Daten und bessere</text>
+<text x="700" y="706" text-anchor="middle" font-family="Arial Narrow, Arial, sans-serif" font-size="20" font-weight="700" fill="#334155">Servicequalität.</text>
+</svg>

@@ -1,0 +1,23 @@
+erDiagram
+  sites ||--o{ blocks : contains
+  blocks ||--o{ flats : contains
+  flats ||--o{ occupancies : has
+  profiles ||--o{ occupancies : linked_to
+  profiles ||--o{ accounts : owns
+  flats ||--o{ accounts : has
+  accounts ||--o{ journal_lines : records
+  journal_entries ||--o{ journal_lines : contains
+  flats ||--o{ bookings : booked_for
+  bookings ||--o{ deposits : secures
+  bookings ||--o{ checkout_inspections : closes_with
+  service_catalog ||--o{ service_orders : ordered_as
+  service_orders ||--o{ tickets : creates
+  tickets ||--o{ ticket_events : has
+  tickets ||--o{ media_reports : has
+  profiles ||--o{ tickets : assigned
+  message_threads ||--o{ messages : contains
+  profiles ||--o{ messages : sends
+  documents ||--o{ document_permissions : secured_by
+  integration_connections ||--o{ integration_events : emits
+  profiles ||--o{ audit_logs : actor
+  ai_events ||--o{ ai_recommendations : creates

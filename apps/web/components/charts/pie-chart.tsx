@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef } from "react"
-import { motion, useInView } from "framer-motion"
+import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
 
 interface PieChartProps {
@@ -10,9 +9,11 @@ interface PieChartProps {
   size?: number
 }
 
+function svgNumber(value: number) {
+  return Number(value.toFixed(3)).toString()
+}
+
 export function PieChart({ data, className, size = 160 }: PieChartProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: "-40px" })
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1
   const radius = size / 2 - 8
   const center = size / 2
@@ -32,7 +33,23 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
       const y1 = center + radius * Math.sin(start)
       const x2 = center + radius * Math.cos(end)
       const y2 = center + radius * Math.sin(end)
-      const path = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
+      const path = [
+        "M",
+        svgNumber(center),
+        svgNumber(center),
+        "L",
+        svgNumber(x1),
+        svgNumber(y1),
+        "A",
+        svgNumber(radius),
+        svgNumber(radius),
+        "0",
+        largeArc,
+        "1",
+        svgNumber(x2),
+        svgNumber(y2),
+        "Z",
+      ].join(" ")
 
       return {
         cumulative: nextCumulative,
@@ -43,7 +60,7 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
   ).slices
 
   return (
-    <div ref={ref} className={cn("flex flex-col items-center gap-4 sm:flex-row", className)}>
+    <div className={cn("flex flex-col items-center gap-4 sm:flex-row", className)}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
         {slices.map((slice, i) => (
           <motion.path
@@ -53,7 +70,7 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
             stroke="var(--background)"
             strokeWidth={2}
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, scale: 1 } : {}}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: i * 0.08 }}
           />
         ))}

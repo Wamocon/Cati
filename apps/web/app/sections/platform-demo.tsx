@@ -28,7 +28,7 @@ export function PlatformDemo() {
   const Icon = icons[active]
 
   return (
-    <section className="relative border-y border-border/50 py-24">
+    <section className="relative border-y border-border/50 py-16 md:py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-background to-muted/20" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
@@ -39,7 +39,7 @@ export function PlatformDemo() {
           <p className="mt-5 text-muted-foreground">{t("subtitle")}</p>
         </ScrollReveal>
 
-        <div className="mx-auto mt-12 grid max-w-6xl items-center gap-8 lg:grid-cols-5">
+        <div className="mx-auto mt-10 grid max-w-6xl items-center gap-8 md:mt-12 lg:grid-cols-5">
           {/* Left: interactive table */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}

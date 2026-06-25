@@ -10,6 +10,7 @@ import {
   useMotionValueEvent,
 } from "framer-motion"
 import { Link } from "@/app/navigation"
+import { CatiLogoMark } from "@/components/cati-logo"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
@@ -59,10 +60,7 @@ export function Navbar() {
       >
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-              <span className="relative z-10">1Ç</span>
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent" />
-            </div>
+            <CatiLogoMark className="shadow-lg shadow-primary/20 transition-transform group-hover:scale-105" />
             <div className="flex flex-col">
               <span className="text-sm leading-tight font-bold tracking-tight text-foreground">
                 Ataberk Estate

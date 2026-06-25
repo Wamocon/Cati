@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant User
+  participant WebApp
+  participant PaymentModule
+  participant Provider
+  participant Ledger
+  participant Audit
+
+  User->>WebApp: Start payment
+  WebApp->>PaymentModule: Create payment intent
+  PaymentModule->>Provider: Create provider payment
+  Provider-->>PaymentModule: Provider reference
+  PaymentModule-->>WebApp: Payment URL/reference
+  User->>Provider: Complete payment
+  Provider->>PaymentModule: Webhook event
+  PaymentModule->>PaymentModule: Verify signature and idempotency
+  PaymentModule->>Ledger: Post payment journal entry
+  Ledger-->>PaymentModule: Posted
+  PaymentModule->>Audit: Write audit log
+  PaymentModule-->>WebApp: Updated payment status

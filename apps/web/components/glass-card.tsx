@@ -14,7 +14,7 @@ export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
       <div
         ref={ref}
         className={cn(
-          "glass relative overflow-hidden rounded-2xl p-6 transition-all duration-300",
+          "glass relative overflow-hidden rounded-xl p-6 transition-all duration-300",
           glow &&
             "shadow-[0_0_40px_-12px_color-mix(in_srgb,var(--primary)_30%,transparent)]",
           hover &&

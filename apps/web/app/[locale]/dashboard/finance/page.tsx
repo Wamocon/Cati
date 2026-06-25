@@ -1,94 +1,280 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-import { CircleDollarSign } from "lucide-react"
-import { useDemoData } from "@/hooks/use-demo-data"
-import { DataTable } from "@/components/data-table"
-import { Card3D } from "@/components/3d-card"
+import { Banknote, CalendarClock, CreditCard, Euro, LockKeyhole, ReceiptText, TrendingDown, WalletCards } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
+import { Card3D } from "@/components/3d-card"
+import { DataTable } from "@/components/data-table"
+import { StatusBadge } from "@/components/status-badge"
+import {
+  accessLabels,
+  cashFlow,
+  formatEur,
+  formatEurShort,
+  formatTry,
+  formatTryShort,
+  getDebtAccounts,
+  getDebtAging,
+  getPaymentPlanSummary,
+  getSummary,
+  paymentLabels,
+  paymentPlans,
+  type AccessStatus,
+  type PaymentPlanStatus,
+  type PaymentStatus,
+} from "@/lib/site-management-data"
+import { clientProfile } from "@/lib/client-context"
+
+function paymentVariant(status: PaymentStatus) {
+  if (status === "clear") return "success"
+  if (status === "minor_debt") return "warning"
+  return "danger"
+}
+
+function accessVariant(status: AccessStatus) {
+  if (status === "active") return "success"
+  if (status === "pending") return "warning"
+  if (status === "restricted") return "danger"
+  return "neutral"
+}
+
+function planVariant(status: PaymentPlanStatus) {
+  if (status === "on_track") return "success"
+  if (status === "due_soon") return "warning"
+  return "danger"
+}
+
+function planLabel(status: PaymentPlanStatus) {
+  if (status === "on_track") return "Planında"
+  if (status === "due_soon") return "Vade yaklaştı"
+  if (status === "overdue") return "Gecikti"
+  return "Blokeli"
+}
+
+function shortDate(date: string) {
+  return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short" }).format(new Date(date))
+}
 
 export default function FinancePage() {
-  const t = useTranslations("dashboardModules.finance")
-  const { loading, financialHistory, deals } = useDemoData()
-
-  if (loading) return <p className="text-muted-foreground">{t("loading")}</p>
-
-  const totalRevenue = financialHistory.reduce((sum, f) => sum + f.revenueEur, 0)
-  const totalCommission = financialHistory.reduce((sum, f) => sum + f.commissionTry, 0)
-  const closedDeals = deals.filter((d) => d.stage === "closed_won").length
-
-  const chartData = financialHistory.map((f) => ({
-    label: f.month,
-    value: f.revenueEur,
-    color: "var(--primary)",
-  }))
+  const summary = getSummary()
+  const accounts = getDebtAccounts()
+  const debtAging = getDebtAging()
+  const latestCashFlow = cashFlow.at(-1)
+  const legalAccounts = accounts.filter((account) => account.paymentStatus === "legal").length
+  const overdueAccounts = accounts.filter((account) => account.paymentStatus === "overdue").length
+  const planSummary = getPaymentPlanSummary()
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+        <h1 className="text-2xl font-black text-foreground">Finans, Satış & Aidat</h1>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          {clientProfile.clientName} için satış ödemeleri, aidat, borç yaşlandırma, depozito, ödeme doğrulama,
+          kira geliri ve erişim kısıtı kararları aynı finans akışında yönetilir.
+        </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card3D>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card3D glow={false}>
           <div className="flex items-center gap-3">
-            <CircleDollarSign className="h-8 w-8 text-primary" />
+            <WalletCards className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs text-muted-foreground uppercase">{t("stats.revenue")}</p>
-              <p className="text-2xl font-black">{(totalRevenue / 1_000_000).toFixed(2)}M €</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Toplam borç</p>
+              <p className="text-2xl font-black">{formatTryShort(summary.totalDebtTry)}</p>
             </div>
           </div>
         </Card3D>
-        <Card3D>
-          <p className="text-xs text-muted-foreground uppercase">{t("stats.commission")}</p>
-          <p className="text-2xl font-black">{(totalCommission / 1_000_000).toFixed(2)}M ₺</p>
+        <Card3D glow={false}>
+          <div className="flex items-center gap-3">
+            <ReceiptText className="h-8 w-8 text-teal-600" />
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Aylık aidat</p>
+              <p className="text-2xl font-black">{formatTryShort(summary.monthlyExpectedTry)}</p>
+            </div>
+          </div>
         </Card3D>
-        <Card3D>
-          <p className="text-xs text-muted-foreground uppercase">{t("stats.closedDeals")}</p>
-          <AnimatedCounter value={closedDeals} className="text-2xl font-black" />
+        <Card3D glow={false}>
+          <div className="flex items-center gap-3">
+            <Banknote className="h-8 w-8 text-sky-600" />
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Haziran tahsilat</p>
+              <p className="text-2xl font-black">{formatTryShort(latestCashFlow?.collectedTry ?? 0)}</p>
+            </div>
+          </div>
+        </Card3D>
+        <Card3D glow={false}>
+          <div className="flex items-center gap-3">
+            <LockKeyhole className="h-8 w-8 text-amber-600" />
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Kısıtlı erişim</p>
+              <AnimatedCounter value={summary.restrictedAccess} className="text-2xl font-black" />
+            </div>
+          </div>
         </Card3D>
       </div>
 
-      <Card3D>
-        <h3 className="mb-4 text-sm font-bold text-card-foreground">{t("chartTitle")}</h3>
-        <BarChart data={chartData} formatValue={(v) => `${(v / 1000).toFixed(0)}k €`} height={240} />
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card3D className="xl:col-span-2" glow={false}>
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">Aylık nakit akışı</h2>
+              <p className="text-xs text-muted-foreground">Tahsilat, açık borç ve servis gideri birlikte takip edilir.</p>
+            </div>
+            <StatusBadge variant="success">Tahsilat {formatTryShort(latestCashFlow?.collectedTry ?? 0)}</StatusBadge>
+          </div>
+          <BarChart
+            data={cashFlow.map((month) => ({ label: month.label, value: month.collectedTry, color: "var(--primary)" }))}
+            formatValue={(value) => formatTryShort(value)}
+            height={250}
+          />
+        </Card3D>
+
+        <Card3D glow={false}>
+          <h2 className="text-sm font-bold text-card-foreground">Borç yaşlandırma</h2>
+          <p className="mb-4 mt-1 text-xs text-muted-foreground">Önceliklendirme 90+ gün ve erişim kısıtından başlar.</p>
+          <div className="space-y-3">
+            {debtAging.map((bucket) => (
+              <div key={bucket.label}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-foreground">{bucket.label} gün</span>
+                  <span className="text-muted-foreground">{formatTryShort(bucket.value)}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${Math.min(100, Math.round((bucket.value / Math.max(summary.totalDebtTry, 1)) * 100 * 3))}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Yasal takip</p>
+              <p className="mt-1 text-xl font-black">{legalAccounts}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">Gecikmiş</p>
+              <p className="mt-1 text-xl font-black">{overdueAccounts}</p>
+            </div>
+          </div>
+        </Card3D>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card3D glow={false}>
+          <div className="flex items-start gap-3">
+            <CreditCard className="mt-0.5 h-5 w-5 text-primary" />
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">Ödeme doğrulama</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Banka dekontu, online ödeme, manuel tahsilat ve kasa hareketi aynı hesap kaydına bağlanır.
+              </p>
+            </div>
+          </div>
+        </Card3D>
+        <Card3D glow={false}>
+          <div className="flex items-start gap-3">
+            <TrendingDown className="mt-0.5 h-5 w-5 text-rose-600" />
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">Borç kısıtlama kuralı</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                90+ gün borçta erişim kısıtı, servis bekletme ve yasal takip önerisi otomatik görünür.
+              </p>
+            </div>
+          </div>
+        </Card3D>
+        <Card3D glow={false}>
+          <div className="flex items-start gap-3">
+            <Banknote className="mt-0.5 h-5 w-5 text-teal-600" />
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">Depozito kontrolü</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Hasar, temizlik ve iade onayı rezervasyon çıkışıyla finans panelinde kapanır.
+              </p>
+            </div>
+          </div>
+        </Card3D>
+      </div>
+
+      <Card3D glow={false}>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Euro className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-bold text-card-foreground">Phase 7 - New Level Premium satış ödeme planı</h2>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              0% taksit akışı; liste fiyatı, peşinat, kalan vade, kur riski ve sözleşme blokajını satıştan önce görünür yapar.
+            </p>
+          </div>
+          <StatusBadge variant="warning">Açık vade {formatEurShort(planSummary.openExposureEur)}</StatusBadge>
+        </div>
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Plan sayısı</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{planSummary.total}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Planında</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{planSummary.onTrack}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Vade uyarısı</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{planSummary.dueSoon + planSummary.overdue}</p>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Blokeli</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{planSummary.blocked}</p>
+          </div>
+        </div>
+        <DataTable
+          data={paymentPlans}
+          pageSize={6}
+          searchValue={(plan) => `${plan.id} ${plan.dealName} ${plan.buyerName} ${plan.unitType} ${plan.approvalBlocker}`}
+          columns={[
+            { key: "id", header: "Plan", sortable: true, render: (plan) => plan.id },
+            { key: "deal", header: "Deal", render: (plan) => plan.dealName },
+            { key: "buyer", header: "Alıcı", render: (plan) => plan.buyerName },
+            { key: "price", header: "Liste", sortable: true, sortValue: (plan) => plan.listPriceEur, render: (plan) => formatEur(plan.listPriceEur) },
+            { key: "paid", header: "Ödenen", sortable: true, sortValue: (plan) => plan.paidEur, render: (plan) => formatEur(plan.paidEur) },
+            { key: "next", header: "Sonraki vade", render: (plan) => (
+              <span className="inline-flex items-center gap-1">
+                <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
+                {formatEur(plan.nextDueEur)} / {shortDate(plan.nextDueAt)}
+              </span>
+            ) },
+            { key: "status", header: "Durum", render: (plan) => <StatusBadge variant={planVariant(plan.status)}>{planLabel(plan.status)}</StatusBadge> },
+            { key: "blocker", header: "Blokaj", render: (plan) => plan.approvalBlocker },
+          ]}
+        />
       </Card3D>
 
       <DataTable
-        data={financialHistory}
-        searchKey="month"
+        data={accounts}
+        searchValue={(account) => `${account.flatNumber} ${account.ownerName} ${account.suggestedAction}`}
         columns={[
-          { key: "month", header: t("columns.month"), render: (f) => f.month, sortable: true },
+          { key: "flat", header: "Daire", sortable: true, render: (account) => account.flatNumber },
+          { key: "owner", header: "Malik", render: (account) => account.ownerName },
           {
-            key: "revenue",
-            header: t("columns.revenue"),
-            render: (f) => `${f.revenueEur.toLocaleString("tr-TR")} €`,
+            key: "balance",
+            header: "Borç",
             sortable: true,
-            sortValue: (f) => f.revenueEur,
+            sortValue: (account) => account.balanceTry,
+            render: (account) => <span className="font-semibold">{formatTry(account.balanceTry)}</span>,
+          },
+          { key: "aging", header: "Yaş", sortable: true, render: (account) => `${account.agingBucket} gün` },
+          {
+            key: "payment",
+            header: "Durum",
+            render: (account) => <StatusBadge variant={paymentVariant(account.paymentStatus)}>{paymentLabels[account.paymentStatus]}</StatusBadge>,
           },
           {
-            key: "commission",
-            header: t("columns.commission"),
-            render: (f) => `${f.commissionTry.toLocaleString("tr-TR")} ₺`,
-            sortable: true,
-            sortValue: (f) => f.commissionTry,
+            key: "access",
+            header: "Erişim",
+            render: (account) => <StatusBadge variant={accessVariant(account.accessStatus)}>{accessLabels[account.accessStatus]}</StatusBadge>,
           },
-          {
-            key: "expenses",
-            header: t("columns.expenses"),
-            render: (f) => `${f.expensesTry.toLocaleString("tr-TR")} ₺`,
-            sortable: true,
-            sortValue: (f) => f.expensesTry,
-          },
-          {
-            key: "deals",
-            header: t("columns.deals"),
-            render: (f) => f.dealsClosed,
-            sortable: true,
-            sortValue: (f) => f.dealsClosed,
-          },
+          { key: "action", header: "Önerilen aksiyon", render: (account) => account.suggestedAction },
         ]}
       />
     </div>

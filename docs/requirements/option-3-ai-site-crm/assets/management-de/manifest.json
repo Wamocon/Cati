@@ -1,0 +1,38 @@
+[
+  {
+    "name": "management-mindmap",
+    "title": "Management-Mindmap",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\management-mindmap.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\management-mindmap.png"
+  },
+  {
+    "name": "betriebsmodell",
+    "title": "Betriebsmodell",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\betriebsmodell.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\betriebsmodell.png"
+  },
+  {
+    "name": "roadmap",
+    "title": "Roadmap",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\roadmap.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\roadmap.png"
+  },
+  {
+    "name": "workflow",
+    "title": "Ablaufdiagramm",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\workflow.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\workflow.png"
+  },
+  {
+    "name": "risiko-heatmap",
+    "title": "Risikolandkarte",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\risiko-heatmap.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\risiko-heatmap.png"
+  },
+  {
+    "name": "architektur",
+    "title": "Architektur",
+    "svg": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\architektur.svg",
+    "png": "D:\\Real Estate CRM\\Cati\\docs\\requirements\\option-3-ai-site-crm\\assets\\management-de\\architektur.png"
+  }
+]

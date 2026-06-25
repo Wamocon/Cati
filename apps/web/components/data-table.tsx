@@ -18,6 +18,7 @@ interface DataTableProps<T> {
   data: T[]
   searchKey?: keyof T
   searchValue?: (row: T) => string
+  pageSize?: number
   className?: string
 }
 
@@ -58,6 +59,7 @@ export function DataTable<T>({
   data,
   searchKey,
   searchValue,
+  pageSize = 20,
   className,
 }: DataTableProps<T>) {
   const t = useTranslations("dataTable")
@@ -66,6 +68,7 @@ export function DataTable<T>({
     key: string
     dir: "asc" | "desc"
   } | null>(null)
+  const [page, setPage] = useState(1)
 
   const filtered =
     searchKey || searchValue
@@ -88,7 +91,13 @@ export function DataTable<T>({
       })
     : filtered
 
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageStart = (currentPage - 1) * pageSize
+  const pageRows = sorted.slice(pageStart, pageStart + pageSize)
+
   function toggleSort(key: string) {
+    setPage(1)
     setSort((prev) => {
       if (!prev || prev.key !== key) return { key, dir: "asc" }
       return prev.dir === "asc" ? { key, dir: "desc" } : null
@@ -98,35 +107,40 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-2xl border border-border bg-card",
+        "premium-surface overflow-hidden rounded-xl",
         className
       )}
       data-testid="data-table"
     >
       {(searchKey || searchValue) && (
-        <div className="flex items-center gap-2 border-b border-border p-3">
-          <Search className="h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col gap-3 border-b border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
+            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
           <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setPage(1)
+            }}
             placeholder={t("search")}
             aria-label={t("search")}
-            className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
+              className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
-          <span className="text-xs text-muted-foreground">
+          </div>
+          <span className="whitespace-nowrap rounded-full border border-border/70 bg-muted/50 px-3 py-1 text-xs font-semibold text-muted-foreground">
             {t("count", { count: sorted.length })}
           </span>
         </div>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-muted/50">
+          <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   className={cn(
-                    "px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground",
+                    "px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground",
                     col.sortable &&
                       "cursor-pointer select-none hover:text-foreground"
                   )}
@@ -146,12 +160,12 @@ export function DataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
-            {sorted.length > 0 ? (
-              sorted.map((row, index) => (
+          <tbody className="divide-y divide-border/60">
+            {pageRows.length > 0 ? (
+              pageRows.map((row, index) => (
                 <tr
                   key={index}
-                  className="transition-colors hover:bg-muted/30"
+                  className="transition-colors hover:bg-primary/[0.045]"
                 >
                   {columns.map((col) => (
                     <td key={col.key} className="px-4 py-3 text-foreground">
@@ -173,6 +187,34 @@ export function DataTable<T>({
           </tbody>
         </table>
       </div>
+      {sorted.length > pageSize && (
+        <div className="flex flex-col gap-3 border-t border-border p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            {pageStart + 1}-{Math.min(pageStart + pageSize, sorted.length)} / {sorted.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+              disabled={currentPage === 1}
+              className="rounded-lg border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Önceki
+            </button>
+            <span>
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-lg border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Sonraki
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

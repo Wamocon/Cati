@@ -1,0 +1,16 @@
+flowchart TD
+  A[Flat and user relationship] --> B[Account and ledger]
+  B --> C[Debt status]
+  C --> D[Restriction rules]
+  D --> E[Service order decision]
+  D --> F[Booking decision]
+  D --> G[Access action request]
+  E --> H[Ticket and task]
+  F --> I[Move-in or checkout workflow]
+  H --> J[Staff completion report]
+  I --> K[Deposit settlement]
+  G --> L[Integration event]
+  J --> M[Resident communication]
+  K --> B
+  L --> N[Audit log]
+  M --> N

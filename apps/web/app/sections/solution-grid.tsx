@@ -61,7 +61,7 @@ export function SolutionGrid() {
   return (
     <section
       data-testid="solution-grid"
-      className="relative border-y border-border/50 py-24"
+      className="relative border-y border-border/50 py-16 md:py-24"
     >
       <div className="absolute inset-0 bg-muted/20" />
       <div className="relative z-10 container">
@@ -72,7 +72,7 @@ export function SolutionGrid() {
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
         </ScrollReveal>
 
-        <div className="mt-14 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid auto-rows-fr gap-4 sm:grid-cols-2 md:mt-14 lg:grid-cols-4">
           {keys.map((key, index) => {
             const Icon = icons[key]
             return (

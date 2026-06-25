@@ -13,9 +13,16 @@ out/
 qa_*.png
 qa_*.txt
 qa_*.py
+quality/
+.tmp/
+
+# Generated archives and local export bundles
+*.zip
 
 # Backup files
 *.orig
+*.bak
+~$*.docx
 
 # OS files
 .DS_Store

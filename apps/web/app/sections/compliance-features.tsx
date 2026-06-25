@@ -34,7 +34,10 @@ export function ComplianceFeatures() {
   ] as const
 
   return (
-    <section data-testid="compliance-features" className="relative py-24">
+    <section
+      data-testid="compliance-features"
+      className="relative py-16 md:py-24"
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.02] to-background" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
@@ -48,7 +51,7 @@ export function ComplianceFeatures() {
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
         </ScrollReveal>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
           {keys.map((key, index) => {
             const Icon = icons[key]
             const tag = t(`items.${key}.tag`)

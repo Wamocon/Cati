@@ -17,12 +17,15 @@ import {
   Settings,
   ShieldCheck,
   AlertCircle,
+  LayoutDashboard,
 } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/app/navigation"
+import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
+import { clientProfile } from "@/lib/client-context"
 
 interface MenuItem {
   resource: Resource
@@ -31,7 +34,8 @@ interface MenuItem {
 }
 
 const menu: MenuItem[] = [
-  { resource: "listings", href: "/dashboard", icon: Building2 },
+  { resource: "dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { resource: "listings", href: "/dashboard/listings", icon: Building2 },
   { resource: "leads", href: "/dashboard/leads", icon: Users },
   { resource: "tickets", href: "/dashboard/tickets", icon: TicketCheck },
   { resource: "calendar", href: "/dashboard/calendar", icon: CalendarDays },
@@ -42,6 +46,23 @@ const menu: MenuItem[] = [
   { resource: "users", href: "/dashboard/users", icon: UserCog },
   { resource: "settings", href: "/dashboard/settings", icon: Settings },
 ]
+
+const siteMenuLabels: Record<Resource, string> = {
+  dashboard: "Genel Bakış",
+  listings: "Daire Matrisi",
+  leads: "Sakinler",
+  deals: "İş Akışları",
+  tickets: "Servis Talepleri",
+  calendar: "Rezervasyon",
+  eids_compliance: "Erişim & Uyum",
+  documents: "Belgeler",
+  finance: "Finans & Aidat",
+  reports: "Raporlar",
+  users: "Kullanıcılar & Roller",
+  settings: "Ayarlar",
+  communications: "İletişim",
+  offline_sync: "Offline Senkron",
+}
 
 export function DashboardSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -76,7 +97,7 @@ export function DashboardSidebar() {
 
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
       >
         <Menu className="h-5 w-5" />
@@ -84,17 +105,20 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform border-r border-border bg-card transition-transform duration-200 md:relative md:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-transform duration-200 md:relative md:translate-x-0 md:shadow-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-full flex-col p-5">
+        <div className="flex h-full flex-col p-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-teal-600 text-sm font-black text-primary-foreground">
-                1Ç
-              </div>
-              <span className="text-lg font-bold text-card-foreground">1Çatı</span>
+              <CatiLogoMark className="shadow-lg shadow-primary/20" />
+              <span className="min-w-0">
+                <span className="block text-lg font-black leading-tight text-sidebar-foreground">1Çatı</span>
+                <span className="block truncate text-[11px] font-semibold text-muted-foreground">
+                  {clientProfile.clientName} pilot
+                </span>
+              </span>
             </Link>
             <button
               className="text-muted-foreground md:hidden"
@@ -105,7 +129,14 @@ export function DashboardSidebar() {
             </button>
           </div>
 
-          <div className="mt-5 flex items-center gap-3 rounded-xl border border-border bg-muted/50 p-3">
+          <div className="mt-5 rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase text-primary">
+                {clientProfile.pilotProject}
+              </span>
+              <span className="text-[10px] font-semibold text-muted-foreground">{clientProfile.pilotLocation}</span>
+            </div>
+            <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <ShieldCheck className="h-4 w-4" />
             </div>
@@ -113,26 +144,30 @@ export function DashboardSidebar() {
               <p className="truncate text-sm font-semibold text-card-foreground">{user.full_name ?? user.email}</p>
               <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
             </div>
+            </div>
           </div>
 
-          <nav className="mt-5 space-y-0.5">
+          <nav className="mt-5 space-y-1">
             {filteredMenu.map((item) => {
               const Icon = item.icon
-              const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+              const active =
+                item.href === "/dashboard"
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`)
               return (
                 <Link
                   key={item.resource}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
                     active
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]"
+                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
-                  {t(`menu.${item.resource}`)}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {siteMenuLabels[item.resource]}
                 </Link>
               )
             })}
@@ -147,7 +182,7 @@ export function DashboardSidebar() {
             )}
             <button
               onClick={logout}
-              className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
             >
               <LogOut className="h-4 w-4" />
               {t("logout")}

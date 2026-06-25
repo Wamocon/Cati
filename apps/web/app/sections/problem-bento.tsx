@@ -49,7 +49,11 @@ export function ProblemBento() {
   ] as const
 
   return (
-    <section id="about" data-testid="problem-bento" className="relative py-24">
+    <section
+      id="about"
+      data-testid="problem-bento"
+      className="relative py-16 md:py-24"
+    >
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
@@ -66,7 +70,7 @@ export function ProblemBento() {
           <p className="mt-4 text-muted-foreground">{t("subtitle")}</p>
         </ScrollReveal>
 
-        <div className="mt-14 grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid auto-rows-fr gap-4 sm:grid-cols-2 md:mt-14 lg:grid-cols-3">
           {keys.map((key, index) => {
             const Icon = icons[key]
             return (
