@@ -213,7 +213,7 @@ SELECT
   r.id,
   CASE WHEN u.rn % 6 = 0 THEN 'tenant' ELSE 'owner' END,
   TRUE,
-  CURRENT_DATE - (u.rn * 17)
+  CURRENT_DATE - ((u.rn * 17)::integer)
 FROM ranked_units u
 JOIN ranked_residents r ON r.rn = u.rn
 ON CONFLICT (unit_id, resident_id, relationship) DO NOTHING;
@@ -448,7 +448,7 @@ INSERT INTO public.operational_search_documents (
   language,
   metadata
 )
-SELECT company_id, 'residents', id, email, full_name, coalesce(phone, '') || ' ' || preferred_language || ' risk ' || risk_score, 'tr', jsonb_build_object('email', email)
+SELECT company_id, 'residents', id, id::text, full_name, coalesce(phone, '') || ' ' || preferred_language || ' risk ' || risk_score, 'tr', jsonb_build_object('email', email)
 FROM public.residents
 WHERE company_id = '11111111-1111-4111-8111-111111111111'
 ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
