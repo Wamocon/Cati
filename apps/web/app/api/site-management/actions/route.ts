@@ -25,7 +25,13 @@ function resourceForEntityTable(entityTable: string | null): Resource {
     entityTable === "import_batches" ||
     entityTable === "import_findings"
   ) return "listings"
-  if (entityTable === "service_tickets") return "tickets"
+  if (
+    entityTable === "service_tickets" ||
+    entityTable === "service_catalog" ||
+    entityTable === "service_orders" ||
+    entityTable === "workforce_tasks" ||
+    entityTable === "media_reports"
+  ) return "tickets"
   if (entityTable === "bookings" || entityTable === "reservations") return "calendar"
   if (entityTable === "documents" || entityTable === "purchase_documents") return "documents"
   if (

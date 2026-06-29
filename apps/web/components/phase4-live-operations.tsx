@@ -30,7 +30,12 @@ type RequestState = "idle" | "loading" | "success" | "error"
 
 const PHASE4_REALTIME_TABLES = [
   "units",
+  "service_catalog",
+  "service_orders",
   "service_tickets",
+  "service_ticket_events",
+  "workforce_tasks",
+  "media_reports",
   "finance_ledger_entries",
   "client_action_requests",
   "import_batches",

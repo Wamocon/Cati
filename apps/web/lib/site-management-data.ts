@@ -73,6 +73,94 @@ export interface ServiceTicket {
   estimatedCostTry: number
 }
 
+export type ServiceCatalogCategory =
+  | "maintenance"
+  | "cleaning"
+  | "transfer"
+  | "amenity"
+  | "security"
+  | "inspection"
+  | "concierge"
+
+export type ServiceDebtPolicy = "allow" | "manager_review" | "block_until_clear"
+export type ServiceProviderType = "internal" | "vendor" | "mixed"
+export type ServiceOrderStatus =
+  | "draft"
+  | "debt_check"
+  | "payment_pending"
+  | "task_created"
+  | "assigned"
+  | "completed"
+  | "blocked"
+  | "cancelled"
+export type ServiceDebtCheckStatus = "clear" | "minor_debt_review" | "blocked"
+export type ServicePaymentDecision =
+  | "no_charge"
+  | "collect_before_dispatch"
+  | "debit_to_account"
+  | "paid_or_debit_approved"
+  | "hold"
+
+export interface ServiceCatalogItem {
+  id: string
+  code: string
+  name: string
+  category: ServiceCatalogCategory
+  description: string
+  basePriceTry: number
+  currency: "TRY"
+  slaHours: number
+  debtPolicy: ServiceDebtPolicy
+  requiresPayment: boolean
+  requiresDeposit: boolean
+  team: string
+  providerType: ServiceProviderType
+  active: boolean
+  serviceLevel: "standard" | "premium" | "emergency"
+  popularityScore: number
+}
+
+export interface ServiceOrderRecord {
+  id: string
+  orderNo: string
+  catalogItemId: string
+  catalogItemName: string
+  ticketId: string
+  flatNumber: string
+  requester: string
+  status: ServiceOrderStatus
+  debtCheckStatus: ServiceDebtCheckStatus
+  paymentDecision: ServicePaymentDecision
+  quotedPriceTry: number
+  currency: "TRY"
+  slaHours: number
+  assignedTeam: string
+  taskCreated: boolean
+  requestedForAt: string
+  createdAt: string
+  nextAction: string
+}
+
+export interface WorkforceTaskRecord {
+  id: string
+  ticketId: string
+  flatNumber: string
+  title: string
+  team: string
+  assignee: string
+  status: ServiceStatus
+  priority: ServicePriority
+  slaHoursRemaining: number
+  routeSlot: string
+  checklist: string[]
+  requiresMedia: boolean
+  mediaCount: number
+  managerApprovalRequired: boolean
+  lastUpdateAt: string
+  fieldNote: string
+  completionReadiness: number
+}
+
 export interface BookingRecord {
   id: string
   flatId: string
@@ -476,6 +564,300 @@ export const serviceTickets: ServiceTicket[] = ([
       estimatedCostTry: Number(estimatedCostTry),
     }
   })
+
+export const serviceCatalogItems: ServiceCatalogItem[] = [
+  {
+    id: "CAT-CLEAN-STD",
+    code: "CLEAN-STD",
+    name: "Standart daire temizligi",
+    category: "cleaning",
+    description: "Daire teslimi, kisa konaklama sonrasi temizlik ve temel sarf malzeme kontrolu.",
+    basePriceTry: 2500,
+    currency: "TRY",
+    slaHours: 24,
+    debtPolicy: "manager_review",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Kat hizmetleri",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "standard",
+    popularityScore: 96,
+  },
+  {
+    id: "CAT-CLEAN-DEEP",
+    code: "CLEAN-DEEP",
+    name: "Derin temizlik ve checkout hazirligi",
+    category: "cleaning",
+    description: "Checkout sonrasi detayli temizlik, hasar fotograflari ve depozito kontrol notu.",
+    basePriceTry: 6200,
+    currency: "TRY",
+    slaHours: 18,
+    debtPolicy: "manager_review",
+    requiresPayment: true,
+    requiresDeposit: true,
+    team: "Kat hizmetleri",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "premium",
+    popularityScore: 88,
+  },
+  {
+    id: "CAT-MAINT-AC",
+    code: "MAINT-AC",
+    name: "Klima bakimi ve drenaj kontrolu",
+    category: "maintenance",
+    description: "Filtre, drenaj, sogutma performansi ve servis kaniti ile periyodik klima bakimi.",
+    basePriceTry: 2100,
+    currency: "TRY",
+    slaHours: 36,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "internal",
+    active: true,
+    serviceLevel: "standard",
+    popularityScore: 84,
+  },
+  {
+    id: "CAT-MAINT-PLUMB",
+    code: "MAINT-PLUMB",
+    name: "Acil tesisat mudahalesi",
+    category: "maintenance",
+    description: "Su kacagi, gider tikanikligi ve acil tesisat onarimi icin hizli saha yonlendirmesi.",
+    basePriceTry: 9800,
+    currency: "TRY",
+    slaHours: 4,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "vendor",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 91,
+  },
+  {
+    id: "CAT-TRANSFER-AYT",
+    code: "TRANSFER-AYT",
+    name: "Antalya havalimani transferi",
+    category: "transfer",
+    description: "Malik, kiraci ve misafirler icin planli havalimani transferi ve varis bildirimi.",
+    basePriceTry: 4500,
+    currency: "TRY",
+    slaHours: 48,
+    debtPolicy: "block_until_clear",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Rezervasyon",
+    providerType: "vendor",
+    active: true,
+    serviceLevel: "premium",
+    popularityScore: 79,
+  },
+  {
+    id: "CAT-AMENITY-SPA",
+    code: "AMENITY-SPA",
+    name: "Spa, fitness ve ortak alan rezervasyonu",
+    category: "amenity",
+    description: "Ortak alan kapasitesi, aidat durumu ve kullanici yetkisine gore rezervasyon kontrolu.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 12,
+    debtPolicy: "block_until_clear",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Sakin destek",
+    providerType: "internal",
+    active: true,
+    serviceLevel: "standard",
+    popularityScore: 73,
+  },
+  {
+    id: "CAT-SEC-ACCESS",
+    code: "SEC-ACCESS",
+    name: "Kart, QR ve plaka erisim islemi",
+    category: "security",
+    description: "Yeni kart/QR, plaka tanimi, kayip kart iptali ve erisim log kontrolu.",
+    basePriceTry: 900,
+    currency: "TRY",
+    slaHours: 8,
+    debtPolicy: "block_until_clear",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Guvenlik",
+    providerType: "internal",
+    active: true,
+    serviceLevel: "standard",
+    popularityScore: 82,
+  },
+  {
+    id: "CAT-INSP-DAMAGE",
+    code: "INSP-DAMAGE",
+    name: "Hasar tespiti ve depozito raporu",
+    category: "inspection",
+    description: "Checkout, bakim veya sikayet sonrasi fotograf/video kanitli hasar raporu.",
+    basePriceTry: 7200,
+    currency: "TRY",
+    slaHours: 12,
+    debtPolicy: "manager_review",
+    requiresPayment: false,
+    requiresDeposit: true,
+    team: "Operasyon",
+    providerType: "internal",
+    active: true,
+    serviceLevel: "premium",
+    popularityScore: 77,
+  },
+]
+
+const catalogByCategory: Partial<Record<string, string>> = {
+  Asansor: "CAT-MAINT-AC",
+  Tesisat: "CAT-MAINT-PLUMB",
+  Iklimlendirme: "CAT-MAINT-AC",
+  "Finans onayi": "CAT-AMENITY-SPA",
+  Guvenlik: "CAT-SEC-ACCESS",
+  Depozito: "CAT-INSP-DAMAGE",
+  Elektrik: "CAT-MAINT-AC",
+  Temizlik: "CAT-CLEAN-STD",
+  "Ortak alan": "CAT-AMENITY-SPA",
+  Erisim: "CAT-SEC-ACCESS",
+  Hasar: "CAT-INSP-DAMAGE",
+  Tahsilat: "CAT-AMENITY-SPA",
+}
+
+function catalogForTicket(ticket: ServiceTicket, index: number) {
+  const matchedId = catalogByCategory[ticket.category]
+  return (
+    serviceCatalogItems.find((item) => item.id === matchedId) ??
+    serviceCatalogItems[index % serviceCatalogItems.length]
+  )
+}
+
+function paymentDecisionForTicket(
+  ticket: ServiceTicket,
+  catalogItem: ServiceCatalogItem
+): ServicePaymentDecision {
+  if (ticket.debtBlocked) return "hold"
+  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
+  if (ticket.paymentVerified) return "paid_or_debit_approved"
+  if (catalogItem.debtPolicy === "allow") return "debit_to_account"
+  return "collect_before_dispatch"
+}
+
+function serviceOrderStatusForTicket(ticket: ServiceTicket): ServiceOrderStatus {
+  if (ticket.debtBlocked) return "blocked"
+  if (ticket.status === "waiting_payment") return "payment_pending"
+  if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
+  if (ticket.status === "assigned" || ticket.status === "in_progress") return "assigned"
+  return "debt_check"
+}
+
+function serviceOrderNextAction(
+  ticket: ServiceTicket,
+  paymentDecision: ServicePaymentDecision
+) {
+  if (ticket.debtBlocked) return "Muhasebe onayi ve borc kontrolu tamamlanmadan saha isine cikarma"
+  if (paymentDecision === "collect_before_dispatch") return "Odeme linki veya cari hesaba borclandirma secimini onayla"
+  if (ticket.status === "open") return "SLA ve ekip uygunluguna gore gorevi ata"
+  if (ticket.status === "assigned") return "Personel rota ve medya kaniti talimatini gonder"
+  if (ticket.status === "in_progress") return "Saha notu ve kapanis kanitini kontrol et"
+  if (ticket.status === "resolved") return "Malik/kiraci memnuniyet ve kapanis onayini al"
+  return "Arsiv ve rapor kontrolu"
+}
+
+export const serviceOrders: ServiceOrderRecord[] = serviceTickets.slice(0, 12).map((ticket, index) => {
+  const catalogItem = catalogForTicket(ticket, index)
+  const paymentDecision = paymentDecisionForTicket(ticket, catalogItem)
+  const quotedPriceTry = ticket.estimatedCostTry > 0 ? ticket.estimatedCostTry : catalogItem.basePriceTry
+
+  return {
+    id: `ORD-${ticket.id.replace("SRV-", "")}`,
+    orderNo: `ORD-${ticket.id.replace("SRV-", "")}`,
+    catalogItemId: catalogItem.id,
+    catalogItemName: catalogItem.name,
+    ticketId: ticket.id,
+    flatNumber: ticket.flatNumber,
+    requester: ticket.requester,
+    status: serviceOrderStatusForTicket(ticket),
+    debtCheckStatus: ticket.debtBlocked
+      ? "blocked"
+      : ticket.paymentVerified
+        ? "clear"
+        : "minor_debt_review",
+    paymentDecision,
+    quotedPriceTry,
+    currency: "TRY",
+    slaHours: catalogItem.slaHours,
+    assignedTeam: catalogItem.team,
+    taskCreated: ticket.status !== "open" && !ticket.debtBlocked,
+    requestedForAt: isoDaysFromAnchor(index % 4, 10 + (index % 6)),
+    createdAt: ticket.openedAt,
+    nextAction: serviceOrderNextAction(ticket, paymentDecision),
+  }
+})
+
+const workforceChecklistByTeam: Record<string, string[]> = {
+  Teknik: ["Sorunu yerinde dogrula", "Oncesi fotograf yukle", "Parca/islem notunu gir", "Kapanis kaniti yukle"],
+  Guvenlik: ["Kimlik/yetki kontrolu", "Kart/QR/plaka islem kaydi", "Access log kontrolu", "Kapanis onayi"],
+  "Kat hizmetleri": ["Daire giris kontrolu", "Temizlik checklist", "Fotograf kaniti", "Teslim notu"],
+  Operasyon: ["Hasar alanini isaretle", "Depozito etkisini not et", "Yonetici onayi al", "Kapanis raporu"],
+  Rezervasyon: ["Varis saatini dogrula", "Tedarikciyi ata", "Misafir bildirimini gonder", "Tamamlandi onayi"],
+  "Sakin destek": ["Yetki kapsamını dogrula", "Randevu uygunlugunu kontrol et", "Bildirim gonder", "Geri bildirim al"],
+}
+
+function taskCompletionReadiness(ticket: ServiceTicket) {
+  const evidenceScore = Math.min(ticket.mediaCount * 18, 54)
+  const statusScore =
+    ticket.status === "closed" || ticket.status === "resolved"
+      ? 40
+      : ticket.status === "in_progress"
+        ? 28
+        : ticket.status === "assigned"
+          ? 18
+          : 8
+  const financePenalty = ticket.debtBlocked ? 35 : 0
+  return Math.max(0, Math.min(100, evidenceScore + statusScore - financePenalty))
+}
+
+export const workforceTasks: WorkforceTaskRecord[] = serviceTickets.slice(0, 12).map((ticket, index) => {
+  const catalogItem = catalogForTicket(ticket, index)
+  const checklist =
+    workforceChecklistByTeam[catalogItem.team] ??
+    ["Talebi dogrula", "Saha notu gir", "Medya kaniti yukle", "Kapanis onayi al"]
+
+  return {
+    id: `TASK-${ticket.id.replace("SRV-", "")}`,
+    ticketId: ticket.id,
+    flatNumber: ticket.flatNumber,
+    title: ticket.title,
+    team: catalogItem.team,
+    assignee: ticket.assignee,
+    status: ticket.status,
+    priority: ticket.priority,
+    slaHoursRemaining: ticket.slaHoursRemaining,
+    routeSlot:
+      ticket.slaHoursRemaining < 0
+        ? "Hemen"
+        : index % 3 === 0
+          ? "Sabah"
+          : index % 3 === 1
+            ? "Ogle"
+            : "Aksam",
+    checklist,
+    requiresMedia: ticket.status !== "closed",
+    mediaCount: ticket.mediaCount,
+    managerApprovalRequired: ticket.debtBlocked || ticket.estimatedCostTry >= 7000,
+    lastUpdateAt: isoDaysFromAnchor(-(index % 3), 9 + (index % 8)),
+    fieldNote: ticket.debtBlocked
+      ? "Finans onayi bekleniyor; saha aksiyonu kilitli."
+      : ticket.slaHoursRemaining < 0
+        ? "SLA asimi var; ekip lideri eskalasyonu gerekli."
+        : "Atama ve kanit akisi hazir.",
+    completionReadiness: taskCompletionReadiness(ticket),
+  }
+})
 
 export const bookings: BookingRecord[] = ([
   ["BKG-501", 11, "Murat A.", "Direct", -2, 2, "move_in_today", "held", 6400, "active", "done"],

@@ -15,7 +15,12 @@ type RequestState = "idle" | "loading" | "success" | "error"
 
 const DASHBOARD_REALTIME_TABLES = [
   "units",
+  "service_catalog",
+  "service_orders",
   "service_tickets",
+  "service_ticket_events",
+  "workforce_tasks",
+  "media_reports",
   "finance_ledger_entries",
   "reservations",
   "ai_action_logs",

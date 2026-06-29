@@ -105,6 +105,37 @@ function validatePhase7Payload(payload, label) {
   )
 }
 
+function validatePhase89Payload(payload, label) {
+  assert(payload.contractVersion === "phase-8-9-service-operations.v1", `${label}: unexpected service operations contract version`)
+  assert(["supabase", "local-seed"].includes(payload.source), `${label}: invalid source`)
+  assert(Date.parse(payload.generatedAt), `${label}: invalid generatedAt`)
+  assert(payload.quality?.status !== "failed", `${label}: quality report failed`)
+  assert(Array.isArray(payload.catalog), `${label}: catalog must be an array`)
+  assert(Array.isArray(payload.orders), `${label}: orders must be an array`)
+  assert(Array.isArray(payload.workforceTasks), `${label}: workforceTasks must be an array`)
+  assert(Array.isArray(payload.tickets), `${label}: tickets must be an array`)
+  assert(payload.summary.activeCatalogItems >= 6, `${label}: expected at least 6 active catalog items`)
+  assert(payload.summary.serviceOrders > 0, `${label}: service order queue must not be empty`)
+  assert(payload.summary.openWorkforceTasks > 0, `${label}: workforce task board must not be empty`)
+  assert(payload.summary.fieldTeams >= 2, `${label}: expected multiple field teams`)
+  assert(
+    payload.catalog.every((item) => item.slaHours > 0 && item.basePriceTry >= 0),
+    `${label}: every catalog item must expose SLA and non-negative price`
+  )
+  assert(
+    payload.orders.every((order) => order.ticketId && order.nextAction),
+    `${label}: every service order must link to a ticket and next action`
+  )
+  assert(
+    payload.orders.every((order) => !(order.debtCheckStatus === "blocked" && order.taskCreated)),
+    `${label}: blocked orders must not create dispatchable tasks`
+  )
+  assert(
+    payload.workforceTasks.every((task) => Array.isArray(task.checklist) && task.checklist.length > 0),
+    `${label}: every workforce task must have a checklist`
+  )
+}
+
 async function verifyPhase7Api({ baseUrl }) {
   const adminPayload = await fetchJson(baseUrl, "/api/site-management/payment-controls?limit=8", {
     role: "admin",
@@ -133,6 +164,38 @@ async function verifyPhase7Api({ baseUrl }) {
     restrictions: adminPayload.restrictionDecisions.length,
     reconciliation: adminPayload.reconciliation.length,
     approvalQueue: adminPayload.summary.approvalQueue,
+  }
+}
+
+async function verifyPhase89Api({ baseUrl }) {
+  const managerPayload = await fetchJson(baseUrl, "/api/site-management/tickets?limit=24", {
+    role: "manager",
+  })
+  validatePhase89Payload(managerPayload, "manager service operations API")
+
+  const staffPayload = await fetchJson(baseUrl, "/api/site-management/tickets?limit=24", {
+    role: "staff",
+  })
+  validatePhase89Payload(staffPayload, "staff service operations API")
+
+  const tenantPayload = await fetchJson(baseUrl, "/api/site-management/tickets?limit=24", {
+    role: "tenant",
+  })
+  validatePhase89Payload(tenantPayload, "tenant service operations API")
+
+  await fetchJson(baseUrl, "/api/site-management/tickets?limit=24", {
+    role: "accountant",
+    expectedStatus: 403,
+  })
+
+  return {
+    source: managerPayload.source,
+    quality: managerPayload.quality.status,
+    catalog: managerPayload.catalog.length,
+    orders: managerPayload.orders.length,
+    tasks: managerPayload.workforceTasks.length,
+    blockedOrders: managerPayload.summary.blockedOrders,
+    fieldTeams: managerPayload.summary.fieldTeams,
   }
 }
 
@@ -226,6 +289,7 @@ async function main() {
   const gates = [
     builtinGate("dev-server-reachable", async ({ baseUrl }) => waitForUrl(baseUrl)),
     builtinGate("phase7-api-contract-rbac", verifyPhase7Api),
+    builtinGate("phase8-9-service-operations-contract-rbac", verifyPhase89Api),
     commandGate("typecheck", "npm run typecheck", webDir),
     commandGate("lint", "npm run lint", webDir),
     commandGate("dashboard-e2e", "npm run test:e2e -- e2e/dashboard.spec.ts --project=chromium", webDir, {

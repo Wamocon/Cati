@@ -18,13 +18,19 @@ import {
   paymentPlans,
   roleCoverage,
   residents,
+  serviceCatalogItems,
+  serviceOrders,
   serviceTickets,
   siteActivities,
   staffMembers,
+  workforceTasks,
   type BookingRecord,
   type DebtAccount,
   type PaymentPlanRecord,
+  type ServiceCatalogItem,
+  type ServiceOrderRecord,
   type ServiceTicket,
+  type WorkforceTaskRecord,
 } from "@/lib/site-management-data"
 
 export type DataSource = "supabase" | "local-seed"
@@ -46,7 +52,7 @@ export interface OperationalQualityReport {
 const PEOPLE_DIRECTORY_CONTRACT_VERSION = "phase-5-people-directory.v1"
 const FINANCE_LEDGER_CONTRACT_VERSION = "phase-6-finance-ledger.v1"
 const PAYMENT_RESTRICTION_CONTRACT_VERSION = "phase-7-payment-restriction.v1"
-const SERVICE_TICKETING_CONTRACT_VERSION = "internal-service-ticketing.v1"
+const SERVICE_TICKETING_CONTRACT_VERSION = "phase-8-9-service-operations.v1"
 
 export interface DashboardSnapshot {
   source: DataSource
@@ -409,8 +415,21 @@ export interface ServiceTicketQueueData {
     mediaEvidenceCount: number
     estimatedCostCents: number
     averageSlaHoursRemaining: number
+    catalogItems: number
+    activeCatalogItems: number
+    serviceOrders: number
+    readyForDispatchOrders: number
+    blockedOrders: number
+    openWorkforceTasks: number
+    slaBreachTasks: number
+    managerApprovalTasks: number
+    fieldTeams: number
+    averageCompletionReadiness: number
   }
   tickets: ServiceTicket[]
+  catalog: ServiceCatalogItem[]
+  orders: ServiceOrderRecord[]
+  workforceTasks: WorkforceTaskRecord[]
   strategy: {
     systemOfRecord: string
     crmRole: string
@@ -1333,18 +1352,353 @@ function slaHoursRemaining(value: string | null) {
   return Math.ceil((dueAt - Date.now()) / 3_600_000)
 }
 
+function catalogCategoryKey(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+}
+
+function catalogItemForTicket(ticket: ServiceTicket, index: number) {
+  const category = catalogCategoryKey(ticket.category)
+  const matchedCode =
+    category.includes("tesisat") || category.includes("su")
+      ? "MAINT-PLUMB"
+      : category.includes("klima") || category.includes("iklim")
+        ? "MAINT-AC"
+        : category.includes("temiz")
+          ? "CLEAN-STD"
+          : category.includes("depozito") || category.includes("hasar")
+            ? "INSP-DAMAGE"
+            : category.includes("erisim") || category.includes("guven") || category.includes("kamera")
+              ? "SEC-ACCESS"
+              : category.includes("ortak") || category.includes("havuz") || category.includes("finans")
+                ? "AMENITY-SPA"
+                : null
+
+  return (
+    serviceCatalogItems.find((item) => item.code === matchedCode) ??
+    serviceCatalogItems[index % serviceCatalogItems.length]
+  )
+}
+
+function servicePaymentDecisionForTicket(
+  ticket: ServiceTicket,
+  catalogItem: ServiceCatalogItem
+): ServiceOrderRecord["paymentDecision"] {
+  if (ticket.debtBlocked) return "hold"
+  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
+  if (ticket.paymentVerified) return "paid_or_debit_approved"
+  if (catalogItem.debtPolicy === "allow") return "debit_to_account"
+  return "collect_before_dispatch"
+}
+
+function serviceOrderStatusForTicket(ticket: ServiceTicket): ServiceOrderRecord["status"] {
+  if (ticket.debtBlocked) return "blocked"
+  if (ticket.status === "waiting_payment") return "payment_pending"
+  if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
+  if (ticket.status === "assigned" || ticket.status === "in_progress") return "assigned"
+  return "debt_check"
+}
+
+function serviceOrderNextAction(
+  ticket: ServiceTicket,
+  paymentDecision: ServiceOrderRecord["paymentDecision"]
+) {
+  if (ticket.debtBlocked) return "Finance approval must clear before dispatch."
+  if (paymentDecision === "collect_before_dispatch") return "Collect payment or approve debit-to-account before dispatch."
+  if (ticket.status === "open") return "Assign the task by SLA and field team capacity."
+  if (ticket.status === "assigned") return "Send route slot and media checklist to staff."
+  if (ticket.status === "in_progress") return "Review field note and closure evidence."
+  if (ticket.status === "resolved") return "Collect resident confirmation and close."
+  return "Archive and include in service reporting."
+}
+
+function buildServiceOrdersFromTickets(tickets: ServiceTicket[]): ServiceOrderRecord[] {
+  return tickets.map((ticket, index) => {
+    const catalogItem = catalogItemForTicket(ticket, index)
+    const paymentDecision = servicePaymentDecisionForTicket(ticket, catalogItem)
+    const quotedPriceTry =
+      ticket.estimatedCostTry > 0 ? ticket.estimatedCostTry : catalogItem.basePriceTry
+
+    return {
+      id: `ORD-${ticket.id.replace(/^SRV-/, "")}`,
+      orderNo: `ORD-${ticket.id.replace(/^SRV-/, "")}`,
+      catalogItemId: catalogItem.id,
+      catalogItemName: catalogItem.name,
+      ticketId: ticket.id,
+      flatNumber: ticket.flatNumber,
+      requester: ticket.requester,
+      status: serviceOrderStatusForTicket(ticket),
+      debtCheckStatus: ticket.debtBlocked
+        ? "blocked"
+        : ticket.paymentVerified
+          ? "clear"
+          : "minor_debt_review",
+      paymentDecision,
+      quotedPriceTry,
+      currency: "TRY",
+      slaHours: catalogItem.slaHours,
+      assignedTeam: catalogItem.team,
+      taskCreated: ticket.status !== "open" && !ticket.debtBlocked,
+      requestedForAt: ticket.dueAt || ticket.openedAt,
+      createdAt: ticket.openedAt,
+      nextAction: serviceOrderNextAction(ticket, paymentDecision),
+    }
+  })
+}
+
+const defaultChecklistByTeam: Record<string, string[]> = {
+  Teknik: ["Verify issue", "Upload before photo", "Add work note", "Upload closure proof"],
+  Guvenlik: ["Verify authority", "Update access record", "Check access log", "Confirm closure"],
+  "Kat hizmetleri": ["Inspect unit", "Complete cleaning checklist", "Upload photo proof", "Add handover note"],
+  Operasyon: ["Mark damage area", "Record deposit impact", "Request manager approval", "Publish closure report"],
+  Rezervasyon: ["Confirm arrival time", "Assign provider", "Notify guest", "Confirm completion"],
+  "Sakin destek": ["Verify scope", "Check slot availability", "Send notification", "Collect feedback"],
+}
+
+function taskCompletionReadiness(ticket: ServiceTicket) {
+  const evidenceScore = Math.min(ticket.mediaCount * 18, 54)
+  const statusScore =
+    ticket.status === "closed" || ticket.status === "resolved"
+      ? 40
+      : ticket.status === "in_progress"
+        ? 28
+        : ticket.status === "assigned"
+          ? 18
+          : 8
+  const financePenalty = ticket.debtBlocked ? 35 : 0
+  return Math.max(0, Math.min(100, evidenceScore + statusScore - financePenalty))
+}
+
+function buildWorkforceTasksFromTickets(tickets: ServiceTicket[]): WorkforceTaskRecord[] {
+  return tickets.map((ticket, index) => {
+    const catalogItem = catalogItemForTicket(ticket, index)
+    const checklist =
+      defaultChecklistByTeam[catalogItem.team] ??
+      ["Verify request", "Add field note", "Upload media proof", "Request closure approval"]
+
+    return {
+      id: `TASK-${ticket.id.replace(/^SRV-/, "")}`,
+      ticketId: ticket.id,
+      flatNumber: ticket.flatNumber,
+      title: ticket.title,
+      team: catalogItem.team,
+      assignee: ticket.assignee,
+      status: ticket.status,
+      priority: ticket.priority,
+      slaHoursRemaining: ticket.slaHoursRemaining,
+      routeSlot:
+        ticket.slaHoursRemaining < 0
+          ? "Immediate"
+          : index % 3 === 0
+            ? "Morning"
+            : index % 3 === 1
+              ? "Midday"
+              : "Evening",
+      checklist,
+      requiresMedia: ticket.status !== "closed",
+      mediaCount: ticket.mediaCount,
+      managerApprovalRequired: ticket.debtBlocked || ticket.estimatedCostTry >= 7000,
+      lastUpdateAt: ticket.openedAt,
+      fieldNote: ticket.debtBlocked
+        ? "Finance approval is pending; field work is locked."
+        : ticket.slaHoursRemaining < 0
+          ? "SLA breach; team lead escalation is required."
+          : "Assignment and evidence flow are ready.",
+      completionReadiness: taskCompletionReadiness(ticket),
+    }
+  })
+}
+
+function mapCatalogCategory(value: string): ServiceCatalogItem["category"] {
+  if (value === "cleaning") return "cleaning"
+  if (value === "transfer") return "transfer"
+  if (value === "amenity") return "amenity"
+  if (value === "security") return "security"
+  if (value === "inspection") return "inspection"
+  if (value === "concierge") return "concierge"
+  return "maintenance"
+}
+
+function mapDebtPolicy(value: string): ServiceCatalogItem["debtPolicy"] {
+  if (value === "allow") return "allow"
+  if (value === "block_until_clear") return "block_until_clear"
+  return "manager_review"
+}
+
+function mapProviderType(value: string): ServiceCatalogItem["providerType"] {
+  if (value === "vendor") return "vendor"
+  if (value === "mixed") return "mixed"
+  return "internal"
+}
+
+function mapServiceLevel(value: string): ServiceCatalogItem["serviceLevel"] {
+  if (value === "premium") return "premium"
+  if (value === "emergency") return "emergency"
+  return "standard"
+}
+
+function mapOrderStatus(value: string): ServiceOrderRecord["status"] {
+  if (value === "draft") return "draft"
+  if (value === "payment_pending") return "payment_pending"
+  if (value === "task_created") return "task_created"
+  if (value === "assigned") return "assigned"
+  if (value === "completed") return "completed"
+  if (value === "blocked") return "blocked"
+  if (value === "cancelled") return "cancelled"
+  return "debt_check"
+}
+
+function mapDebtCheckStatus(value: string): ServiceOrderRecord["debtCheckStatus"] {
+  if (value === "minor_debt_review") return "minor_debt_review"
+  if (value === "blocked") return "blocked"
+  return "clear"
+}
+
+function mapPaymentDecision(value: string): ServiceOrderRecord["paymentDecision"] {
+  if (value === "no_charge") return "no_charge"
+  if (value === "debit_to_account") return "debit_to_account"
+  if (value === "paid_or_debit_approved") return "paid_or_debit_approved"
+  if (value === "hold") return "hold"
+  return "collect_before_dispatch"
+}
+
+function normalizeServiceCatalogRows(rows: unknown): ServiceCatalogItem[] {
+  if (!Array.isArray(rows)) return []
+
+  return rows.map((row, index) => {
+    const record = asRecord(row)
+    return {
+      id: asString(record.id, `catalog-${index + 1}`),
+      code: asString(record.code, `CAT-${index + 1}`),
+      name: asString(record.name, "Service item"),
+      category: mapCatalogCategory(asString(record.category, "maintenance")),
+      description: asString(record.description),
+      basePriceTry: Math.round(asNumber(record.base_price_cents) / 100),
+      currency: "TRY",
+      slaHours: asNumber(record.sla_hours, 24),
+      debtPolicy: mapDebtPolicy(asString(record.debt_policy, "manager_review")),
+      requiresPayment: asBoolean(record.requires_payment, true),
+      requiresDeposit: asBoolean(record.requires_deposit),
+      team: asString(record.team, "Operations"),
+      providerType: mapProviderType(asString(record.provider_type, "internal")),
+      active: asBoolean(record.active, true),
+      serviceLevel: mapServiceLevel(asString(record.service_level, "standard")),
+      popularityScore: asNumber(record.popularity_score),
+    }
+  })
+}
+
+function normalizeServiceOrderRows(rows: unknown): ServiceOrderRecord[] {
+  if (!Array.isArray(rows)) return []
+
+  return rows.map((row, index) => {
+    const record = asRecord(row)
+    const catalog = relatedRecord(record.service_catalog)
+    const ticket = relatedRecord(record.service_tickets)
+    const unit = relatedRecord(record.units)
+    const resident = relatedRecord(record.residents)
+    const status = mapOrderStatus(asString(record.status, "debt_check"))
+    const debtCheckStatus = mapDebtCheckStatus(asString(record.debt_check_status, "clear"))
+    const paymentDecision = mapPaymentDecision(asString(record.payment_decision, "collect_before_dispatch"))
+
+    return {
+      id: asString(record.id, `order-${index + 1}`),
+      orderNo: asString(record.order_no, `ORD-${index + 1}`),
+      catalogItemId: asString(catalog.id, asString(record.service_catalog_id)),
+      catalogItemName: asString(catalog.name, "Service order"),
+      ticketId: asString(ticket.ticket_no, asString(record.ticket_id)),
+      flatNumber: asString(unit.unit_no, "Unassigned"),
+      requester: asString(resident.full_name, "Site management"),
+      status,
+      debtCheckStatus,
+      paymentDecision,
+      quotedPriceTry: Math.round(asNumber(record.quoted_price_cents) / 100),
+      currency: "TRY",
+      slaHours: asNumber(catalog.sla_hours, 24),
+      assignedTeam: asString(catalog.team, "Operations"),
+      taskCreated: status === "task_created" || status === "assigned" || status === "completed",
+      requestedForAt: asString(record.requested_for_at, asString(record.created_at, new Date().toISOString())),
+      createdAt: asString(record.created_at, new Date().toISOString()),
+      nextAction: asString(record.next_action, serviceOrderNextAction(
+        {
+          id: asString(ticket.ticket_no, `ticket-${index + 1}`),
+          flatId: asString(record.unit_id),
+          flatNumber: asString(unit.unit_no, "Unassigned"),
+          title: asString(catalog.name, "Service order"),
+          category: asString(catalog.category, "maintenance"),
+          priority: "medium",
+          status: "open",
+          assignee: "Operations queue",
+          requester: asString(resident.full_name, "Site management"),
+          openedAt: asString(record.created_at, new Date().toISOString()),
+          dueAt: asString(record.requested_for_at),
+          slaHoursRemaining: 0,
+          debtBlocked: debtCheckStatus === "blocked",
+          paymentVerified: paymentDecision === "paid_or_debit_approved" || paymentDecision === "no_charge",
+          mediaCount: 0,
+          estimatedCostTry: Math.round(asNumber(record.quoted_price_cents) / 100),
+        },
+        paymentDecision
+      )),
+    }
+  })
+}
+
+function normalizeWorkforceTaskRows(rows: unknown): WorkforceTaskRecord[] {
+  if (!Array.isArray(rows)) return []
+
+  return rows.map((row, index) => {
+    const record = asRecord(row)
+    const ticket = relatedRecord(record.service_tickets)
+    const unit = relatedRecord(record.units)
+    const staff = relatedRecord(record.staff_members)
+    const rawChecklist = Array.isArray(record.checklist) ? record.checklist : []
+    const status = mapTicketStatus(asString(record.status, "open"))
+    const dueAt = asNullableString(record.sla_due_at)
+
+    return {
+      id: asString(record.task_no, asString(record.id, `task-${index + 1}`)),
+      ticketId: asString(ticket.ticket_no, asString(record.ticket_id)),
+      flatNumber: asString(unit.unit_no, "Unassigned"),
+      title: asString(record.title, "Workforce task"),
+      team: asString(record.team, "Operations"),
+      assignee: asString(staff.name, "Operations queue"),
+      status,
+      priority: mapTicketPriority(asString(record.priority, "medium")),
+      slaHoursRemaining: slaHoursRemaining(dueAt),
+      routeSlot: asString(record.route_slot, "Unscheduled"),
+      checklist: rawChecklist.map((item) => asString(item)).filter(Boolean),
+      requiresMedia: asBoolean(record.requires_media, true),
+      mediaCount: asNumber(record.media_count),
+      managerApprovalRequired: asBoolean(record.manager_approval_required),
+      lastUpdateAt: asString(record.updated_at, asString(record.created_at, new Date().toISOString())),
+      fieldNote: asString(record.field_note),
+      completionReadiness: asNumber(record.completion_readiness),
+    }
+  })
+}
+
 function ticketStrategy(): ServiceTicketQueueData["strategy"] {
   return {
-    systemOfRecord: "Internal Supabase service_tickets and service_ticket_events tables.",
-    crmRole: "Twenty CRM should hold contacts, companies, opportunities and relationship history; operational SLA tickets stay inside 1Cati.",
-    escalationPolicy: "Escalate finance-blocked, overdue SLA and security/access tickets through client_action_requests with manager approval.",
-    externalHelpdeskDecision: "Do not add Zendesk/Freshdesk-style helpdesk for the first operating phase unless the client needs public multi-channel support.",
+    systemOfRecord: "1Cati keeps the operational service catalogue, service orders, SLA tasks and ticket events inside Supabase.",
+    crmRole: "Twenty CRM remains the relationship/contact system; 1Cati remains the resident-service and field-operations system.",
+    escalationPolicy: "Debt-blocked orders, overdue SLA tasks, access/security work and high-cost repairs create manager approval actions before closure.",
+    externalHelpdeskDecision: "Use the internal ticketing system first; add Zendesk/Freshdesk/Jira Service Management later only if public omnichannel support becomes a client requirement.",
   }
 }
 
-function summarizeServiceTickets(tickets: ServiceTicket[]): ServiceTicketQueueData["summary"] {
+function summarizeServiceTickets(
+  tickets: ServiceTicket[],
+  catalog: ServiceCatalogItem[],
+  orders: ServiceOrderRecord[],
+  tasks: WorkforceTaskRecord[]
+): ServiceTicketQueueData["summary"] {
   const openTickets = tickets.filter((ticket) => ticket.status !== "closed" && ticket.status !== "resolved")
   const totalSla = tickets.reduce((sum, ticket) => sum + ticket.slaHoursRemaining, 0)
+  const fieldTeams = new Set(tasks.map((task) => task.team).filter(Boolean))
+  const totalReadiness = tasks.reduce((sum, task) => sum + task.completionReadiness, 0)
 
   return {
     totalTickets: tickets.length,
@@ -1356,11 +1710,35 @@ function summarizeServiceTickets(tickets: ServiceTicket[]): ServiceTicketQueueDa
     mediaEvidenceCount: tickets.reduce((sum, ticket) => sum + ticket.mediaCount, 0),
     estimatedCostCents: tickets.reduce((sum, ticket) => sum + ticket.estimatedCostTry * 100, 0),
     averageSlaHoursRemaining: tickets.length > 0 ? Math.round(totalSla / tickets.length) : 0,
+    catalogItems: catalog.length,
+    activeCatalogItems: catalog.filter((item) => item.active).length,
+    serviceOrders: orders.length,
+    readyForDispatchOrders: orders.filter(
+      (order) =>
+        order.status === "assigned" ||
+        order.status === "task_created" ||
+        order.paymentDecision === "paid_or_debit_approved" ||
+        order.paymentDecision === "no_charge"
+    ).length,
+    blockedOrders: orders.filter(
+      (order) => order.status === "blocked" || order.debtCheckStatus === "blocked"
+    ).length,
+    openWorkforceTasks: tasks.filter(
+      (task) => task.status !== "closed" && task.status !== "resolved"
+    ).length,
+    slaBreachTasks: tasks.filter((task) => task.slaHoursRemaining < 0).length,
+    managerApprovalTasks: tasks.filter((task) => task.managerApprovalRequired).length,
+    fieldTeams: fieldTeams.size,
+    averageCompletionReadiness:
+      tasks.length > 0 ? Math.round(totalReadiness / tasks.length) : 0,
   }
 }
 
 function buildServiceTicketingQuality(
   tickets: ServiceTicket[],
+  catalog: ServiceCatalogItem[],
+  orders: ServiceOrderRecord[],
+  tasks: WorkforceTaskRecord[],
   summary: ServiceTicketQueueData["summary"]
 ): OperationalQualityReport {
   const openWithoutSla = tickets.filter(
@@ -1372,8 +1750,40 @@ function buildServiceTicketingQuality(
   const autonomousFinanceWork = tickets.filter(
     (ticket) => ticket.debtBlocked && ticket.paymentVerified
   )
+  const activeCatalogueWithoutSla = catalog.filter(
+    (item) => item.active && (!item.slaHours || item.slaHours <= 0)
+  )
+  const orderWithoutTicket = orders.filter((order) => !order.ticketId)
+  const blockedButDispatchable = orders.filter(
+    (order) => order.debtCheckStatus === "blocked" && order.taskCreated
+  )
+  const taskWithoutChecklist = tasks.filter((task) => task.checklist.length === 0)
 
   return qualityReport([
+    {
+      id: "service.catalog-present",
+      label: "Service catalogue has active services",
+      status: summary.activeCatalogItems >= 6 ? "passed" : "warning",
+      detail: `${summary.activeCatalogItems} active service catalogue items returned.`,
+    },
+    {
+      id: "service.catalog-sla-pricing",
+      label: "Catalogue exposes price and SLA rules",
+      status: activeCatalogueWithoutSla.length === 0 ? "passed" : "failed",
+      detail: `${activeCatalogueWithoutSla.length} active catalogue items miss SLA hours.`,
+    },
+    {
+      id: "service.order-ticket-link",
+      label: "Service orders link to ticket workflow",
+      status: orderWithoutTicket.length === 0 && orders.length > 0 ? "passed" : "warning",
+      detail: `${orders.length} service orders returned; ${orderWithoutTicket.length} are missing ticket links.`,
+    },
+    {
+      id: "service.debt-gate",
+      label: "Debt-blocked orders are not dispatched",
+      status: blockedButDispatchable.length === 0 ? "passed" : "failed",
+      detail: `${blockedButDispatchable.length} blocked orders appear dispatchable.`,
+    },
     {
       id: "ticketing.queue-present",
       label: "Internal ticket queue is available",
@@ -1404,21 +1814,39 @@ function buildServiceTicketingQuality(
       status: summary.urgentTickets > 0 || summary.overdueTickets > 0 ? "passed" : "warning",
       detail: `${summary.urgentTickets} urgent and ${summary.overdueTickets} overdue tickets.`,
     },
+    {
+      id: "workforce.tasks-present",
+      label: "Workforce task board is available",
+      status: tasks.length > 0 ? "passed" : "warning",
+      detail: `${tasks.length} workforce tasks returned across ${summary.fieldTeams} teams.`,
+    },
+    {
+      id: "workforce.checklist-media",
+      label: "Tasks carry checklist and media policy",
+      status: taskWithoutChecklist.length === 0 ? "passed" : "failed",
+      detail: `${taskWithoutChecklist.length} tasks have no checklist.`,
+    },
   ])
 }
 
 function localSeedServiceTicketQueueData(limit = 24, warning?: string): ServiceTicketQueueData {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
   const tickets = serviceTickets.slice(0, safeLimit)
-  const summary = summarizeServiceTickets(tickets)
+  const catalog = serviceCatalogItems
+  const orders = serviceOrders.slice(0, safeLimit)
+  const tasks = workforceTasks.slice(0, safeLimit)
+  const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
   return {
     contractVersion: SERVICE_TICKETING_CONTRACT_VERSION,
     source: "local-seed",
     generatedAt: new Date().toISOString(),
-    quality: buildServiceTicketingQuality(tickets, summary),
+    quality: buildServiceTicketingQuality(tickets, catalog, orders, tasks, summary),
     summary,
     tickets,
+    catalog,
+    orders,
+    workforceTasks: tasks,
     strategy: ticketStrategy(),
     recentActions: siteActivities.slice(0, 4),
     warning,
@@ -2280,7 +2708,13 @@ export async function getServiceTicketQueueData({
 
   try {
     const supabase = await createDataClient()
-    const [ticketResponse, actionResponse] = await Promise.all([
+    const [
+      ticketResponse,
+      catalogResponse,
+      orderResponse,
+      taskResponse,
+      actionResponse,
+    ] = await Promise.all([
       supabase
         .from("service_tickets")
         .select(
@@ -2289,9 +2723,29 @@ export async function getServiceTicketQueueData({
         .order("sla_due_at", { ascending: true })
         .limit(safeLimit),
       supabase
+        .from("service_catalog")
+        .select(
+          "id, code, name, category, description, base_price_cents, currency, sla_hours, debt_policy, requires_payment, requires_deposit, team, provider_type, service_level, popularity_score, active"
+        )
+        .order("popularity_score", { ascending: false }),
+      supabase
+        .from("service_orders")
+        .select(
+          "id, service_catalog_id, ticket_id, unit_id, resident_id, order_no, status, debt_check_status, payment_decision, quoted_price_cents, requested_for_at, next_action, created_at, service_catalog(id, name, sla_hours, team, category), service_tickets(id, ticket_no), units(id, unit_no), residents(id, full_name)"
+        )
+        .order("created_at", { ascending: false })
+        .limit(safeLimit),
+      supabase
+        .from("workforce_tasks")
+        .select(
+          "id, task_no, title, team, status, priority, sla_due_at, route_slot, checklist, requires_media, media_count, manager_approval_required, completion_readiness, field_note, created_at, updated_at, service_tickets(id, ticket_no), units(id, unit_no), staff_members(id, name)"
+        )
+        .order("sla_due_at", { ascending: true, nullsFirst: false })
+        .limit(safeLimit),
+      supabase
         .from("client_action_requests")
         .select("id, action_type, title, status, entity_table, entity_external_id, created_at")
-        .eq("entity_table", "service_tickets")
+        .in("entity_table", ["service_tickets", "service_catalog", "service_orders", "workforce_tasks", "media_reports"])
         .order("created_at", { ascending: false })
         .limit(5),
     ])
@@ -2299,15 +2753,32 @@ export async function getServiceTicketQueueData({
     if (ticketResponse.error) throw ticketResponse.error
 
     const tickets = normalizeServiceTicketRows(ticketResponse.data, safeLimit)
-    const summary = summarizeServiceTickets(tickets)
+    const catalog =
+      catalogResponse.error || !Array.isArray(catalogResponse.data) || catalogResponse.data.length === 0
+        ? serviceCatalogItems
+        : normalizeServiceCatalogRows(catalogResponse.data)
+    const derivedOrders = buildServiceOrdersFromTickets(tickets)
+    const orders =
+      orderResponse.error || !Array.isArray(orderResponse.data) || orderResponse.data.length === 0
+        ? derivedOrders
+        : normalizeServiceOrderRows(orderResponse.data)
+    const derivedTasks = buildWorkforceTasksFromTickets(tickets)
+    const tasks =
+      taskResponse.error || !Array.isArray(taskResponse.data) || taskResponse.data.length === 0
+        ? derivedTasks
+        : normalizeWorkforceTaskRows(taskResponse.data)
+    const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
     return {
       contractVersion: SERVICE_TICKETING_CONTRACT_VERSION,
       source: "supabase",
       generatedAt: new Date().toISOString(),
-      quality: buildServiceTicketingQuality(tickets, summary),
+      quality: buildServiceTicketingQuality(tickets, catalog, orders, tasks, summary),
       summary,
       tickets,
+      catalog,
+      orders,
+      workforceTasks: tasks,
       strategy: ticketStrategy(),
       recentActions: actionResponse.error
         ? []

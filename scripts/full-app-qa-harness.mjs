@@ -228,6 +228,24 @@ async function checkApiContracts(baseUrl) {
   })
   await run("phase7-tenant-denied", "/api/site-management/payment-controls?limit=8", { role: "tenant", expectedStatus: 403 })
 
+  await run("phase8-9-service-operations-manager", "/api/site-management/tickets?limit=24", { role: "manager" }, (payload) => {
+    validateQuality(payload, "service operations")
+    assert(payload.contractVersion === "phase-8-9-service-operations.v1", "service operations contract mismatch")
+    assert(Array.isArray(payload.catalog) && payload.catalog.length >= 6, "service catalogue must include active services")
+    assert(Array.isArray(payload.orders) && payload.orders.length > 0, "service orders must be present")
+    assert(Array.isArray(payload.workforceTasks) && payload.workforceTasks.length > 0, "workforce tasks must be present")
+    assert(payload.summary?.fieldTeams >= 2, "service operations must include multiple field teams")
+    assert(
+      payload.orders.every((order) => !(order.debtCheckStatus === "blocked" && order.taskCreated)),
+      "blocked service orders must not be dispatchable"
+    )
+  })
+  await run("phase8-9-service-operations-staff", "/api/site-management/tickets?limit=24", { role: "staff" }, (payload) => {
+    validateQuality(payload, "staff service operations")
+    assert(payload.workforceTasks.every((task) => Array.isArray(task.checklist) && task.checklist.length > 0), "staff tasks must expose checklists")
+  })
+  await run("phase8-9-accountant-denied", "/api/site-management/tickets?limit=8", { role: "accountant", expectedStatus: 403 })
+
   await run("search-manager", "/api/site-management/search?q=A-001&limit=5", { role: "manager" }, (payload) => {
     assert(Array.isArray(payload.results), "search must return results array")
   })
@@ -331,6 +349,8 @@ async function checkSchemaFiles() {
     "supabase/migrations/00000000000002_site_crm_core.sql",
     "supabase/migrations/00000000000003_operational_api_foundation.sql",
     "supabase/migrations/00000000000004_realtime_operational_dashboard.sql",
+    "supabase/migrations/00000000000005_new_level_premium_unit_sales.sql",
+    "supabase/migrations/00000000000006_service_operations_phase_08_09.sql",
     "supabase/seed.sql",
   ]
   const requiredSnippets = [
@@ -342,6 +362,10 @@ async function checkSchemaFiles() {
     "CREATE TABLE IF NOT EXISTS public.access_events",
     "CREATE TABLE IF NOT EXISTS public.staff_members",
     "CREATE TABLE IF NOT EXISTS public.role_coverage",
+    "CREATE TABLE IF NOT EXISTS public.service_catalog",
+    "CREATE TABLE IF NOT EXISTS public.service_orders",
+    "CREATE TABLE IF NOT EXISTS public.workforce_tasks",
+    "CREATE TABLE IF NOT EXISTS public.media_reports",
     "get_site_dashboard_snapshot",
     "get_phase4_site_data",
     "supabase_realtime",
