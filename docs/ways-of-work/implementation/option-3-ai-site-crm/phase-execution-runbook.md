@@ -28,9 +28,9 @@ The current delivery model is the 15-phase ERP model in `docs/PROJECT-HANDBOOK.m
 | Phase range | Current state on 29 June 2026 | Delivery control |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Maintain regression coverage and do not reopen unless production data exposes a gap. |
-| Phase 5-7 | Complete as implementation foundation / review-ready slice | Validate people/role relationships, ledger surfaces and payment/deposit/restriction controls with real client data, accounting/legal review and UAT before production activation. |
-| Phase 8 | Next active build | Build service catalogue and service-order flow on top of the Phase 7 debt/restriction gate. |
-| Phase 9-15 | Accelerated delivery window | Target remaining development and automated QA evidence by Wednesday 8 July 2026, excluding a full exploratory manual testing round. Do not mark complete without harness/browser evidence. |
+| Phase 5-9 | Complete as implementation foundation / ready-for-UAT slice | Validate people/role relationships, ledger surfaces, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA and media-proof workflows with real client data, accounting/legal review and UAT before production activation. |
+| Phase 10 | Next active build | Build booking, move-in and checkout on top of the Phase 5-9 people, finance, service and task foundation. |
+| Phase 11-15 | Accelerated delivery window | Target remaining development and automated QA evidence by Wednesday 8 July 2026, excluding a full exploratory manual testing round. Do not mark complete without harness/browser evidence. |
 
 Delivery boundary: the 8 July 2026 target covers implementation, developer-side unit checks, automated E2E/regression scripts and browser smoke/manual spot checks. A full exploratory manual QA/UAT round is a separate activity after implementation and should be planned with additional days if required.
 

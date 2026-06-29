@@ -49,9 +49,9 @@ Use this table when status appears inconsistent across documents or generated ex
 | Phase range | Current status on 29 June 2026 | Practical meaning |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Scope, UX/RBAC, Supabase schema, site/block/floor/unit model, import validation and live dashboard foundation exist. |
-| Phase 5-7 | Complete as implementation foundation / review-ready slice | User/profile/role relationship surfaces, core finance ledger surfaces and payment/deposit/restriction control APIs/UI/harnesses exist. They still require client data validation, accounting/legal review, provider decisions and UAT before production use. |
-| Phase 8 | Next active build | Service catalogue and service-order flow should connect debt checks, payment/debit decisions, ticket creation, SLA and assignment using the Phase 5-7 foundation. |
-| Phase 9-15 | Accelerated delivery window | Remaining development is targeted for completion by Wednesday 8 July 2026, excluding full exploratory manual testing. Each phase still needs harness/browser evidence before it is marked complete. |
+| Phase 5-9 | Complete as implementation foundation / ready-for-UAT slice | User/profile/role relationships, finance ledger, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA board and media-proof workflow exist with API/UI/harness evidence. They still require client data validation, accounting/legal review, provider decisions and UAT before production use. |
+| Phase 10 | Next active build | Booking, move-in and checkout should connect reservations, deposits, cleaning tasks, access activation/deactivation and damage settlement using the Phase 5-9 foundation. |
+| Phase 11-15 | Accelerated delivery window | Remaining development is targeted for completion by Wednesday 8 July 2026, excluding full exploratory manual testing. Each phase still needs harness/browser evidence before it is marked complete. |
 
 The current expert plan is a 15-phase ERP model because integrations, AI and launch hardening need separate governance and test gates.
 

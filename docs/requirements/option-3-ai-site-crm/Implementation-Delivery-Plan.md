@@ -34,7 +34,7 @@ Primary delivery model: Phased web application and installable PWA
 
 ## Current Delivery Baseline
 
-As of 26 June 2026, the active delivery control model is 15 phases: phases 1-4 complete as a local/product foundation, phase 5 ready for UAT review, phases 6-7 in active build, and phases 8-15 planned production work.
+As of 29 June 2026, the active delivery control model is 15 phases: phases 1-9 are complete as a demo/internal-QA implementation foundation and ready-for-UAT slice, while phases 10-15 remain planned production work under the accelerated delivery target.
 
 This plan defines governance and sequencing. It should not be read as proof that every target phase is production complete.
 

@@ -6,6 +6,8 @@ Confidentiality: STRICTLY CONFIDENTIAL
 
 Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 29 June 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
 
+Current implementation checkpoint: phases 1-9 are complete as a demo/internal-QA foundation; phases 10-15 remain in the accelerated delivery window. Full exploratory manual QA/UAT is tracked separately from this development target.
+
 ## Active Source-Of-Truth Documents
 
 | Area | Document | Use |

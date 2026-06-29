@@ -41,7 +41,7 @@ Related documents:
 
 This PRD defines the product target and acceptance criteria. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
 
-As of 29 June 2026, phases 1-7 are complete as a demo/internal-QA implementation foundation, with production activation still dependent on real client data, provider decisions, accounting/legal review and UAT. Phases 8-15 are under an accelerated Codex-assisted delivery target for completion by Wednesday 8 July 2026, excluding full exploratory manual testing. This target includes implementation, unit checks, automated E2E/regression scripts and browser smoke checks; a separate exploratory manual QA/UAT round should be planned after development if required. Product requirements below are target scope unless a section explicitly says the capability is already implemented.
+As of 29 June 2026, phases 1-9 are complete as a demo/internal-QA implementation foundation, with production activation still dependent on real client data, provider decisions, accounting/legal review and UAT. Phases 10-15 remain under an accelerated Codex-assisted delivery target for completion by Wednesday 8 July 2026, excluding full exploratory manual testing. This target includes implementation, unit checks, automated E2E/regression scripts and browser smoke checks; a separate exploratory manual QA/UAT round should be planned after development if required. Product requirements below are target scope unless a section explicitly says the capability is already implemented.
 
 ## 1. Executive Summary
 

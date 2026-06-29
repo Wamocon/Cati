@@ -34,7 +34,7 @@ Purpose: Connect business needs to product requirements, technical controls and 
 
 ## Current Traceability Baseline
 
-As of 26 June 2026, traceability is controlled through the 15-phase ERP model. Phases 1-4 have local/product foundation evidence, phase 5 is ready for UAT review, phases 6-7 are active build, and phases 8-15 require implementation, tests and sign-off before being treated as complete.
+As of 29 June 2026, traceability is controlled through the 15-phase ERP model. Phases 1-9 have demo/internal-QA implementation evidence and are ready for UAT review, while phases 10-15 require implementation, tests and sign-off before being treated as complete.
 
 The matrix below describes required coverage, not automatic completion.
 

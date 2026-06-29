@@ -1361,7 +1361,7 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
     phase: 7,
     title: "Ödeme, depozito, mutabakat ve borç kısıtı",
-    status: "in_progress",
+    status: "ready_for_uat",
     owner: "Finance + Legal",
     businessOutcome: "Ödeme, depozito, iade, borç eşiği ve servis/erişim kısıtları muhasebe ve hukuk onayıyla yürür.",
     userGuide: "Finans ve Uyum ekranlarında gecikme, depozito, kısıt ve onay kuyruğunu takip edin.",
@@ -1370,20 +1370,20 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
     phase: 8,
     title: "Servis kataloğu ve servis siparişi akışı",
-    status: "planned",
+    status: "ready_for_uat",
     owner: "Operations + Finance",
     businessOutcome: "Temizlik, transfer, bakım ve özel hizmetler fiyat, SLA, borç kontrolü ve görev üretimiyle siparişe dönüşür.",
     userGuide: "Servis Talepleri ekranında katalog, borç kontrolü, görev üretimi ve durum takibini yönetin.",
-    evidence: ["Service catalogue target", "Debt-check gate", "Task handoff", "Resident order flow"],
+    evidence: ["Service catalogue", "Debt-check gate", "Service order API", "Resident order flow"],
   },
   {
     phase: 9,
     title: "Görev, saha ekibi, SLA ve medya raporu",
-    status: "planned",
+    status: "ready_for_uat",
     owner: "Technical + Staff",
     businessOutcome: "Saha işleri atama, öncelik, SLA, foto/video kanıt, iptal ve yönetici onayıyla görünür olur.",
     userGuide: "Servis Talepleri ekranında görev panosu, SLA riski ve saha raporlarını yönetin.",
-    evidence: ["Task board target", "Mobile staff flow", "SLA timer", "Media proof"],
+    evidence: ["Task board", "Mobile staff flow", "SLA timer", "Media proof"],
   },
   {
     phase: 10,

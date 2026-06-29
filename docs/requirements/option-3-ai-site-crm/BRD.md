@@ -41,7 +41,7 @@ Primary deployment scope: Web application and installable PWA, not native mobile
 
 This BRD defines the business target and acceptance logic for the 1Cati residential site management CRM. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
 
-As of 26 June 2026, phases 1-4 are complete as a local/product foundation, phase 5 is ready for UAT review, phases 6-7 are in active build, and phases 8-15 remain planned production work. Business claims in this BRD describe target requirements unless a section explicitly says that the capability is already implemented.
+As of 29 June 2026, phases 1-9 are complete as a demo/internal-QA implementation foundation and ready-for-UAT slice, while phases 10-15 remain planned production work under the accelerated delivery target. Business claims in this BRD describe target requirements unless a section explicitly says that the capability is already implemented.
 
 ## 1. Executive Summary
 

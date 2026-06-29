@@ -46,9 +46,9 @@ const projectTemplateKey =
   env.JIRA_PROJECT_TEMPLATE_KEY ?? "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic"
 
 const phaseStatusSummary = {
-  done: 7,
+  done: 9,
   inProgress: 1,
-  todo: 7,
+  todo: 5,
 }
 
 function adfText(text) {
@@ -643,7 +643,7 @@ const phases = [
   },
   {
     phase: 8,
-    status: "in-progress",
+    status: "done",
     version: "Release 2",
     component: "Services und Tickets",
     title: "Servicekatalog und Servicebestellprozess produktiv machen",
@@ -659,7 +659,7 @@ const phases = [
   },
   {
     phase: 9,
-    status: "todo",
+    status: "done",
     version: "Release 2",
     component: "Services und Tickets",
     title: "Aufgaben, Personal, SLA und mobile Arbeitsberichte umsetzen",
@@ -675,7 +675,7 @@ const phases = [
   },
   {
     phase: 10,
-    status: "todo",
+    status: "in-progress",
     version: "Release 2",
     component: "Buchung und Zugang",
     title: "Buchung, Einzug, Auszug, Kaution und Zugang Ende-zu-Ende steuern",

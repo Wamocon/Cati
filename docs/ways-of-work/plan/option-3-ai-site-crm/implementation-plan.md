@@ -13,13 +13,13 @@ This plan defines the target product and implementation sequence. It is not a cl
 | Phase range | Status | Practical meaning |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Scope, UX/RBAC, Supabase schema, site/block/floor/unit model, import validation and live dashboard foundation exist. |
-| Phase 5-7 | Complete as implementation foundation / review-ready slice | User/profile/role relationship surfaces, core finance ledger surfaces and payment/deposit/restriction controls are present with APIs, UI and harness coverage. They still need real-data validation, accounting/legal review, provider choices and UAT before production activation. |
-| Phase 8 | Next active build | Service catalogue and service-order flow should connect debt checks, payment/debit decisions, ticket creation, SLA and assignment using the Phase 5-7 foundation. |
-| Phase 9-15 | Accelerated delivery window | Tasks/SLA, booking/checkout, communications, PWA, integrations, AI premium layer and launch hardening are targeted for rapid Codex-assisted development by Wednesday 8 July 2026, with automated QA evidence collected per phase. |
+| Phase 5-9 | Complete as implementation foundation / ready-for-UAT slice | User/profile/role relationships, core finance ledger, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA board and media-proof workflow are present with APIs, UI and harness coverage. They still need real-data validation, accounting/legal review, provider choices and UAT before production activation. |
+| Phase 10 | Next active build | Booking, move-in and checkout should connect reservations, deposits, cleaning tasks, access activation/deactivation and damage settlement using the Phase 5-9 foundation. |
+| Phase 11-15 | Accelerated delivery window | Communications, PWA, integrations, AI premium layer and launch hardening are targeted for rapid Codex-assisted development by Wednesday 8 July 2026, with automated QA evidence collected per phase. |
 
-Parallel-session reconciliation on 26 June 2026 confirmed the 15-phase ERP dashboard model, RBAC-aware dashboard drilldowns, listings interaction fixes, local Supabase fixes, fuzzy search, Jira/Xray dry-run workflow and realtime dashboard refresh. The 27-29 June 2026 work completed the Phase 5-7 implementation foundation: people/roles, finance ledger surfaces, guarded payment-control API, finance-page control panel, landing/product UX cleanup, multilingual route fixes and QA gates for payment/deposit/restriction flows.
+Parallel-session reconciliation on 26 June 2026 confirmed the 15-phase ERP dashboard model, RBAC-aware dashboard drilldowns, listings interaction fixes, local Supabase fixes, fuzzy search, Jira/Xray dry-run workflow and realtime dashboard refresh. The 27-29 June 2026 work completed the Phase 5-9 implementation foundation: people/roles, finance ledger surfaces, guarded payment-control API, finance-page control panel, service catalogue, service orders, workforce SLA task board, media-proof workflow, landing/product UX cleanup, multilingual route fixes and QA gates for payment/deposit/restriction/service operations flows.
 
-Accelerated delivery target on 29 June 2026: complete remaining Phase 8-15 development by Wednesday 8 July 2026, excluding a full exploratory manual testing round. This target assumes continuous Codex-assisted execution, fast review loops, unit checks, automated E2E/regression scripts, browser smoke checks and no blocking client/provider credentials. A separate exploratory manual QA/UAT round should be planned after this target and may take additional days depending on scope and client availability.
+Accelerated delivery target on 29 June 2026: complete remaining Phase 10-15 development by Wednesday 8 July 2026, excluding a full exploratory manual testing round. This target assumes continuous Codex-assisted execution, fast review loops, unit checks, automated E2E/regression scripts, browser smoke checks and no blocking client/provider credentials. A separate exploratory manual QA/UAT round should be planned after this target and may take additional days depending on scope and client availability.
 
 ## Market Benchmark
 
@@ -847,9 +847,9 @@ Accelerated planning assumption:
 
 | Date | Target delivery scope | Estimated Codex-assisted effort |
 |---|---|---:|
-| 29 June 2026 | Phase 1-7 implementation foundation and QA evidence complete | Complete |
-| 30 June 2026 | Phase 8 service catalogue and service-order flow | 10-14 hours |
-| 1 July 2026 | Phase 9 tasks, workforce, SLA and field reporting | 12-18 hours |
+| 29 June 2026 | Phase 1-9 implementation foundation and QA evidence complete | Complete |
+| 29 June 2026 | Phase 8 service catalogue and service-order flow | Complete |
+| 29 June 2026 | Phase 9 tasks, workforce, SLA and field reporting | Complete |
 | 2 July 2026 | Phase 10 booking, move-in and checkout | 16-22 hours |
 | 3 July 2026 | Phase 11 communication, notifications and documents | 12-18 hours |
 | 4 July 2026 | Phase 12 mobile PWA and installable mobile surfaces | 12-18 hours |
@@ -857,13 +857,13 @@ Accelerated planning assumption:
 | 6 July 2026 | Phase 14 AI premium layer and advanced analytics v1 | 12-18 hours |
 | 8 July 2026 | Phase 15 final automated QA, security checks, UAT pack, training material and launch-readiness preparation | 18-28 hours |
 
-Current control point: phases 1-7 are complete as an implementation foundation and review-ready delivery slice. Phases 8-15 are now under an accelerated delivery target to finish development by Wednesday 8 July 2026, excluding full exploratory manual testing. This target is aggressive but feasible only with continuous Codex-assisted execution, parallel automated QA and immediate correction of defects found by the harnesses.
+Current control point: phases 1-9 are complete as an implementation foundation and ready-for-UAT delivery slice. Phases 10-15 are now under an accelerated delivery target to finish development by Wednesday 8 July 2026, excluding full exploratory manual testing. This target is aggressive but feasible only with continuous Codex-assisted execution, parallel automated QA and immediate correction of defects found by the harnesses.
 
 ## Next Engineering Priorities
 
-1. Validate Phase 5-7 implementation foundation with real client data, accounting/legal review and UAT evidence before production activation.
+1. Validate Phase 5-9 implementation foundation with real client data, accounting/legal review and UAT evidence before production activation.
 2. Confirm provider decisions for payments, bank reconciliation, SMS/email/push, access/security and monitoring before live credentials are issued.
-3. Execute Phase 8-15 development in the compressed 30 June to 8 July delivery window.
+3. Execute Phase 10-15 development in the compressed 30 June to 8 July delivery window.
 4. Keep dashboard metrics tied to Supabase-backed APIs with realtime or polling refresh, not static-only cards.
 5. Harden RLS, RBAC and audit coverage for every write action before production UAT.
 6. Keep Jira/Xray synchronization aligned with this checkpoint; remote attachment uploads still require explicit approval because the package contains confidential material.

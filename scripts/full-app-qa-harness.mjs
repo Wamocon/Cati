@@ -186,7 +186,11 @@ async function checkApiContracts(baseUrl) {
   await run("phase-status", "/api/site-management/phase-status", {}, (payload) => {
     assert((payload.phases ?? []).length === 15, "phase-status must expose 15 phases")
     const phase7 = payload.phases.find((phase) => phase.phase === 7)
-    assert(phase7?.status === "in_progress", "phase 7 must remain in active build")
+    const phase8 = payload.phases.find((phase) => phase.phase === 8)
+    const phase9 = payload.phases.find((phase) => phase.phase === 9)
+    assert(phase7?.status === "ready_for_uat", "phase 7 must be ready for UAT")
+    assert(phase8?.status === "ready_for_uat", "phase 8 must be ready for UAT")
+    assert(phase9?.status === "ready_for_uat", "phase 9 must be ready for UAT")
   })
 
   await run("dashboard-admin", "/api/site-management/dashboard", { role: "admin" }, (payload) => {
