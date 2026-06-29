@@ -5,6 +5,8 @@ import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
+import { FinanceLiveLedger } from "@/components/finance-live-ledger"
+import { PaymentRestrictionControl } from "@/components/payment-restriction-control"
 import { StatusBadge } from "@/components/status-badge"
 import {
   accessLabels,
@@ -197,12 +199,16 @@ export default function FinancePage() {
         </Card3D>
       </div>
 
+      <FinanceLiveLedger />
+
+      <PaymentRestrictionControl />
+
       <Card3D glow={false}>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <Euro className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">Phase 7 - New Level Premium satış ödeme planı</h2>
+              <h2 className="text-sm font-bold text-card-foreground">Satış ödeme planı</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
               0% taksit akışı; liste fiyatı, peşinat, kalan vade, kur riski ve sözleşme blokajını satıştan önce görünür yapar.

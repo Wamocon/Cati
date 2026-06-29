@@ -2,9 +2,9 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2
-Date: 25 June 2026
-Prepared for: Product, design, engineering, QA and delivery teams  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Product, design, engineering, QA and delivery teams
 Related documents:
 
 - BRD: `docs/requirements/option-3-ai-site-crm/BRD.md`
@@ -26,17 +26,22 @@ Related documents:
 |---|---|
 | Document type | Product Requirements Document |
 | Primary audience | Product, design, engineering, QA and delivery teams |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 29 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Product Roadmap](assets/diagrams/prd-00-product-roadmap.png)
-- [Product Operating Model](assets/diagrams/prd-01-product-operating-model.png)
-- [Product Module Interaction Model](assets/diagrams/prd-02-product-module-interaction-model.png)
+- Product Roadmap (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Product Operating Model (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Product Module Interaction Model (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Delivery Baseline
+
+This PRD defines the product target and acceptance criteria. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
+
+As of 29 June 2026, phases 1-7 are complete as a demo/internal-QA implementation foundation, with production activation still dependent on real client data, provider decisions, accounting/legal review and UAT. Phases 8-15 are under an accelerated Codex-assisted delivery target for completion by Wednesday 8 July 2026, excluding full exploratory manual testing. This target includes implementation, unit checks, automated E2E/regression scripts and browser smoke checks; a separate exploratory manual QA/UAT round should be planned after development if required. Product requirements below are target scope unless a section explicitly says the capability is already implemented.
 
 ## 1. Executive Summary
 
@@ -460,9 +465,9 @@ Testing:
 The product should be understood as four connected experiences, not one generic CRM screen. Each experience has a different job and therefore a different product standard.
 
 <!-- DIAGRAM:prd-01-product-operating-model:BEGIN -->
-![Product Operating Model](assets/diagrams/prd-01-product-operating-model.png)
+_Diagram: Product Operating Model. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Product Operating Model. Generated from the workflow source in this document._
+_Figure: Product Operating Model. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -501,9 +506,9 @@ Product implication:
 The main product risk is treating modules as separate pages. The platform only works if finance, restrictions, tickets, bookings, access and communications share one operational state.
 
 <!-- DIAGRAM:prd-02-product-module-interaction-model:BEGIN -->
-![Product Module Interaction Model](assets/diagrams/prd-02-product-module-interaction-model.png)
+_Diagram: Product Module Interaction Model. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Product Module Interaction Model. Generated from the workflow source in this document._
+_Figure: Product Module Interaction Model. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>

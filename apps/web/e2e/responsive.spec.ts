@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test"
-import { screenshot, collectConsoleIssues } from "./helpers"
+import { expect, test } from "@playwright/test"
+import { collectConsoleIssues, screenshot } from "./helpers"
 
 test.describe("Responsive mobile checks", () => {
   let issues: string[]
@@ -15,7 +15,7 @@ test.describe("Responsive mobile checks", () => {
     await page.goto("/tr")
     await expect(
       page.getByRole("heading", {
-        name: /Türkiye emlağını tek çatı altında yönetin/,
+        name: /Emlak operasyonunuzu tek ERP merkezinde yönetin/,
       })
     ).toBeVisible()
 
@@ -31,9 +31,7 @@ test.describe("Responsive mobile checks", () => {
 
   test("dashboard is usable on small viewport", async ({ page }, testInfo) => {
     await page.goto("/tr/dashboard")
-    await expect(
-      page.getByRole("heading", { name: "Ataberk Estate Premium CRM Merkezi" })
-    ).toBeVisible()
+    await expect(page.getByRole("heading", { name: /ERP Operasyon Merkezi/ })).toBeVisible()
     await expect(page.getByText("Toplam Daire").first()).toBeVisible()
     await screenshot(page, testInfo, "mobile-dashboard", { fullPage: true })
     expect(issues).toEqual([])

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
-import { generateAiResponse } from "@/lib/ai-responses"
-import { normalizeRole } from "@/lib/auth"
+import {
+  generateAiResponse,
+  getAiAccessDecision,
+  getAiRoleProfile,
+  getAiRoleSystemInstruction,
+} from "@/lib/ai-responses"
+import { getUserProfile } from "@/lib/auth"
 import {
   completeWithLocalAi,
   isLocalAiConfigured,
@@ -22,7 +27,7 @@ function choosePurpose(message: string): LocalAiPurpose {
 }
 
 export async function POST(request: Request) {
-  let body: { message?: unknown; role?: unknown }
+  let body: { message?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -37,13 +42,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is too long" }, { status: 413 })
   }
 
-  const role = normalizeRole(body.role)
+  const profile = await getUserProfile()
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const role = profile.role
+  const roleProfile = getAiRoleProfile(role)
+  const accessDecision = getAiAccessDecision(message, role)
   const deterministicContext = generateAiResponse(message, role)
+
+  if (!accessDecision.allowed) {
+    return NextResponse.json({
+      reply: deterministicContext,
+      source: "rbac-guard",
+      role,
+      roleProfile,
+      resource: accessDecision.resource,
+    })
+  }
 
   if (!(await isLocalAiConfigured())) {
     return NextResponse.json({
       reply: deterministicContext,
       source: "deterministic-fallback",
+      role,
+      roleProfile,
+      resource: accessDecision.resource,
     })
   }
 
@@ -55,8 +80,13 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content:
-            "Sen 1Cati site yonetim CRM icin Turkce konusan operasyon asistanisin. Kisa, net ve profesyonel cevap ver. Markdown, kalin yazi isareti, tablo veya kod blogu kullanma. Finans, iade, depozito, borc kisiti, erisim karti veya guvenlik aksiyonlarini dogrudan uygulama; sadece oner ve insan onayi gerektigini belirt. Uydurma veri kullanma. Verilen sistem baglamina dayan.",
+          content: [
+            "Sen 1Cati site yonetim CRM icin Turkce konusan operasyon asistanisin.",
+            getAiRoleSystemInstruction(role),
+            "Kisa, net ve profesyonel cevap ver. Markdown, kalin yazi isareti, tablo veya kod blogu kullanma.",
+            "Finans, iade, depozito, borc kisiti, erisim karti, guvenlik veya kullanici yetkisi aksiyonlarini dogrudan uygulama; sadece oner ve insan onayi gerektigini belirt.",
+            "Uydurma veri kullanma. Verilen sistem baglamina ve aktif rol kapsamına dayan.",
+          ].join(" "),
         },
         {
           role: "user",
@@ -68,6 +98,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply: completion.content,
       source: "local-ai",
+      role,
+      roleProfile,
+      resource: accessDecision.resource,
       model: completion.model,
       usage: completion.usage,
     })
@@ -75,6 +108,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply: deterministicContext,
       source: "deterministic-fallback",
+      role,
+      roleProfile,
+      resource: accessDecision.resource,
     })
   }
 }

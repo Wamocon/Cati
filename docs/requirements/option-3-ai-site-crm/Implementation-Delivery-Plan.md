@@ -2,10 +2,10 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2  
-Date: 25 June 2026  
-Prepared for: Delivery planning, estimation and client governance  
-Prepared by: 1Cati / Product and Engineering  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Delivery planning, estimation and client governance
+Prepared by: 1Cati / Product and Engineering
 Primary delivery model: Phased web application and installable PWA
 
 ---
@@ -23,15 +23,20 @@ Primary delivery model: Phased web application and installable PWA
 |---|---|
 | Document type | Implementation Delivery Plan |
 | Primary audience | Delivery leadership, product, engineering, client operations and steering group |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Delivery Workflow](assets/diagrams/implementation-01-delivery-workflow.png)
+- Delivery Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Delivery Baseline
+
+As of 26 June 2026, the active delivery control model is 15 phases: phases 1-4 complete as a local/product foundation, phase 5 ready for UAT review, phases 6-7 in active build, and phases 8-15 planned production work.
+
+This plan defines governance and sequencing. It should not be read as proof that every target phase is production complete.
 
 ## 1. Executive Summary
 
@@ -57,9 +62,9 @@ The recommended delivery approach is a phased modular monolith. Each phase shoul
 ## 3. Delivery Workflow
 
 <!-- DIAGRAM:implementation-01-delivery-workflow:BEGIN -->
-![Delivery Workflow](assets/diagrams/implementation-01-delivery-workflow.png)
+_Diagram: Delivery Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Delivery Workflow. Generated from the workflow source in this document._
+_Figure: Delivery Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -184,4 +189,3 @@ The final launch handover should include:
 - Backup/restore procedure.
 - Role-based training material.
 - Post-launch adoption report template.
-

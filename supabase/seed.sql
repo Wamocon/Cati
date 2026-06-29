@@ -34,6 +34,100 @@ SET
   currency = EXCLUDED.currency,
   updated_at = NOW();
 
+INSERT INTO auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at,
+  is_sso_user,
+  is_anonymous
+)
+VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  '77777777-7777-4777-8777-777777777777',
+  'authenticated',
+  'authenticated',
+  'manager@cati.local',
+  crypt('CatiLocal!2026', gen_salt('bf')),
+  NOW(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  '{"full_name":"Local Manager","role":"manager","language":"tr","company_id":"11111111-1111-4111-8111-111111111111"}'::jsonb,
+  NOW(),
+  NOW(),
+  FALSE,
+  FALSE
+)
+ON CONFLICT (id) DO UPDATE
+SET
+  email = EXCLUDED.email,
+  encrypted_password = EXCLUDED.encrypted_password,
+  email_confirmed_at = EXCLUDED.email_confirmed_at,
+  raw_app_meta_data = EXCLUDED.raw_app_meta_data,
+  raw_user_meta_data = EXCLUDED.raw_user_meta_data,
+  updated_at = NOW();
+
+UPDATE auth.users
+SET
+  confirmation_token = COALESCE(confirmation_token, ''),
+  recovery_token = COALESCE(recovery_token, ''),
+  email_change_token_new = COALESCE(email_change_token_new, ''),
+  email_change = COALESCE(email_change, ''),
+  email_change_token_current = COALESCE(email_change_token_current, ''),
+  phone_change = COALESCE(phone_change, ''),
+  phone_change_token = COALESCE(phone_change_token, ''),
+  reauthentication_token = COALESCE(reauthentication_token, ''),
+  email_change_confirm_status = COALESCE(email_change_confirm_status, 0)
+WHERE id = '77777777-7777-4777-8777-777777777777';
+
+INSERT INTO auth.identities (
+  id,
+  provider_id,
+  user_id,
+  identity_data,
+  provider,
+  last_sign_in_at,
+  created_at,
+  updated_at
+)
+VALUES (
+  '88888888-8888-4888-8888-888888888888',
+  'manager@cati.local',
+  '77777777-7777-4777-8777-777777777777',
+  '{"sub":"77777777-7777-4777-8777-777777777777","email":"manager@cati.local","email_verified":true,"phone_verified":false}'::jsonb,
+  'email',
+  NOW(),
+  NOW(),
+  NOW()
+)
+ON CONFLICT (provider_id, provider) DO UPDATE
+SET
+  user_id = EXCLUDED.user_id,
+  identity_data = EXCLUDED.identity_data,
+  updated_at = NOW();
+
+INSERT INTO public.profiles (id, full_name, role, language, company_id)
+VALUES (
+  '77777777-7777-4777-8777-777777777777',
+  'Local Manager',
+  'manager',
+  'tr',
+  '11111111-1111-4111-8111-111111111111'
+)
+ON CONFLICT (id) DO UPDATE
+SET
+  full_name = EXCLUDED.full_name,
+  role = EXCLUDED.role,
+  language = EXCLUDED.language,
+  company_id = EXCLUDED.company_id,
+  updated_at = NOW();
+
 INSERT INTO public.offices (id, company_id, name, city, address, phone, status)
 VALUES (
   '22222222-2222-4222-8222-222222222222',
@@ -84,7 +178,7 @@ WITH floor_source AS (
     lpad(gs::text, 2, '0') AS label,
     gs AS level
   FROM public.site_blocks b
-  CROSS JOIN generate_series(1, 12) gs
+  CROSS JOIN generate_series(1, 13) gs
   WHERE b.site_id = '33333333-3333-4333-8333-333333333333'
 )
 INSERT INTO public.site_floors (company_id, site_id, block_id, label, level)
@@ -99,8 +193,8 @@ WITH numbered AS (
 computed AS (
   SELECT
     n,
-    LEAST(((n - 1) / 96), 7)::int AS block_index,
-    ((n - 1) % 96)::int AS within_block
+    CASE WHEN n = 769 THEN 7 ELSE ((n - 1) / 96)::int END AS block_index,
+    CASE WHEN n = 769 THEN 96 ELSE ((n - 1) % 96)::int END AS within_block
   FROM numbered
 ),
 unit_source AS (
@@ -311,7 +405,7 @@ SELECT
   NOW() - interval '1 day',
   'seed-dues-2026-06-' || unit_no
 FROM ledger_units
-ON CONFLICT (company_id, idempotency_key) DO NOTHING;
+ON CONFLICT (company_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING;
 
 WITH reservation_units AS (
   SELECT id, company_id, site_id, unit_no, row_number() OVER (ORDER BY unit_no) AS rn
@@ -395,17 +489,18 @@ INSERT INTO public.staff_members (id, company_id, name, role, team, phone, langu
 VALUES
   ('66666666-6666-4666-8666-666666666601', '11111111-1111-4111-8111-111111111111', 'Selin Yonetici', 'manager', 'Site Yonetimi', '+90 532 110 1001', 'tr', 9, 15000000, 'all_site', 'active'),
   ('66666666-6666-4666-8666-666666666602', '11111111-1111-4111-8111-111111111111', 'Merve Muhasebe', 'accountant', 'Finans', '+90 532 110 1002', 'tr', 14, 7500000, 'finance_only', 'active'),
-  ('66666666-6666-4666-8666-666666666603', '11111111-1111-4111-8111-111111111111', 'Ahmet Teknik', 'maintenance', 'Teknik', '+90 532 110 1003', 'tr', 11, 1200000, 'field_only', 'active')
+  ('66666666-6666-4666-8666-666666666603', '11111111-1111-4111-8111-111111111111', 'Ahmet Teknik', 'staff', 'Teknik', '+90 532 110 1003', 'tr', 11, 1200000, 'field_only', 'active')
 ON CONFLICT (id) DO UPDATE
 SET active_tasks = EXCLUDED.active_tasks, approval_limit_cents = EXCLUDED.approval_limit_cents, status = EXCLUDED.status, updated_at = NOW();
 
 INSERT INTO public.role_coverage (company_id, role_label, users_count, can_approve_finance, can_restrict_access, can_manage_users, can_export_data)
 VALUES
-  ('11111111-1111-4111-8111-111111111111', 'Yonetici', 2, TRUE, TRUE, TRUE, TRUE),
+  ('11111111-1111-4111-8111-111111111111', 'Yonetim', 1, TRUE, TRUE, TRUE, TRUE),
+  ('11111111-1111-4111-8111-111111111111', 'Sorumlu', 2, FALSE, TRUE, FALSE, TRUE),
   ('11111111-1111-4111-8111-111111111111', 'Muhasebe', 3, TRUE, FALSE, FALSE, TRUE),
-  ('11111111-1111-4111-8111-111111111111', 'Teknisyen', 8, FALSE, FALSE, FALSE, FALSE),
-  ('11111111-1111-4111-8111-111111111111', 'Guvenlik', 5, FALSE, TRUE, FALSE, FALSE),
-  ('11111111-1111-4111-8111-111111111111', 'Sakin Destek', 4, FALSE, FALSE, FALSE, FALSE)
+  ('11111111-1111-4111-8111-111111111111', 'Personel', 17, FALSE, FALSE, FALSE, FALSE),
+  ('11111111-1111-4111-8111-111111111111', 'Malik', 511, FALSE, FALSE, FALSE, TRUE),
+  ('11111111-1111-4111-8111-111111111111', 'Kiraci', 184, FALSE, FALSE, FALSE, FALSE)
 ON CONFLICT (company_id, role_label) DO UPDATE
 SET
   users_count = EXCLUDED.users_count,
@@ -420,6 +515,32 @@ VALUES
   ('11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'finance', 'finance_ledger_entries', 'Prioritize overdue dues before approving non-urgent service work.', 0.8400, 'suggested', '[{"table":"finance_ledger_entries","reason":"overdue balance"}]'),
   ('11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'service', 'service_tickets', 'Escalate urgent tickets with negative SLA to manager review.', 0.9100, 'suggested', '[{"table":"service_tickets","reason":"negative SLA"}]')
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.operational_search_documents (
+  company_id,
+  site_id,
+  entity_table,
+  entity_id,
+  entity_external_id,
+  title,
+  summary,
+  language,
+  metadata
+)
+SELECT
+  company_id,
+  id,
+  'sites',
+  id,
+  code,
+  name,
+  city || ' ' || district || ' ' || address,
+  'tr',
+  jsonb_build_object('site_code', code, 'total_units', total_units)
+FROM public.sites
+WHERE id = '33333333-3333-4333-8333-333333333333'
+ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
+SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();
 
 INSERT INTO public.operational_search_documents (
   company_id,
@@ -450,6 +571,30 @@ INSERT INTO public.operational_search_documents (
 )
 SELECT company_id, 'residents', id, id::text, full_name, coalesce(phone, '') || ' ' || preferred_language || ' risk ' || risk_score, 'tr', jsonb_build_object('email', email)
 FROM public.residents
+WHERE company_id = '11111111-1111-4111-8111-111111111111'
+ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
+SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();
+
+INSERT INTO public.operational_search_documents (
+  company_id,
+  entity_table,
+  entity_id,
+  entity_external_id,
+  title,
+  summary,
+  language,
+  metadata
+)
+SELECT
+  company_id,
+  'vendors',
+  id,
+  name,
+  name,
+  category || ' ' || status || ' ' || COALESCE(phone, '') || ' ' || COALESCE(email, ''),
+  'tr',
+  jsonb_build_object('category', category, 'phone', phone, 'email', email)
+FROM public.vendors
 WHERE company_id = '11111111-1111-4111-8111-111111111111'
 ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
 SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();

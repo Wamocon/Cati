@@ -62,6 +62,7 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
   return (
     <div className={cn("flex flex-col items-center gap-4 sm:flex-row", className)}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="shrink-0">
+        <circle cx={center} cy={center} r={radius} fill="var(--muted)" opacity={0.55} />
         {slices.map((slice, i) => (
           <motion.path
             key={slice.label}
@@ -74,7 +75,7 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
             transition={{ duration: 0.5, delay: i * 0.08 }}
           />
         ))}
-        <circle cx={center} cy={center} r={radius * 0.55} fill="var(--card)" />
+        <circle cx={center} cy={center} r={radius * 0.58} fill="var(--card)" stroke="var(--border)" strokeWidth={1} />
         <text x={center} y={center - 4} textAnchor="middle" className="fill-foreground text-[10px] font-bold" style={{ fontSize: 18 }}>
           {total}
         </text>
@@ -82,9 +83,9 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
           total
         </text>
       </svg>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-1">
+      <div className="grid w-full grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-1">
         {data.map((d) => (
-          <div key={d.label} className="flex items-center gap-2 text-xs">
+          <div key={d.label} className="flex items-center gap-2 rounded-lg bg-muted/35 px-2 py-1.5 text-xs">
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
             <span className="text-muted-foreground capitalize">{d.label}</span>
             <span className="ml-auto font-semibold text-foreground">{d.value}</span>

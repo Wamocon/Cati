@@ -2,11 +2,11 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2
-Date: 25 June 2026
-Prepared for: Internal proposal and delivery planning  
-Prepared by: 1Cati / Product and Engineering  
-Primary market: Turkey  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Internal proposal and delivery planning
+Prepared by: 1Cati / Product and Engineering
+Primary market: Turkey
 Primary deployment scope: Web application and installable PWA, not native mobile app at launch
 
 ---
@@ -24,19 +24,24 @@ Primary deployment scope: Web application and installable PWA, not native mobile
 |---|---|
 | Document type | Business Requirements Document |
 | Primary audience | Executive sponsors, product leadership, delivery leads |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Service Ticket Workflow](assets/diagrams/brd-01-service-ticket-workflow.png)
-- [Payment And Debt Restriction Workflow](assets/diagrams/brd-02-payment-and-debt-restriction-workflow.png)
-- [Move-In Workflow](assets/diagrams/brd-03-move-in-workflow.png)
-- [Checkout Workflow](assets/diagrams/brd-04-checkout-workflow.png)
-- [Access Restriction Workflow](assets/diagrams/brd-05-access-restriction-workflow.png)
+- Service Ticket Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Payment And Debt Restriction Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Move-In Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Checkout Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Access Restriction Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Delivery Baseline
+
+This BRD defines the business target and acceptance logic for the 1Cati residential site management CRM. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
+
+As of 26 June 2026, phases 1-4 are complete as a local/product foundation, phase 5 is ready for UAT review, phases 6-7 are in active build, and phases 8-15 remain planned production work. Business claims in this BRD describe target requirements unless a section explicitly says that the capability is already implemented.
 
 ## 1. Executive Summary
 
@@ -145,7 +150,7 @@ Primary sources reviewed:
 - OWASP ASVS: https://owasp.org/www-project-application-security-verification-standard/
 - KVKK Personal Data Protection Law: https://www.kvkk.gov.tr/Icerik/6649/Personal-Data-Protection-Law
 
-Research date: 24 June 2026. If a strictly historical June 2024 research baseline is required, a separate archive-based research task should be performed.
+Research date: 24 June 2026. Re-check external market sources before final pricing, legal review or production launch decisions.
 
 ---
 
@@ -1403,9 +1408,9 @@ Competitors emphasize onboarding, support, training and migration. For non-techn
 ## 10.1 Service Ticket Workflow
 
 <!-- DIAGRAM:brd-01-service-ticket-workflow:BEGIN -->
-![Service Ticket Workflow](assets/diagrams/brd-01-service-ticket-workflow.png)
+_Diagram: Service Ticket Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Service Ticket Workflow. Generated from the workflow source in this document._
+_Figure: Service Ticket Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1433,9 +1438,9 @@ flowchart TD
 ## 10.2 Payment And Debt Restriction Workflow
 
 <!-- DIAGRAM:brd-02-payment-and-debt-restriction-workflow:BEGIN -->
-![Payment And Debt Restriction Workflow](assets/diagrams/brd-02-payment-and-debt-restriction-workflow.png)
+_Diagram: Payment And Debt Restriction Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Payment And Debt Restriction Workflow. Generated from the workflow source in this document._
+_Figure: Payment And Debt Restriction Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1464,9 +1469,9 @@ flowchart TD
 ## 10.3 Move-In Workflow
 
 <!-- DIAGRAM:brd-03-move-in-workflow:BEGIN -->
-![Move-In Workflow](assets/diagrams/brd-03-move-in-workflow.png)
+_Diagram: Move-In Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Move-In Workflow. Generated from the workflow source in this document._
+_Figure: Move-In Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1489,9 +1494,9 @@ flowchart TD
 ## 10.4 Checkout Workflow
 
 <!-- DIAGRAM:brd-04-checkout-workflow:BEGIN -->
-![Checkout Workflow](assets/diagrams/brd-04-checkout-workflow.png)
+_Diagram: Checkout Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Checkout Workflow. Generated from the workflow source in this document._
+_Figure: Checkout Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1518,9 +1523,9 @@ flowchart TD
 ## 10.5 Access Restriction Workflow
 
 <!-- DIAGRAM:brd-05-access-restriction-workflow:BEGIN -->
-![Access Restriction Workflow](assets/diagrams/brd-05-access-restriction-workflow.png)
+_Diagram: Access Restriction Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Access Restriction Workflow. Generated from the workflow source in this document._
+_Figure: Access Restriction Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>

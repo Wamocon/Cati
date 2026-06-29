@@ -2,8 +2,8 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2
-Date: 25 June 2026
+Version: 0.3
+Date: 26 June 2026
 Purpose: Phase-by-phase market research and best-practice comparison for the 15-phase delivery plan.
 
 ---
@@ -21,15 +21,18 @@ Purpose: Phase-by-phase market research and best-practice comparison for the 15-
 |---|---|
 | Document type | Market Research Annex |
 | Primary audience | Strategy, sales, product and delivery leadership |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Market Benchmark Implications](assets/diagrams/market-00-benchmark-implications.png)
+- Market Benchmark Implications (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Use Note
+
+This annex supports the 15-phase delivery plan and product positioning. It is planning evidence, not current implementation proof. Current implementation status is maintained in `docs/PROJECT-HANDBOOK.md`.
 
 ## 1. Research Position
 

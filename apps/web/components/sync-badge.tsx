@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Cloud, CheckCircle2, RefreshCw } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 
 interface SyncBadgeProps {
@@ -9,35 +10,132 @@ interface SyncBadgeProps {
   className?: string
 }
 
-export function SyncBadge({ lastSync, className }: SyncBadgeProps) {
-  const [syncing, setSyncing] = useState(false)
+type SnapshotSource = "supabase" | "local-seed"
+type RequestState = "idle" | "loading" | "success" | "error"
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSyncing(true)
-      setTimeout(() => setSyncing(false), 1200)
-    }, 30000)
-    return () => clearInterval(interval)
+const DASHBOARD_REALTIME_TABLES = [
+  "units",
+  "service_tickets",
+  "finance_ledger_entries",
+  "reservations",
+  "ai_action_logs",
+  "client_action_requests",
+  "import_batches",
+  "import_findings",
+]
+
+interface DashboardHeartbeat {
+  source?: SnapshotSource
+  generatedAt?: string
+  warning?: string
+}
+
+function hasSupabasePublicEnv() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
+}
+
+export function SyncBadge({ lastSync, className }: SyncBadgeProps) {
+  const [heartbeat, setHeartbeat] = useState<DashboardHeartbeat | null>(null)
+  const [requestState, setRequestState] = useState<RequestState>("idle")
+
+  const refreshHeartbeat = useCallback(async () => {
+    setRequestState("loading")
+
+    try {
+      const response = await fetch("/api/site-management/dashboard", {
+        cache: "no-store",
+      })
+      if (!response.ok) throw new Error("Dashboard heartbeat failed.")
+      const payload = (await response.json()) as DashboardHeartbeat
+      setHeartbeat(payload)
+      setRequestState("success")
+    } catch {
+      setRequestState("error")
+    }
   }, [])
 
-  const timeText = lastSync
-    ? lastSync.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
+  useEffect(() => {
+    const initial = window.setTimeout(() => {
+      void refreshHeartbeat()
+    }, 0)
+    const interval = window.setInterval(() => {
+      void refreshHeartbeat()
+    }, 30000)
+    const handleOperationalChange = () => {
+      void refreshHeartbeat()
+    }
+
+    window.addEventListener("site-management:changed", handleOperationalChange)
+
+    return () => {
+      window.clearTimeout(initial)
+      window.clearInterval(interval)
+      window.removeEventListener("site-management:changed", handleOperationalChange)
+    }
+  }, [refreshHeartbeat])
+
+  useEffect(() => {
+    if (!hasSupabasePublicEnv() || heartbeat?.source !== "supabase") return
+
+    const supabase = createClient()
+    let channel = supabase.channel("dashboard-heartbeat")
+
+    DASHBOARD_REALTIME_TABLES.forEach((table) => {
+      channel = channel.on(
+        "postgres_changes",
+        { event: "*", schema: "public", table },
+        () => {
+          void refreshHeartbeat()
+        }
+      )
+    })
+
+    channel.subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [heartbeat?.source, refreshHeartbeat])
+
+  const parsedSyncDate = heartbeat?.generatedAt ? new Date(heartbeat.generatedAt) : null
+  const syncDate =
+    parsedSyncDate && !Number.isNaN(parsedSyncDate.getTime())
+      ? parsedSyncDate
+      : lastSync ?? null
+
+  const timeText = syncDate
+    ? syncDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })
     : "--:--"
+  const isLoading = requestState === "loading" && !heartbeat
+  const isError = requestState === "error"
+  const label = isLoading
+    ? "Veri durumu kontrol ediliyor"
+    : isError
+      ? "Veri yenilenemedi"
+      : `Veri güncel - ${timeText}`
 
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-border bg-card/80 px-3 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm",
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium backdrop-blur-sm",
+        isError
+          ? "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+          : "border-border bg-card/80 text-muted-foreground",
         className
       )}
+      title={heartbeat?.warning ?? label}
     >
-      {syncing ? (
+      {isLoading ? (
         <RefreshCw className="h-3.5 w-3.5 animate-spin text-primary" />
+      ) : isError ? (
+        <AlertCircle className="h-3.5 w-3.5 text-rose-500" />
       ) : (
-        <Cloud className="h-3.5 w-3.5 text-sky-500" />
+        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
       )}
-      <span>{syncing ? "CRM + yerel AI senkronize ediliyor" : `CRM + yerel AI güncel - ${timeText}`}</span>
-      {!syncing && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+      <span>{label}</span>
     </div>
   )
 }

@@ -1,13 +1,16 @@
 "use client"
 
+import Link from "next/link"
+
 export default function GlobalError({
+  error,
   reset,
 }: {
   error: Error & { digest?: string }
   reset: () => void
 }) {
   return (
-    <html lang="tr">
+    <html lang="en">
       <body>
         <main
           style={{
@@ -15,71 +18,107 @@ export default function GlobalError({
             display: "grid",
             placeItems: "center",
             padding: "24px",
-            background: "#f7f3ee",
-            color: "#1f2933",
+            background: "#061a17",
+            color: "#ffffff",
             fontFamily:
-              'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+              'Aptos, "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
           }}
         >
           <section
             style={{
-              width: "min(100%, 520px)",
-              border: "1px solid rgba(31, 41, 51, 0.14)",
-              borderRadius: "8px",
-              background: "#fffaf5",
-              padding: "28px",
-              boxShadow: "0 24px 80px rgba(31, 41, 51, 0.12)",
+              width: "min(100%, 760px)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: "24px",
+              background: "linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06))",
+              padding: "32px",
+              boxShadow: "0 30px 100px rgba(0,0,0,0.28)",
+              backdropFilter: "blur(18px)",
             }}
           >
             <p
               style={{
-                margin: "0 0 8px",
+                margin: "0 0 12px",
                 fontSize: "12px",
-                fontWeight: 800,
-                letterSpacing: "0.08em",
+                fontWeight: 900,
+                letterSpacing: "0.16em",
                 textTransform: "uppercase",
-                color: "#9a3412",
+                color: "#a7f3d0",
               }}
             >
-              Sistem durumu
+              System recovery
             </p>
             <h1
               style={{
                 margin: 0,
-                fontSize: "28px",
-                lineHeight: 1.15,
-                fontWeight: 900,
+                maxWidth: "620px",
+                fontSize: "clamp(34px, 6vw, 64px)",
+                lineHeight: 0.98,
+                fontWeight: 950,
               }}
             >
-              Sayfa yuklenemedi
+              The ERP view could not be loaded.
             </h1>
             <p
               style={{
-                margin: "14px 0 22px",
-                fontSize: "15px",
-                lineHeight: 1.7,
-                color: "#52616f",
+                margin: "20px 0 0",
+                maxWidth: "620px",
+                fontSize: "16px",
+                lineHeight: 1.75,
+                color: "rgba(255,255,255,0.74)",
               }}
             >
-              Beklenmeyen bir hata olustu. Operasyon ekranina geri donmek icin
-              sayfayi yeniden deneyin.
+              Please retry the screen. If the issue repeats, share the error digest with the administrator so the failed route can be traced in logs.
             </p>
-            <button
-              onClick={() => reset()}
-              style={{
-                height: "40px",
-                border: 0,
-                borderRadius: "6px",
-                background: "#0f766e",
-                color: "#ffffff",
-                padding: "0 16px",
-                fontSize: "14px",
-                fontWeight: 800,
-                cursor: "pointer",
-              }}
-            >
-              Tekrar dene
-            </button>
+            {error.digest && (
+              <p
+                style={{
+                  margin: "18px 0 0",
+                  border: "1px solid rgba(255,255,255,0.14)",
+                  borderRadius: "12px",
+                  padding: "10px 12px",
+                  fontSize: "12px",
+                  color: "rgba(255,255,255,0.7)",
+                }}
+              >
+                Digest: {error.digest}
+              </p>
+            )}
+            <div style={{ marginTop: "28px", display: "flex", flexWrap: "wrap", gap: "12px" }}>
+              <button
+                onClick={() => reset()}
+                style={{
+                  height: "44px",
+                  border: 0,
+                  borderRadius: "999px",
+                  background: "#ffffff",
+                  color: "#061a17",
+                  padding: "0 20px",
+                  fontSize: "14px",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                Try again
+              </button>
+              <Link
+                href="/tr/dashboard"
+                style={{
+                  height: "44px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  borderRadius: "999px",
+                  background: "rgba(255,255,255,0.1)",
+                  color: "#ffffff",
+                  padding: "0 20px",
+                  fontSize: "14px",
+                  fontWeight: 900,
+                  textDecoration: "none",
+                }}
+              >
+                Open dashboard
+              </Link>
+            </div>
           </section>
         </main>
       </body>

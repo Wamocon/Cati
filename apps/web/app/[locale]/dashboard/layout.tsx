@@ -4,8 +4,10 @@ import { UserProvider } from "@/components/user-provider"
 import { redirect } from "@/app/navigation"
 import { locales, defaultLocale } from "@/i18n"
 import { DashboardSidebar } from "./dashboard-sidebar"
+import { DashboardTopbar } from "./dashboard-topbar"
 import { AiAssistant } from "@/components/ai-assistant"
 import { DashboardCommandRibbon } from "@/components/dashboard-command-ribbon"
+import { DashboardRouteGuard } from "./dashboard-route-guard"
 
 export default async function DashboardLayout({
   children,
@@ -26,12 +28,15 @@ export default async function DashboardLayout({
 
   return (
     <UserProvider initialUser={profile!}>
-      <div className="dashboard-shell flex min-h-svh bg-background">
+      <div className="dashboard-shell flex min-h-svh min-w-0 bg-background">
         <DashboardSidebar />
-        <main id="main" className="flex-1 overflow-x-hidden p-4 pt-16 md:p-6 lg:p-8">
-          <DashboardCommandRibbon />
-          {children}
-        </main>
+        <div className="min-w-0 flex-1">
+          <DashboardTopbar />
+          <main id="main" className="min-w-0 overflow-x-hidden p-4 pb-28 md:p-6 md:pb-10 lg:p-8 lg:pb-12">
+            <DashboardCommandRibbon />
+            <DashboardRouteGuard>{children}</DashboardRouteGuard>
+          </main>
+        </div>
       </div>
       <AiAssistant />
     </UserProvider>

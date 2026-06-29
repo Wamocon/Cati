@@ -4,6 +4,7 @@ import { BadgeCheck, Languages, ShieldCheck, UserCog, Users, WalletCards } from 
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
+import { PeopleDirectoryLive } from "@/components/people-directory-live"
 import { StatusBadge } from "@/components/status-badge"
 import {
   formatTry,
@@ -15,20 +16,16 @@ import {
 } from "@/lib/site-management-data"
 
 function staffRoleLabel(role: StaffMember["role"]) {
-  if (role === "manager") return "Yönetici"
+  if (role === "admin") return "Yönetim"
+  if (role === "manager") return "Sorumlu"
   if (role === "accountant") return "Muhasebe"
-  if (role === "maintenance") return "Teknisyen"
-  if (role === "security") return "Güvenlik"
-  if (role === "resident_support") return "Sakin destek"
-  return "Admin"
+  return "Personel"
 }
 
 function staffRoleVariant(role: StaffMember["role"]) {
-  if (role === "manager" || role === "admin") return "accent"
+  if (role === "admin" || role === "manager") return "accent"
   if (role === "accountant") return "warning"
-  if (role === "maintenance") return "info"
-  if (role === "security") return "danger"
-  return "success"
+  return "info"
 }
 
 function statusVariant(status: StaffMember["status"]) {
@@ -45,9 +42,10 @@ function statusLabel(status: StaffMember["status"]) {
 
 function scopeLabel(scope: StaffMember["accessScope"]) {
   if (scope === "all_site") return "Tüm site"
+  if (scope === "operations") return "Operasyon"
   if (scope === "finance_only") return "Sadece finans"
   if (scope === "field_only") return "Saha"
-  return "Destek"
+  return "Sakin"
 }
 
 function booleanBadge(value: boolean) {
@@ -63,7 +61,7 @@ export default function UsersPage() {
       <div>
         <h1 className="text-2xl font-black text-foreground">Kullanıcılar & Roller</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Phase 5 çıktısı: malik, kiracı, misafir, personel, dil desteği, görev yükü ve yetki kapsamı tek yönetim alanında.
+          Malik, kiracı, misafir ve personel kayıtları; dil, görev yükü ve yetki kapsamı tek yönetim alanında izlenir.
         </p>
       </div>
 
@@ -105,6 +103,8 @@ export default function UsersPage() {
           </div>
         </Card3D>
       </div>
+
+      <PeopleDirectoryLive />
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>

@@ -1,4 +1,11 @@
-// Deterministic mock backend data for the residential site-management CRM.
+import {
+  newLevelPremiumBlocks,
+  newLevelPremiumDataset,
+  newLevelPremiumUnits,
+  type NewLevelPremiumSaleStatus,
+} from "./new-level-premium-data"
+
+// Deterministic local backend data for the residential site-management CRM.
 // The model is shaped around the client request: 769 flats, service, finance,
 // bookings, access control, deposits, debt restrictions, and AI work queues.
 
@@ -9,7 +16,7 @@ export type ServicePriority = "low" | "medium" | "high" | "urgent"
 export type ServiceStatus = "open" | "assigned" | "waiting_payment" | "in_progress" | "resolved" | "closed"
 export type BookingStatus = "confirmed" | "precheck_pending" | "move_in_today" | "checkout_today" | "deposit_review" | "cancelled"
 export type DepositStatus = "not_required" | "reserved" | "held" | "deduction_pending" | "refund_ready"
-export type PhaseDeliveryStatus = "complete" | "ready_for_uat" | "in_progress" | "blocked"
+export type PhaseDeliveryStatus = "complete" | "ready_for_uat" | "in_progress" | "planned" | "blocked"
 export type ViewingStatus = "planned" | "confirmed" | "completed" | "follow_up_due" | "no_show"
 export type PaymentPlanStatus = "on_track" | "due_soon" | "overdue" | "blocked"
 export type PurchaseDocumentStatus = "verified" | "pending" | "missing" | "expired" | "rejected"
@@ -19,8 +26,19 @@ export interface FlatRecord {
   id: string
   block: string
   floor: number
+  floorLabel: string
   number: string
+  displayNumber: string
   type: string
+  areaText: string | null
+  interiorM2: number | null
+  outdoorM2: number | null
+  saleStatus: NewLevelPremiumSaleStatus
+  buyNowEur: number | null
+  nextPriceEur: number[]
+  priceSource: string | null
+  numberingSource: string | null
+  sourceNotes: string | null
   status: FlatStatus
   ownerName: string
   residentName: string
@@ -89,7 +107,7 @@ export interface PaymentPlanRecord {
   id: string
   dealName: string
   buyerName: string
-  unitType: "1+1" | "2+1 Garden" | "2+1 Penthouse" | "3+1 Penthouse"
+  unitType: string
   listPriceEur: number
   downPaymentPercent: number
   paidEur: number
@@ -219,6 +237,13 @@ export interface SiteSummary {
 export interface BlockOverview {
   block: string
   total: number
+  availableForSale: number
+  sold: number
+  sourceMissing: number
+  minBuyNowEur: number | null
+  maxBuyNowEur: number | null
+  priceSourceStatus: "parsed" | "missing"
+  numberingSource: string | null
   occupied: number
   vacant: number
   blocked: number
@@ -279,13 +304,13 @@ export interface ImportFinding {
 export interface StaffMember {
   id: string
   name: string
-  role: "manager" | "accountant" | "maintenance" | "security" | "resident_support" | "admin"
+  role: "admin" | "manager" | "accountant" | "staff"
   team: string
   phone: string
   language: "tr" | "en" | "de" | "ru"
   activeTasks: number
   approvalLimitTry: number
-  accessScope: "all_site" | "finance_only" | "field_only" | "support_only"
+  accessScope: "all_site" | "operations" | "finance_only" | "field_only" | "resident_only"
   status: "active" | "training" | "restricted"
 }
 
@@ -298,32 +323,6 @@ export interface RoleCoverage {
   canExportData: boolean
 }
 
-const ownerNames = [
-  "Ayse Kaya",
-  "Mehmet Yilmaz",
-  "Elena Sokolova",
-  "Fatma Sahin",
-  "Sergey Petrov",
-  "Murat Demir",
-  "Olga Ivanova",
-  "Deniz Arslan",
-  "Mustafa Aydin",
-  "Anna Kuznetsova",
-]
-
-const residentNames = [
-  "Aylin K.",
-  "Burak T.",
-  "Elif D.",
-  "Cem O.",
-  "Mert A.",
-  "Zeynep S.",
-  "Daria P.",
-  "Kemal Y.",
-  "Nina V.",
-  "Hakan E.",
-]
-
 const assignees = [
   "Teknik - Ahmet",
   "Teknik - Burak",
@@ -333,7 +332,7 @@ const assignees = [
   "Operasyon - Can",
 ]
 
-const blockNames = ["A", "B", "C", "D", "E", "F", "G", "H"]
+const blockNames = newLevelPremiumBlocks.map((block) => block.name)
 
 function isoDaysFromAnchor(days: number, hour = 9) {
   const date = new Date("2026-06-24T09:00:00+03:00")
@@ -356,25 +355,30 @@ function accessStatusFor(status: FlatStatus, paymentStatus: PaymentStatus): Acce
   return "active"
 }
 
-export const flats: FlatRecord[] = Array.from({ length: 769 }).map((_, index) => {
-  const block = blockNames[Math.min(Math.floor(index / 96), blockNames.length - 1)]
-  const withinBlock = index - blockNames.indexOf(block) * 96
-  const floor = Math.floor(withinBlock / 8) + 1
-  const door = (withinBlock % 8) + 1
-  const number = `${block}-${String(floor).padStart(2, "0")}${String(door).padStart(2, "0")}`
-  const status: FlatStatus =
-    index % 53 === 0
-      ? "blocked"
-      : index % 37 === 0
-        ? "maintenance"
-        : index % 19 === 0
-          ? "vacant"
-          : index % 29 === 0
-            ? "reserved"
-            : "occupied"
-  const monthlyFeeTry = 1650 + (floor % 4) * 225 + (door % 3) * 80
+function flatStatusForSaleStatus(saleStatus: NewLevelPremiumSaleStatus, index: number): FlatStatus {
+  if (saleStatus === "sold") {
+    if (index % 53 === 0) return "blocked"
+    if (index % 37 === 0) return "maintenance"
+    return "occupied"
+  }
+
+  if (saleStatus === "available") {
+    return index % 29 === 0 ? "reserved" : "vacant"
+  }
+
+  return index % 41 === 0 ? "blocked" : "vacant"
+}
+
+export const flats: FlatRecord[] = newLevelPremiumUnits.map((unit, index) => {
+  const block = unit.block
+  const floor = unit.floorLevel
+  const number = unit.unitNo
+  const saleStatus = unit.saleStatus
+  const status = flatStatusForSaleStatus(saleStatus, index)
+  const sizeBasis = unit.interiorM2 ?? 50
+  const monthlyFeeTry = 1450 + Math.round(sizeBasis * 18) + Math.max(floor, 0) * 45
   const balanceTry =
-    status === "vacant"
+    status === "vacant" || status === "reserved"
       ? 0
       : index % 41 === 0
         ? monthlyFeeTry * 12
@@ -386,18 +390,33 @@ export const flats: FlatRecord[] = Array.from({ length: 769 }).map((_, index) =>
   const paymentStatus = paymentStatusFor(balanceTry)
   const residentType: FlatRecord["residentType"] =
     status === "vacant" || status === "maintenance" ? "empty" : index % 11 === 0 ? "guest" : index % 3 === 0 ? "tenant" : "owner"
+  const ownerName =
+    saleStatus === "available" ? "Satış portföyü" : "Malik kaydı bekliyor"
+  const residentName =
+    residentType === "empty" ? "Sakin kaydı yok" : "Sakin kaydı bekliyor"
 
   return {
-    id: `FLAT-${1001 + index}`,
+    id: unit.id,
     block,
     floor,
+    floorLabel: unit.floorLabel,
     number,
-    type: floor > 10 ? "3+1" : door % 4 === 0 ? "2+1" : door % 3 === 0 ? "1+1" : "Stüdyo",
+    displayNumber: unit.displayNo,
+    type: unit.unitType,
+    areaText: unit.areaText,
+    interiorM2: unit.interiorM2,
+    outdoorM2: unit.outdoorM2,
+    saleStatus,
+    buyNowEur: unit.buyNowEur,
+    nextPriceEur: [...unit.nextPriceEur],
+    priceSource: unit.priceSource,
+    numberingSource: unit.numberingSource,
+    sourceNotes: unit.notes,
     status,
-    ownerName: ownerNames[index % ownerNames.length],
-    residentName: residentType === "empty" ? "Boş" : residentNames[index % residentNames.length],
+    ownerName,
+    residentName,
     residentType,
-    phone: `+90 549 55${String(7000 + index).slice(-4)}`,
+    phone: "Kaynak bekliyor",
     monthlyFeeTry,
     balanceTry,
     depositTry: residentType === "tenant" || residentType === "guest" ? monthlyFeeTry * 2 : 0,
@@ -561,64 +580,51 @@ export const viewingPipeline: ViewingRecord[] = [
   },
 ]
 
-export const paymentPlans: PaymentPlanRecord[] = [
-  {
-    id: "PAY-701",
-    dealName: "NLP-2G-014",
-    buyerName: "Markus Weber",
-    unitType: "2+1 Garden",
-    listPriceEur: 241800,
-    downPaymentPercent: 35,
-    paidEur: 84630,
-    nextDueEur: 18135,
-    nextDueAt: isoDaysFromAnchor(9, 12),
-    currencyRisk: "medium",
-    status: "due_soon",
-    approvalBlocker: "Payment plan signature pending",
-  },
-  {
-    id: "PAY-702",
-    dealName: "NLP-1A-092",
-    buyerName: "Elena Morozova",
-    unitType: "1+1",
-    listPriceEur: 137600,
-    downPaymentPercent: 35,
-    paidEur: 48160,
-    nextDueEur: 0,
-    nextDueAt: isoDaysFromAnchor(28, 12),
-    currencyRisk: "low",
-    status: "on_track",
-    approvalBlocker: "No blocker",
-  },
-  {
-    id: "PAY-703",
-    dealName: "NLP-PH-301",
-    buyerName: "Ahmed Al Mansouri",
-    unitType: "3+1 Penthouse",
-    listPriceEur: 295900,
-    downPaymentPercent: 40,
-    paidEur: 80000,
-    nextDueEur: 38360,
-    nextDueAt: isoDaysFromAnchor(-3, 12),
-    currencyRisk: "high",
-    status: "overdue",
-    approvalBlocker: "Second installment not verified",
-  },
-  {
-    id: "PAY-704",
-    dealName: "NLP-PH-217",
-    buyerName: "Ayşe Karaca",
-    unitType: "2+1 Penthouse",
-    listPriceEur: 241900,
-    downPaymentPercent: 35,
-    paidEur: 0,
-    nextDueEur: 84665,
-    nextDueAt: isoDaysFromAnchor(2, 12),
-    currencyRisk: "medium",
-    status: "blocked",
-    approvalBlocker: "Reservation contract missing",
-  },
+const paymentPlanBuyers = [
+  "Markus Weber",
+  "Elena Morozova",
+  "Ahmed Al Mansouri",
+  "Ayşe Karaca",
+  "James Wilson",
+  "Olga Morozova",
+  "Thomas Klein",
+  "Daria Volkova",
 ]
+
+export const paymentPlans: PaymentPlanRecord[] = flats
+  .filter((flat) => flat.saleStatus === "available" && flat.buyNowEur)
+  .slice(0, 10)
+  .map((flat, index) => {
+    const listPriceEur = flat.buyNowEur ?? 0
+    const status: PaymentPlanStatus =
+      index % 7 === 0 ? "blocked" : index % 5 === 0 ? "overdue" : index % 3 === 0 ? "due_soon" : "on_track"
+    const downPaymentPercent = index % 4 === 0 ? 40 : 35
+    const paidEur = status === "blocked" ? 0 : Math.round(listPriceEur * (downPaymentPercent / 100))
+    const nextDueEur =
+      status === "on_track" ? 0 : status === "blocked" ? paidEur || Math.round(listPriceEur * 0.35) : Math.round(listPriceEur * 0.12)
+
+    return {
+      id: `PAY-${701 + index}`,
+      dealName: `${flat.number} satış planı`,
+      buyerName: paymentPlanBuyers[index % paymentPlanBuyers.length],
+      unitType: flat.type,
+      listPriceEur,
+      downPaymentPercent,
+      paidEur,
+      nextDueEur,
+      nextDueAt: isoDaysFromAnchor(status === "overdue" ? -3 : 7 + index, 12),
+      currencyRisk: listPriceEur >= 250000 ? "high" : listPriceEur >= 180000 ? "medium" : "low",
+      status,
+      approvalBlocker:
+        status === "blocked"
+          ? "Reservation contract missing"
+          : status === "overdue"
+            ? "Installment not verified"
+            : status === "due_soon"
+              ? "Payment plan signature pending"
+              : "No blocker",
+    }
+  })
 
 export const purchaseChecklist: PurchaseChecklistRecord[] = [
   {
@@ -844,25 +850,27 @@ export const accessControlRecords: AccessControlRecord[] = flats
     }
   })
 
-export const documentVault: DocumentVaultRecord[] = ([
-  ["DOC-9001", "A-0101", "Ayse Kaya", "Aidat borcu yasal takip bildirimi.pdf", "Aidat", "verified", "420 KB", -1, "10 yıl finans arşivi"],
-  ["DOC-9002", "A-0307", "Deniz Arslan", "Check-out hasar fotoğraf paketi.zip", "Depozito", "pending", "18.2 MB", 0, "Rezervasyon kapanışına bağlı"],
-  ["DOC-9003", "B-0701", "Daria P.", "Depozito iade onayı.pdf", "Depozito", "pending", "860 KB", -2, "2 yıl misafir işlem arşivi"],
-  ["DOC-9004", "C-0808", "Anna K.", "Kimlik ve giriş formu.pdf", "Kimlik", "verified", "1.4 MB", -1, "KVKK sınırlı erişim"],
-  ["DOC-9005", "D-0702", "Mustafa Aydin", "Erişim kartı teslim tutanağı.pdf", "Uyum", "missing", "0 KB", -4, "Eksik belge alarmı"],
-  ["DOC-9006", "F-0501", "Fatma Sahin", "Balkon camı servis raporu.pdf", "Servis", "verified", "2.1 MB", -3, "Servis kapanış kanıtı"],
-  ["DOC-9007", "G-0405", "Sergey Petrov", "Otopark plaka yetki formu.pdf", "Uyum", "expired", "790 KB", -30, "Yenileme gerekli"],
-  ["DOC-9008", "H-0303", "Mustafa Aydin", "Yasal takip dosyası.pdf", "Aidat", "verified", "3.8 MB", -1, "Hukuk erişimi gerekli"],
-] as const).map(([id, flatNumber, ownerName, name, category, status, size, updatedOffset, retentionRule]) => ({
-  id,
-  flatNumber,
-  ownerName,
-  name,
-  category,
-  status,
-  size,
-  updatedAt: isoDaysFromAnchor(updatedOffset, 13),
-  retentionRule,
+function documentCategoryForSource(category: string): DocumentVaultRecord["category"] {
+  if (category === "price_list") return "Sözleşme"
+  if (category === "legal_document") return "Uyum"
+  if (category === "rental_income") return "Sözleşme"
+  if (category === "floor_plan" || category === "facility_map" || category === "numbering") return "Servis"
+  return "Uyum"
+}
+
+export const documentVault: DocumentVaultRecord[] = newLevelPremiumDataset.documents.slice(0, 18).map((document, index) => ({
+  id: `DOC-NLP-${String(index + 1).padStart(3, "0")}`,
+  flatNumber: document.category === "price_list" ? `${document.title.charAt(0)}-pricing` : "NLP-AVS",
+  ownerName: "Ataberk Estate",
+  name: document.title,
+  category: documentCategoryForSource(document.category),
+  status: document.status === "active" ? "verified" : "pending",
+  size: "Kaynak dosya",
+  updatedAt: isoDaysFromAnchor(-(index % 7), 13),
+  retentionRule:
+    document.status === "active"
+      ? `Kaynak: ${document.path}`
+      : `OCR / insan onayı gerekli: ${document.path}`,
 }))
 
 export const reportCards: ReportCardRecord[] = [
@@ -915,76 +923,139 @@ export const reportCards: ReportCardRecord[] = [
 
 export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
+    phase: 1,
+    title: "Keşif, kapsam kilidi ve pazar kıyası",
+    status: "complete",
+    owner: "Product + Delivery",
+    businessOutcome: "769 dairelik site, roller, finans, servis, rezervasyon, erişim ve raporlama kapsamı tek ERP hedefinde netleşir.",
+    userGuide: "Yönetim özeti ve dokümantasyon merkezinden kapsam, risk ve karar kayıtlarını kontrol edin.",
+    evidence: ["İhtiyaç haritası", "ERP modül planı", "Pazar kıyası", "Karar kaydı"],
+  },
+  {
     phase: 2,
-    title: "UX/UI ve rol bazlı navigasyon",
+    title: "UX/UI tasarım sistemi ve ürün navigasyonu",
     status: "complete",
     owner: "Product + UX",
-    businessOutcome: "Yönetici, muhasebe, saha ekibi ve destek rolleri kendi işleri için sade bir panelden ilerler.",
-    userGuide: "Sol menüden rolünüze açık modülü seçin; üst kartlarda kritik sayılar, altta detay tabloları ve arama kullanılır.",
-    evidence: ["Rol bazlı menü", "Mobil uyumlu dashboard", "26/26 browser route audit", "Turkish workflow copy"],
+    businessOutcome: "Yönetici, muhasebe, saha ekibi, sakin ve destek rolleri kendi işlerine uygun, sade ve erişilebilir arayüzden ilerler.",
+    userGuide: "Sol menüden rolünüze açık modülü seçin; üst kartlarda kritik sayılar, altta detay tabloları, arama ve aksiyonlar kullanılır.",
+    evidence: ["Role-based navigation", "Mobile dashboard", "Accessible card routing", "Turkish-first UX"],
   },
   {
     phase: 3,
-    title: "Platform, Auth, RBAC ve audit temeli",
+    title: "Platform temeli, auth, RBAC ve audit",
     status: "complete",
     owner: "Platform + Security",
-    businessOutcome: "Demo auth, rol matrisi, yetki görünürlüğü ve denetim izi aynı işletim modeline bağlandı.",
+    businessOutcome: "Oturum, rol, izin, RLS ve denetim izi bütün hassas işlemler için gerçek kontrol zemini sağlar.",
     userGuide: "Ayarlar ekranında güvenlik kontrollerini, rol yetkilerini ve son audit olaylarını inceleyin.",
-    evidence: ["Demo role switching", "RBAC filtered navigation", "Audit event model", "Supabase RLS migration draft"],
+    evidence: ["Güvenli oturum temeli", "Rol bazlı navigasyon", "Denetimli aksiyon servisi", "Korumalı ekranlar"],
   },
   {
     phase: 4,
-    title: "Site, blok, kat, daire ve import kontrolü",
+    title: "Site, blok, kat, daire ve veri importu",
     status: "complete",
     owner: "Data + Operations",
-    businessOutcome: "769 daire blok/kat/durum/borç/erişim ilişkisiyle yönetilebilir ve import kalite kontrolü görülebilir.",
-    userGuide: "Daire Matrisi ekranında blok özetini, görsel matrisi, import doğrulamasını ve detay tablosunu kullanın.",
-    evidence: ["769 deterministic units", "Block/floor matrix", "Import validation summary", "Debt and access state"],
+    businessOutcome: "769 daire blok, kat, durum, borç ve erişim ilişkisiyle filtrelenebilir; import kalite kapısı yönetilir.",
+    userGuide: "Daire Matrisi ekranında blok özetini, canlı matrisi, import doğrulamasını ve detay tablosunu kullanın.",
+    evidence: ["769 live units", "Block/floor matrix", "Veri kontrol ve uygulama isteği", "Anlık yenileme"],
   },
   {
     phase: 5,
-    title: "Malik, kiracı, misafir, personel ve roller",
-    status: "complete",
+    title: "Kullanıcı, malik, kiracı ve personel yönetimi",
+    status: "ready_for_uat",
     owner: "Operations + Admin",
-    businessOutcome: "Sakin ve personel kayıtları ilişki, dil, iletişim, risk, görev ve yetki kapsamıyla takip edilir.",
-    userGuide: "Sakinler ekranında müşteri kayıtlarını, Kullanıcılar & Roller ekranında ekip ve yetki matrisini yönetin.",
-    evidence: ["Resident profile model", "Staff role table", "Role coverage matrix", "Risk and access indicators"],
+    businessOutcome: "Her kişi doğru daire, hesap, belge, iletişim dili ve yetki kapsamıyla tek kayıtta yönetilir.",
+    userGuide: "Kullanıcılar ekranında sakin, malik, kiracı, personel ve rol ilişkilerini kontrol edin.",
+    evidence: ["Resident profile model", "Kişi dizini servisi", "Kullanıcı yönetim paneli", "Rol matrisi"],
   },
   {
     phase: 6,
-    title: "Besichtigung, online tur ve takip akışı",
-    status: "complete",
-    owner: "Sales + Customer Success",
-    businessOutcome: "Online tur, saha ziyareti, geri arama ve belge görüşmeleri lead hedefi, dil, sorumlu ve takip tarihiyle yönetilir.",
-    userGuide: "Rezervasyon ekranında Phase 6 tur pipeline kartlarını, bugünkü işleri ve follow-up gerektiren görüşmeleri takip edin.",
-    evidence: ["Viewing pipeline", "Follow-up due states", "Lead language and buyer-goal context", "No-show recovery action"],
+    title: "Finans ledger motoru",
+    status: "ready_for_uat",
+    owner: "Finance + Engineering",
+    businessOutcome: "Bakiyeler ekran hesabından değil, hesap, borç/alacak, tahakkuk, düzeltme ve ekstre kayıtlarından hesaplanır.",
+    userGuide: "Finans ekranında aidat, borç, tahsilat, gecikme ve ekstre hareketlerini ledger mantığıyla inceleyin.",
+    evidence: ["Finans defteri modeli", "Finans defteri servisi", "Finans operasyon paneli", "Denetimli finans aksiyonları"],
   },
   {
     phase: 7,
-    title: "Satış finans planı, 0% taksit ve blokaj",
-    status: "complete",
-    owner: "Finance + Sales",
-    businessOutcome: "New Level Premium satışları için liste fiyatı, peşinat, kalan taksit, vade, kur riski ve onay blokajı aynı yerde okunur.",
-    userGuide: "Finans ekranında Phase 7 ödeme planı kartlarını ve taksit tablosunu kullanarak gecikme, vade ve sözleşme blokajını kontrol edin.",
-    evidence: ["0% installment plan model", "Overdue and blocked deal states", "Currency-risk indicators", "Approval blocker field"],
+    title: "Ödeme, depozito, mutabakat ve borç kısıtı",
+    status: "in_progress",
+    owner: "Finance + Legal",
+    businessOutcome: "Ödeme, depozito, iade, borç eşiği ve servis/erişim kısıtları muhasebe ve hukuk onayıyla yürür.",
+    userGuide: "Finans ve Uyum ekranlarında gecikme, depozito, kısıt ve onay kuyruğunu takip edin.",
+    evidence: ["Debt restriction model", "Deposit states", "Finance approval queue", "Human-approved access policy"],
   },
   {
     phase: 8,
-    title: "TAPU, KYC, EIDS ve satış belge dosyası",
-    status: "complete",
-    owner: "Backoffice + Compliance",
-    businessOutcome: "Kaufakte; pasaport, KYC, TAPU, rezervasyon, satış sözleşmesi, EIDS ve ödeme planı statüleriyle takip edilir.",
-    userGuide: "Belgeler ekranında Phase 8 satış dosyası kartlarını kullanın; eksik, bekleyen, reddedilen ve doğrulanan belgeleri arayın.",
-    evidence: ["Purchase checklist", "Document-risk statuses", "TAPU/KYC/EIDS categories", "Next-action guidance"],
+    title: "Servis kataloğu ve servis siparişi akışı",
+    status: "planned",
+    owner: "Operations + Finance",
+    businessOutcome: "Temizlik, transfer, bakım ve özel hizmetler fiyat, SLA, borç kontrolü ve görev üretimiyle siparişe dönüşür.",
+    userGuide: "Servis Talepleri ekranında katalog, borç kontrolü, görev üretimi ve durum takibini yönetin.",
+    evidence: ["Service catalogue target", "Debt-check gate", "Task handoff", "Resident order flow"],
   },
   {
     phase: 9,
-    title: "Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü",
-    status: "complete",
-    owner: "Sales + Legal Partner",
-    businessOutcome: "Alıcı hedefi, uyruk, bütçe, hedef daire, ekspertiz ihtiyacı ve bölge kontrolü garanti vermeden ön kontrolde gösterilir.",
-    userGuide: "Erişim & Uyum ekranında Phase 9 uygunluk tablosunu kullanın; hukuki partner incelemesi gereken veya blokeli durumları ayırın.",
-    evidence: ["Eligibility pre-check", "Residence/citizenship guardrails", "District quota status", "Legal partner review queue"],
+    title: "Görev, saha ekibi, SLA ve medya raporu",
+    status: "planned",
+    owner: "Technical + Staff",
+    businessOutcome: "Saha işleri atama, öncelik, SLA, foto/video kanıt, iptal ve yönetici onayıyla görünür olur.",
+    userGuide: "Servis Talepleri ekranında görev panosu, SLA riski ve saha raporlarını yönetin.",
+    evidence: ["Task board target", "Mobile staff flow", "SLA timer", "Media proof"],
+  },
+  {
+    phase: 10,
+    title: "Rezervasyon, kiralama, move-in ve checkout",
+    status: "planned",
+    owner: "Reservations + Operations",
+    businessOutcome: "Müsaitlik, rezervasyon, depozito, giriş hazırlığı, checkout, kesinti ve erişim kapatma tek süreç olur.",
+    userGuide: "Rezervasyon ekranında takvim, giriş/çıkış işleri, depozito ve final kontrol adımlarını takip edin.",
+    evidence: ["Booking calendar", "Move-in checklist", "Checkout settlement", "Access action queue"],
+  },
+  {
+    phase: 11,
+    title: "İletişim, bildirim ve doküman merkezi",
+    status: "planned",
+    owner: "Support + Backoffice",
+    businessOutcome: "Sakin, malik, yönetici ve personel iletişimi daire, borç, görev, rezervasyon ve belgeyle ilişkilendirilir.",
+    userGuide: "İletişim ve Belgeler ekranlarında konuşma, duyuru, bildirim ve dosya izinlerini yönetin.",
+    evidence: ["Communication inbox", "Document vault", "Notification templates", "Permission-safe attachments"],
+  },
+  {
+    phase: 12,
+    title: "Mobil PWA ve kurulabilir kullanıcı deneyimi",
+    status: "planned",
+    owner: "Frontend + QA",
+    businessOutcome: "Sakin, personel ve yönetici ana işleri telefondan hızlı, erişilebilir ve kurulabilir PWA olarak yapılır.",
+    userGuide: "Mobil görünümde bakiye, servis, görev, belge, sohbet ve bildirim akışlarını test edin.",
+    evidence: ["Mobile E2E", "Installable PWA target", "Touch-safe navigation", "Performance budget"],
+  },
+  {
+    phase: 13,
+    title: "Dış sistem entegrasyonları",
+    status: "planned",
+    owner: "Integrations + Security",
+    businessOutcome: "Banka/ödeme, SMS/e-posta, erişim kartı/bariyer, sayaç ve kimlik sistemleri test modu ve retry kuyruğuyla bağlanır.",
+    userGuide: "Ayarlar ekranında entegrasyon durumu, son hata, manuel retry ve bağlantı loglarını takip edin.",
+    evidence: ["Adapter pattern", "Webhook/retry target", "Integration health", "Manual fallback"],
+  },
+  {
+    phase: 14,
+    title: "AI premium katmanı ve gelişmiş analitik",
+    status: "planned",
+    owner: "AI Governance + Analytics",
+    businessOutcome: "AI günlük brifing, borç riski, servis triage, anomali, doğal dil arama ve rapor taslağı üretir; hassas işlem yapmaz.",
+    userGuide: "AI Rapor Merkezi'nde önerileri kaynak, güven ve insan onayıyla inceleyin.",
+    evidence: ["AI command center", "Guardrailed recommendations", "Source-linked answers", "Evaluation set"],
+  },
+  {
+    phase: 15,
+    title: "QA, güvenlik, performans, kabul testi ve canlıya geçiş",
+    status: "planned",
+    owner: "QA + Delivery",
+    businessOutcome: "Üretim canlıya geçmeden önce güvenlik, performans, yedekleme, eğitim, kabul testi ve destek kanıtı tamamlanır.",
+    userGuide: "Raporlar ve dokümantasyon üzerinden test, kabul, eğitim ve canlıya geçiş checklist durumunu yönetin.",
+    evidence: ["Otomatik test kapsamı", "Security checklist", "Kabul onayı", "Canlıya geçiş runbooku"],
   },
 ]
 
@@ -992,10 +1063,10 @@ export const platformControls: PlatformControl[] = [
   {
     id: "CTL-AUTH-01",
     area: "Auth",
-    title: "Demo rol seçimi ve gerçek auth ayrımı",
+    title: "Rol profili ve oturum kontrolü",
     status: "active",
     owner: "Platform",
-    detail: "Supabase yoksa demo profil devreye girer; Supabase yapılandırıldığında gerçek kullanıcı profili önceliklidir.",
+    detail: "Yerel çalışma ortamında yetki profili kullanılabilir; üretim ortamında doğrulanmış kullanıcı profili önceliklidir.",
   },
   {
     id: "CTL-RBAC-01",
@@ -1019,7 +1090,7 @@ export const platformControls: PlatformControl[] = [
     title: "Şirket/site izolasyon hazırlığı",
     status: "review",
     owner: "Data",
-    detail: "Supabase migration şirket, site ve rol bağlamını RLS politikalarına hazırlayacak şekilde tasarlanmıştır.",
+    detail: "Veri modeli şirket, site ve rol bağlamını güvenli erişim politikalarına hazırlayacak şekilde tasarlanmıştır.",
   },
   {
     id: "CTL-AI-01",
@@ -1034,12 +1105,12 @@ export const platformControls: PlatformControl[] = [
 export const auditEvents: AuditEvent[] = [
   {
     id: "AUD-2401",
-    actor: "Demo Manager",
+    actor: "Operasyon Sorumlusu",
     action: "Rol bazlı panele giriş yaptı",
     module: "Auth",
     risk: "low",
     timestamp: isoDaysFromAnchor(0, 8),
-    decision: "Oturum demo rolüyle sınırlandı.",
+    decision: "Oturum rol yetkileriyle sınırlandı.",
   },
   {
     id: "AUD-2402",
@@ -1079,74 +1150,62 @@ export const auditEvents: AuditEvent[] = [
   },
 ]
 
+const sourceMissingUnitRows = newLevelPremiumUnits.filter(
+  (unit) => unit.dataQuality === "source_missing"
+).length
+
 export const importBatches: ImportBatch[] = [
   {
     id: "IMP-769-01",
-    source: "Client master flat list",
-    totalRows: 769,
-    validRows: 752,
-    warningRows: 17,
+    source: "New Level Premium price-list package",
+    totalRows: newLevelPremiumDataset.project.totalUnits,
+    validRows: newLevelPremiumDataset.project.totalUnits - sourceMissingUnitRows,
+    warningRows: sourceMissingUnitRows,
     rejectedRows: 0,
     status: "ready_to_apply",
-    importedBy: "Operations Admin",
+    importedBy: "Data import harness",
     checkedAt: isoDaysFromAnchor(0, 13),
   },
   {
-    id: "IMP-RES-02",
-    source: "Owner and resident contact list",
-    totalRows: 618,
-    validRows: 603,
-    warningRows: 15,
+    id: "IMP-DOC-02",
+    source: "Project documents, facility map and floor plans",
+    totalRows: newLevelPremiumDataset.documents.length,
+    validRows: newLevelPremiumDataset.documents.filter((document) => document.status === "active").length,
+    warningRows: newLevelPremiumDataset.documents.filter((document) => document.status !== "active").length,
     rejectedRows: 0,
     status: "review_required",
-    importedBy: "Resident Support",
+    importedBy: "Document control",
     checkedAt: isoDaysFromAnchor(0, 14),
   },
   {
-    id: "IMP-FIN-03",
-    source: "Opening balance ledger",
-    totalRows: 769,
-    validRows: 769,
+    id: "IMP-MEDIA-03",
+    source: "Construction and showroom media",
+    totalRows: newLevelPremiumDataset.media.length,
+    validRows: newLevelPremiumDataset.media.length,
     warningRows: 0,
     rejectedRows: 0,
     status: "validated",
-    importedBy: "Finance",
+    importedBy: "Marketing ops",
     checkedAt: isoDaysFromAnchor(0, 15),
   },
 ]
 
 export const importFindings: ImportFinding[] = [
+  ...newLevelPremiumDataset.findings.map((finding, index) => ({
+    id: `FND-NLP-${String(index + 1).padStart(2, "0")}`,
+    severity: finding.severity as ImportFinding["severity"],
+    area: finding.area,
+    affectedRows: finding.area.includes("Block B") ? 105 : finding.area.includes("Block D") ? 123 : 0,
+    message: finding.message,
+    recommendedAction: "Eksik kaynak dosyayı ekleyin veya yönetici onayıyla kaydı kaynak eksik olarak yayınlayın.",
+  })),
   {
-    id: "FND-01",
-    severity: "warning",
-    area: "Sakin telefon",
-    affectedRows: 9,
-    message: "Bazı telefonlar WhatsApp formatına göre eksik ülke kodu içeriyor.",
-    recommendedAction: "Import öncesi +90 standardına normalize edin.",
-  },
-  {
-    id: "FND-02",
-    severity: "warning",
-    area: "Kimlik durumu",
-    affectedRows: 6,
-    message: "Misafir kayıtlarında kimlik belgesi bekleyen satırlar var.",
-    recommendedAction: "Erişim kodu üretilmeden belge kontrolü zorunlu kalsın.",
-  },
-  {
-    id: "FND-03",
+    id: "FND-NLP-DOC",
     severity: "info",
-    area: "Daire tipi",
-    affectedRows: 2,
-    message: "Daire tipi müşteri dosyasında boş, sistem varsayılan değer önerdi.",
-    recommendedAction: "Operasyon yöneticisi import ön izlemesinde doğrulasın.",
-  },
-  {
-    id: "FND-04",
-    severity: "info",
-    area: "Açılış bakiyesi",
-    affectedRows: 0,
-    message: "Finans açılış bakiyesi satırlarında kritik hata bulunmadı.",
-    recommendedAction: "Ledger importu çift kayıt korumasıyla uygulanabilir.",
+    area: "Scan-only legal documents",
+    affectedRows: newLevelPremiumDataset.documents.filter((document) => document.status === "scan_review").length,
+    message: "İmar, tapu ve yetki belgelerinin bir kısmı tarama/PDF görseli olarak geldi; OCR veya insan doğrulaması gerekir.",
+    recommendedAction: "Cloud Storage yüklemesinden sonra belge tiplerini ve resmi geçerlilik tarihlerini manuel onaydan geçirin.",
   },
 ]
 
@@ -1178,7 +1237,7 @@ export const staffMembers: StaffMember[] = [
   {
     id: "USR-103",
     name: "Ahmet Teknik",
-    role: "maintenance",
+    role: "staff",
     team: "Teknik",
     phone: "+90 532 110 1003",
     language: "tr",
@@ -1190,7 +1249,7 @@ export const staffMembers: StaffMember[] = [
   {
     id: "USR-104",
     name: "Selim Güvenlik",
-    role: "security",
+    role: "staff",
     team: "Güvenlik",
     phone: "+90 532 110 1004",
     language: "tr",
@@ -1202,13 +1261,13 @@ export const staffMembers: StaffMember[] = [
   {
     id: "USR-105",
     name: "Daria Destek",
-    role: "resident_support",
+    role: "staff",
     team: "Sakin Destek",
     phone: "+90 532 110 1005",
     language: "ru",
     activeTasks: 18,
     approvalLimitTry: 5000,
-    accessScope: "support_only",
+    accessScope: "resident_only",
     status: "training",
   },
   {
@@ -1226,11 +1285,12 @@ export const staffMembers: StaffMember[] = [
 ]
 
 export const roleCoverage: RoleCoverage[] = [
-  { role: "Yönetici", users: 2, canApproveFinance: true, canRestrictAccess: true, canManageUsers: true, canExportData: true },
+  { role: "Yönetim", users: 1, canApproveFinance: true, canRestrictAccess: true, canManageUsers: true, canExportData: true },
+  { role: "Sorumlu", users: 2, canApproveFinance: false, canRestrictAccess: true, canManageUsers: false, canExportData: true },
   { role: "Muhasebe", users: 3, canApproveFinance: true, canRestrictAccess: false, canManageUsers: false, canExportData: true },
-  { role: "Teknisyen", users: 8, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
-  { role: "Güvenlik", users: 5, canApproveFinance: false, canRestrictAccess: true, canManageUsers: false, canExportData: false },
-  { role: "Sakin Destek", users: 4, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
+  { role: "Personel", users: 17, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
+  { role: "Malik", users: 511, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: true },
+  { role: "Kiracı", users: 184, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
 ]
 
 export const statusLabels: Record<FlatStatus, string> = {
@@ -1319,9 +1379,17 @@ export function formatEurShort(amount: number) {
 export function getBlockOverview(): BlockOverview[] {
   return blockNames.map((block) => {
     const records = flats.filter((flat) => flat.block === block)
+    const blockSource = newLevelPremiumBlocks.find((item) => item.name === block)
     return {
       block,
       total: records.length,
+      availableForSale: records.filter((flat) => flat.saleStatus === "available").length,
+      sold: records.filter((flat) => flat.saleStatus === "sold").length,
+      sourceMissing: records.filter((flat) => flat.saleStatus === "source_missing").length,
+      minBuyNowEur: blockSource?.minBuyNowEur ?? null,
+      maxBuyNowEur: blockSource?.maxBuyNowEur ?? null,
+      priceSourceStatus: blockSource?.priceSourceStatus ?? "missing",
+      numberingSource: blockSource?.numberingSource ?? null,
       occupied: records.filter((flat) => flat.status === "occupied").length,
       vacant: records.filter((flat) => flat.status === "vacant").length,
       blocked: records.filter((flat) => flat.accessStatus === "restricted").length,
@@ -1508,6 +1576,9 @@ export function getPhaseDeliverySummary() {
     total: phaseDeliveryRecords.length,
     complete: phaseDeliveryRecords.filter((phase) => phase.status === "complete").length,
     readyForUat: phaseDeliveryRecords.filter((phase) => phase.status === "ready_for_uat").length,
+    inProgress: phaseDeliveryRecords.filter((phase) => phase.status === "in_progress").length,
+    planned: phaseDeliveryRecords.filter((phase) => phase.status === "planned").length,
+    blocked: phaseDeliveryRecords.filter((phase) => phase.status === "blocked").length,
     evidenceCount: phaseDeliveryRecords.reduce((sum, phase) => sum + phase.evidence.length, 0),
   }
 }

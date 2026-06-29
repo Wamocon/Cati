@@ -5,9 +5,9 @@ import { Link } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 
 const linkHrefs: Record<string, string[]> = {
-  company: ["/about", "/pitch", "#services", "#services", "#contacts"],
-  catalog: ["#services", "#services", "#services", "#services"],
-  services: ["#services", "#services", "#services", "#services"],
+  company: ["/about", "/platform", "#modules", "#modules", "#contacts"],
+  catalog: ["#modules", "#modules", "#modules", "#modules"],
+  services: ["#modules", "#modules", "#modules", "#modules"],
   legal: ["/privacy", "/terms"],
 }
 
@@ -71,7 +71,7 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row">
           <p>{t("rights")}</p>
-          <p>{t("confidential")}</p>
+          <p>{t("securityNote")}</p>
         </div>
       </div>
     </footer>

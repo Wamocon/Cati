@@ -55,8 +55,13 @@ function isIgnorableConsoleIssue(text) {
   return text.includes("/_next/webpack-hmr") && text.includes("WebSocket connection")
 }
 
+function phaseStatus(phases, phaseNumber) {
+  return phases.find((phase) => phase.phase === phaseNumber)?.status ?? "missing"
+}
+
 async function runStep(browser, baseUrl, outDir, step) {
   const context = await browser.newContext({ viewport: step.viewport })
+  await context.addCookies([{ name: "access_profile_role", value: "admin", url: baseUrl }])
   const page = await context.newPage()
   const issues = []
 
@@ -78,6 +83,12 @@ async function runStep(browser, baseUrl, outDir, step) {
     checks.push(await action(page))
   }
 
+  const bodyWidth = await page.evaluate(() => document.body.scrollWidth)
+  const viewportWidth = await page.evaluate(() => window.innerWidth)
+  if (bodyWidth > viewportWidth + 1) {
+    issues.push(`[layout] horizontal overflow body=${bodyWidth} viewport=${viewportWidth}`)
+  }
+
   const screenshotPath = path.join(outDir, `${step.id}.png`)
   await page.screenshot({ path: screenshotPath, fullPage: true })
   await context.close()
@@ -97,15 +108,23 @@ async function runStep(browser, baseUrl, outDir, step) {
 async function main() {
   const args = parseArgs(process.argv.slice(2))
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
-  const outDir = path.join(args.outDir, `${timestamp}-phase-02-09`)
+  const outDir = path.join(args.outDir, `${timestamp}-phase-02-04`)
   await fs.mkdir(outDir, { recursive: true })
 
   const apiResponse = await fetch(new URL("/api/site-management/phase-status", args.baseUrl))
   if (!apiResponse.ok) throw new Error(`Phase API failed with HTTP ${apiResponse.status}`)
   const apiPayload = await apiResponse.json()
+  const phases = apiPayload.phases ?? []
   const completedPhases = apiPayload.summaries?.delivery?.complete ?? 0
-  if ((apiPayload.phases?.length ?? 0) < 8 || completedPhases < 8) {
-    throw new Error(`Phase API is not complete. Received ${completedPhases}/${apiPayload.phases?.length ?? 0}.`)
+  const requiredCompletePhases = [2, 3, 4]
+  const incompleteRequiredPhases = requiredCompletePhases.filter(
+    (phaseNumber) => phaseStatus(phases, phaseNumber) !== "complete"
+  )
+
+  if (phases.length < 15 || completedPhases < 4 || incompleteRequiredPhases.length > 0) {
+    throw new Error(
+      `Phase API is not aligned. Received ${completedPhases}/${phases.length}; incomplete phases: ${incompleteRequiredPhases.join(", ") || "none"}.`
+    )
   }
 
   const { chromium } = await loadPlaywright()
@@ -115,134 +134,102 @@ async function main() {
   const mobile = { width: 390, height: 844 }
   const steps = [
     {
-      id: "01-phase-hub-desktop",
-      title: "Phase 2-9 delivery hub",
+      id: "01-phase-2-navigation-desktop",
+      title: "Phase 2 role navigation and ERP command center",
       route: "/tr/dashboard",
       viewport: desktop,
       actions: [
-        (page) => assertVisible(page, page.getByText("Phase 2-9 teslim merkezi"), "Phase hub is visible"),
-        (page) => assertVisible(page, page.getByText("8/8 tamamlandı"), "All eight phases show complete"),
-        (page) => assertVisible(page, page.getByText("AI operasyon asistanı"), "AI assistant module is visible"),
+        (page) =>
+          assertVisible(
+            page,
+            page.getByRole("heading", { name: /ERP Operasyon Merkezi/ }),
+            "Dashboard command center is visible"
+          ),
+        (page) => assertVisible(page, page.getByText("ERP modül durumu"), "ERP module map is visible"),
+        (page) => assertVisible(page, page.getByText(/aktif/i).first(), "Active modules are visible"),
+        (page) => assertVisible(page, page.getByText(/yap.mda/i).first(), "In-progress modules are visible"),
+        (page) =>
+          assertVisible(page, page.locator('a[href$="/dashboard/listings"]').first(), "Listings module route is visible"),
+        (page) => assertVisible(page, page.getByText(/AI operasyon/i), "AI assistant module is visible"),
       ],
     },
     {
-      id: "02-import-validation-search",
-      title: "Phase 4 import validation and unit search",
-      route: "/tr/dashboard/listings",
-      viewport: desktop,
-      actions: [
-        (page) => assertVisible(page, page.getByText("Import doğrulama merkezi"), "Import validation center is visible"),
-        async (page) => {
-          await page.getByLabel("Ara...").fill("A-0101")
-          return assertVisible(page, page.getByRole("cell", { name: "A-0101" }), "Unit search returns A-0101")
-        },
-      ],
-    },
-    {
-      id: "03-users-roles-search",
-      title: "Phase 5 users, staff and role coverage",
-      route: "/tr/dashboard/users",
-      viewport: desktop,
-      actions: [
-        (page) => assertVisible(page, page.getByText("Kullanıcılar & Roller"), "Users and roles page is visible"),
-        async (page) => {
-          await page.getByLabel("Ara...").first().fill("Merve")
-          return assertVisible(page, page.getByRole("cell", { name: "Merve Muhasebe" }), "Staff search returns Merve Muhasebe")
-        },
-        (page) => assertVisible(page, page.getByText("Yetki prensibi"), "Role coverage principle is visible"),
-      ],
-    },
-    {
-      id: "04-viewing-online-tour-pipeline",
-      title: "Phase 6 viewing, online tour and follow-up pipeline",
-      route: "/tr/dashboard/calendar",
-      viewport: desktop,
+      id: "02-phase-2-navigation-mobile",
+      title: "Phase 2 mobile dashboard usability",
+      route: "/tr/dashboard",
+      viewport: mobile,
       actions: [
         (page) =>
           assertVisible(
             page,
-            page.getByText("Phase 6 - Besichtigung & online tur pipeline"),
-            "Viewing pipeline is visible"
+            page.getByRole("heading", { name: /ERP Operasyon Merkezi/ }),
+            "Dashboard command center is visible on mobile"
           ),
+        (page) => assertVisible(page, page.getByText("ERP modül durumu"), "ERP module map is visible on mobile"),
         async (page) => {
-          await page.getByLabel("Ara...").first().fill("VIEW-601")
-          return assertVisible(page, page.getByRole("cell", { name: "VIEW-601" }), "Viewing search returns VIEW-601")
-        },
-      ],
-    },
-    {
-      id: "05-sales-payment-plan",
-      title: "Phase 7 sales payment plan and exposure control",
-      route: "/tr/dashboard/finance",
-      viewport: desktop,
-      actions: [
-        (page) =>
-          assertVisible(
+          await page.getByRole("button", { name: /Men.y. a./i }).click()
+          await page.waitForTimeout(300)
+          return assertVisible(
             page,
-            page.getByText("Phase 7 - New Level Premium satış ödeme planı"),
-            "Sales payment plan is visible"
-          ),
-        async (page) => {
-          await page.getByLabel("Ara...").first().fill("PAY-701")
-          return assertVisible(page, page.getByRole("cell", { name: "PAY-701" }), "Payment plan search returns PAY-701")
+            page.locator("aside").getByRole("link", { name: /Daire Matrisi/i }),
+            "Mobile route link is reachable"
+          )
         },
       ],
     },
     {
-      id: "06-purchase-document-checklist",
-      title: "Phase 8 purchase file, TAPU, KYC and EIDS checklist",
-      route: "/tr/dashboard/documents",
-      viewport: desktop,
-      actions: [
-        (page) =>
-          assertVisible(
-            page,
-            page.getByText("Phase 8 - Kaufakte, TAPU, KYC ve EIDS kontrolü"),
-            "Purchase checklist is visible"
-          ),
-        async (page) => {
-          await page.getByLabel("Ara...").first().fill("DOCBUY-803")
-          return assertVisible(page, page.getByRole("cell", { name: "DOCBUY-803" }), "Purchase checklist search returns DOCBUY-803")
-        },
-      ],
-    },
-    {
-      id: "07-buyer-eligibility-precheck",
-      title: "Phase 9 residence, citizenship and buyer eligibility pre-check",
-      route: "/tr/dashboard/compliance",
-      viewport: desktop,
-      actions: [
-        (page) =>
-          assertVisible(
-            page,
-            page.getByText("Phase 9 - Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü"),
-            "Buyer eligibility pre-check is visible"
-          ),
-        async (page) => {
-          await page.getByLabel("Ara...").first().fill("ELG-903")
-          return assertVisible(page, page.getByRole("cell", { name: "ELG-903" }), "Eligibility search returns ELG-903")
-        },
-      ],
-    },
-    {
-      id: "08-platform-audit-controls",
-      title: "Phase 3 platform controls and audit trail",
+      id: "03-phase-3-rbac-audit-controls",
+      title: "Phase 3 platform controls, RBAC and audit trail",
       route: "/tr/dashboard/settings",
       viewport: desktop,
       actions: [
-        (page) => assertVisible(page, page.getByText("Platform & Audit Merkezi"), "Platform audit page is visible"),
+        (page) =>
+          assertVisible(
+            page,
+            page.getByRole("heading", { name: "Platform Yönetim Merkezi" }),
+            "Platform audit page is visible"
+          ),
         (page) => assertVisible(page, page.getByText("AUD-2401"), "Audit trail contains AUD-2401"),
         (page) => assertVisible(page, page.getByText("RBAC").first(), "RBAC platform control is visible"),
       ],
     },
     {
-      id: "09-phase-hub-mobile",
-      title: "Mobile dashboard usability",
-      route: "/tr/dashboard",
-      viewport: mobile,
+      id: "04-phase-4-import-validation-search",
+      title: "Phase 4 import validation and unit search",
+      route: "/tr/dashboard/listings",
+      viewport: desktop,
       actions: [
-        (page) => assertVisible(page, page.getByText("Phase 2-9 teslim merkezi"), "Phase hub is visible on mobile"),
-        (page) => assertVisible(page, page.getByText("8/8 tamamlandı"), "Completion status is visible on mobile"),
+        (page) =>
+          assertVisible(page, page.getByRole("heading", { name: "Proje & Daire Matrisi" }), "Flat matrix page is visible"),
+        (page) => assertVisible(page, page.getByText(/Daire matrisi kay.tlar./i), "Live unit data panel is visible"),
+        (page) => assertVisible(page, page.getByText(/Veri do.rulama merkezi/i), "Data validation center is visible"),
+        async (page) => {
+          await page.getByLabel("Ara...").first().fill("A-001")
+          return assertVisible(page, page.getByRole("cell", { name: "A-001" }), "Unit search returns A-001")
+        },
+      ],
+    },
+    {
+      id: "05-phase-4-audited-unit-actions",
+      title: "Phase 4 flat filters and audited unit actions",
+      route: "/tr/dashboard/listings",
+      viewport: desktop,
+      actions: [
+        async (page) => {
+          const restrictedFilter = page.getByRole("button", { name: /Eri.im k.s.t./i }).first()
+          await restrictedFilter.click()
+          return assertVisible(page, restrictedFilter, "Restricted-access filter is usable")
+        },
+        async (page) => {
+          await page.getByRole("button", { name: /Filtreyi s.f.rla/i }).click()
+          await page.getByRole("button", { name: /A-001 detay/i }).first().click()
+          return assertVisible(page, page.getByRole("heading", { name: "A-001" }), "Unit detail opens from matrix")
+        },
+        async (page) => {
+          const debtAction = page.getByRole("button", { name: /A-001 bor/i })
+          await debtAction.click()
+          return assertVisible(page, debtAction, "Audited unit action is clickable")
+        },
       ],
     },
   ]
@@ -258,13 +245,12 @@ async function main() {
     baseUrl: args.baseUrl,
     api: {
       status: apiResponse.status,
-      phases: apiPayload.phases?.length ?? 0,
+      phases: phases.length,
       completedPhases,
-      rejectedImportRows: apiPayload.summaries?.import?.rejectedRows ?? null,
-      viewingRecords: apiPayload.summaries?.viewing?.total ?? null,
-      paymentOpenExposureEur: apiPayload.summaries?.paymentPlans?.openExposureEur ?? null,
-      purchaseHighRiskItems: apiPayload.summaries?.purchaseChecklist?.highRisk ?? null,
-      eligibilityReviewItems: apiPayload.summaries?.eligibility?.review ?? null,
+      phase2Status: phaseStatus(phases, 2),
+      phase3Status: phaseStatus(phases, 3),
+      phase4Status: phaseStatus(phases, 4),
+      rejectedDataRows: apiPayload.summaries?.import?.rejectedRows ?? null,
       controls: apiPayload.controls?.length ?? 0,
       auditEvents: apiPayload.auditEvents?.length ?? 0,
     },
@@ -279,17 +265,19 @@ async function main() {
       `Manual QA completed at ${report.generatedAt}`,
       `Base URL: ${report.baseUrl}`,
       `Phase API: ${report.api.completedPhases}/${report.api.phases} completed phases`,
-      `Import rejected rows: ${report.api.rejectedImportRows}`,
-      `Viewing records: ${report.api.viewingRecords}`,
-      `Payment open exposure EUR: ${report.api.paymentOpenExposureEur}`,
-      `Purchase high-risk items: ${report.api.purchaseHighRiskItems}`,
-      `Eligibility review items: ${report.api.eligibilityReviewItems}`,
+      `Phase 2 status: ${report.api.phase2Status}`,
+      `Phase 3 status: ${report.api.phase3Status}`,
+      `Phase 4 status: ${report.api.phase4Status}`,
+      `Rejected data rows: ${report.api.rejectedDataRows}`,
+      `Controls: ${report.api.controls}`,
+      `Audit events: ${report.api.auditEvents}`,
       `Browser steps passed: ${results.filter((result) => result.passed).length}/${results.length}`,
       "",
       ...results.flatMap((result) => [
         `${result.id}: ${result.title}`,
         `Route: ${result.route}`,
         `Checks: ${result.checks.join("; ")}`,
+        `Issues: ${result.issues.join("; ") || "none"}`,
         `Screenshot: ${result.screenshotPath}`,
         "",
       ]),

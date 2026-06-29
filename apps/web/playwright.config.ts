@@ -5,8 +5,8 @@ const reuseExistingServer = process.env.PLAYWRIGHT_REUSE_SERVER === "true"
 const nextMode = useProductionServer ? "start" : "dev"
 const nextServerCommand =
   process.platform === "win32"
-    ? `cmd /c npm run ${nextMode} -- -p 3100`
-    : `npm run ${nextMode} -- -p 3100`
+    ? `cmd /c set NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true&& npm run ${nextMode} -- -p 3100`
+    : `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true npm run ${nextMode} -- -p 3100`
 
 export default defineConfig({
   testDir: "./e2e",
@@ -27,6 +27,9 @@ export default defineConfig({
   ],
   webServer: {
     command: nextServerCommand,
+    env: {
+      NEXT_PUBLIC_ENABLE_ACCESS_PROFILES: "true",
+    },
     url: "http://localhost:3100",
     reuseExistingServer,
     timeout: 120_000,

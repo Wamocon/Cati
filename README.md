@@ -1,6 +1,6 @@
 # Cati Real Estate CRM
 
-Cati is a premium real-estate CRM and site-management platform for the Ataberk Estate / New Level Premium Avsallar pilot. It combines a public product experience, a protected CRM dashboard, operational workflows, local AI integration, Supabase data foundations, Jira/Xray project automation, and business documentation for stakeholder delivery.
+Cati is a premium real-estate ERP and site-management platform for Ataberk Estate operations. It combines a public product experience, a protected CRM dashboard, operational workflows, local AI integration, Supabase data foundations, Jira/Xray project automation, and business documentation for stakeholder delivery.
 
 > [!IMPORTANT]
 > This repository must never contain real credentials. Keep `.env.local`, browser caches, QA screenshots, generated reports, and export archives local. Use GitHub repository secrets for CI/Jira automation.
@@ -10,31 +10,34 @@ Cati is a premium real-estate CRM and site-management platform for the Ataberk E
 | Area | Location | Purpose |
 | --- | --- | --- |
 | Web CRM app | `apps/web` | Next.js 16 application with landing pages, login, role-based dashboard, operational modules, AI API route, and Playwright QA. |
-| Pitch app | `apps/pitch` | Static customer-facing pitch/proposal experience. |
 | Supabase | `supabase` | Database migrations, RLS-oriented foundation, and seed data for CRM/site operations. |
-| Documentation | `docs` | German business blueprint, source material, phase documentation, and requirements archive. |
+| Documentation | `docs` | Project handbook, active BRD/PRD/TRD package, runbooks, source material and current DOCX reading copies. |
 | Automation | `scripts` | Browser QA, phase harnesses, Jira/Xray sync, screenshot capture, and document-generation utilities. |
 | Twenty CRM | `twenty` | Self-hosted CRM reference/configuration area. |
 
 ## Current Product Scope
 
-The current implementation is focused on the Ataberk Estate / New Level Premium pilot and is structured so it can later be generalized for more projects.
+The current implementation is focused on Ataberk Estate operations and is structured so it can support more portfolios, sites and projects without rebuilding the product model.
 
-Completed demo/package coverage:
+ERP phase status:
 
-- Phase 2: UX/UI and role-based navigation
-- Phase 3: platform, auth, RBAC, audit and security controls
-- Phase 4: site, block, flat and import validation model
-- Phase 5: users, roles, residents and staff views
-- Phase 6: viewing, online tour and follow-up pipeline
-- Phase 7: sales payment plan, installment status and finance blockers
-- Phase 8: purchase file, TAPU, KYC, EIDS and document checklist
-- Phase 9: residence, citizenship and buyer eligibility pre-check
+- Phase 1: discovery, requirement lock and market benchmark
+- Phase 2: UX/UI design system and role-based navigation
+- Phase 3: platform foundation, auth, RBAC, RLS and audit
+- Phase 4: site, block, floor, flat and import validation
+- Phase 5: user, owner, tenant and staff management
+- Phase 6: financial ledger engine
+- Phase 7: payments, deposits, reconciliation and debt restrictions
+- Phase 8: service catalogue and service order flow
+- Phase 9: task, workforce, SLA and field reporting
+- Phase 10: booking, letting, move-in and checkout
+- Phase 11: communication, notifications and documents
+- Phase 12: mobile PWA and installable workflows
+- Phase 13: external integrations
+- Phase 14: AI premium layer and advanced analytics
+- Phase 15: QA, security, performance, UAT, training and launch
 
-Planned next packages:
-
-- Phase 10-12: communication, notifications, integrations, mobile/PWA workflows
-- Phase 13-15: external systems, AI analytics, hardening, UAT, training and launch
+Current implementation status: phases 1-4 are connected as a local/Supabase-backed ERP foundation, phase 5 is ready for acceptance review, phases 6-7 are in active build, and phases 8-15 remain planned production work.
 
 ## Tech Stack
 
@@ -95,9 +98,9 @@ pnpm --dir apps/web dev -- -p 3100
 Useful routes:
 
 - `http://localhost:3100/tr`
+- `http://localhost:3100/tr/platform`
 - `http://localhost:3100/tr/login`
 - `http://localhost:3100/tr/dashboard`
-- `http://localhost:3100/tr/pitch`
 
 ## Quality Gates
 
@@ -137,6 +140,8 @@ set TMP=.tmp
 - Work on a feature branch, not directly on `main`.
 - Recommended branch format: `feature/CATI-123-short-description` or `chore/release-readiness-github-jira`.
 - Reference Jira issue keys in commits when work is tied to Jira, for example `CATI-123 add buyer eligibility precheck`.
+- Preview Jira/Xray changes locally before remote sync: `pnpm jira:sync -- --dry-run`.
+- Live Jira/Xray sync creates or updates 15 phase epics, 53 phase stories, one documentation issue, 20 UAT/Xray test cases and the managed current DOCX documentation package.
 - The GitHub workflow `.github/workflows/jira-main-sync.yml` updates Jira issues referenced in commits that land on `main`.
 - CI must provide these GitHub secrets: `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`.
 
@@ -144,7 +149,7 @@ set TMP=.tmp
 
 - `.env`, `.env.local`, `.env.*.local`
 - `.tmp/`
-- `quality/`
+- generated QA output folders
 - `playwright-report/`
 - `test-results/`
 - generated `.zip` archives
@@ -164,8 +169,18 @@ pnpm phase:06-09
 
 ## Documentation
 
-Start with `docs/README.md` to understand which documents are active, archived, or source-only. The main business-facing document is:
+Start with:
 
 ```text
-docs/client-new-level-premium/New-Level-Premium-CRM-Business-Blueprint-DE.docx
+docs/README.md
+docs/PROJECT-HANDBOOK.md
+docs/requirements/option-3-ai-site-crm/README.md
 ```
+
+The current combined documentation reading copy is:
+
+```text
+docs/1Cati-Current-Project-Documentation.docx
+```
+
+Markdown files in `docs/requirements/option-3-ai-site-crm` are the canonical BRD/PRD/TRD and delivery sources. Matching `.docx` files are exports.

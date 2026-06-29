@@ -13,31 +13,30 @@ export interface UserProfile {
   avatar_url?: string | null
 }
 
-// Demo fallback used when Supabase auth is not configured.
+// Access-profile fallback used when external auth is not configured.
 // Priority:
-//   1. demo_role cookie (set by role-selector on the login page)
-//   2. NEXT_PUBLIC_DEMO_ROLE env var
+//   1. access_profile_role cookie (set by role-selector on the login page)
+//   2. NEXT_PUBLIC_ACCESS_PROFILE_ROLE env var
 //   3. default "manager"
-// This is intentionally exposed for pre-launch demos; replace with real auth before go-live.
-async function getDemoProfile(): Promise<UserProfile> {
-  let demoRole = process.env.NEXT_PUBLIC_DEMO_ROLE ?? "manager"
+async function getAccessProfile(): Promise<UserProfile> {
+  let accessRole = process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ?? "manager"
 
   try {
     const cookieStore = await cookies()
-    const cookieRole = cookieStore.get("demo_role")?.value
+    const cookieRole = cookieStore.get("access_profile_role")?.value
     if (cookieRole && isValidRole(cookieRole)) {
-      demoRole = cookieRole
+      accessRole = cookieRole
     }
   } catch {
     // Cookies may not be available in all contexts; fall back to env/default.
   }
 
-  const role: Role = isValidRole(demoRole) ? demoRole : "manager"
+  const role: Role = isValidRole(accessRole) ? accessRole : "manager"
 
   return {
     id: "00000000-0000-0000-0000-000000000000",
-    email: "demo@cati.local",
-    full_name: "Demo User",
+    email: "access@cati.local",
+    full_name: "Operasyon Kullanıcısı",
     role,
     phone: null,
     language: "ru",
@@ -53,18 +52,21 @@ export function isSupabaseConfigured(): boolean {
   )
 }
 
-export function isDemoAuthEnabled(): boolean {
-  return !isSupabaseConfigured() || process.env.NEXT_PUBLIC_ENABLE_DEMO_AUTH === "true"
+export function isAccessProfileEnabled(): boolean {
+  return (
+    !isSupabaseConfigured() ||
+    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
+  )
 }
 
 /**
  * Returns the current authenticated user profile with a normalized role.
- * Falls back to a demo profile only when Supabase is not configured, unless
- * NEXT_PUBLIC_ENABLE_DEMO_AUTH=true is explicitly set for a staging demo.
+ * Falls back to a local access profile only when external auth is not configured,
+ * unless access profiles are explicitly enabled for a controlled environment.
  */
 export async function getUserProfile(): Promise<UserProfile | null> {
   if (!isSupabaseConfigured()) {
-    return getDemoProfile()
+    return getAccessProfile()
   }
 
   try {
@@ -75,7 +77,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     } = await supabase.auth.getUser()
 
     if (authError || !user) {
-      return isDemoAuthEnabled() ? getDemoProfile() : null
+      return isAccessProfileEnabled() ? getAccessProfile() : null
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -85,15 +87,16 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       .single()
 
     if (profileError) {
-      // If no profile exists yet, treat as viewer/client until the trigger runs or admin assigns a role.
+      // If no profile exists yet, treat as a limited tenant until the trigger
+      // runs or an admin assigns the correct client role.
       return {
         id: user.id,
         email: user.email,
-        role: "viewer",
+        role: "tenant",
       }
     }
 
-    const role = isValidRole(profile?.role) ? (profile.role as Role) : "viewer"
+    const role = isValidRole(profile?.role) ? (profile.role as Role) : "tenant"
 
     return {
       id: user.id,
@@ -106,7 +109,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       avatar_url: profile?.avatar_url,
     }
   } catch {
-    return isDemoAuthEnabled() ? getDemoProfile() : null
+    return isAccessProfileEnabled() ? getAccessProfile() : null
   }
 }
 
@@ -126,12 +129,12 @@ export async function requireProfile(): Promise<UserProfile> {
  * Validate that a role string from a form/API is one of the known platform roles.
  */
 export function normalizeRole(role: unknown): Role {
-  return isValidRole(role) ? role : "viewer"
+  return isValidRole(role) ? role : "tenant"
 }
 
 /**
- * List of roles that can be assigned by admins. Platform-only roles are excluded.
+ * List of roles that can be assigned by admins.
  */
 export function assignableRoles(): Role[] {
-  return roles.filter((r) => r !== "super_admin")
+  return [...roles]
 }

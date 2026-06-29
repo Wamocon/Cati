@@ -16,16 +16,18 @@ import {
   UserCog,
   Settings,
   ShieldCheck,
-  AlertCircle,
   LayoutDashboard,
+  MessageSquareText,
 } from "lucide-react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
+import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 interface MenuItem {
   resource: Resource
@@ -33,40 +35,32 @@ interface MenuItem {
   icon: React.ElementType
 }
 
-const menu: MenuItem[] = [
-  { resource: "dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { resource: "listings", href: "/dashboard/listings", icon: Building2 },
-  { resource: "leads", href: "/dashboard/leads", icon: Users },
-  { resource: "tickets", href: "/dashboard/tickets", icon: TicketCheck },
-  { resource: "calendar", href: "/dashboard/calendar", icon: CalendarDays },
-  { resource: "eids_compliance", href: "/dashboard/compliance", icon: FileCheck },
-  { resource: "finance", href: "/dashboard/finance", icon: CircleDollarSign },
-  { resource: "documents", href: "/dashboard/documents", icon: FileText },
-  { resource: "reports", href: "/dashboard/reports", icon: BarChart3 },
-  { resource: "users", href: "/dashboard/users", icon: UserCog },
-  { resource: "settings", href: "/dashboard/settings", icon: Settings },
-]
-
-const siteMenuLabels: Record<Resource, string> = {
-  dashboard: "Genel Bakış",
-  listings: "Daire Matrisi",
-  leads: "Sakinler",
-  deals: "İş Akışları",
-  tickets: "Servis Talepleri",
-  calendar: "Rezervasyon",
-  eids_compliance: "Erişim & Uyum",
-  documents: "Belgeler",
-  finance: "Finans & Aidat",
-  reports: "Raporlar",
-  users: "Kullanıcılar & Roller",
-  settings: "Ayarlar",
-  communications: "İletişim",
-  offline_sync: "Offline Senkron",
+const iconsByResource: Record<Resource, React.ElementType> = {
+  dashboard: LayoutDashboard,
+  listings: Building2,
+  leads: Users,
+  deals: Users,
+  tickets: TicketCheck,
+  calendar: CalendarDays,
+  eids_compliance: FileCheck,
+  finance: CircleDollarSign,
+  documents: FileText,
+  reports: BarChart3,
+  users: UserCog,
+  settings: Settings,
+  communications: MessageSquareText,
+  offline_sync: ShieldCheck,
 }
+
+const menu: MenuItem[] = dashboardRoutes.map((item) => ({
+  ...item,
+  icon: iconsByResource[item.resource],
+}))
 
 export function DashboardSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const user = useUser()
+  const locale = resolveDashboardLocale(useLocale())
   const t = useTranslations("dashboard")
   const roleT = useTranslations("roles")
   const router = useRouter()
@@ -75,12 +69,11 @@ export function DashboardSidebar() {
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
-
-  const isDemo = user.email === "demo@cati.local"
+  const userDisplayName = localizeOperationalValue(user.full_name ?? user.email, locale)
 
   async function logout() {
     try {
-      await fetch("/api/demo-role", { method: "DELETE" })
+      await fetch("/api/access-profile", { method: "DELETE" })
     } catch {
       // ignore
     }
@@ -97,7 +90,7 @@ export function DashboardSidebar() {
 
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="absolute top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
       >
         <Menu className="h-5 w-5" />
@@ -105,8 +98,8 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-transform duration-200 md:relative md:translate-x-0 md:shadow-none",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:relative md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
+          mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
         )}
       >
         <div className="flex h-full flex-col p-4">
@@ -116,7 +109,7 @@ export function DashboardSidebar() {
               <span className="min-w-0">
                 <span className="block text-lg font-black leading-tight text-sidebar-foreground">1Çatı</span>
                 <span className="block truncate text-[11px] font-semibold text-muted-foreground">
-                  {clientProfile.clientName} pilot
+                  {clientProfile.clientName}
                 </span>
               </span>
             </Link>
@@ -130,18 +123,21 @@ export function DashboardSidebar() {
           </div>
 
           <div className="mt-5 rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase text-primary">
-                {clientProfile.pilotProject}
-              </span>
-              <span className="text-[10px] font-semibold text-muted-foreground">{clientProfile.pilotLocation}</span>
+            <div className="mb-3">
+              <p className="text-[10px] font-semibold uppercase text-muted-foreground">{t("activePortfolio")}</p>
+              <p className="mt-1 truncate text-sm font-black text-card-foreground">
+                {clientProfile.activePortfolio}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">{clientProfile.activeLocation}</p>
             </div>
             <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
               <ShieldCheck className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-card-foreground">{user.full_name ?? user.email}</p>
+              <p className="truncate text-sm font-semibold text-card-foreground">
+                {userDisplayName}
+              </p>
               <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
             </div>
             </div>
@@ -167,19 +163,13 @@ export function DashboardSidebar() {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {siteMenuLabels[item.resource]}
+                  {t(`menu.${item.resource}`)}
                 </Link>
               )
             })}
           </nav>
 
           <div className="mt-auto space-y-2">
-            {isDemo && (
-              <div className="flex items-start gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{t("demoNotice")}</span>
-              </div>
-            )}
             <button
               onClick={logout}
               className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"

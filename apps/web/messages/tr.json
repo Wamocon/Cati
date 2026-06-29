@@ -1,58 +1,58 @@
 {
   "metadata": {
-    "title": "Ataberk Estate — Türkiye'de Emlak | 1Çatı CRM",
-    "description": "Ataberk Estate'ten Türkiye'de emlak satışı ve kiralama. 212.000+ ilan, 6.000+ işlem, 150 çalışan. Artık 1Çatı mülk yönetim platformu ile."
+    "title": "1Çatı ERP | Emlak, Site Yönetimi ve CRM Platformu",
+    "description": "1Çatı, Türkiye emlak operasyonları için CRM, portföy, aidat, servis, belge, uyumluluk ve rol bazlı ekip yönetimini tek ERP çalışma alanında birleştirir."
   },
   "topBar": {
     "phone": "+90 (549) 557 7 557",
     "email": "info@ataberkestate.com",
-    "presentation": "Ataberk Estate Sunumu"
+    "platformLink": "ERP Platformu"
   },
   "nav": {
     "home": "Ana Sayfa",
-    "catalog": "Tüm İlanlar",
+    "catalog": "Modüller",
     "about": "Hakkımızda",
-    "pitch": "1Çatı Sunumu",
-    "services": "Hizmetler",
+    "services": "İş Akışları",
     "articles": "Makaleler",
     "reviews": "Yorumlar",
     "contacts": "İletişim",
     "login": "Giriş Yap",
     "portal": "Müşteri Paneli",
     "platformSubtitle": "1Çatı Platform",
-    "toggleMenu": "Menüyü aç/kapat"
+    "toggleMenu": "Menüyü aç/kapat",
+    "platform": "Platform"
   },
   "hero": {
-    "badge": "yeni emlak yönetim platformu",
-    "headline": "Türkiye emlağını tek çatı altında yönetin",
-    "subheadline": "Ataberk Estate, 10.000+ aktif ilanı, 212.000+ veritabanı kaydını, 6.000+ işlemi ve 150 uzmanı 1Çatı ile birleştiriyor — ilk aramadan satış sonrası hizmete kadar.",
-    "ctaPrimary": "İlan Ara",
-    "ctaSecondary": "Nasıl Çalışır",
+    "badge": "Türkiye emlak operasyon platformu",
+    "headline": "Emlak operasyonunuzu tek ERP merkezinde yönetin",
+    "subheadline": "1Çatı; satış, portföy, malik, kiracı, aidat, servis, belge, EİDS ve raporlamayı rol bazlı, hızlı ve denetlenebilir bir çalışma alanında birleştirir.",
+    "ctaPrimary": "Ürün akışını incele",
+    "ctaSecondary": "Çalışma alanına giriş",
     "searchCity": "Şehir",
     "searchType": "Tip",
     "searchBudget": "Bütçe",
     "typeApartment": "Daire",
     "budgetValue": "100.000 €'ye kadar",
     "statLabels": {
-      "activeListings": "Aktif ilan",
-      "leads": "Adaylar",
-      "openTickets": "Açık talep",
-      "transactions": "İşlem"
+      "activeListings": "Portföy kaydı",
+      "leads": "Kişi profili",
+      "openTickets": "Açık iş",
+      "transactions": "İşlem geçmişi"
     },
-    "badgeReturn": "Yatırım getirisi",
-    "badgeListings": "Veritabanı ilan",
-    "previewTitle": "1Çatı Panel",
-    "previewStatus": "Canlı",
+    "badgeReturn": "Tahsilat görünürlüğü",
+    "badgeListings": "Bağlı operasyon kaydı",
+    "previewTitle": "ERP çalışma alanı",
+    "previewStatus": "Aktif",
     "previewActivityLabel": "Son aktivite",
-    "previewActivityText": "EİDS yetkilendirmesi onaylandı — Villa #4021",
+    "previewActivityText": "CRM, daire matrisi, finans ve servis ekipleri aynı kayıt üzerinden çalışır.",
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212.298+",
     "previewCity": "Alanya",
     "statValues": {
-      "activeListings": "10.000+",
-      "leads": "1.247",
+      "activeListings": "212k+",
+      "leads": "150",
       "openTickets": "89",
-      "transactions": "6.000+"
+      "transactions": "6k+"
     }
   },
   "stats": {
@@ -113,7 +113,7 @@
       "calendar": "Gezinti, işlem ve görev takvimi",
       "documents": "TAPU, sözleşmeler, DASK için belge arşivi",
       "reports": "Malikler için finansal raporlama",
-      "roles": "Roles: Süper Admin, Şirket Admini, Müdür, Satış Danışmanı, İlan Danışmanı, Property Manager, Muhasebeci, Teknisyen, Müşteri / Malik, Sadece Görüntüleyici",
+      "roles": "Roller: Yönetim, Sorumlu, Muhasebe, Personel, Malik, Kiracı. Her rol yalnızca kendi görev alanındaki sayfaları ve aksiyonları görür.",
       "languages": "Türkçe, Rusça, İngilizce, Almanca",
       "eids": "EİDS yetkilendirme takibi ve son kullanma hatırlatıcıları",
       "compliance": "TÜRSAB/e-GUEST ve KBS uyumluluk kontrol listesi",
@@ -123,201 +123,82 @@
   },
   "compliance": {
     "title": "Türkiye'nin 2026 kuralları için tasarlandı",
-    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, yabancı alıcı kısıtlamaları ve döviz riskleri. MVP'de olanlar ve yol haritasındakiler açıkça ayrılmıştır.",
+    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, yabancı alıcı kısıtlamaları ve döviz riskleri. Aktif iş akışları ve resmi API erişimi bekleyen otomasyonlar net şekilde ayrılır.",
     "items": {
       "eids": {
         "title": "EİDS yetkilendirme takibi",
         "desc": "Her ilan için e-Devlet yetki belgesi, durum ve bitiş tarihi. Otomatik hatırlatıcılar ve malik ile komisyon sözleşmesi bağlantısı.",
-        "tag": "MVP"
+        "tag": "Aktif"
       },
       "dueDiligence": {
         "title": "TAPU & sözleşme due-diligence",
         "desc": "Satış öncesi zorunlu kontrol listesi: TAPU, DASK, imar, fotoğraf, yetki belgesi. Sadece yönetici 'sözleşmeye hazır' yapabilir.",
-        "tag": "MVP"
+        "tag": "Aktif"
       },
       "residence": {
         "title": "Oturum / vatandaşlık uygunluk rehberi",
         "desc": "200.000 $ eşik, gelir/sigorta ve ilçe kota sınırı için ön kontrol. SPK ekspertiz değeri obje kartında saklanır.",
-        "tag": "MVP"
+        "tag": "Aktif"
       },
       "tax": {
         "title": "Çoklu para birimi ve vergi tahmini",
         "desc": "Alış/satış fiyatı TRY/EUR/USD olarak girilir. 5 yıllık kazanç vergisi için basit bir hesaplayıcı ve fiyat geçmişi.",
-        "tag": "MVP"
+        "tag": "Aktif"
       },
       "shortTerm": {
         "title": "Otomatik KBS/e-GUEST raporlama",
         "desc": "Kısa dönem kiralamada 24 saatlik bildirim süresi ve TÜRSAB lisansı takibi. Tam otomasyon resmi API mevcut olduğunda eklenecek.",
-        "tag": "Roadmap"
+        "tag": "Entegrasyon hazır"
       },
       "verification": {
         "title": "Tapu doğrulama ve noter entegrasyonu",
         "desc": "QR/barkod okuma ve zaman damgası. Resmi Tapu/Noter API'leri açıldığında otomatik doğrulama eklenecek.",
-        "tag": "Roadmap"
+        "tag": "Entegrasyon hazır"
       }
     },
     "sectionBadge": "2026 Uyumluluk"
   },
   "services": {
-    "title": "Ataberk Estate Hizmetleri",
-    "subtitle": "İlan seçiminden satış sonrası hizmete kadar — alıcı ve malik için tam döngü.",
-    "buy": "Emlak alımı",
-    "sell": "Satış ve takas",
-    "rent": "Kiralama yönetimi",
-    "legal": "Hukuki danışmanlık ve TAPU",
-    "citizenship": "Vatandaşlık ve oturum izni",
-    "aftersales": "7/24 satış sonrası hizmet",
-    "tour": "Ücretsiz tanıtım turu",
-    "online": "Online ilan gezisi",
-    "compliance": "EİDS ve uyumluluk danışmanlığı",
-    "tax": "Vergi ve döviz planlama",
-    "offline": "Saha ekibi mobil erişimi"
+    "title": "ERP modülleri",
+    "subtitle": "Satıştan site yönetimine kadar ekiplerin günlük işini hızlandıran temel çalışma alanları.",
+    "buy": "CRM ve lead yönetimi",
+    "sell": "Portföy ve daire matrisi",
+    "rent": "Malik, kiracı ve sakin kayıtları",
+    "legal": "TAPU, KYC ve belge kasası",
+    "citizenship": "EİDS ve uygunluk kontrolleri",
+    "aftersales": "Servis talepleri ve saha işleri",
+    "tour": "Rezervasyon ve gezinti takvimi",
+    "online": "WhatsApp, e-posta ve iletişim akışı",
+    "compliance": "Rol, yetki ve denetim izi",
+    "tax": "Aidat, tahsilat ve finans defteri",
+    "offline": "Mobil saha çalışma alanı"
   },
   "howItWorks": {
-    "title": "Nasıl çalışırız",
+    "title": "ERP iş akışı",
     "steps": {
-      "1": "Ataberk Estate'e başvurun",
-      "2": "Kişiselleştirilmiş ilan seçimi",
-      "3": "Türkiye'de ilan turu",
-      "4": "Rezervasyon ve due diligence",
-      "5": "Tapu dairesinde belge hazırlığı",
-      "6": "İşlem ve anahtar teslimi",
-      "7": "Satış sonrası hizmet"
-    }
-  },
-  "platformDemo": {
-    "title": "Platformu canlı önizleme",
-    "subtitle": "Aşağıdaki sekme simülasyonu, 1Çatı'nın günlük kullanımını gösterir. Veriler örnek amaçlıdır.",
-    "tabs": {
-      "crm": "CRM",
-      "listings": "İlanlar",
-      "tickets": "Talepler",
-      "calendar": "Takvim"
-    },
-    "crm": {
-      "name": "CRM",
-      "columns": [
-        "Aday",
-        "Durum",
-        "Kaynak",
-        "Temsilci"
-      ],
-      "rows": [
-        [
-          "Anna K. - Alanya daire",
-          "Sıcak",
-          "WhatsApp",
-          "Mehmet"
-        ],
-        [
-          "Sergey P. - Villa",
-          "Yeni",
-          "Web form",
-          "Ayşe"
-        ],
-        [
-          "Li W. - Yatırım",
-          "Görüşme",
-          "Referans",
-          "Can"
-        ]
-      ]
-    },
-    "listings": {
-      "name": "İlanlar",
-      "columns": [
-        "İlan",
-        "Fiyat",
-        "EİDS",
-        "Durum"
-      ],
-      "rows": [
-        [
-          "Villa #4021 - Kargıcak",
-          "€ 420.000",
-          "Onaylı",
-          "Aktif"
-        ],
-        [
-          "Daire #1847 - Mahmutlar",
-          "€ 95.000",
-          "Bekliyor",
-          "Aktif"
-        ],
-        [
-          "Penthouse #990 - Alanya",
-          "€ 310.000",
-          "Onaylı",
-          "Rezerve"
-        ]
-      ]
-    },
-    "tickets": {
-      "name": "Talepler",
-      "columns": [
-        "Talep",
-        "Öncelik",
-        "Son Güncelleme"
-      ],
-      "rows": [
-        [
-          "Su kaçağı - Villa #4021",
-          "Yüksek",
-          "2 saat önce"
-        ],
-        [
-          "Klima bakımı - Daire #1847",
-          "Orta",
-          "Dün"
-        ],
-        [
-          "Boyama - Penthouse #990",
-          "Düşük",
-          "3 gün önce"
-        ]
-      ]
-    },
-    "calendar": {
-      "name": "Takvim",
-      "columns": [
-        "Saat",
-        "Etkinlik",
-        "Yer"
-      ],
-      "rows": [
-        [
-          "10:00",
-          "Villa turu - Anna K.",
-          "Kargıcak"
-        ],
-        [
-          "14:00",
-          "Tapu randevusu",
-          "Alanya Tapu"
-        ],
-        [
-          "16:30",
-          "Bakım kontrolü",
-          "Mahmutlar"
-        ]
-      ]
+      "1": "Lead veya malik kaydı açılır",
+      "2": "Portföy, daire ve kişi bilgileri bağlanır",
+      "3": "Rolüne göre ekip görevi atanır",
+      "4": "Belge, ödeme ve uyumluluk kontrol edilir",
+      "5": "Servis, gezinti veya satış aksiyonu yürütülür",
+      "6": "Finans ve yönetim onayı alınır",
+      "7": "Malik, kiracı ve yönetim raporu güncellenir"
     }
   },
   "cta": {
     "title": "Emlak operasyonunuzu 2026 kurallarına göre yönetin",
-    "subtitle": "1Çatı demosu talep edin. EİDS, uyumluluk, CRM ve bakım yönetimini tek yerde görün.",
-    "primary": "Demo Talep Et",
+    "subtitle": "Satış, site yönetimi, finans, servis ve uyumluluk ekiplerinizi tek ERP çalışma alanında birleştirin.",
+    "primary": "Ürün görüşmesi planla",
     "secondary": "Panele Giriş Yap",
-    "mailSubject": "1Çatı Demo Talebi"
+    "mailSubject": "1Çatı Ürün Görüşmesi"
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
-    "confidential": "Gizli bilgi — WAMOCON GmbH & Ataberk Estate.",
     "description": "Türkiye'de emlak satışı ve yönetimi; yerel ve yabancı malikler için güvenilir çözüm ortağı.",
     "companyTitle": "Şirket",
     "company": [
       "Hakkımızda",
-      "1Çatı Sunumu",
+      "Platform",
       "Ekibimiz",
       "Kariyer",
       "İletişim"
@@ -340,46 +221,41 @@
     "legal": [
       "Gizlilik Politikası",
       "Kullanım Koşulları"
-    ]
+    ],
+    "securityNote": "Güvenli operasyon platformu — WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
     "title": "Kontrol Paneli",
-    "subtitle": "Twenty ve Supabase'e bağlı CRM panosu olacak. Aşağıdaki kartlar rolünüze göre sunulan MVP modüllerini gösterir.",
+    "subtitle": "Rolünüze göre operasyon, finans, servis, belge ve rapor ekranları.",
     "closeMenu": "Menüyü kapat",
     "openMenu": "Menüyü aç",
     "logout": "Çıkış Yap",
-    "demoNotice": "Demo modu: Supabase kimlik doğrulaması yapılandırılmamış. Farklı yetkileri önizlemek için Giriş sayfasından başka bir rol seçin.",
+    "activePortfolio": "Aktif portföy",
     "menu": {
-      "listings": "İlanlar",
+      "dashboard": "Genel Bakış",
+      "listings": "Daire Matrisi",
       "leads": "Müşteri Adayları",
-      "tickets": "Talepler",
-      "calendar": "Takvim",
-      "eids_compliance": "EİDS & Uyumluluk",
-      "finance": "Finans & Döviz",
+      "tickets": "Servis Talepleri",
+      "calendar": "Rezervasyon",
+      "eids_compliance": "Erişim & Uyum",
+      "finance": "Finans & Aidat",
       "documents": "Belgeler",
       "reports": "Raporlar",
+      "communications": "İletişim",
       "users": "Kullanıcılar & Roller",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "deals": "İş Akışları",
+      "offline_sync": "Offline Senkron"
     },
     "modules": {
       "activeListings": "Aktif İlanlar",
       "openLeads": "Açık Adaylar",
       "tickets": "Bakım Talepleri",
       "activeDeals": "Devam Eden İşlemler",
-      "twentyHint": "Twenty + Supabase bağlantısı sonrası",
+      "twentyHint": "Operasyon bağlantısı",
       "leadsHint": "Lead yönetimi",
       "ticketsHint": "Fotoğraflı ticketlar",
       "dealsHint": "Satış / kiralama pipeline"
-    },
-    "roadmapTitle": "Yol Haritası Modülleri",
-    "roadmapSubtitle": "Bu özellikler sonraki fazlarda eklenecek; arayüzde yerleri hazır.",
-    "roadmap": {
-      "whatsapp": "WhatsApp / Telegram Entegrasyonu",
-      "voip": "In-app VoIP & Video Görüşme",
-      "ai": "AI Lead Asistanı",
-      "airbnb": "Airbnb / Booking Sync",
-      "kbs": "Otomatik KBS/e-GUEST",
-      "offline": "Offline Saha Modu"
     },
     "signedInAs": "{role} olarak giriş yapıldı",
     "comingSoon": "Yakında",
@@ -388,27 +264,19 @@
     "permissionsSubtitle": "Rolünüze göre görünen modüller"
   },
   "roles": {
-    "superAdmin": "Süper Admin",
-    "companyAdmin": "Şirket Admini",
-    "manager": "Müdür",
-    "salesConsultant": "Satış Danışmanı",
-    "listingAgent": "İlan Danışmanı",
-    "propertyManager": "Property Manager",
-    "accountant": "Muhasebeci",
-    "maintenance": "Teknisyen",
-    "client": "Müşteri / Malik",
-    "viewer": "Sadece Görüntüleyici",
+    "admin": "Yönetim",
+    "manager": "Sorumlu",
+    "accountant": "Muhasebe",
+    "staff": "Personel",
+    "owner": "Malik",
+    "tenant": "Kiracı",
     "descriptions": {
-      "superAdmin": "Platform operatörü. Şirketleri, genel ayarları ve faturalandırmayı yönetir.",
-      "companyAdmin": "Şirket sahibi/yöneticisi. Kullanıcılara, finansa ve ayarlara tam erişim.",
-      "manager": "Ofis/şube müdürü. İlan ve işlem onaylar, ekibi yönetir.",
-      "salesConsultant": "Alıcı/kiracı danışmanı. Adayları, gezintileri ve teklifleri yönetir.",
-      "listingAgent": "İlan danışmanı. İlan oluşturur, malikleri ve EİDS belgelerini yönetir.",
-      "propertyManager": "Kiralama/property manager. Kiracıları, bakımı ve kiralama işlemlerini yönetir.",
-      "accountant": "Finans sorumlusu. Faturaları, komisyonları ve malik raporlarını yönetir.",
-      "maintenance": "Teknisyen. Kendine atanmış bakım taleplerini görür ve günceller.",
-      "client": "Harici malik veya alıcı. Sadece kendi mülk ve belgelerini görür.",
-      "viewer": "Sadece görüntüleyen stajyer veya sekreter. Veriyi görür ama düzenleyemez."
+      "admin": "Sistemin tamamından sorumlu yönetim rolü. Kullanıcılar, ayarlar, finans, erişim ve audit kontrollerini yönetir.",
+      "manager": "Saha ve operasyon sorumlusu. Servis, görev, personel, rezervasyon, iletişim ve günlük riskleri takip eder.",
+      "accountant": "Buchhaltung/finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
+      "staff": "Mitarbeiter/personel rolü. Atanan işleri kabul eder, işi kapatır, fotoğraf/video raporu ekler.",
+      "owner": "Eigentümer/malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
+      "tenant": "Mieter/kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, chat, bildirim ve belgeleri görür."
     }
   },
   "login": {
@@ -419,26 +287,22 @@
     "password": "Şifre",
     "passwordPlaceholder": "••••••••",
     "submit": "Giriş Yap",
-    "authNote": "Supabase ile kimlik doğrulama, proje yapılandırması tamamlandığında etkinleştirilecektir.",
+    "authNote": "E-posta ve şifrenizle giriş yapın. Yetki profilleri yerel erişim kontrolü için kullanılabilir.",
     "backHome": "← Ana sayfaya dön",
-    "demoTitle": "Demo olarak dene",
     "roles": {
-      "super_admin": "Süper Admin",
-      "company_admin": "Şirket Admini",
-      "manager": "Müdür",
-      "sales_consultant": "Satış Danışmanı",
-      "listing_agent": "İlan Danışmanı",
-      "property_manager": "Property Manager",
-      "accountant": "Muhasebeci",
-      "maintenance": "Teknisyen",
-      "client": "Müşteri / Malik",
-      "viewer": "Sadece Görüntüleyici"
+      "admin": "Yönetim",
+      "manager": "Sorumlu",
+      "accountant": "Muhasebe",
+      "staff": "Personel",
+      "owner": "Malik",
+      "tenant": "Kiracı"
     },
-    "demoError": "Demo girişi başarısız oldu. Lütfen tekrar deneyin.",
-    "demoDescription": "Kontrol panelini o rolün yetki setiyle önizlemek için aşağıdan bir rol seçin.",
-    "authReady": "Supabase kimlik doğrulaması etkin. E-posta ve şifrenizle giriş yapabilirsiniz.",
+    "authReady": "Kimlik doğrulaması aktif. E-posta ve şifrenizle giriş yapabilirsiniz.",
     "authError": "Giriş başarısız. Bilgileri kontrol edip tekrar deneyin.",
-    "demoUnavailable": "Demo girişi gerçek Supabase kimlik doğrulaması etkin olduğunda kapalıdır."
+    "accessTitle": "Yetki profiliyle giriş",
+    "accessDescription": "Rol bazlı paneli açmak için aşağıdan yetki profilinizi seçin.",
+    "accessUnavailable": "Yetki profili seçimi yalnızca yetkili ortamlarda kullanılabilir.",
+    "accessError": "Yetki profiliyle giriş başarısız oldu. Lütfen tekrar deneyin."
   },
   "theme": {
     "toggle": "Temayı değiştir"
@@ -472,7 +336,7 @@
   },
   "reviews": {
     "title": "Müşteri Yorumları",
-    "intro": "Demo sürecinde alınan ilk geri bildirimlerden örnek yorumlar.",
+    "intro": "Operasyon ekiplerinden ve mülk sahiplerinden alınan ürün geri bildirimleri.",
     "items": {
       "0": {
         "quote": "Artık müşteri mesajları ve bakım talepleri tek yerde. Ekip olarak çok daha hızlı hareket ediyoruz.",
@@ -494,7 +358,9 @@
   "dataTable": {
     "search": "Ara...",
     "count": "{count} kayıt",
-    "empty": "Sonuç bulunamadı"
+    "empty": "Sonuç bulunamadı",
+    "previous": "Önceki",
+    "next": "Sonraki"
   },
   "dashboardHome": {
     "loading": "Kontrol paneli hazırlanıyor...",
@@ -536,7 +402,7 @@
   "aiAssistant": {
     "open": "AI asistanını aç",
     "close": "AI asistanını kapat",
-    "subtitle": "Demo verileriyle yanıtlar",
+    "subtitle": "Operasyon verileriyle yanıtlar",
     "welcome": "Merhaba {role}. Bugün hangi operasyonu hızlandıralım?",
     "placeholder": "Adaylar, EİDS, bakım veya gelir hakkında sorun...",
     "send": "Gönder"
@@ -745,16 +611,12 @@
         "deals": "Aktif İşlem"
       },
       "roles": {
-        "super_admin": "Süper Admin",
-        "company_admin": "Şirket Admini",
-        "manager": "Müdür",
-        "sales_consultant": "Satış Danışmanı",
-        "listing_agent": "İlan Danışmanı",
-        "property_manager": "Property Manager",
-        "accountant": "Muhasebeci",
-        "maintenance": "Teknisyen",
-        "client": "Müşteri / Malik",
-        "viewer": "Sadece Görüntüleyici"
+        "admin": "Yönetim",
+        "manager": "Sorumlu",
+        "accountant": "Muhasebe",
+        "staff": "Personel",
+        "owner": "Malik",
+        "tenant": "Kiracı"
       }
     },
     "settings": {
@@ -779,5 +641,130 @@
         "desc": "Açık, koyu veya sistem temasını seçin."
       }
     }
+  },
+  "platformWorkflow": {
+    "title": "ERP iş akışı görünümü",
+    "subtitle": "Aşağıdaki çalışma alanı, CRM, daire matrisi, servis, finans ve takvim ekiplerinin aynı kayıt üzerinden nasıl çalıştığını gösterir.",
+    "tabs": {
+      "crm": "CRM",
+      "listings": "İlanlar",
+      "tickets": "Talepler",
+      "calendar": "Takvim"
+    },
+    "crm": {
+      "name": "CRM",
+      "columns": [
+        "Aday",
+        "Durum",
+        "Kaynak",
+        "Temsilci"
+      ],
+      "rows": [
+        [
+          "Anna K. - Alanya daire",
+          "Sıcak",
+          "WhatsApp",
+          "Mehmet"
+        ],
+        [
+          "Sergey P. - Villa",
+          "Yeni",
+          "Web form",
+          "Ayşe"
+        ],
+        [
+          "Li W. - Yatırım",
+          "Görüşme",
+          "Referans",
+          "Can"
+        ]
+      ]
+    },
+    "listings": {
+      "name": "İlanlar",
+      "columns": [
+        "İlan",
+        "Fiyat",
+        "EİDS",
+        "Durum"
+      ],
+      "rows": [
+        [
+          "Villa #4021 - Kargıcak",
+          "€ 420.000",
+          "Onaylı",
+          "Aktif"
+        ],
+        [
+          "Daire #1847 - Mahmutlar",
+          "€ 95.000",
+          "Bekliyor",
+          "Aktif"
+        ],
+        [
+          "Penthouse #990 - Alanya",
+          "€ 310.000",
+          "Onaylı",
+          "Rezerve"
+        ]
+      ]
+    },
+    "tickets": {
+      "name": "Talepler",
+      "columns": [
+        "Talep",
+        "Öncelik",
+        "Son Güncelleme"
+      ],
+      "rows": [
+        [
+          "Su kaçağı - Villa #4021",
+          "Yüksek",
+          "2 saat önce"
+        ],
+        [
+          "Klima bakımı - Daire #1847",
+          "Orta",
+          "Dün"
+        ],
+        [
+          "Boyama - Penthouse #990",
+          "Düşük",
+          "3 gün önce"
+        ]
+      ]
+    },
+    "calendar": {
+      "name": "Takvim",
+      "columns": [
+        "Saat",
+        "Etkinlik",
+        "Yer"
+      ],
+      "rows": [
+        [
+          "10:00",
+          "Villa turu - Anna K.",
+          "Kargıcak"
+        ],
+        [
+          "14:00",
+          "Tapu randevusu",
+          "Alanya Tapu"
+        ],
+        [
+          "16:30",
+          "Bakım kontrolü",
+          "Mahmutlar"
+        ]
+      ]
+    }
+  },
+  "dashboardRefresh": {
+    "refresh": "Veriyi yenile",
+    "refreshing": "Yenileniyor",
+    "ready": "{source} hazır",
+    "retry": "Tekrar deneyin",
+    "sourceFallback": "Veri"
   }
 }

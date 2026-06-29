@@ -1,16 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface DashboardRefreshButtonProps {
   className?: string
+  onRefresh?: () => Promise<{ source?: string } | void> | { source?: string } | void
 }
 
 type RefreshState = "idle" | "loading" | "success" | "error"
 
-export function DashboardRefreshButton({ className }: DashboardRefreshButtonProps) {
+export function DashboardRefreshButton({
+  className,
+  onRefresh,
+}: DashboardRefreshButtonProps) {
+  const t = useTranslations("dashboardRefresh")
   const [state, setState] = useState<RefreshState>("idle")
   const [source, setSource] = useState<string | null>(null)
 
@@ -19,13 +25,18 @@ export function DashboardRefreshButton({ className }: DashboardRefreshButtonProp
     setSource(null)
 
     try {
-      const response = await fetch("/api/site-management/dashboard", {
-        cache: "no-store",
-      })
-      if (!response.ok) throw new Error("Dashboard refresh failed.")
+      if (onRefresh) {
+        const payload = await onRefresh()
+        setSource(payload?.source ?? "backend")
+      } else {
+        const response = await fetch("/api/site-management/dashboard", {
+          cache: "no-store",
+        })
+        if (!response.ok) throw new Error("Dashboard refresh failed.")
 
-      const payload = (await response.json()) as { source?: string }
-      setSource(payload.source ?? "backend")
+        const payload = (await response.json()) as { source?: string }
+        setSource(payload.source ?? "backend")
+      }
       setState("success")
     } catch {
       setState("error")
@@ -34,12 +45,12 @@ export function DashboardRefreshButton({ className }: DashboardRefreshButtonProp
 
   const statusLabel =
     state === "loading"
-      ? "Yenileniyor"
+      ? t("refreshing")
       : state === "success"
-        ? `${source ?? "Veri"} hazır`
+        ? t("ready", { source: source ?? t("sourceFallback") })
         : state === "error"
-          ? "Tekrar deneyin"
-          : "Veriyi yenile"
+          ? t("retry")
+          : t("refresh")
 
   return (
     <button

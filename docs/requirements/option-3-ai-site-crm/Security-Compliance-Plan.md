@@ -2,10 +2,10 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2  
-Date: 25 June 2026  
-Prepared for: Security, privacy, compliance and production readiness  
-Prepared by: 1Cati / Product and Engineering  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Security, privacy, compliance and production readiness
+Prepared by: 1Cati / Product and Engineering
 Reference baseline: KVKK-aware processing and OWASP ASVS-aligned controls
 
 ---
@@ -23,15 +23,20 @@ Reference baseline: KVKK-aware processing and OWASP ASVS-aligned controls
 |---|---|
 | Document type | Security And Compliance Plan |
 | Primary audience | Security, compliance, engineering, product and client leadership |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Security Control Model](assets/diagrams/security-01-security-control-model.png)
+- Security Control Model (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Security Baseline
+
+As of 26 June 2026, the repository includes RBAC/RLS-oriented migrations, protected dashboard routing, demo-auth fallback controls, audit-oriented tables and AI approval rules. Production still requires environment hardening, demo-auth removal or strict gating, RLS policy review, storage policy review, secrets review, backup/restore proof and client/legal sign-off for debt/access restrictions.
+
+This document is an engineering and delivery checklist, not a legal opinion.
 
 ## 1. Executive Summary
 
@@ -54,9 +59,9 @@ This plan is not a legal opinion. It is a delivery checklist for engineering, pr
 ## 3. Security Control Model
 
 <!-- DIAGRAM:security-01-security-control-model:BEGIN -->
-![Security Control Model](assets/diagrams/security-01-security-control-model.png)
+_Diagram: Security Control Model. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Security Control Model. Generated from the workflow source in this document._
+_Figure: Security Control Model. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -168,4 +173,3 @@ flowchart TD
 - Backup/restore drill is complete.
 - AI guardrail tests pass.
 - Legal/accounting review is complete for access, debt, payments, identity and retention.
-

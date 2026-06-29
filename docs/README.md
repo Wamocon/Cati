@@ -1,56 +1,74 @@
-# Dokumentationsstruktur
+# Documentation Hub
 
-Stand: 25. Juni 2026
+Status: active documentation map
+Last reviewed: 29 June 2026
+Confidentiality: STRICTLY CONFIDENTIAL
 
-## Aktive Management-Dokumentation
+Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 29 June 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
 
-Der zentrale fachliche Leitfaden fuer den aktuellen Kunden- und Projektkontext liegt hier:
+## Active Source-Of-Truth Documents
 
-- `client-new-level-premium/New-Level-Premium-CRM-Business-Blueprint-DE.docx`
+| Area | Document | Use |
+|---|---|---|
+| Project handbook | `PROJECT-HANDBOOK.md` | Single entry point for the whole project. |
+| Requirements package | `requirements/option-3-ai-site-crm/README.md` | Index for BRD, PRD, TRD, QA, security, migration and traceability. |
+| Business requirements | `requirements/option-3-ai-site-crm/BRD.md` | Business goals, workflows and market context. |
+| Product requirements | `requirements/option-3-ai-site-crm/PRD.md` | Product scope, personas, user stories and acceptance criteria. |
+| Technical requirements | `requirements/option-3-ai-site-crm/TRD.md` | Architecture, data model, APIs, integrations and controls. |
+| Third-party integrations and costs | `requirements/option-3-ai-site-crm/Third-Party-Integration-And-Vendor-Plan.md` | Provider shortlist, external dependency cost register, Supabase Cloud Pro, payments, SMS, email, wallet/top-up, access/security and monitoring. |
+| Delivery plan | `requirements/option-3-ai-site-crm/Implementation-Delivery-Plan.md` | Delivery phases, governance, risks and handover. |
+| Engineering plan | `ways-of-work/plan/option-3-ai-site-crm/implementation-plan.md` | Detailed implementation planning and feature inventory. |
+| Execution runbook | `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md` | Harness commands, QA loop and stop conditions. |
+| Local Supabase | `local-supabase.md` | Local database setup, seed login and cloud migration notes. |
+| Current DOCX package | `1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
 
-Dieses Dokument ist die primaere Lesefassung fuer Management, Vertrieb, Backoffice, Service, Finanzen und Projektleitung. Es beschreibt New Level Premium Avsallar Alanya, den aktuellen Umsetzungsstand, die fachlichen Luecken und die 15 umzusetzenden Geschaeftsphasen in einfacher deutscher Sprache.
+## Current Status Rule
 
-## Originale Kundenvorgaben und Eingaben
+For current delivery status, trust this order:
 
-Die vom Kunden oder aus der Analyse stammenden Ausgangsdokumente liegen gesammelt hier:
+1. `PROJECT-HANDBOOK.md`
+2. `requirements/option-3-ai-site-crm/README.md`
+3. `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md`
+4. Current code and scripts under `apps/web`, `supabase` and `scripts`
 
-- `source/client-inputs/`
+Files outside this map are not current project documentation.
 
-Diese Dateien sind Quellenmaterial. Sie sollen nicht geloescht werden, weil sie die fachliche Herleitung des Projekts belegen. Neue Rohdokumente oder extrahierte Texte aus Kundendateien gehoeren ebenfalls in diesen Ordner, nicht in das Repository-Hauptverzeichnis.
+## Stakeholder Reading Copies
 
-## Detailnachweise zu umgesetzten Phasen
+| Document | Status |
+|---|---|
+| `1Cati-Current-Project-Documentation.docx` | Current combined DOCX generated from the active Markdown set. |
 
-Die folgenden Dokumente bleiben als Detailnachweise fuer bereits gebaute Phasen erhalten:
+Stakeholder `.docx` files are reading copies. For requirements and technical changes, update Markdown first and regenerate exports only when needed.
 
-- `phase-delivery/de/phase-02-ux-ui-rollennavigation.docx`
-- `phase-delivery/de/phase-03-plattform-auth-rbac-audit.docx`
-- `phase-delivery/de/phase-04-site-import-datenmodell.docx`
-- `phase-delivery/de/phase-05-benutzer-rollen-personal.docx`
+## Source Material
 
-## Quellen- und Archivmaterial
+`source/client-inputs/` contains original client inputs and extracted text. These files are evidence, not editable active requirements. Do not rewrite them into a new active source of truth.
 
-Die alten BRD-, PRD-, TRD- und Annex-Dateien bleiben als Arbeits- und Archivmaterial erhalten:
+## QA And Evidence
 
-- `requirements/option-3-ai-site-crm/`
-- `ways-of-work/`
-- `archive/legacy-product-roadmap.md`
+| Location | Rule |
+|---|---|
+| `requirements/option-3-ai-site-crm/qa/*.md` | Documentation QA notes retained as Markdown only. |
+| Generated screenshots, previews and JSON reports | Do not keep in the repository. Regenerate them from scripts when needed. |
 
-Diese Dateien sind nicht mehr die erste Lesefassung fuer Stakeholder. Sie dienen als Nachweis, Quelle oder technische Vertiefung. Fuer externe Weitergabe soll zuerst der Master Blueprint genutzt werden. Dateien im Archiv koennen aeltere Formulierungen oder technische Rohfassung enthalten und sollen vor externer Nutzung ueberarbeitet werden.
+Current repeatable QA commands:
 
-## Bilder und QA
+```powershell
+pnpm phase:harness -- --profile smoke --max-attempts 2
+pnpm phase:06-09
+pnpm jira:sync -- --dry-run
+```
 
-- `phase-delivery/business-assets/`: Screenshots fuer Business-Dokumente.
-- `phase-delivery/assets/`: fruehere Phasenbilder.
-- `quality/browser-audit/`: Browser-QA-Berichte und Screenshots.
-- `quality/manual-qa/legacy-root-qa/`: alte manuelle QA-Screenshots, die vorher im Hauptverzeichnis lagen.
+`pnpm jira:sync` without `--dry-run` performs remote Jira/Xray writes and may attach confidential documents. Use it only after explicit approval.
 
-## Pflege-Regel
+## Cleanup Rules
 
-Neue stakeholderrelevante Informationen zu New Level Premium sollen zuerst im Master Blueprint ergaenzt werden. Detaildokumente koennen danach nachgezogen werden, damit keine widerspruechlichen Fassungen entstehen.
-
-## Aufraeum-Regeln
-
-- Keine DOCX-, PNG-, TXT- oder Analyse-Dateien im Repository-Hauptverzeichnis ablegen.
-- Temporäre Word-Dateien wie `~$*.docx`, `.tmp` oder `.bak` duerfen entfernt werden.
-- Exakte Duplikate duerfen entfernt werden, wenn eine gleichwertige Fassung erhalten bleibt.
-- Alte Anforderungen bleiben im Archiv, solange sie als Quelle oder Nachweis dienen.
+- No business DOCX, PNG, TXT, ZIP or QA exports in the repository root.
+- Markdown is canonical for requirements, technical, QA and delivery docs.
+- DOCX files are generated exports or stakeholder reading copies.
+- Generated diagrams, screenshots, HTML previews, JSON reports and extracted TXT duplicates are not kept.
+- Exact duplicate exports may be deleted after a canonical copy remains.
+- Temporary Word files such as `~$*.docx`, `.tmp`, `.bak` and generated ZIPs may be removed.
+- Do not keep archive folders or old phase-delivery evidence in the active docs tree.
+- Update this file and `PROJECT-HANDBOOK.md` whenever documentation ownership or structure changes.

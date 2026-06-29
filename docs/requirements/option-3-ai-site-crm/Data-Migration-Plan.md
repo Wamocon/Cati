@@ -2,10 +2,10 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2  
-Date: 25 June 2026  
-Prepared for: Data migration, import validation and launch readiness  
-Prepared by: 1Cati / Product and Engineering  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Data migration, import validation and launch readiness
+Prepared by: 1Cati / Product and Engineering
 Primary migration scope: 769 flats, owners, tenants, staff, opening balances, documents and operational history where available
 
 ---
@@ -23,15 +23,20 @@ Primary migration scope: 769 flats, owners, tenants, staff, opening balances, do
 |---|---|
 | Document type | Data Migration Plan |
 | Primary audience | Data migration, product, engineering, finance and client operations |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Migration Workflow](assets/diagrams/migration-01-migration-workflow.png)
+- Migration Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Migration Baseline
+
+As of 26 June 2026, local Supabase migrations and seed data exist for realistic development and review. Production migration still requires client-approved source files, mapping sign-off, reconciliation, cloud Supabase setup, RLS/security verification and UAT acceptance.
+
+Do not treat seeded local data as final production data.
 
 ## 1. Executive Summary
 
@@ -44,9 +49,9 @@ Historical data should be migrated only where it has business value and acceptab
 ## 2. Migration Workflow
 
 <!-- DIAGRAM:migration-01-migration-workflow:BEGIN -->
-![Migration Workflow](assets/diagrams/migration-01-migration-workflow.png)
+_Diagram: Migration Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Migration Workflow. Generated from the workflow source in this document._
+_Figure: Migration Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -160,4 +165,3 @@ The migration cannot be accepted by file count alone. It needs reconciliation re
 - Import errors are visible and resolved or accepted.
 - Sensitive documents are not publicly accessible.
 - Migration report is stored with source file versions and sign-off.
-

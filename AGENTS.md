@@ -6,10 +6,9 @@
 
 ## Projektübersicht
 
-Dieses Repository enthält **zwei klar getrennte Deliverables** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
+Dieses Repository enthält **ein zentrales Produkt-Deliverable** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
 
-1. **`apps/pitch/`** — Eine statische HTML-Verkaufspräsentation / das Angebot an den Kunden. Sie erklärt das CRM-System, visualisiert die Probleme türkischer Property Manager mit Zahlen/Daten/Fakten und bietet dann die Lösung. Sie sagt ehrlich, was das System aktuell kann und was noch auf der Roadmap liegt.
-2. **`apps/web/`** — Die eigentliche Next.js-Anwendung: eine modernisierte Ataberk-Landingpage (primär Türkisch) mit integriertem Login/Auth sowie dem CRM-Portal dahinter.
+1. **`apps/web/`** — Die eigentliche Next.js-Anwendung: öffentliche ERP-Produktseiten, integrierter Login/Auth sowie das rollenbasierte CRM-/ERP-Portal dahinter.
 
 - **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer, Verkäufer, Eigentümer; lokale Betriebssprache Türkisch)
 - **Durchführung / Beratung:** WAMOCON GmbH
@@ -17,7 +16,6 @@ Dieses Repository enthält **zwei klar getrennte Deliverables** für die digital
 - **Mandanten-Website:** https://www.ataberkestate.com/
 - **Immobilienbestand:** 212.298+ Objekte in der Datenbank
 - **Live-Web-App:** https://cati-blond.vercel.app
-- **Live-Pitch:** https://cati-pitch.vercel.app
 - **CRM-Kern:** Twenty CRM (Open Source, AGPL-3.0)
 - **Auth & Datenbank:** Supabase (PostgreSQL, Auth, Realtime, Storage)
 - **Frontend:** Next.js 16, React 19, TypeScript 5, Tailwind CSS v4, shadcn/ui
@@ -27,13 +25,10 @@ Dieses Repository enthält **zwei klar getrennte Deliverables** für die digital
 ```
 Cati/
 ├── apps/
-│   ├── pitch/              # Statisches HTML-Angebot / Pitch (englisch)
-│   │   ├── index.html
-│   │   └── assets/
-│   └── web/                # Next.js App (Landingpage + CRM-Portal)
+│   └── web/                # Next.js App (Produktseite + CRM-/ERP-Portal)
 │       ├── app/            # App Router
 │       │   ├── sections/   # Landingpage-Sektionen
-│       │   ├── dashboard/  # CRM-Portal-Platzhalter
+│       │   ├── dashboard/  # CRM-Portal und 15-Phasen-ERP-Dashboard
 │       │   └── login/      # Auth-Login-Seite
 │       ├── components/     # React-Komponenten
 │       ├── lib/            # Hilfsfunktionen (Supabase, i18n, RBAC)
@@ -44,22 +39,20 @@ Cati/
 │   └── ui/                 # Optionale geteilte shadcn/ui-Komponenten
 ├── twenty/                 # Twenty CRM Self-Hosting (Docker Compose)
 ├── supabase/               # Supabase Migrations, Seed, RLS-Policies
-├── docs/                   # Architektur-, Produkt- und QA-Dokumentation
-│   ├── product-roadmap.md  # Mapping realer Marktprobleme → Features
-│   └── qa-report-*.md      # Playwright QA-Berichte inkl. Screenshots
-├── wmc_report.md           # Strategiepapier (bestehend)
-├── WMC_Anforderung_1Çatı.docx
-├── 1cati_strategiepapier.docx
+├── docs/                   # Projekt-, Produkt-, Technik-, QA- und Übergabedokumentation
+│   ├── README.md           # Dokumentationskarte und Pflege-Regeln
+│   ├── PROJECT-HANDBOOK.md # Zentrale Projektübersicht / Main Handbook
+│   ├── requirements/option-3-ai-site-crm/
+│   │   ├── README.md       # Index für BRD, PRD, TRD, Security, QA, Migration
+│   │   ├── BRD.md
+│   │   ├── PRD.md
+│   │   └── TRD.md
+│   ├── source/client-inputs/ # Originale Kundenvorgaben und extrahierte Texte
+│   ├── ways-of-work/       # Implementierungsplan und Phase-Execution-Runbook
 └── AGENTS.md               # Diese Datei
 ```
 
-## Wichtige Unterscheidung: Pitch vs. Produkt
-
-### `apps/pitch/index.html`
-- **Zweck:** Verkaufsdokument an Entscheider bei Ataberk Estate.
-- **Inhalt:** Problem → Marktrealität → Lösung → Ehrlicher Scope → Roadmap/Investment.
-- **Sprache:** Englisch (leicht verständlich für internationale Stakeholder).
-- **Deployment:** Statisch auf Vercel, `https://cati-pitch.vercel.app`.
+## Produktstruktur
 
 ### `apps/web/`
 - **Zweck:** Öffentliche Landingpage (transformierter Ataberk-Content) + geschütztes CRM-Portal.
@@ -83,7 +76,7 @@ Cati/
 - **Aurora-Hintergründe** animierte, verschwommene Gradient-Kugeln (CSS-only, `prefers-reduced-motion` beachtet).
 - **Bento-Grid** Layouts für Problem-, Lösungs-, Service- und Compliance-Sektionen.
 - **BuildingIllustration** realistische SVG-Gebäude-Illustration im Hero (`components/building-illustration.tsx`), themenfähig und animiert.
-- **DashboardPreview** SVG-Produktvorschau in der Platform-Demo (`components/dashboard-preview.tsx`).
+- **DashboardPreview** SVG-Produktvorschau im Platform-Workflow (`components/dashboard-preview.tsx`).
 - **3D HyperFrame** (veraltet) wurde durch `BuildingIllustration` ersetzt.
 - **Kinetic Typography** animierte Wort-für-Wort-Überschriften (`components/kinetic-headline.tsx`).
 - **Scroll-Reveal** Eintrittsanimationen via `components/scroll-reveal.tsx`.
@@ -102,12 +95,13 @@ Cati/
 - Erweiterung um Property-Management-Objekte: `Property`, `Unit`, `Lead`, `Opportunity`, `Lease`, `Booking`, `MaintenanceTicket`, `Contractor`, `Document`, `Appointment`, `Message`
 
 ### Testing & QA
-- **Vitest** für Unit-Tests
 - **Playwright** für E2E-Tests und visuelle QA (siehe `apps/web/e2e/`)
-- **Lighthouse** für Performance, A11y, SEO
+- **TypeScript / ESLint / Next build** als aktuelle technische Quality Gates
+- **Phase-Harnesses** (`scripts/phase-harness.mjs`, `scripts/phase-06-09-harness.mjs`) für wiederholbare Build-, Browser- und QA-Schleifen
+- **Lighthouse** ist als Performance-/A11y-/SEO-Gate sinnvoll, aber derzeit kein fest verdrahtetes Package-Script
 
 ### Deployment
-- **Vercel** für beide Apps
+- **Vercel** für `apps/web`
 - **Turborepo** / `pnpm workspaces` für das Monorepo
 
 ## Build-Befehle
@@ -125,8 +119,6 @@ pnpm --filter cati-web build    # Produktionsbuild
 pnpm --filter cati-web lint     # Linting
 pnpm --filter cati-web typecheck
 
-# apps/pitch
-npx serve apps/pitch            # Lokale Vorschau des Pitches
 ```
 
 ## Entwicklungskonventionen
@@ -146,22 +138,22 @@ npx serve apps/pitch            # Lokale Vorschau des Pitches
 - **RBAC** Rollenbasierte Zugriffssteuerung für alle Module definiert (`apps/web/lib/rbac.ts`) und in der Datenbank gespiegelt (`supabase/migrations/00000000000001_rbac.sql`).
 - **Route-Guards** über `apps/web/proxy.ts` (Next.js 16 Proxy): Session-Refresh, Locale-Routing und Weiterleitung nicht authentifizierter Benutzer von `/dashboard` zu `/login`.
 - **Dashboard** filtert Sidebar und KPI-Karten basierend auf der aktuellen Rolle (`useUser` / `UserProvider`).
-- **Demo-Anmeldung** funktioniert auch ohne Supabase-Env-Vars: Login-Seite zeigt alle 10 Rollen mit Beschreibung. Klick setzt ein `demo_role`-Cookie und leitet zum Dashboard weiter, um jede Rolle zu testen. Sobald `NEXT_PUBLIC_SUPABASE_URL` + `ANON_KEY` gesetzt sind, wird echte Auth genutzt.
+- **Lokale Access-Profile** funktionieren nur in kontrollierten lokalen/QA-Umgebungen: Login-Seite zeigt Rollen mit Beschreibung. Klick setzt ein `access_profile_role`-Cookie und leitet zum Dashboard weiter, um RBAC zu prüfen. In Produktion bleibt echte Auth maßgeblich.
 - **Secrets** niemals committen (`.env*` ist in `.gitignore`).
 - **OAuth-Keys**, **Supabase service role key**, **Twilio**, **Cal.com**-Keys über Vercel Environment Variables injizieren.
 - **Twenty-AGPL:** Modifikationen bleiben im internen Betrieb des Mandanten; keine Distribution.
 
 ## Nächste Schritte (laufend)
 
-1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Demo-Fallback deaktivieren, sobald echte Auth live ist.
-2. CRM-Datenmodell in Supabase/Twenty aufbauen (Properties, Leads, Tickets, Documents).
-3. Dashboard-Module mit echten Daten verbinden.
-4. MVP-Module für EİDS-Tracking, Compliance-Checklisten und Mehrwährung implementieren.
-5. Server Actions / API-Routen mit rollenbasierten Prüfungen (`hasPermission`) absichern.
-6. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen und QA-Bericht in `docs/` pflegen.
+1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) und lokale Access-Profile in Produktion deaktiviert lassen.
+2. Lokales Supabase-CRM-Datenmodell mit echten Kundendaten verifizieren und fehlende Produktionsfelder ergänzen.
+3. Dashboard-Module vollständig mit Produktionsdaten, Server Actions/API-Routen und rollenbasierten Prüfungen verbinden.
+4. EİDS-, Compliance-, Mehrwährungs-, Zahlungs-, Zugangs- und Integrationsworkflows produktionsreif mit echten Anbieterentscheidungen und QA-Gates abschließen.
+5. UAT, Security-/RLS-Prüfung, Datenmigration, Backup/Restore und Launch-Runbook mit dem Kunden abnehmen.
+6. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen; lokale Rohartefakte nicht behalten, aktuelle Nachweise gehören nur als gepflegte Markdown- oder DOCX-Lesefassung in die aktive `docs/`-Struktur.
 
 ## Hinweis für Agenten
 
 - Nicht löschen oder veröffentlichen — Inhalte sind vertraulich.
-- Änderungen an `AGENTS.md` müssen bei Architektur- oder Strukturänderungen nachgeführt werden.
+- Änderungen an `AGENTS.md`, `docs/README.md` und `docs/PROJECT-HANDBOOK.md` müssen bei Architektur-, Struktur- oder Dokumentationsänderungen nachgeführt werden.
 - Vor größeren Architekturentscheidungen einen Plan erstellen und absegnen lassen.

@@ -2,6 +2,7 @@
 
 import { Mail, Phone } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { Link } from "@/app/navigation"
 
 export function TopBar() {
   const t = useTranslations("topBar")
@@ -25,14 +26,12 @@ export function TopBar() {
             <span>{t("email")}</span>
           </a>
         </div>
-        <a
-          href="https://www.ataberkestate.com/sites/default/files/ataberkestate.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/platform"
           className="flex items-center gap-1.5 font-medium text-primary transition-colors hover:text-primary/80"
         >
-          <span>{t("presentation")}</span>
-        </a>
+          <span>{t("platformLink")}</span>
+        </Link>
       </div>
     </div>
   )

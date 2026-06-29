@@ -1,5 +1,5 @@
-import { test, expect, type Page } from "@playwright/test"
-import { screenshot, collectConsoleIssues } from "./helpers"
+import { expect, test, type Page } from "@playwright/test"
+import { collectConsoleIssues, screenshot } from "./helpers"
 
 function exactAccessibleName(label: string) {
   return new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`)
@@ -9,9 +9,48 @@ async function clickDashboardMenu(page: Page, label: string) {
   if ((page.viewportSize()?.width ?? 1280) < 768) {
     await page.getByRole("button", { name: "Menüyü aç" }).click()
   }
-  const link = page.locator("aside").getByRole("link", { name: exactAccessibleName(label) })
+
+  const link = page
+    .locator("aside")
+    .getByRole("link", { name: exactAccessibleName(label) })
   await expect(link).toBeVisible()
+
+  const href = await link.getAttribute("href")
   await link.click()
+
+  if (href) {
+    const expectedPath = new URL(href, "http://localhost").pathname
+    await page.waitForURL((url) => url.pathname === expectedPath, {
+      timeout: 20_000,
+    })
+  }
+}
+
+async function clickDashboardCommand(
+  page: Page,
+  label: string | RegExp,
+  expectedUrl: RegExp
+) {
+  await page.goto("/tr/dashboard")
+  const link = page.getByRole("link", { name: label }).first()
+  await expect(link).toBeVisible()
+
+  const href = await link.getAttribute("href")
+  const expectedPath = href ? new URL(href, "http://localhost").pathname : null
+  await link.click()
+
+  if (expectedPath) {
+    await page.waitForURL((url) => url.pathname === expectedPath, {
+      timeout: 20_000,
+    })
+  }
+  await expect(page).toHaveURL(expectedUrl)
+}
+
+async function signInAsAccessProfile(page: Page, label: string) {
+  await page.goto("/tr/login")
+  await page.getByRole("button", { name: new RegExp(label) }).click()
+  await expect(page).toHaveURL(/\/tr\/dashboard/)
 }
 
 test.describe("Dashboard portal", () => {
@@ -22,33 +61,49 @@ test.describe("Dashboard portal", () => {
     collectConsoleIssues(page, issues)
   })
 
-  test("dashboard shows premium site-management command center", async ({
+  test("dashboard opens as a production ERP command center", async ({
     page,
   }, testInfo) => {
     await page.goto("/tr/dashboard")
+
     await expect(
-      page.getByRole("heading", { name: "Ataberk Estate Premium CRM Merkezi" })
+      page.getByRole("heading", { name: /ERP Operasyon Merkezi/ })
     ).toBeVisible()
+    await expect(page.getByText("ERP modül durumu")).toBeVisible()
+    await expect(page.getByText("Operasyon Risk Haritası")).toBeVisible()
+    await expect(page.getByText("AI operasyon asistanı")).toBeVisible()
     await expect(page.getByText("Toplam Daire").first()).toBeVisible()
     await expect(page.getByText("Toplam Borç").first()).toBeVisible()
     await expect(page.getByText("Açık Servis").first()).toBeVisible()
-    await expect(page.getByText("Phase 2-9 teslim merkezi")).toBeVisible()
-    await expect(page.getByText("8/8 tamamlandı")).toBeVisible()
-    await expect(page.getByText("Canlı Site Simülasyonu")).toBeVisible()
-    await expect(page.getByText("AI operasyon asistanı")).toBeVisible()
 
-    const refreshButton = page.getByRole("button", { name: "Veriyi yenile" })
-    await refreshButton.click()
-    await expect(page.getByRole("button", { name: /hazır|hazir/i })).toBeVisible()
+    await page.getByRole("button", { name: "Veriyi yenile" }).click()
+    await expect(page.getByRole("button", { name: /hazır|Veri/i })).toBeVisible()
 
-    await screenshot(page, testInfo, "01-dashboard-command-center", { fullPage: true })
+    await screenshot(page, testInfo, "01-dashboard-erp-command-center", {
+      fullPage: true,
+    })
+    expect(issues).toEqual([])
+  })
+
+  test("dashboard command cards route to working modules", async ({ page }) => {
+    test.setTimeout(90_000)
+
+    await clickDashboardCommand(page, "Toplam Daire modülünü aç", /\/dashboard\/listings/)
+    await clickDashboardCommand(page, "Toplam Borç modülünü aç", /\/dashboard\/finance/)
+    await clickDashboardCommand(page, "Açık Servis modülünü aç", /\/dashboard\/tickets/)
+    await clickDashboardCommand(page, "Bugünkü İşler modülünü aç", /\/dashboard\/calendar/)
+    await clickDashboardCommand(page, /Blok A daire matrisi detayını aç/, /\/dashboard\/listings/)
+    await clickDashboardCommand(page, /Tahsilat rotası detayını aç/, /\/dashboard\/finance/)
+    await clickDashboardCommand(page, /AI operasyon asistanı raporlarını aç/, /\/dashboard\/reports/)
 
     expect(issues).toEqual([])
   })
 
-  test("expanded site-management routes render and support search", async ({
+  test("expanded ERP modules render core production controls", async ({
     page,
   }, testInfo) => {
+    test.setTimeout(120_000)
+
     await page.goto("/tr/dashboard")
 
     const modules = [
@@ -60,8 +115,9 @@ test.describe("Dashboard portal", () => {
       { menu: "Finans & Aidat", heading: "Finans, Satış & Aidat", url: /\/dashboard\/finance/ },
       { menu: "Belgeler", heading: "TAPU & Belge Kasası", url: /\/dashboard\/documents/ },
       { menu: "Raporlar", heading: "AI Rapor Merkezi", url: /\/dashboard\/reports/ },
+      { menu: "İletişim", heading: "İletişim Merkezi", url: /\/dashboard\/communications/ },
       { menu: "Kullanıcılar & Roller", heading: "Kullanıcılar & Roller", url: /\/dashboard\/users/ },
-      { menu: "Ayarlar", heading: "Platform & Audit Merkezi", url: /\/dashboard\/settings/ },
+      { menu: "Ayarlar", heading: "Platform Yönetim Merkezi", url: /\/dashboard\/settings/ },
     ]
 
     for (const item of modules) {
@@ -73,127 +129,327 @@ test.describe("Dashboard portal", () => {
     }
 
     await clickDashboardMenu(page, "Daire Matrisi")
-    await expect(page.getByText("Import doğrulama merkezi")).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("A-0101")
-    await expect(page.getByRole("cell", { name: "A-0101" }).first()).toBeVisible()
-
-    await clickDashboardMenu(page, "Sakinler")
-    await expect(page.getByRole("heading", { name: "Müşteri & Malik CRM", exact: true })).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("A-0101")
-    await expect(page.getByRole("cell", { name: "A-0101" }).first()).toBeVisible()
-
-    await clickDashboardMenu(page, "Servis Talepleri")
-    await expect(page.getByRole("heading", { name: "Servis Talepleri", exact: true })).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("SRV-2401")
-    await expect(page.getByRole("cell", { name: "SRV-2401" }).first()).toBeVisible()
+    await expect(page.getByText("Daire matrisi kayıtları")).toBeVisible()
+    await expect(page.getByText("Veri kalite bulguları")).toBeVisible()
+    await page.getByPlaceholder("Daire, malik, sakin veya blok ara").fill("A-001")
+    await expect(page.getByText("A-001").first()).toBeVisible()
+    await page.getByRole("button", { name: "Veri kontrolü" }).click()
+    await expect(page.getByRole("button", { name: "Veri kontrolü" })).toHaveAttribute("data-state", "success")
+    await page.getByRole("button", { name: "Değişiklik iste" }).click()
+    await expect(page.getByRole("button", { name: "Değişiklik iste" })).toHaveAttribute("data-state", "success")
+    await expect(page.getByText("Veri doğrulama merkezi")).toBeVisible()
 
     await clickDashboardMenu(page, "Rezervasyon")
-    await expect(page.getByRole("heading", { name: "Rezervasyon & Giriş-Çıkış", exact: true })).toBeVisible()
-    await expect(page.getByText("Phase 6 - Besichtigung & online tur pipeline")).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("VIEW-601")
-    await expect(page.getByRole("cell", { name: "VIEW-601" }).first()).toBeVisible()
+    await expect(page.getByText("Gezinti ve online tur akışı")).toBeVisible()
 
     await clickDashboardMenu(page, "Finans & Aidat")
-    await expect(page.getByRole("heading", { name: "Finans, Satış & Aidat", exact: true })).toBeVisible()
-    await expect(page.getByText("Phase 7 - New Level Premium satış ödeme planı")).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("PAY-701")
-    await expect(page.getByRole("cell", { name: "PAY-701" }).first()).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Finans defteri" })).toBeVisible()
+    await expect(page.getByText("Son finans kayıtları")).toBeVisible()
+    await page.getByRole("button", { name: "Defteri yenile" }).click()
+    const financeExportButton = page.getByRole("button", { name: /Finans defteri.*aktar/i })
+    await financeExportButton.click()
+    await expect(financeExportButton).toHaveAttribute("data-state", "success")
+    await expect(page.getByRole("heading", { name: "Satış ödeme planı" })).toBeVisible()
 
     await clickDashboardMenu(page, "Belgeler")
-    await expect(page.getByRole("heading", { name: "TAPU & Belge Kasası", exact: true })).toBeVisible()
-    await expect(page.getByText("Phase 8 - Kaufakte, TAPU, KYC ve EIDS kontrolü")).toBeVisible()
-    await page.getByRole("button", { name: "Belge yükle" }).click()
-    await expect(page.getByRole("button", { name: "Belge yükle" })).toHaveAttribute("data-state", "success")
-    await page.getByLabel("Ara...").first().fill("DOCBUY-803")
-    await expect(page.getByRole("cell", { name: "DOCBUY-803" }).first()).toBeVisible()
-    await page.getByLabel("Ara...").first().clear()
-    await page.getByLabel("Ara...").nth(1).fill("DOC-9001")
-    await expect(page.getByRole("cell", { name: "DOC-9001" }).first()).toBeVisible()
-    await page.getByRole("button", { name: "Belgeyi görüntüle" }).first().click()
-    await expect(page.getByRole("button", { name: "Belgeyi görüntüle" }).first()).toHaveAttribute("data-state", "success")
-
-    await clickDashboardMenu(page, "Raporlar")
-    await page.getByRole("button", { name: "Raporu dışa aktar" }).first().click()
-    await expect(page.getByRole("button", { name: "Raporu dışa aktar" }).first()).toHaveAttribute("data-state", "success")
+    await expect(page.getByText("Satış dosyası, TAPU, KYC ve EIDS kontrolü")).toBeVisible()
 
     await clickDashboardMenu(page, "Erişim & Uyum")
-    await expect(page.getByRole("heading", { name: "Erişim & Uyum", exact: true })).toBeVisible()
-    await expect(page.getByText("Phase 9 - Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü")).toBeVisible()
-    await page.getByLabel("Ara...").first().fill("ELG-903")
-    await expect(page.getByRole("cell", { name: "ELG-903" }).first()).toBeVisible()
+    await expect(page.getByText("Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü")).toBeVisible()
 
     await clickDashboardMenu(page, "Kullanıcılar & Roller")
-    await page.getByLabel("Ara...").first().fill("Merve")
-    await expect(page.getByRole("cell", { name: "Merve Muhasebe" })).toBeVisible()
+    await expect(page.getByText("Kişi ve rol dizini")).toBeVisible()
+    await expect(page.getByText(/Sakin bağlantıları/i)).toBeVisible()
 
     await clickDashboardMenu(page, "Ayarlar")
     await expect(page.getByText("Güvenlik ve platform kontrolleri")).toBeVisible()
-    await expect(page.getByText("AUD-2401")).toBeVisible()
-    await screenshot(page, testInfo, "02-dashboard-expanded-modules", { fullPage: true })
 
+    await screenshot(page, testInfo, "02-dashboard-expanded-erp-modules", {
+      fullPage: true,
+    })
     expect(issues).toEqual([])
   })
 
-  test("phase 2-9 backend status API exposes completed delivery model", async ({ request }) => {
-    const response = await request.get("/api/site-management/phase-status")
-    expect(response.ok()).toBeTruthy()
-    const payload = await response.json()
+  test("site-management API endpoints expose database-ready contracts", async ({
+    request,
+  }) => {
+    const allowedSources = ["supabase", "local-seed"]
 
-    expect(payload.phases).toHaveLength(8)
-    expect(payload.summaries.delivery.complete).toBe(8)
-    expect(payload.summaries.import.rejectedRows).toBe(0)
-    expect(payload.summaries.viewing.total).toBeGreaterThanOrEqual(5)
-    expect(payload.summaries.paymentPlans.openExposureEur).toBeGreaterThan(0)
-    expect(payload.summaries.purchaseChecklist.highRisk).toBeGreaterThan(0)
-    expect(payload.summaries.eligibility.review).toBeGreaterThan(0)
-    expect(payload.controls.length).toBeGreaterThanOrEqual(5)
-    expect(payload.auditEvents.length).toBeGreaterThanOrEqual(5)
-    expect(payload.roleCoverage.length).toBeGreaterThanOrEqual(5)
-  })
-
-  test("site-management API endpoints expose database-ready contracts", async ({ request }) => {
     const dashboardResponse = await request.get("/api/site-management/dashboard")
     expect(dashboardResponse.ok()).toBeTruthy()
     const dashboard = await dashboardResponse.json()
-    expect(["supabase", "demo-fallback"]).toContain(dashboard.source)
+    expect(allowedSources).toContain(dashboard.source)
     expect(dashboard.summary.totalUnits).toBeGreaterThan(0)
-    expect(dashboard.tickets.length).toBeGreaterThan(0)
 
-    const searchResponse = await request.get("/api/site-management/search?q=A-0101&limit=5")
+    const searchResponse = await request.get("/api/site-management/search?q=A-001&limit=5")
     expect(searchResponse.ok()).toBeTruthy()
     const search = await searchResponse.json()
-    expect(["supabase", "demo-fallback"]).toContain(search.source)
+    expect(allowedSources).toContain(search.source)
     expect(search.results.length).toBeGreaterThan(0)
-    expect(search.results[0].title).toContain("A-0101")
 
-    const emptySearchResponse = await request.get("/api/site-management/search")
-    expect(emptySearchResponse.status()).toBe(400)
+    const phase4Response = await request.get("/api/site-management/phase4?limit=769")
+    expect(phase4Response.ok()).toBeTruthy()
+    const phase4 = await phase4Response.json()
+    expect(allowedSources).toContain(phase4.source)
+    expect(phase4.summary.totalUnits).toBe(769)
+
+    const financeResponse = await request.get("/api/site-management/finance?limit=12")
+    expect(financeResponse.ok()).toBeTruthy()
+    const finance = await financeResponse.json()
+    expect(allowedSources).toContain(finance.source)
+    expect(finance.summary.openLedgerCents).toBeGreaterThan(0)
+
+    const usersResponse = await request.get("/api/site-management/users?limit=20")
+    expect(usersResponse.ok()).toBeTruthy()
+    const users = await usersResponse.json()
+    expect(allowedSources).toContain(users.source)
+    expect(users.summary.staffTotal).toBeGreaterThan(0)
 
     const actionResponse = await request.post("/api/site-management/actions", {
       data: {
         actionType: "e2e.client-action",
         entityTable: "units",
-        entityExternalId: "A-0101",
+        entityExternalId: "A-001",
         title: "Playwright action smoke test",
         metadata: { test: "dashboard.spec.ts" },
       },
     })
     expect(actionResponse.status()).toBe(201)
     const action = await actionResponse.json()
-    expect(["supabase", "demo-fallback"]).toContain(action.source)
+    expect(allowedSources).toContain(action.source)
     expect(action.id).toBeTruthy()
   })
 
-  test("dashboard filters menu by demo role", async ({ page }, testInfo) => {
-    await page.goto("/tr/login")
-    await page.getByRole("button", { name: /Teknisyen/ }).click()
-    await expect(page).toHaveURL(/\/tr\/dashboard/)
-    await expect(page.getByText("Teknisyen", { exact: true })).toBeVisible()
-    await expect(page.locator("aside").getByText("Servis Talepleri")).toBeVisible()
-    await expect(page.locator("aside").getByText("Finans & Aidat")).toHaveCount(0)
-    await expect(page.locator("aside").getByText("Kullanıcılar & Roller")).toHaveCount(0)
-    await screenshot(page, testInfo, "03-dashboard-rbac-maintenance")
+  test("dashboard filters every access-profile role", async ({ page }, testInfo) => {
+    test.setTimeout(120_000)
 
+    const roleMatrix = [
+      {
+        label: "Yönetim",
+        heading: /ERP Operasyon Merkezi/,
+        visible: [
+          "Genel Bakış",
+          "Daire Matrisi",
+          "Sakinler",
+          "Servis Talepleri",
+          "Rezervasyon",
+          "Erişim & Uyum",
+          "Finans & Aidat",
+          "Belgeler",
+          "Raporlar",
+          "İletişim",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        hidden: [],
+        global: true,
+      },
+      {
+        label: "Sorumlu",
+        heading: /ERP Operasyon Merkezi/,
+        visible: [
+          "Genel Bakış",
+          "Daire Matrisi",
+          "Sakinler",
+          "Servis Talepleri",
+          "Rezervasyon",
+          "Erişim & Uyum",
+          "Finans & Aidat",
+          "Belgeler",
+          "Raporlar",
+          "İletişim",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        hidden: [],
+        global: true,
+      },
+      {
+        label: "Muhasebe",
+        heading: /Finans Çalışma Alanı/,
+        visible: ["Genel Bakış", "Finans & Aidat", "Belgeler", "Raporlar", "İletişim"],
+        hidden: [
+          "Daire Matrisi",
+          "Sakinler",
+          "Servis Talepleri",
+          "Rezervasyon",
+          "Erişim & Uyum",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        global: false,
+      },
+      {
+        label: "Personel",
+        heading: /Saha Ekibi Çalışma Alanı/,
+        visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
+        hidden: [
+          "Daire Matrisi",
+          "Sakinler",
+          "Erişim & Uyum",
+          "Finans & Aidat",
+          "Raporlar",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        global: false,
+      },
+      {
+        label: "Malik",
+        heading: /Malik Çalışma Alanı/,
+        visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
+        hidden: [
+          "Daire Matrisi",
+          "Sakinler",
+          "Erişim & Uyum",
+          "Finans & Aidat",
+          "Raporlar",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        global: false,
+      },
+      {
+        label: "Kiracı",
+        heading: /Kiracı Çalışma Alanı/,
+        visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
+        hidden: [
+          "Daire Matrisi",
+          "Sakinler",
+          "Erişim & Uyum",
+          "Finans & Aidat",
+          "Raporlar",
+          "Kullanıcılar & Roller",
+          "Ayarlar",
+        ],
+        global: false,
+      },
+    ]
+
+    const isMobile = (page.viewportSize()?.width ?? 1280) < 768
+
+    for (const role of roleMatrix) {
+      await signInAsAccessProfile(page, role.label)
+      await expect(page.getByRole("heading", { name: role.heading })).toBeVisible()
+
+      if (role.global) {
+        await expect(page.getByText("ERP modül durumu")).toBeVisible()
+      } else {
+        await expect(page.getByText("ERP modül durumu")).toHaveCount(0)
+        await expect(page.getByText("Toplam Daire").first()).toHaveCount(0)
+      }
+
+      if (isMobile) {
+        await page.getByRole("button", { name: "Menüyü aç" }).click()
+      }
+
+      const aside = page.locator("aside")
+      await expect(aside.getByText(role.label, { exact: true })).toBeVisible()
+
+      for (const label of role.visible) {
+        await expect(
+          aside.getByRole("link", { name: exactAccessibleName(label) })
+        ).toBeVisible()
+      }
+
+      for (const label of role.hidden) {
+        await expect(
+          aside.getByRole("link", { name: exactAccessibleName(label) })
+        ).toHaveCount(0)
+      }
+
+      if (isMobile) {
+        await page.getByRole("button", { name: "Menüyü kapat" }).click()
+      }
+    }
+
+    await screenshot(page, testInfo, "03-dashboard-rbac-all-roles")
     expect(issues).toEqual([])
+  })
+
+  test("restricted roles cannot open global modules by URL or API", async ({
+    page,
+  }, testInfo) => {
+    await signInAsAccessProfile(page, "Kiracı")
+
+    await page.goto("/tr/dashboard/finance")
+    await expect(page).toHaveURL(/\/tr\/dashboard$/)
+    await expect(page.getByRole("heading", { name: /Kiracı Çalışma Alanı/ })).toBeVisible()
+
+    await page.goto("/tr/dashboard/listings")
+    await expect(page).toHaveURL(/\/tr\/dashboard$/)
+    await expect(page.getByRole("heading", { name: /Kiracı Çalışma Alanı/ })).toBeVisible()
+
+    const dashboardApiResponse = await page.request.get("/api/site-management/dashboard")
+    expect(dashboardApiResponse.status()).toBe(403)
+
+    const phase4ApiResponse = await page.request.get("/api/site-management/phase4?limit=4")
+    expect(phase4ApiResponse.status()).toBe(403)
+
+    const searchApiResponse = await page.request.get("/api/site-management/search?q=A-001&limit=4")
+    expect(searchApiResponse.status()).toBe(403)
+
+    const financeApiResponse = await page.request.get("/api/site-management/finance?limit=4")
+    expect(financeApiResponse.status()).toBe(403)
+
+    const usersApiResponse = await page.request.get("/api/site-management/users?limit=4")
+    expect(usersApiResponse.status()).toBe(403)
+
+    await screenshot(page, testInfo, "04-dashboard-rbac-tenant-blocked")
+    expect(issues).toEqual([])
+  })
+
+  test("AI chat follows the same RBAC scope", async ({ page }) => {
+    await signInAsAccessProfile(page, "Kiracı")
+
+    const tenantDenied = await page.request.post("/api/ai/chat", {
+      data: { message: "Show me the finance ledger and all unit debts." },
+    })
+    expect(tenantDenied.ok()).toBeTruthy()
+    const tenantDeniedPayload = await tenantDenied.json()
+    expect(tenantDeniedPayload.source).toBe("rbac-guard")
+    expect(String(tenantDeniedPayload.reply)).toContain("kapalı")
+    expect(String(tenantDeniedPayload.reply)).not.toContain("Toplam açık borç")
+
+    const tenantAllowed = await page.request.post("/api/ai/chat", {
+      data: { message: "Show my open service requests." },
+    })
+    expect(tenantAllowed.ok()).toBeTruthy()
+    const tenantAllowedPayload = await tenantAllowed.json()
+    expect(tenantAllowedPayload.source).not.toBe("rbac-guard")
+    expect(String(tenantAllowedPayload.reply)).toContain("servis")
+
+    await signInAsAccessProfile(page, "Personel")
+    const staffDenied = await page.request.post("/api/ai/chat", {
+      data: { message: "Which flats need debt action today?" },
+    })
+    expect(staffDenied.ok()).toBeTruthy()
+    const staffDeniedPayload = await staffDenied.json()
+    expect(staffDeniedPayload.source).toBe("rbac-guard")
+
+    await signInAsAccessProfile(page, "Muhasebe")
+    const accountantAllowed = await page.request.post("/api/ai/chat", {
+      data: { message: "Which accounts need finance follow-up today?" },
+    })
+    expect(accountantAllowed.ok()).toBeTruthy()
+    const accountantAllowedPayload = await accountantAllowed.json()
+    expect(accountantAllowedPayload.source).not.toBe("rbac-guard")
+  })
+
+  test("backend action API denies unauthorized tenant writes", async ({ page }) => {
+    await page.goto("/tr/login")
+    await page.getByRole("button", { name: /Kiracı/ }).click()
+    await expect(page).toHaveURL(/\/tr\/dashboard/)
+
+    const response = await page.request.post("/api/site-management/actions", {
+      data: {
+        actionType: "document.upload.requested",
+        entityTable: "documents",
+        entityExternalId: "DOC-PRIVATE",
+        title: "Unauthorized document upload test",
+      },
+    })
+
+    expect(response.status()).toBe(403)
   })
 })

@@ -6,13 +6,29 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Sparkles, Send, X, Bot, User } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import { getAiSuggestions, generateAiResponse } from "@/lib/ai-responses"
+import type { Role } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
-import { clientProfile } from "@/lib/client-context"
 
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+}
+
+function placeholderForRole(role: Role, fallback: string) {
+  if (role === "accountant") {
+    return "Aidat, tahsilat, depozito veya finans raporu sorun..."
+  }
+
+  if (role === "staff") {
+    return "Atanan servis, saha notu veya rezervasyon işi sorun..."
+  }
+
+  if (role === "owner" || role === "tenant") {
+    return "Servis, rezervasyon, belge veya mesaj hakkında sorun..."
+  }
+
+  return fallback
 }
 
 export function AiAssistant() {
@@ -25,7 +41,7 @@ export function AiAssistant() {
       id: "welcome",
       role: "assistant",
       content: t("welcome", {
-        role: user.full_name || user.email || "Demo User",
+        role: user.full_name || user.email || "Operasyon kullanıcısı",
       }),
     },
   ])
@@ -57,7 +73,7 @@ export function AiAssistant() {
       const result = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, role: user.role }),
+        body: JSON.stringify({ message: text }),
       })
       if (result.ok) {
         const payload = (await result.json()) as { reply?: unknown }
@@ -88,13 +104,13 @@ export function AiAssistant() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
         className={cn(
-          "fixed right-6 bottom-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-2xl shadow-primary/30 ring-1 ring-white/20",
+          "fixed right-4 bottom-4 z-50 flex h-10 w-10 items-center justify-center rounded-full shadow-2xl shadow-primary/30 ring-1 ring-white/20 sm:bottom-6 sm:right-6 sm:h-14 sm:w-14",
           "bg-gradient-to-br from-primary via-teal-500 to-emerald-400 text-primary-foreground",
           open && "hidden"
         )}
         aria-label={t("open")}
       >
-        <Sparkles className="h-6 w-6" />
+        <Sparkles className="h-5 w-5 sm:h-6 sm:w-6" />
       </motion.button>
 
       <AnimatePresence>
@@ -113,9 +129,9 @@ export function AiAssistant() {
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">1Çatı AI - {clientProfile.clientName}</p>
+                  <p className="text-sm font-bold text-foreground">1Çatı Operasyon Asistanı</p>
                   <p className="text-[10px] text-muted-foreground">
-                    Yerel AI + {clientProfile.pilotProject} bağlamı
+                    {t("subtitle")}
                   </p>
                 </div>
               </div>
@@ -196,7 +212,7 @@ export function AiAssistant() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={t("placeholder")}
+                placeholder={placeholderForRole(user.role, t("placeholder"))}
                 className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <button

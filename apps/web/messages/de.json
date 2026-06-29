@@ -1,58 +1,58 @@
 {
   "metadata": {
-    "title": "Ataberk Estate — Immobilien in der Türkei | 1Çatı CRM",
-    "description": "Kaufen und mieten Sie Immobilien in der Türkei mit Ataberk Estate. 212.000+ Anzeigen, 6.000+ Transaktionen, 150 Mitarbeiter. Jetzt mit der 1Çatı Immobilienverwaltungsplattform."
+    "title": "1Cati ERP | Immobilien-CRM und Standortbetrieb",
+    "description": "1Cati verbindet CRM, Portfolio, Service, Finanzen, Dokumente, Compliance und rollenbasierte Abläufe in einem ERP-Arbeitsbereich."
   },
   "topBar": {
     "phone": "+90 (549) 557 7 557",
     "email": "info@ataberkestate.com",
-    "presentation": "Ataberk Estate Präsentation"
+    "platformLink": "ERP-Plattform"
   },
   "nav": {
     "home": "Startseite",
-    "catalog": "Alle Anzeigen",
+    "catalog": "Module",
     "about": "Über uns",
-    "pitch": "Pitch Deck",
-    "services": "Dienstleistungen",
+    "services": "Abläufe",
     "articles": "Artikel",
     "reviews": "Bewertungen",
     "contacts": "Kontakt",
     "login": "Anmelden",
     "portal": "Kundenportal",
     "platformSubtitle": "1Çatı Plattform",
-    "toggleMenu": "Menü umschalten"
+    "toggleMenu": "Menü umschalten",
+    "platform": "Plattform"
   },
   "hero": {
-    "badge": "neue Immobilienverwaltungsplattform",
-    "headline": "Türkische Immobilien unter einem Dach verwalten",
-    "subheadline": "Ataberk Estate vereint 10.000+ aktive Anzeigen, 212.000+ Datenbankeinträge, 6.000+ Transaktionen und 150 Experten mit 1Çatı — von der ersten Suche bis zum After-Sales-Service.",
-    "ctaPrimary": "Anzeigen suchen",
-    "ctaSecondary": "So funktioniert's",
+    "badge": "Plattform für Immobilienbetrieb",
+    "headline": "Steuern Sie den Immobilienbetrieb aus einem ERP-Zentrum",
+    "subheadline": "1Cati verbindet Vertrieb, Portfolio, Eigentümer, Mieter, Beiträge, Service, Dokumente, EIDS und Reporting in einem schnellen, rollenbasierten Arbeitsbereich.",
+    "ctaPrimary": "Produktfluss ansehen",
+    "ctaSecondary": "Arbeitsbereich öffnen",
     "searchCity": "Stadt",
     "searchType": "Typ",
     "searchBudget": "Budget",
     "typeApartment": "Wohnung",
     "budgetValue": "Bis zu 100.000 €",
     "statLabels": {
-      "activeListings": "Aktive Inserate",
-      "leads": "Leads",
-      "openTickets": "Offene Tickets",
-      "transactions": "Transaktionen"
+      "activeListings": "Portfoliodaten",
+      "leads": "Personenprofile",
+      "openTickets": "Offene Arbeit",
+      "transactions": "Transaktionshistorie"
     },
-    "badgeReturn": "Rendite",
-    "badgeListings": "Inserate in der Datenbank",
-    "previewTitle": "1Çatı Panel",
-    "previewStatus": "Live",
+    "badgeReturn": "Transparente Einzüge",
+    "badgeListings": "verbundene Betriebsdaten",
+    "previewTitle": "ERP-Arbeitsbereich",
+    "previewStatus": "Aktiv",
     "previewActivityLabel": "Letzte Aktivität",
-    "previewActivityText": "EİDS-Autorisierung genehmigt — Villa #4021",
+    "previewActivityText": "CRM, Wohnungs Matrix, Finanzen und Service arbeiten auf demselben Datensatz.",
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212.000+",
     "previewCity": "Alanya",
     "statValues": {
-      "activeListings": "10.000+",
-      "leads": "1.247",
+      "activeListings": "212k+",
+      "leads": "150",
       "openTickets": "89",
-      "transactions": "6.000+"
+      "transactions": "6k+"
     }
   },
   "stats": {
@@ -113,7 +113,7 @@
       "calendar": "Kalender für Besichtigungen, Transaktionen und Aufgaben",
       "documents": "Dokumentenarchiv für Grundbücher, Verträge und DASK",
       "reports": "Finanzberichte für Eigentümer",
-      "roles": "Roles: Super Admin, Firmenadmin, Manager, Vertriebsberater, Listing Agent, Property Manager, Buchhalter, Techniker, Kunde / Eigentümer, Nur Lesezugriff",
+      "roles": "Rollen: Verwaltung, Verantwortlicher, Buchhaltung, Mitarbeiter, Eigentümer, Mieter. Jede Rolle sieht nur die Seiten und Aktionen, die für ihre Verantwortung notwendig sind.",
       "languages": "Türkisch, Russisch, Englisch, Deutsch",
       "eids": "EİDS-Autorisierungsnachverfolgung und Ablauferinnerungen",
       "compliance": "TÜRSAB/e-GUEST und KBS-Compliance-Checkliste",
@@ -123,201 +123,82 @@
   },
   "compliance": {
     "title": "Entwickelt für die türkischen Vorschriften 2026",
-    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, Beschränkungen für ausländische Käufer und Währungsrisiken. MVP und Roadmap sind klar getrennt.",
+    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, Beschränkungen für ausländische Käufer und Währungsrisiken. Aktive Workflows und Automationen mit ausstehendem offizieller API-Zugang sind klar getrennt.",
     "items": {
       "eids": {
         "title": "EİDS-Autorisierungsnachverfolgung",
         "desc": "e-Government-Autorisierungsdokument, Status und Ablaufdatum für jede Anzeige. Automatische Erinnerungen und Verknüpfung zum Maklervertrag.",
-        "tag": "MVP"
+        "tag": "Aktiv"
       },
       "dueDiligence": {
         "title": "Grundbuch- & Vertragsdue Diligence",
         "desc": "Verpflichtende Vorverkaufs-Checkliste: Grundbuch, DASK, Zonierung, Fotos, Autorisierungsdokument. Nur ein Manager kann 'vertragsbereit' markieren.",
-        "tag": "MVP"
+        "tag": "Aktiv"
       },
       "residence": {
         "title": "Leitfaden zur Aufenthalts-/Staatsbürgerschaftseignung",
         "desc": "Vorprüfung für 200.000 $ Schwelle, Einkommen/Versicherung und Bezirkskontingent. Der SPK-Bewertungswert wird in der Objektkarte gespeichert.",
-        "tag": "MVP"
+        "tag": "Aktiv"
       },
       "tax": {
         "title": "Multi-Währung und Steuerschätzung",
         "desc": "Kauf-/Verkaufspreis in TRY/EUR/USD erfasst. Einfacher Rechner und Preishistorie für 5-Jahres-Gewinnsteuer.",
-        "tag": "MVP"
+        "tag": "Aktiv"
       },
       "shortTerm": {
         "title": "Automatische KBS/e-GUEST-Berichterstattung",
         "desc": "24-Stunden-Meldezeit für Kurzzeitvermietung und TÜRSAB-Lizenzüberwachung. Volle Automatisierung folgt, sobald die offizielle API verfügbar ist.",
-        "tag": "Roadmap"
+        "tag": "Integrationsbereit"
       },
       "verification": {
         "title": "Grundbuchverifizierung und Notarintegration",
         "desc": "QR/Barcode-Lesen und Zeitstempel. Automatische Verifizierung folgt, sobald offizielle Grundbuch-/Notar-APIs geöffnet sind.",
-        "tag": "Roadmap"
+        "tag": "Integrationsbereit"
       }
     },
     "sectionBadge": "Compliance 2026"
   },
   "services": {
-    "title": "Ataberk Estate Dienstleistungen",
-    "subtitle": "Von der Anzeigenauswahl bis zum After-Sales-Service — der komplette Kreislauf für Käufer und Eigentümer.",
-    "buy": "Immobilienkauf",
-    "sell": "Verkauf und Tausch",
-    "rent": "Vermietungsmanagement",
-    "legal": "Rechtsberatung und Grundbuch",
-    "citizenship": "Staatsbürgerschaft und Aufenthaltserlaubnis",
-    "aftersales": "24/7 After-Sales-Service",
-    "tour": "Kostenlose Einführungstour",
-    "online": "Online-Immobilienbesichtigung",
-    "compliance": "EİDS und Compliance-Beratung",
-    "tax": "Steuer- und Währungsplanung",
-    "offline": "Mobiler Zugriff für Außenteams"
+    "title": "ERP-Module",
+    "subtitle": "Zentrale Arbeitsbereiche für tägliche Arbeit von Vertrieb bis Standortbetrieb.",
+    "buy": "CRM und Lead-Management",
+    "sell": "Portfolio und Wohnungsmatrix",
+    "rent": "Eigentümer-, Mieter- und Bewohnerdaten",
+    "legal": "TAPU, KYC und Dokumententresor",
+    "citizenship": "EIDS und Eignungsprüfungen",
+    "aftersales": "Serviceanfragen und Außendienst",
+    "tour": "Reservierungs- und Besichtigungskalender",
+    "online": "WhatsApp, E-Mail und Kommunikation",
+    "compliance": "Rollen, Rechte und Prüfspur",
+    "tax": "Beiträge, Einzüge und Finanzbuch",
+    "offline": "Mobiler Außendienst-Arbeitsbereich"
   },
   "howItWorks": {
-    "title": "So arbeiten wir",
+    "title": "ERP-Arbeitsfluss",
     "steps": {
-      "1": "Bewerbung bei Ataberk Estate",
-      "2": "Personalisierte Anzeigenauswahl",
-      "3": "Immobilientour in der Türkei",
-      "4": "Reservierung und Due Diligence",
-      "5": "Dokumentenvorbereitung im Grundbuchamt",
-      "6": "Transaktion und Übergabe",
-      "7": "After-Sales-Service"
-    }
-  },
-  "platformDemo": {
-    "title": "Live-Plattform-Vorschau",
-    "subtitle": "Die folgende Tab-Simulation zeigt den täglichen Gebrauch von 1Çatı. Daten sind nur zur Demonstration.",
-    "tabs": {
-      "crm": "CRM",
-      "listings": "Anzeigen",
-      "tickets": "Tickets",
-      "calendar": "Kalender"
-    },
-    "crm": {
-      "name": "CRM",
-      "columns": [
-        "Lead",
-        "Status",
-        "Quelle",
-        "Makler"
-      ],
-      "rows": [
-        [
-          "Anna K. - Alanya Wohnung",
-          "Heiß",
-          "WhatsApp",
-          "Mehmet"
-        ],
-        [
-          "Sergey P. - Villa",
-          "Neu",
-          "Webformular",
-          "Ayşe"
-        ],
-        [
-          "Li W. - Investition",
-          "Meeting",
-          "Empfehlung",
-          "Can"
-        ]
-      ]
-    },
-    "listings": {
-      "name": "Anzeigen",
-      "columns": [
-        "Anzeige",
-        "Preis",
-        "EİDS",
-        "Status"
-      ],
-      "rows": [
-        [
-          "Villa #4021 - Kargıcak",
-          "€ 420.000",
-          "Genehmigt",
-          "Aktiv"
-        ],
-        [
-          "Wohnung #1847 - Mahmutlar",
-          "€ 95.000",
-          "Ausstehend",
-          "Aktiv"
-        ],
-        [
-          "Penthouse #990 - Alanya",
-          "€ 310.000",
-          "Genehmigt",
-          "Reserviert"
-        ]
-      ]
-    },
-    "tickets": {
-      "name": "Tickets",
-      "columns": [
-        "Anfrage",
-        "Priorität",
-        "Letzte Aktualisierung"
-      ],
-      "rows": [
-        [
-          "Wasserleck - Villa #4021",
-          "Hoch",
-          "vor 2 Stunden"
-        ],
-        [
-          "Klima-Wartung - Whg #1847",
-          "Mittel",
-          "Gestern"
-        ],
-        [
-          "Malerei - Penthouse #990",
-          "Niedrig",
-          "vor 3 Tagen"
-        ]
-      ]
-    },
-    "calendar": {
-      "name": "Kalender",
-      "columns": [
-        "Zeit",
-        "Termin",
-        "Ort"
-      ],
-      "rows": [
-        [
-          "10:00",
-          "Villen-Tour - Anna K.",
-          "Kargıcak"
-        ],
-        [
-          "14:00",
-          "Grundbuchtermin",
-          "Alanya Tapu"
-        ],
-        [
-          "16:30",
-          "Wartungskontrolle",
-          "Mahmutlar"
-        ]
-      ]
+      "1": "Lead- oder Eigentümerdatensatz anlegen",
+      "2": "Portfolio, Einheit und Personendaten verbinden",
+      "3": "Aufgaben nach Rolle zuweisen",
+      "4": "Dokumente, Zahlungen und Compliance prüfen",
+      "5": "Service-, Besichtigungs- oder Verkaufsaktion ausführen",
+      "6": "Finanz- und Managementfreigabe einholen",
+      "7": "Eigentümer-, Mieter- und Managementberichte aktualisieren"
     }
   },
   "cta": {
     "title": "Führen Sie Ihre Immobilienoperationen nach den Regeln 2026",
-    "subtitle": "Fordern Sie eine 1Çatı-Demo an. Sehen Sie EİDS, Compliance, CRM und Wartungsmanagement an einem Ort.",
-    "primary": "Demo anfordern",
+    "subtitle": "Verbinden Sie Vertrieb, Site Management, Finanzen, Service und Compliance in einem ERP-Arbeitsbereich.",
+    "primary": "Produktgespräch buchen",
     "secondary": "Portal-Login",
-    "mailSubject": "Anfrage 1Çatı Demo"
+    "mailSubject": "1Çatı Produktgespräch"
   },
   "footer": {
     "rights": "© 2026 Ataberk Estate. Alle Rechte vorbehalten.",
-    "confidential": "Vertraulich — WAMOCON GmbH & Ataberk Estate.",
     "description": "Immobilienverkauf und -management in der Türkei; ein vertrauenswürdiger Partner für lokale und ausländische Eigentümer.",
     "companyTitle": "Unternehmen",
     "company": [
       "Über uns",
-      "Pitch Deck",
+      "Plattform",
       "Unser Team",
       "Karriere",
       "Kontakt"
@@ -340,46 +221,41 @@
     "legal": [
       "Datenschutz",
       "Nutzungsbedingungen"
-    ]
+    ],
+    "securityNote": "Sichere Betriebsplattform — WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Hier entsteht das CRM-Dashboard, das mit Twenty und Supabase verbunden ist. Die Karten unten zeigen die MVP-Module, die für Ihre Rolle verfügbar sind.",
+    "subtitle": "Rollenbasierte Ansichten für Betrieb, Finanzen, Service, Dokumente und Reporting.",
     "closeMenu": "Menü schließen",
     "openMenu": "Menü öffnen",
     "logout": "Abmelden",
-    "demoNotice": "Demo-Modus: Supabase-Authentifizierung ist nicht konfiguriert. Wählen Sie auf der Login-Seite eine andere Rolle aus, um andere Berechtigungen zu testen.",
+    "activePortfolio": "Aktives Portfolio",
     "menu": {
-      "listings": "Immobilien",
-      "leads": "Leads",
-      "tickets": "Tickets",
-      "calendar": "Kalender",
-      "eids_compliance": "EİDS & Compliance",
-      "finance": "Finanzen & Währung",
+      "dashboard": "Übersicht",
+      "listings": "Wohnungsmatrix",
+      "leads": "Kontakte",
+      "tickets": "Serviceanfragen",
+      "calendar": "Reservierung",
+      "eids_compliance": "Zugang & Compliance",
+      "finance": "Finanzen & Beiträge",
       "documents": "Dokumente",
       "reports": "Berichte",
+      "communications": "Kommunikation",
       "users": "Benutzer & Rollen",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "deals": "Workflows",
+      "offline_sync": "Offline-Sync"
     },
     "modules": {
       "activeListings": "Aktive Inserate",
       "openLeads": "Offene Leads",
       "tickets": "Wartungstickets",
       "activeDeals": "Laufende Transaktionen",
-      "twentyHint": "Twenty + Supabase-Verbindung ausstehend",
+      "twentyHint": "Operative Verbindung",
       "leadsHint": "Lead-Management",
       "ticketsHint": "Tickets mit Foto/Video",
       "dealsHint": "Verkaufs-/Miet-Pipeline"
-    },
-    "roadmapTitle": "Roadmap-Module",
-    "roadmapSubtitle": "Diese Funktionen werden in späteren Phasen hinzugefügt; die UI-Platzhalter sind bereit.",
-    "roadmap": {
-      "whatsapp": "WhatsApp / Telegram Integration",
-      "voip": "In-App VoIP & Video",
-      "ai": "AI Lead Assistant",
-      "airbnb": "Airbnb / Booking Sync",
-      "kbs": "Automatische KBS/e-GUEST",
-      "offline": "Offline-Feldmodus"
     },
     "signedInAs": "Angemeldet als {role}",
     "comingSoon": "Demnächst",
@@ -388,27 +264,19 @@
     "permissionsSubtitle": "Für Ihre Rolle sichtbare Module"
   },
   "roles": {
-    "superAdmin": "Super Admin",
-    "companyAdmin": "Firmenadmin",
-    "manager": "Manager",
-    "salesConsultant": "Vertriebsberater",
-    "listingAgent": "Listing Agent",
-    "propertyManager": "Property Manager",
-    "accountant": "Buchhalter",
-    "maintenance": "Techniker",
-    "client": "Kunde / Eigentümer",
-    "viewer": "Nur Lesezugriff",
+    "admin": "Verwaltung",
+    "manager": "Verantwortlicher",
+    "accountant": "Buchhaltung",
+    "staff": "Mitarbeiter",
+    "owner": "Eigentümer",
+    "tenant": "Mieter",
     "descriptions": {
-      "superAdmin": "Plattformbetreiber. Verwaltet Unternehmen, globale Einstellungen und Abrechnung.",
-      "companyAdmin": "Firmeninhaber/Geschäftsführer. Voller Zugriff auf Benutzer, Finanzen und Einstellungen.",
-      "manager": "Büro-/Filialleiter. Genehmigt Inserate und Transaktionen, führt das Team.",
-      "salesConsultant": "Käufer-/Mieterberater. Verwaltet Leads, Besichtigungen und Angebote.",
-      "listingAgent": "Listing-Agent. Erstellt Inserate, verwaltet Eigentümer und EİDS-Dokumente.",
-      "propertyManager": "Rental/Property Manager. Verwaltet Mieter, Wartung und Miettransaktionen.",
-      "accountant": "Finanzverantwortlicher. Verwaltet Rechnungen, Provisionen und Eigentümerberichte.",
-      "maintenance": "Techniker. Sieht und aktualisiert zugewiesene Wartungstickets.",
-      "client": "Externer Eigentümer oder Käufer. Sieht nur eigene Immobilien und Dokumente.",
-      "viewer": "Praktikant oder Sekretär mit Lesezugriff. Kann Daten sehen, aber nicht bearbeiten."
+      "admin": "Vollständige Verwaltungsrolle. Verwaltet Nutzer, Einstellungen, Finanzen, Zutritt und Prüfspur.",
+      "manager": "Verantwortliche Betriebsrolle. Überwacht Services, Aufgaben, Personal, Reservierungen, Kommunikation und Tagesrisiken.",
+      "accountant": "Buchhaltungsrolle. Verwaltet Gebühren, Zahlungen, Inkasso, Kautionen, Rückerstattungen und Finanzberichte.",
+      "staff": "Mitarbeiterrolle. Nimmt zugewiesene Aufträge an, erledigt Aufgaben und ergänzt Foto-/Videoberichte.",
+      "owner": "Eigentümerrolle. Sieht Services, Reservierungen, berechtigte Dokumente und Verwaltungskommunikation zur eigenen Wohnung.",
+      "tenant": "Mieterrolle. Sieht Services, Reservierungen, Chat, Benachrichtigungen und Dokumente zur berechtigten Wohnung."
     }
   },
   "login": {
@@ -419,26 +287,22 @@
     "password": "Passwort",
     "passwordPlaceholder": "••••••••",
     "submit": "Anmelden",
-    "authNote": "Die Supabase-Authentifizierung wird nach Abschluss der Projektkonfiguration aktiviert.",
+    "authNote": "Melden Sie sich mit E-Mail und Passwort an. Zugriffsprofile sind für kontrollierte lokale Umgebungen verfügbar.",
     "backHome": "← Zurück zur Startseite",
-    "demoTitle": "Als Demo testen",
     "roles": {
-      "super_admin": "Super Admin",
-      "company_admin": "Firmenadmin",
-      "manager": "Manager",
-      "sales_consultant": "Vertriebsberater",
-      "listing_agent": "Listing Agent",
-      "property_manager": "Property Manager",
-      "accountant": "Buchhalter",
-      "maintenance": "Techniker",
-      "client": "Kunde / Eigentümer",
-      "viewer": "Nur Lesezugriff"
+      "admin": "Verwaltung",
+      "manager": "Verantwortlicher",
+      "accountant": "Buchhaltung",
+      "staff": "Mitarbeiter",
+      "owner": "Eigentümer",
+      "tenant": "Mieter"
     },
-    "demoError": "Demo-Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
-    "demoDescription": "Wählen Sie unten eine Rolle aus, um das Dashboard mit diesem Berechtigungssatz zu testen.",
-    "authReady": "Supabase authentication is active. Sign in with your email and password.",
+    "authReady": "Sichere Anmeldung ist aktiv. Melden Sie sich mit E-Mail und Passwort an.",
     "authError": "Sign-in failed. Check your credentials and try again.",
-    "demoUnavailable": "Demo sign-in is disabled while real Supabase authentication is active."
+    "accessTitle": "Mit Zugriffsprofil anmelden",
+    "accessDescription": "Wählen Sie Ihr Zugriffsprofil, um den rollenbasierten Arbeitsbereich zu öffnen.",
+    "accessUnavailable": "Zugriffsprofile sind nur in autorisierten Umgebungen verfügbar.",
+    "accessError": "Anmeldung mit Zugriffsprofil fehlgeschlagen. Bitte erneut versuchen."
   },
   "theme": {
     "toggle": "Thema wechseln"
@@ -472,7 +336,7 @@
   },
   "reviews": {
     "title": "Kundenbewertungen",
-    "intro": "Beispiel-Feedback aus dem Demo-Prozess.",
+    "intro": "Produktfeedback von Betriebsteams und Eigentümern.",
     "items": {
       "0": {
         "quote": "Kundennachrichten und Wartungsanfragen sind jetzt an einem Ort. Wir agieren als Team viel schneller.",
@@ -494,7 +358,9 @@
   "dataTable": {
     "search": "Search...",
     "count": "{count} records",
-    "empty": "No results found"
+    "empty": "No results found",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "dashboardHome": {
     "loading": "Preparing dashboard...",
@@ -536,7 +402,7 @@
   "aiAssistant": {
     "open": "Open AI assistant",
     "close": "Close AI assistant",
-    "subtitle": "Answers with demo data",
+    "subtitle": "Antworten aus Betriebsdaten",
     "welcome": "Hello {role}. Which operation should we speed up today?",
     "placeholder": "Ask about leads, EİDS, maintenance or revenue...",
     "send": "Send"
@@ -745,16 +611,12 @@
         "deals": "Active Deals"
       },
       "roles": {
-        "super_admin": "Super Admin",
-        "company_admin": "Company Admin",
-        "manager": "Manager",
-        "sales_consultant": "Sales Consultant",
-        "listing_agent": "Listing Agent",
-        "property_manager": "Property Manager",
-        "accountant": "Accountant",
-        "maintenance": "Maintenance",
-        "client": "Client / Owner",
-        "viewer": "Read-only Viewer"
+        "admin": "Verwaltung",
+        "manager": "Verantwortlicher",
+        "accountant": "Buchhaltung",
+        "staff": "Mitarbeiter",
+        "owner": "Eigentümer",
+        "tenant": "Mieter"
       }
     },
     "settings": {
@@ -779,5 +641,130 @@
         "desc": "Choose light, dark or system theme."
       }
     }
+  },
+  "platformWorkflow": {
+    "title": "ERP-Workflow-Ansicht",
+    "subtitle": "Der Arbeitsbereich zeigt, wie CRM, Wohnungsmaske, Service, Finanzen und Kalenderteams aus einem gemeinsamen Datensatz arbeiten.",
+    "tabs": {
+      "crm": "CRM",
+      "listings": "Anzeigen",
+      "tickets": "Tickets",
+      "calendar": "Kalender"
+    },
+    "crm": {
+      "name": "CRM",
+      "columns": [
+        "Lead",
+        "Status",
+        "Quelle",
+        "Makler"
+      ],
+      "rows": [
+        [
+          "Anna K. - Alanya Wohnung",
+          "Heiß",
+          "WhatsApp",
+          "Mehmet"
+        ],
+        [
+          "Sergey P. - Villa",
+          "Neu",
+          "Webformular",
+          "Ayşe"
+        ],
+        [
+          "Li W. - Investition",
+          "Meeting",
+          "Empfehlung",
+          "Can"
+        ]
+      ]
+    },
+    "listings": {
+      "name": "Anzeigen",
+      "columns": [
+        "Anzeige",
+        "Preis",
+        "EİDS",
+        "Status"
+      ],
+      "rows": [
+        [
+          "Villa #4021 - Kargıcak",
+          "€ 420.000",
+          "Genehmigt",
+          "Aktiv"
+        ],
+        [
+          "Wohnung #1847 - Mahmutlar",
+          "€ 95.000",
+          "Ausstehend",
+          "Aktiv"
+        ],
+        [
+          "Penthouse #990 - Alanya",
+          "€ 310.000",
+          "Genehmigt",
+          "Reserviert"
+        ]
+      ]
+    },
+    "tickets": {
+      "name": "Tickets",
+      "columns": [
+        "Anfrage",
+        "Priorität",
+        "Letzte Aktualisierung"
+      ],
+      "rows": [
+        [
+          "Wasserleck - Villa #4021",
+          "Hoch",
+          "vor 2 Stunden"
+        ],
+        [
+          "Klima-Wartung - Whg #1847",
+          "Mittel",
+          "Gestern"
+        ],
+        [
+          "Malerei - Penthouse #990",
+          "Niedrig",
+          "vor 3 Tagen"
+        ]
+      ]
+    },
+    "calendar": {
+      "name": "Kalender",
+      "columns": [
+        "Zeit",
+        "Termin",
+        "Ort"
+      ],
+      "rows": [
+        [
+          "10:00",
+          "Villen-Tour - Anna K.",
+          "Kargıcak"
+        ],
+        [
+          "14:00",
+          "Grundbuchtermin",
+          "Alanya Tapu"
+        ],
+        [
+          "16:30",
+          "Wartungskontrolle",
+          "Mahmutlar"
+        ]
+      ]
+    }
+  },
+  "dashboardRefresh": {
+    "refresh": "Daten aktualisieren",
+    "refreshing": "Aktualisieren",
+    "ready": "{source} bereit",
+    "retry": "Erneut versuchen",
+    "sourceFallback": "Daten"
   }
 }

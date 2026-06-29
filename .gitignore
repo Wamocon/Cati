@@ -13,8 +13,17 @@ out/
 qa_*.png
 qa_*.txt
 qa_*.py
+qa/
+qa_output/
 quality/
 .tmp/
+.graphify/
+Microsoft/
+
+# Local raw client/source folders copied beside the repo for extraction.
+# Curated app assets and generated datasets belong under apps/web/public,
+# supabase/imports or docs/source/client-inputs instead.
+1.NEW LEVEL PREMIUM/
 
 # Generated archives and local export bundles
 *.zip
@@ -53,3 +62,4 @@ test-results/
 
 # Supabase
 supabase/.temp/
+supabase/.branches/

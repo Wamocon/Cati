@@ -16,10 +16,10 @@ import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
   { label: "home", href: "#" },
-  { label: "catalog", href: "#services" },
+  { label: "catalog", href: "#modules" },
   { label: "about", href: "/about" },
-  { label: "pitch", href: "/pitch" },
-  { label: "services", href: "#services" },
+  { label: "platform", href: "/platform" },
+  { label: "services", href: "#modules" },
   { label: "reviews", href: "/reviews" },
   { label: "contacts", href: "#contacts" },
 ]
@@ -56,7 +56,7 @@ export function Navbar() {
         variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
         animate={hidden ? "hidden" : "visible"}
         transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="glass fixed top-10 right-0 left-0 z-50 border-b border-border/50"
+        className="glass fixed top-0 right-0 left-0 z-50 border-b border-border/50"
       >
         <div className="container flex h-16 items-center justify-between">
           <Link href="/" className="group flex items-center gap-2.5">

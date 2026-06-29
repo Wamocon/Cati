@@ -33,16 +33,16 @@ export interface ClientServicePillar {
 
 export const clientProfile = {
   clientName: "Ataberk Estate",
-  productName: "1Çatı CRM",
-  pilotProject: "New Level Premium",
-  pilotLocation: "Avsallar, Alanya",
-  pilotOffer: "5-Sterne-Projekt mit Wohnungen zum Verkauf",
+  productName: "1Çatı ERP",
+  activePortfolio: "New Level Premium",
+  activeLocation: "Avsallar, Alanya",
+  portfolioOffer: "Premium satış ve site operasyon portföyü",
   publicWebsite: "https://www.ataberkestate.com/",
-  projectArticle:
+  portfolioSource:
     "https://www.ataberkestate.com/articles/proekt-new-level-premium-investiruy-zarabatyvay-i-otdykhay",
   avsallarComplex: "https://www.ataberkestate.com/turkey/complex-in-avsallar",
-  sourceNote:
-    "Die erste Version wird bewusst auf Ataberk Estate und das Projekt New Level Premium in Avsallar ausgerichtet. Danach kann dieselbe Plattform als allgemeines CRM für weitere Projekte, Standorte und Kundensegmente erweitert werden.",
+  operationsNote:
+    "Ataberk Estate operasyonları satış, portföy, malik, kiracı, servis, finans ve uyumluluk ekipleri için tek ERP çalışma alanında yönetilir.",
 }
 
 export const clientKpis: ClientKpi[] = [
@@ -131,7 +131,7 @@ export const clientServicePillars: ClientServicePillar[] = [
   {
     title: "Skalierbare Generalisierung",
     detail:
-      "Die Pilotlogik wird so gebaut, dass später weitere Projekte, Standorte und Unternehmen ohne Neuentwicklung ergänzt werden können.",
+      "Modüler yapı yeni projeler, lokasyonlar ve şirket portföyleri eklenirken aynı operasyon modelinin korunmasını sağlar.",
     icon: PackageCheck,
   },
 ]
@@ -143,11 +143,4 @@ export const clientSourceFacts = [
   "Weitere öffentliche Listing-Seiten beschreiben New Level Premium mit 52.000 m² Projektfläche, Incekum-Nähe, Privatstrand, 5-Sterne-Hotel, Eigentümer-Rezeption, Freizeit- und Sportangeboten sowie Mietpotenzial.",
   "Die Website nutzt WhatsApp, Telegram, Rückruf und Anfrageformulare als starke Conversion-Kanäle.",
   "Die Services umfassen unter anderem Online-Besichtigung, Möbelkauf, Verkaufshilfe, Mietthemen, TAPU-/Kaufprozessinformationen und Finanzierungs-/Ratenzahlungsinhalte.",
-]
-
-export const clientVisualAnchors = [
-  { label: "Premium", value: "5-Sterne-Projekt" },
-  { label: "Standort", value: "Avsallar / Alanya" },
-  { label: "Erste Phase", value: "Ataberk-spezifisch" },
-  { label: "Später", value: "generalisierbare CRM-Plattform" },
 ]

@@ -1,14 +1,14 @@
 # Cati Web App
 
-This is the Next.js application for the Cati CRM pilot. It contains the public product pages, login flow, role-aware dashboard, AI API route, site-management modules, and Playwright tests.
+This is the Next.js application for the 1Çatı ERP and CRM workspace. It contains the public product pages, login flow, role-aware dashboard, AI API route, site-management modules, and Playwright tests.
 
 ## Main Areas
 
 - `app/[locale]`: localized public pages and protected CRM routes
-- `app/api`: demo-role, AI chat and site-management status APIs
-- `components`: shared UI, charts, cards, dashboard simulations and assistant components
-- `e2e`: Playwright coverage for landing, login, pitch, dashboard and responsive checks
-- `lib`: AI response helpers, local AI adapter, client context and site-management demo data
+- `app/api`: access-profile, AI chat and site-management status APIs
+- `components`: shared UI, charts, cards, operational widgets and assistant components
+- `e2e`: Playwright coverage for landing, login, platform, dashboard and responsive checks
+- `lib`: AI response helpers, local AI adapter, client context and site-management seed data
 
 ## Development
 

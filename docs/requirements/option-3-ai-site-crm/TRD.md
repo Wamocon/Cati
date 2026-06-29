@@ -2,12 +2,12 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2
-Date: 25 June 2026
-Prepared for: Internal architecture, estimation and delivery planning  
-Prepared by: 1Cati / Product and Engineering  
-Related BRD: `docs/requirements/option-3-ai-site-crm/BRD.md`  
-Primary delivery model: Web application and installable PWA  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Internal architecture, estimation and delivery planning
+Prepared by: 1Cati / Product and Engineering
+Related BRD: `docs/requirements/option-3-ai-site-crm/BRD.md`
+Primary delivery model: Web application and installable PWA
 Native mobile scope: Excluded from launch scope unless later approved
 
 ---
@@ -25,20 +25,25 @@ Native mobile scope: Excluded from launch scope unless later approved
 |---|---|
 | Document type | Technical Requirements Document |
 | Primary audience | Architecture, engineering, QA, security and implementation teams |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [High-Level System Architecture](assets/diagrams/trd-01-high-level-system-architecture.png)
-- [Data Model Overview](assets/diagrams/trd-02-data-model-overview.png)
-- [Ticket Lifecycle](assets/diagrams/trd-03-ticket-lifecycle.png)
-- [Payment Flow](assets/diagrams/trd-04-payment-flow.png)
-- [Access Flow](assets/diagrams/trd-05-access-flow.png)
-- [Control Architecture](assets/diagrams/trd-06-control-architecture.png)
+- High-Level System Architecture (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Data Model Overview (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Ticket Lifecycle (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Payment Flow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Access Flow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
+- Control Architecture (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Technical Baseline
+
+This TRD defines the target technical architecture and implementation controls. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
+
+As of 26 June 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, UAT and launch handover remain required.
 
 ## 1. Technical Executive Summary
 
@@ -135,9 +140,9 @@ The existing stack is a good foundation for the web/PWA product. The missing par
 ## 4. High-Level System Architecture
 
 <!-- DIAGRAM:trd-01-high-level-system-architecture:BEGIN -->
-![High-Level System Architecture](assets/diagrams/trd-01-high-level-system-architecture.png)
+_Diagram: High-Level System Architecture. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: High-Level System Architecture. Generated from the workflow source in this document._
+_Figure: High-Level System Architecture. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -594,9 +599,9 @@ Key entities:
 ## 9. Data Model Overview
 
 <!-- DIAGRAM:trd-02-data-model-overview:BEGIN -->
-![Data Model Overview](assets/diagrams/trd-02-data-model-overview.png)
+_Diagram: Data Model Overview. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Data Model Overview. Generated from the workflow source in this document._
+_Figure: Data Model Overview. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -788,9 +793,9 @@ Integrations:
 ### 12.1 Ticket Lifecycle
 
 <!-- DIAGRAM:trd-03-ticket-lifecycle:BEGIN -->
-![Ticket Lifecycle](assets/diagrams/trd-03-ticket-lifecycle.png)
+_Diagram: Ticket Lifecycle. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Ticket Lifecycle. Generated from the workflow source in this document._
+_Figure: Ticket Lifecycle. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -863,9 +868,9 @@ Required fields:
 ### 13.1 Payment Flow
 
 <!-- DIAGRAM:trd-04-payment-flow:BEGIN -->
-![Payment Flow](assets/diagrams/trd-04-payment-flow.png)
+_Diagram: Payment Flow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Payment Flow. Generated from the workflow source in this document._
+_Figure: Payment Flow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -930,9 +935,9 @@ sequenceDiagram
 ### 14.2 Access Flow
 
 <!-- DIAGRAM:trd-05-access-flow:BEGIN -->
-![Access Flow](assets/diagrams/trd-05-access-flow.png)
+_Diagram: Access Flow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Access Flow. Generated from the workflow source in this document._
+_Figure: Access Flow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1870,9 +1875,9 @@ The following are excluded from first launch unless separately approved:
 The platform should apply sensitive controls in layers. UI visibility is useful, but it is not a security boundary. Server-side authorization, database policies, idempotency, audit logs and approval queues must carry the actual control responsibility.
 
 <!-- DIAGRAM:trd-06-control-architecture:BEGIN -->
-![Control Architecture](assets/diagrams/trd-06-control-architecture.png)
+_Diagram: Control Architecture. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Control Architecture. Generated from the workflow source in this document._
+_Figure: Control Architecture. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1905,9 +1910,9 @@ Required rule:
 Every external integration must behave like an auditable state machine. This is especially important for payments, banks, access cards/barriers, SMS/email, identity verification and meter systems.
 
 <!-- DIAGRAM:trd-07-integration-lifecycle:BEGIN -->
-![Integration Lifecycle](assets/diagrams/trd-07-integration-lifecycle.png)
+_Diagram: Integration Lifecycle. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Integration Lifecycle. Generated from the workflow source in this document._
+_Figure: Integration Lifecycle. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -1938,9 +1943,9 @@ Required rule:
 ### 28.3 Data Lifecycle
 
 <!-- DIAGRAM:trd-08-data-lifecycle:BEGIN -->
-![Data Lifecycle](assets/diagrams/trd-08-data-lifecycle.png)
+_Diagram: Data Lifecycle. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Data Lifecycle. Generated from the workflow source in this document._
+_Figure: Data Lifecycle. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>

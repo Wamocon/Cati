@@ -50,6 +50,7 @@ export function DashboardActionButton({
       })
 
       if (!response.ok) throw new Error("Action failed.")
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
       setState("success")
       window.setTimeout(() => setState("idle"), 1600)
     } catch {
@@ -75,7 +76,7 @@ export function DashboardActionButton({
       title={stateLabel}
       data-state={state}
       className={cn(
-        "transition-colors disabled:cursor-wait disabled:opacity-70 data-[state=success]:border-teal-500/60 data-[state=success]:text-teal-600 data-[state=error]:border-rose-500/60 data-[state=error]:text-rose-600",
+        "scroll-mt-32 transition-colors disabled:cursor-wait disabled:opacity-70 data-[state=success]:border-teal-500/60 data-[state=success]:text-teal-600 data-[state=error]:border-rose-500/60 data-[state=error]:text-rose-600",
         className
       )}
     >

@@ -23,7 +23,7 @@ export function StatusBadge({ children, variant = "neutral", className }: Status
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
+        "inline-flex max-w-full items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold leading-4",
         variants[variant],
         className
       )}

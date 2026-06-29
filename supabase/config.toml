@@ -22,6 +22,10 @@ port = 55323
 enabled = true
 port = 55324
 
+[analytics]
+enabled = true
+port = 55327
+
 [auth]
 enabled = true
 site_url = "http://localhost:3000"

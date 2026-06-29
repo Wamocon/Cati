@@ -1,12 +1,15 @@
 "use client"
 
 import type { CSSProperties } from "react"
-import { Activity, LockKeyhole, Radar, TicketCheck, WalletCards } from "lucide-react"
+import { Activity, ArrowUpRight, LockKeyhole, TicketCheck, WalletCards } from "lucide-react"
+import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import {
+  type BlockOverview,
   formatTryShort,
   getBlockOverview,
   getSummary,
+  type SiteSummary,
   serviceTickets,
 } from "@/lib/site-management-data"
 
@@ -17,10 +20,23 @@ const towerSkins = [
   "from-rose-500/30 via-amber-400/15 to-white/5",
 ]
 
-export function SiteCommandSimulation({ className }: { className?: string }) {
-  const blocks = getBlockOverview()
-  const summary = getSummary()
+interface SiteCommandSimulationProps {
+  blocks?: BlockOverview[]
+  className?: string
+  summary?: SiteSummary
+  urgentTicketCount?: number
+}
+
+export function SiteCommandSimulation({
+  blocks: liveBlocks,
+  className,
+  summary: liveSummary,
+  urgentTicketCount,
+}: SiteCommandSimulationProps) {
+  const blocks = liveBlocks ?? getBlockOverview()
+  const summary = liveSummary ?? getSummary()
   const urgentTickets = serviceTickets.filter((ticket) => ticket.slaHoursRemaining < 0 || ticket.priority === "urgent")
+  const urgentTicketTotal = urgentTicketCount ?? urgentTickets.length
 
   return (
     <section
@@ -28,20 +44,19 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
         "relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,color-mix(in_srgb,var(--card)_94%,transparent),color-mix(in_srgb,var(--primary)_8%,var(--card)))] p-4 shadow-sm md:p-5",
         className
       )}
-      aria-label="3D site operations simulation"
+      aria-label="Site operations risk map"
     >
       <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px),linear-gradient(90deg,color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:36px_36px]" />
       <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-stretch">
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase text-primary">
-                <Radar className="h-3.5 w-3.5" />
-                Canlı Site Simülasyonu
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                Operasyon risk haritası
+              </p>
               <h2 className="mt-3 text-lg font-black text-foreground md:text-xl">Blok, borç, servis ve erişim risk haritası</h2>
               <p className="mt-1 max-w-2xl text-xs text-muted-foreground md:text-sm">
-                8 blok ve 769 daire, AI öncelik motoru için tek 3D operasyon sahnesinde okunur.
+                8 blok ve 769 daire; borç, servis, erişim ve SLA riskleri tek operasyon görünümünde okunur.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
@@ -60,7 +75,12 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
             </div>
           </div>
 
-          <div className="site-orbit-scene mt-6 min-h-[300px] rounded-2xl border border-border/70 bg-background/70 p-4">
+          <Link
+            href="/dashboard/listings"
+            aria-label="3D blok risk haritasını daire matrisinde aç"
+            className="mt-6 block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+          <div className="site-orbit-scene min-h-[300px] rounded-2xl border border-border/70 bg-background/70 p-4 transition hover:border-primary/40">
             <div className="site-grid-floor" />
             <div className="site-risk-route site-risk-route-a" />
             <div className="site-risk-route site-risk-route-b" />
@@ -100,6 +120,7 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
               })}
             </div>
           </div>
+          </Link>
         </div>
 
         <aside className="grid gap-3 lg:w-72">
@@ -113,7 +134,7 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
             {
               icon: TicketCheck,
               label: "SLA alarmı",
-              value: `${urgentTickets.length} iş`,
+              value: `${urgentTicketTotal} iş`,
               text: "Teknik rota ödeme onayı ve öncelik riskine göre sıralanır.",
             },
             {
@@ -128,8 +149,24 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
               value: `${summary.aiRiskCount} risk`,
               text: "Her risk aksiyona çevrilir: ara, kısıtla, servis ata, belge iste.",
             },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-border bg-card/80 p-3 shadow-sm backdrop-blur">
+          ].map((item) => {
+            const href =
+              item.icon === WalletCards
+                ? "/dashboard/finance"
+                : item.icon === TicketCheck
+                  ? "/dashboard/tickets"
+                  : item.icon === LockKeyhole
+                    ? "/dashboard/compliance"
+                    : "/dashboard/reports"
+
+            return (
+            <Link
+              key={item.label}
+              href={href}
+              aria-label={`${item.label} detayını aç`}
+              className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+            <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm backdrop-blur transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -137,11 +174,16 @@ export function SiteCommandSimulation({ className }: { className?: string }) {
                   </div>
                   <p className="text-xs font-bold uppercase text-muted-foreground">{item.label}</p>
                 </div>
-                <p className="text-sm font-black text-foreground">{item.value}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-black text-foreground">{item.value}</p>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
               </div>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{item.text}</p>
             </div>
-          ))}
+            </Link>
+            )
+          })}
         </aside>
       </div>
     </section>

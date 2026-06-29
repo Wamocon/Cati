@@ -11,6 +11,9 @@ interface Column<T> {
   render: (row: T) => React.ReactNode
   sortable?: boolean
   sortValue?: (row: T) => string | number | Date | null | undefined
+  sticky?: "right"
+  headerClassName?: string
+  cellClassName?: string
 }
 
 interface DataTableProps<T> {
@@ -107,7 +110,7 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "premium-surface overflow-hidden rounded-xl",
+        "premium-surface min-w-0 overflow-hidden rounded-xl",
         className
       )}
       data-testid="data-table"
@@ -132,8 +135,8 @@ export function DataTable<T>({
           </span>
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+      <div className="min-w-0 overflow-x-auto overscroll-x-contain">
+        <table className="min-w-max w-full text-left text-sm">
           <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur">
             <tr>
               {columns.map((col) => (
@@ -141,8 +144,11 @@ export function DataTable<T>({
                   key={col.key}
                   className={cn(
                     "px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground",
+                    col.sticky === "right" &&
+                      "sticky right-0 z-20 bg-muted/95 shadow-[-14px_0_18px_-18px_rgba(15,23,42,0.75)] backdrop-blur",
                     col.sortable &&
-                      "cursor-pointer select-none hover:text-foreground"
+                      "cursor-pointer select-none hover:text-foreground",
+                    col.headerClassName
                   )}
                   onClick={() => col.sortable && toggleSort(col.key)}
                 >
@@ -168,7 +174,15 @@ export function DataTable<T>({
                   className="transition-colors hover:bg-primary/[0.045]"
                 >
                   {columns.map((col) => (
-                    <td key={col.key} className="px-4 py-3 text-foreground">
+                    <td
+                      key={col.key}
+                      className={cn(
+                        "px-4 py-3 text-foreground",
+                        col.sticky === "right" &&
+                          "sticky right-0 z-10 bg-card/95 shadow-[-14px_0_18px_-18px_rgba(15,23,42,0.75)] backdrop-blur",
+                        col.cellClassName
+                      )}
+                    >
                       {col.render(row)}
                     </td>
                   ))}
@@ -199,7 +213,7 @@ export function DataTable<T>({
               disabled={currentPage === 1}
               className="rounded-lg border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Önceki
+              {t("previous")}
             </button>
             <span>
               {currentPage} / {totalPages}
@@ -210,7 +224,7 @@ export function DataTable<T>({
               disabled={currentPage === totalPages}
               className="rounded-lg border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Sonraki
+              {t("next")}
             </button>
           </div>
         </div>

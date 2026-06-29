@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, "..")
 const resultsDir = path.join(rootDir, "quality", "results")
+const workspaceTempDir = path.join(rootDir, ".tmp")
 
 const phases = new Map([
   [1, "Discovery, requirement lock and market benchmark"],
@@ -61,21 +62,27 @@ function shellCommand(command, env = {}) {
   return { type: "command", command, env }
 }
 
+function npmScript(scriptName, ...args) {
+  const npmExecutable = process.platform === "win32" ? "npm.cmd" : "npm"
+  const extraArgs = args.length > 0 ? ` -- ${args.join(" ")}` : ""
+  return `${npmExecutable} --prefix apps/web run ${scriptName}${extraArgs}`
+}
+
 const gatesByProfile = {
   docs: [
     { name: "requirements-docs", ...{ type: "builtin", fn: verifyRequirementsDocs } },
   ],
   smoke: [
     { name: "requirements-docs", type: "builtin", fn: verifyRequirementsDocs },
-    { name: "lint", ...shellCommand("pnpm lint") },
-    { name: "typecheck", ...shellCommand("pnpm typecheck") },
+    { name: "lint", ...shellCommand(npmScript("lint")) },
+    { name: "typecheck", ...shellCommand(npmScript("typecheck")) },
   ],
   full: [
     { name: "requirements-docs", type: "builtin", fn: verifyRequirementsDocs },
-    { name: "lint", ...shellCommand("pnpm lint") },
-    { name: "typecheck", ...shellCommand("pnpm typecheck") },
-    { name: "build", ...shellCommand("pnpm build") },
-    { name: "playwright-e2e", ...shellCommand("pnpm --dir apps/web test:e2e", { PLAYWRIGHT_SERVER_MODE: "production" }) },
+    { name: "lint", ...shellCommand(npmScript("lint")) },
+    { name: "typecheck", ...shellCommand(npmScript("typecheck")) },
+    { name: "build", ...shellCommand(npmScript("build")) },
+    { name: "playwright-e2e", ...shellCommand(npmScript("test:e2e"), { PLAYWRIGHT_SERVER_MODE: "production" }) },
     { name: "browser-audit", ...shellCommand("node scripts/browser-audit.mjs --start-server --server-mode start") },
   ],
 }
@@ -90,7 +97,7 @@ async function verifyRequirementsDocs() {
     "docs/requirements/option-3-ai-site-crm/PRD.docx",
     "docs/requirements/option-3-ai-site-crm/TRD.docx",
     "docs/requirements/option-3-ai-site-crm/Market-Research-Annex.docx",
-    "docs/requirements/option-3-ai-site-crm/AI-Site-CRM-Requirements-Package.docx",
+    "docs/requirements/option-3-ai-site-crm/1Cati-Requirements-Package.docx",
     "docs/ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md",
   ]
 
@@ -139,10 +146,17 @@ function shouldSkipGate(gate, args) {
 async function runCommand(command, logFile, env = {}) {
   return await new Promise((resolve) => {
     const started = Date.now()
+    const commandEnv = {
+      ...process.env,
+      TEMP: workspaceTempDir,
+      TMP: workspaceTempDir,
+      ...env,
+      FORCE_COLOR: "1",
+    }
     const child = spawn(command, {
       cwd: rootDir,
       shell: true,
-      env: { ...process.env, ...env, FORCE_COLOR: "1" },
+      env: commandEnv,
     })
     const chunks = []
     const append = (chunk, stream) => {

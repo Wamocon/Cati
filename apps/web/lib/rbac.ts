@@ -1,22 +1,15 @@
-// Role-Based Access Control (RBAC) for the 1Çatı real-estate platform.
+// Client-aligned RBAC for the 1Cati site-management platform.
 //
-// Design principles:
-// - Least privilege: every role receives only the permissions required for its job function.
-// - Defense in depth: these claims are mirrored by Supabase Row Level Security (RLS) policies.
-// - Explicit over implicit: each role lists its exact permissions rather than inheriting broadly.
-// - Scalable: new resources and actions can be added without changing the core helpers.
+// The client specification defines six business roles. We keep that set small
+// and use explicit permissions plus data ownership rules to avoid role sprawl.
 
 export const roles = [
-  "super_admin",
-  "company_admin",
+  "admin",
   "manager",
-  "sales_consultant",
-  "listing_agent",
-  "property_manager",
   "accountant",
-  "maintenance",
-  "client",
-  "viewer",
+  "staff",
+  "owner",
+  "tenant",
 ] as const
 
 export type Role = (typeof roles)[number]
@@ -63,79 +56,104 @@ export interface RoleDefinition {
   labelKey: string
   descriptionKey: string
   level: number
-  scope: "platform" | "company" | "office" | "personal"
+  scope: "company" | "site" | "finance" | "field" | "owned_unit" | "rented_unit"
+  responsibilities: string[]
+  constraints: string[]
 }
 
 export const roleDefinitions: RoleDefinition[] = [
   {
-    key: "super_admin",
-    labelKey: "roles.superAdmin",
-    descriptionKey: "roles.descriptions.superAdmin",
-    level: 100,
-    scope: "platform",
-  },
-  {
-    key: "company_admin",
-    labelKey: "roles.companyAdmin",
-    descriptionKey: "roles.descriptions.companyAdmin",
+    key: "admin",
+    labelKey: "roles.admin",
+    descriptionKey: "roles.descriptions.admin",
     level: 90,
     scope: "company",
+    responsibilities: [
+      "Full platform configuration",
+      "User and role administration",
+      "Sensitive finance, access, audit, and integration oversight",
+    ],
+    constraints: [
+      "Must use separate approval/audit trail for finance and access changes",
+      "Cannot bypass tenant/company data isolation",
+    ],
   },
   {
     key: "manager",
     labelKey: "roles.manager",
     descriptionKey: "roles.descriptions.manager",
     level: 70,
-    scope: "office",
-  },
-  {
-    key: "sales_consultant",
-    labelKey: "roles.salesConsultant",
-    descriptionKey: "roles.descriptions.salesConsultant",
-    level: 50,
-    scope: "office",
-  },
-  {
-    key: "listing_agent",
-    labelKey: "roles.listingAgent",
-    descriptionKey: "roles.descriptions.listingAgent",
-    level: 50,
-    scope: "office",
-  },
-  {
-    key: "property_manager",
-    labelKey: "roles.propertyManager",
-    descriptionKey: "roles.descriptions.propertyManager",
-    level: 50,
-    scope: "office",
+    scope: "site",
+    responsibilities: [
+      "Daily site operations",
+      "Task, service, staff, reservation, and communication supervision",
+      "SLA, debt restriction, and access-risk review",
+    ],
+    constraints: [
+      "Can review finance but cannot post accounting entries",
+      "Can assign staff but cannot change global system settings",
+    ],
   },
   {
     key: "accountant",
     labelKey: "roles.accountant",
     descriptionKey: "roles.descriptions.accountant",
-    level: 50,
-    scope: "office",
+    level: 60,
+    scope: "finance",
+    responsibilities: [
+      "Fees, payments, deposits, refunds, collections, and finance reports",
+      "Debt restriction validation before paid services and reservations",
+    ],
+    constraints: [
+      "No user administration",
+      "No field task closure without operational evidence",
+    ],
   },
   {
-    key: "maintenance",
-    labelKey: "roles.maintenance",
-    descriptionKey: "roles.descriptions.maintenance",
+    key: "staff",
+    labelKey: "roles.staff",
+    descriptionKey: "roles.descriptions.staff",
     level: 40,
-    scope: "office",
+    scope: "field",
+    responsibilities: [
+      "Accept assigned jobs",
+      "Complete tasks with photo/video evidence",
+      "Update service status and field notes",
+    ],
+    constraints: [
+      "Cannot view finance ledgers",
+      "Cannot approve refunds, access restrictions, or user roles",
+    ],
   },
   {
-    key: "client",
-    labelKey: "roles.client",
-    descriptionKey: "roles.descriptions.client",
-    level: 10,
-    scope: "personal",
-  },
-  {
-    key: "viewer",
-    labelKey: "roles.viewer",
-    descriptionKey: "roles.descriptions.viewer",
+    key: "owner",
+    labelKey: "roles.owner",
+    descriptionKey: "roles.descriptions.owner",
     level: 20,
-    scope: "office",
+    scope: "owned_unit",
+    responsibilities: [
+      "View owned-unit documents, reservations, communications, and service status",
+      "Create service requests and communicate with management",
+    ],
+    constraints: [
+      "Can only access own units and authorized tenants",
+      "Cannot see other owners, staff, reports, or internal finance controls",
+    ],
+  },
+  {
+    key: "tenant",
+    labelKey: "roles.tenant",
+    descriptionKey: "roles.descriptions.tenant",
+    level: 10,
+    scope: "rented_unit",
+    responsibilities: [
+      "View own service requests, reservations, chat, and authorized documents",
+      "Create reservations or service requests when owner permissions allow it",
+    ],
+    constraints: [
+      "Access is restricted by the owner agreement and debt status",
+      "Cannot view owner records, reports, finance ledgers, or other units",
+    ],
   },
 ]
 
@@ -161,27 +179,9 @@ const view = (resource: Resource): Permission[] => [
   permission(resource, "view"),
 ]
 
-// Canonical permission matrix. Keep in sync with:
-// - supabase/migrations/* RLS policies
-// - app/[locale]/dashboard/page.tsx menu config
+// Canonical permission matrix. Keep in sync with Supabase RLS and tests.
 export const rolePermissions: Record<Role, Permission[]> = {
-  super_admin: [
-    ...manage("dashboard"),
-    ...manage("listings"),
-    ...manage("leads"),
-    ...manage("deals"),
-    ...manage("tickets"),
-    ...manage("calendar"),
-    ...manage("documents"),
-    ...manage("eids_compliance"),
-    ...manage("finance"),
-    ...manage("reports"),
-    ...manage("users"),
-    ...manage("settings"),
-    ...manage("communications"),
-    ...manage("offline_sync"),
-  ],
-  company_admin: [
+  admin: [
     ...manage("dashboard"),
     ...manage("listings"),
     ...manage("leads"),
@@ -223,98 +223,13 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("reports", "create"),
     permission("reports", "export"),
     permission("users", "view"),
+    permission("users", "assign"),
     permission("settings", "view"),
     ...crud("communications"),
     ...crud("offline_sync"),
   ],
-  sales_consultant: [
-    ...view("dashboard"),
-    ...view("listings"),
-    permission("leads", "view"),
-    permission("leads", "create"),
-    permission("leads", "update"),
-    permission("deals", "view"),
-    permission("deals", "create"),
-    permission("deals", "update"),
-    permission("tickets", "view"),
-    permission("tickets", "create"),
-    permission("calendar", "view"),
-    permission("calendar", "create"),
-    permission("calendar", "update"),
-    permission("documents", "view"),
-    permission("documents", "create"),
-    permission("eids_compliance", "view"),
-    permission("communications", "view"),
-    permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
-    permission("offline_sync", "update"),
-    permission("offline_sync", "delete"),
-  ],
-  listing_agent: [
-    ...view("dashboard"),
-    permission("listings", "view"),
-    permission("listings", "create"),
-    permission("listings", "update"),
-    permission("listings", "assign"),
-    permission("leads", "view"),
-    permission("leads", "create"),
-    permission("deals", "view"),
-    permission("tickets", "view"),
-    permission("tickets", "create"),
-    permission("calendar", "view"),
-    permission("calendar", "create"),
-    permission("calendar", "update"),
-    permission("documents", "view"),
-    permission("documents", "create"),
-    permission("documents", "update"),
-    permission("eids_compliance", "view"),
-    permission("eids_compliance", "create"),
-    permission("eids_compliance", "update"),
-    permission("communications", "view"),
-    permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
-    permission("offline_sync", "update"),
-    permission("offline_sync", "delete"),
-  ],
-  property_manager: [
-    ...view("dashboard"),
-    permission("listings", "view"),
-    permission("listings", "update"),
-    permission("leads", "view"),
-    permission("leads", "create"),
-    permission("deals", "view"),
-    permission("deals", "create"),
-    permission("deals", "update"),
-    permission("tickets", "view"),
-    permission("tickets", "create"),
-    permission("tickets", "update"),
-    permission("tickets", "assign"),
-    permission("tickets", "approve"),
-    permission("calendar", "view"),
-    permission("calendar", "create"),
-    permission("calendar", "update"),
-    permission("calendar", "delete"),
-    permission("documents", "view"),
-    permission("documents", "create"),
-    permission("documents", "update"),
-    permission("eids_compliance", "view"),
-    permission("finance", "view"),
-    permission("reports", "view"),
-    permission("reports", "export"),
-    permission("communications", "view"),
-    permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
-    permission("offline_sync", "update"),
-    permission("offline_sync", "delete"),
-  ],
   accountant: [
     ...view("dashboard"),
-    permission("listings", "view"),
-    permission("deals", "view"),
-    permission("tickets", "view"),
     permission("documents", "view"),
     permission("documents", "create"),
     permission("documents", "update"),
@@ -326,15 +241,14 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("reports", "view"),
     permission("reports", "create"),
     permission("reports", "export"),
-    permission("settings", "view"),
     permission("communications", "view"),
+    permission("communications", "create"),
   ],
-  maintenance: [
+  staff: [
     ...view("dashboard"),
     permission("tickets", "view"),
     permission("tickets", "update"),
     permission("calendar", "view"),
-    permission("calendar", "create"),
     permission("calendar", "update"),
     permission("documents", "view"),
     permission("documents", "create"),
@@ -343,34 +257,26 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("offline_sync", "view"),
     permission("offline_sync", "create"),
     permission("offline_sync", "update"),
-    permission("offline_sync", "delete"),
   ],
-  client: [
+  owner: [
     ...view("dashboard"),
-    permission("listings", "view"),
-    permission("deals", "view"),
     permission("tickets", "view"),
     permission("tickets", "create"),
+    permission("calendar", "view"),
+    permission("calendar", "create"),
     permission("documents", "view"),
-    permission("finance", "view"),
-    permission("finance", "export"),
-    permission("reports", "view"),
-    permission("reports", "export"),
     permission("communications", "view"),
     permission("communications", "create"),
   ],
-  viewer: [
+  tenant: [
     ...view("dashboard"),
-    permission("listings", "view"),
-    permission("leads", "view"),
-    permission("deals", "view"),
     permission("tickets", "view"),
+    permission("tickets", "create"),
     permission("calendar", "view"),
+    permission("calendar", "create"),
     permission("documents", "view"),
-    permission("eids_compliance", "view"),
-    permission("finance", "view"),
-    permission("reports", "view"),
     permission("communications", "view"),
+    permission("communications", "create"),
   ],
 }
 
@@ -413,7 +319,7 @@ export function getAccessibleResources(
 }
 
 export function isAdmin(role: Role | null | undefined): boolean {
-  return role === "super_admin" || role === "company_admin"
+  return role === "admin"
 }
 
 export function isManagerOrAbove(role: Role | null | undefined): boolean {

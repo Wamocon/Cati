@@ -2,10 +2,10 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2  
-Date: 25 June 2026  
-Prepared for: Scope control, QA planning and stakeholder sign-off  
-Prepared by: 1Cati / Product and Engineering  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: Scope control, QA planning and stakeholder sign-off
+Prepared by: 1Cati / Product and Engineering
 Purpose: Connect business needs to product requirements, technical controls and test evidence
 
 ---
@@ -23,15 +23,20 @@ Purpose: Connect business needs to product requirements, technical controls and 
 |---|---|
 | Document type | Requirements Traceability Matrix |
 | Primary audience | Product, QA, delivery leadership, engineering and client stakeholders |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [Traceability Flow](assets/diagrams/traceability-01-traceability-flow.png)
+- Traceability Flow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current Traceability Baseline
+
+As of 26 June 2026, traceability is controlled through the 15-phase ERP model. Phases 1-4 have local/product foundation evidence, phase 5 is ready for UAT review, phases 6-7 are active build, and phases 8-15 require implementation, tests and sign-off before being treated as complete.
+
+The matrix below describes required coverage, not automatic completion.
 
 ## 1. Executive Summary
 
@@ -44,9 +49,9 @@ Each major requirement must have a product owner, a technical owner, acceptance 
 ## 2. Traceability Flow
 
 <!-- DIAGRAM:traceability-01-traceability-flow:BEGIN -->
-![Traceability Flow](assets/diagrams/traceability-01-traceability-flow.png)
+_Diagram: Traceability Flow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: Traceability Flow. Generated from the workflow source in this document._
+_Figure: Traceability Flow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -122,4 +127,3 @@ flowchart TD
 - Every mandatory scenario has a test case.
 - Every UAT result is linked to the requirement it validates.
 - Open decisions are tracked before scope lock.
-

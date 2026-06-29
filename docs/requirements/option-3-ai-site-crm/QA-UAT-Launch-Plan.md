@@ -2,10 +2,10 @@
 
 ## AI-Powered Residential Site Management CRM
 
-Version: 0.2  
-Date: 25 June 2026  
-Prepared for: QA, UAT, release management and launch readiness  
-Prepared by: 1Cati / Product and Engineering  
+Version: 0.3
+Date: 26 June 2026
+Prepared for: QA, UAT, release management and launch readiness
+Prepared by: 1Cati / Product and Engineering
 Primary goal: Launch safely with tested workflows, trained users and clear support ownership
 
 ---
@@ -23,15 +23,20 @@ Primary goal: Launch safely with tested workflows, trained users and clear suppo
 |---|---|
 | Document type | QA, UAT And Launch Plan |
 | Primary audience | QA, product, engineering, delivery leadership and client operations |
-| Status | Consulting-ready v0.2 |
-| Design refresh | 25 June 2026 |
+| Status | Current delivery baseline v0.3 |
+| Last reconciled | 26 June 2026 |
 | Confidentiality | STRICTLY CONFIDENTIAL |
 
 ## Visual Navigation
 
-- [UAT Workflow](assets/diagrams/qa-01-uat-workflow.png)
+- UAT Workflow (source retained in this Markdown; regenerate a rendered diagram only when a stakeholder export explicitly needs it)
 <!-- DOC-UPGRADE:END -->
 
+## Current QA Baseline
+
+As of 26 June 2026, repeatable QA includes TypeScript/ESLint/build checks, Playwright E2E, phase harnesses, a focused `phase:06-09` regression harness and Jira/Xray dry-run planning. Production launch still requires UAT with realistic client data, RLS/security review, migration reconciliation, backup/restore proof and signed launch approval.
+
+Generated screenshots, JSON reports and temporary browser output are disposable unless promoted into a maintained Markdown or DOCX reading copy.
 
 ## 1. Executive Summary
 
@@ -57,9 +62,9 @@ The launch should not proceed until the mandatory client scenarios pass: role lo
 ## 3. UAT Workflow
 
 <!-- DIAGRAM:qa-01-uat-workflow:BEGIN -->
-![UAT Workflow](assets/diagrams/qa-01-uat-workflow.png)
+_Diagram: UAT Workflow. Source is included below; regenerate a rendered diagram only when a stakeholder export explicitly needs it._
 
-_Figure: UAT Workflow. Generated from the workflow source in this document._
+_Figure: UAT Workflow. Source retained in this document for regeneration._
 
 <details>
 <summary>Mermaid source</summary>
@@ -171,4 +176,3 @@ flowchart TD
 - AI guardrail tests passed.
 - Backup/restore evidence exists.
 - Launch runbook approved.
-

@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "1Çatı AI CRM | Ataberk Estate",
+  title: "1Çatı ERP | Ataberk Estate",
   description:
-    "AI-powered CRM command center for Ataberk Estate, New Level Premium Avsallar, sales, service, documents, finance and operations.",
+    "Real estate ERP workspace for Ataberk Estate: CRM, portfolio, site operations, service, documents, finance and compliance.",
 }
 
 export const dynamic = "force-dynamic"
@@ -17,6 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
+      lang="tr"
+      dir="ltr"
       className={cn("antialiased")}
       suppressHydrationWarning
       data-scroll-behavior="smooth"

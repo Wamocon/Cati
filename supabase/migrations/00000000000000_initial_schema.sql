@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
-  role TEXT NOT NULL DEFAULT 'agent' CHECK (role IN ('admin','manager','agent','accountant','maintenance','client')),
+  role TEXT NOT NULL DEFAULT 'tenant' CHECK (role IN ('admin','manager','accountant','staff','owner','tenant')),
   phone TEXT,
   language TEXT DEFAULT 'ru',
   office_id UUID,
@@ -29,7 +29,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, role, language)
-  VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', COALESCE(NEW.raw_user_meta_data->>'role','client'), 'ru');
+  VALUES (NEW.id, NEW.raw_user_meta_data->>'full_name', COALESCE(NEW.raw_user_meta_data->>'role','tenant'), 'tr');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

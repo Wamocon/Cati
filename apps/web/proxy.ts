@@ -41,9 +41,11 @@ export default async function proxy(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const accessProfilesEnabled =
+    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
 
   if (!supabaseUrl || !supabaseKey) {
-    // Supabase is not configured yet; run in demo mode without blocking the UI.
+    // External auth is not configured yet; keep the local workspace usable.
     return intlResponse
   }
 
@@ -74,7 +76,7 @@ export default async function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith(prefix)
   )
 
-  if (isProtected && !isAuthenticated) {
+  if (isProtected && !isAuthenticated && !accessProfilesEnabled) {
     return NextResponse.redirect(signInUrl(locale, request))
   }
 

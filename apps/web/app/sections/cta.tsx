@@ -11,7 +11,7 @@ export function CTA() {
   return (
     <section id="contact" className="relative overflow-hidden py-16 md:py-24">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-accent/8" />
-      <div className="absolute top-1/2 left-1/2 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[120px]" />
+      <div className="absolute top-1/2 left-1/2 h-[min(500px,calc(100vw-2rem))] w-[min(500px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-[120px]" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-3xl text-center">
           <GlassCard glow className="p-8 sm:p-12">

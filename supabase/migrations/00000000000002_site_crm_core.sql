@@ -1,5 +1,5 @@
 -- Core site-management CRM schema for 1Cati.
--- This migration adds the production domain model behind the current demo UI.
+-- This migration adds the production domain model behind the ERP UI.
 
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER AS $$
@@ -25,7 +25,7 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES public.companies(id) ON DELETE SET NULL;
 
 ALTER TABLE public.profiles
-  ALTER COLUMN role SET DEFAULT 'client';
+  ALTER COLUMN role SET DEFAULT 'tenant';
 
 CREATE TABLE IF NOT EXISTS public.offices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -311,7 +311,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $$
-  SELECT public.current_user_profile_role() = 'super_admin';
+  SELECT public.current_user_profile_role() = 'admin';
 $$;
 
 DO $$
@@ -350,11 +350,11 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS "Managers can insert company data" ON public.%I', table_name);
     EXECUTE format('DROP POLICY IF EXISTS "Managers can update company data" ON public.%I', table_name);
     EXECUTE format(
-      'CREATE POLICY "Managers can insert company data" ON public.%I FOR INSERT WITH CHECK ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 50)',
+      'CREATE POLICY "Managers can insert company data" ON public.%I FOR INSERT WITH CHECK ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 70)',
       table_name
     );
     EXECUTE format(
-      'CREATE POLICY "Managers can update company data" ON public.%I FOR UPDATE USING ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 50) WITH CHECK ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 50)',
+      'CREATE POLICY "Managers can update company data" ON public.%I FOR UPDATE USING ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 70) WITH CHECK ((public.is_super_admin() OR company_id = public.current_user_company_id()) AND public.current_user_role_level() >= 70)',
       table_name
     );
   END LOOP;

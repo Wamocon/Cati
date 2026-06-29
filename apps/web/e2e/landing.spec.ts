@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test"
-import { screenshot, collectConsoleIssues, scrollToSection } from "./helpers"
+import { expect, test } from "@playwright/test"
+import { collectConsoleIssues, screenshot, scrollToSection } from "./helpers"
 
 test.describe("Landing page journey", () => {
   test.setTimeout(60_000)
@@ -11,93 +11,61 @@ test.describe("Landing page journey", () => {
     collectConsoleIssues(page, issues)
   })
 
-  test("home page renders all sections", async ({ page }, testInfo) => {
+  test("home page renders the production ERP story", async ({
+    page,
+  }, testInfo) => {
     await page.goto("/tr")
-    await expect(page).toHaveTitle(/1Çatı/)
+    await expect(page).toHaveTitle(/1Çatı|1Cati/)
 
-    // Hero
     await expect(
       page.getByRole("heading", {
-        name: /Türkiye emlağını tek çatı altında yönetin/,
+        name: /Emlak operasyonunuzu tek ERP merkezinde yönetin/,
       })
     ).toBeVisible()
+    await expect(page.getByText("ERP çalışma alanı", { exact: true })).toBeVisible()
     await screenshot(page, testInfo, "01-hero")
 
-    // Stats
     await scrollToSection(page, "[data-testid='stats']")
     await expect(page.getByText("212 298")).toBeVisible()
     await screenshot(page, testInfo, "02-stats")
 
-    // Problems bento
-    const problemCards = page.locator(
-      "[data-testid='problem-bento'] > div > div.grid > div"
-    )
-    await expect(problemCards).toHaveCount(9)
-    await expect(
-      page.getByText("EİDS yetkilendirmesi takibi zor")
-    ).toBeVisible()
-    await expect(
-      page.getByRole("heading", { name: "Sahte TAPU ve sahte ilanlar" })
-    ).toBeVisible()
-    await expect(
-      page.getByText("Oturum izni kuralları sıkılaştı")
-    ).toBeVisible()
+    await scrollToSection(page, "[data-testid='problem-bento']")
+    await expect(page.locator("[data-testid='problem-bento'] > div > div.grid > div")).toHaveCount(9)
+    await expect(page.getByText("EİDS yetkilendirmesi takibi zor")).toBeVisible()
     await screenshot(page, testInfo, "03-problems")
 
-    // Solution grid
     await scrollToSection(page, "[data-testid='solution-grid']")
-    const solutionCards = page.locator(
-      "[data-testid='solution-grid'] > div > div.grid > div"
-    )
-    await expect(solutionCards).toHaveCount(12)
-    await expect(
-      page.getByText(
-        "EİDS yetkilendirme takibi ve son kullanma hatırlatıcıları"
-      )
-    ).toBeVisible()
+    await expect(page.locator("[data-testid='solution-grid'] > div > div.grid > div")).toHaveCount(12)
+    await expect(page.getByText("CRM, ilanlar, işlemler, kiralama")).toBeVisible()
     await screenshot(page, testInfo, "04-solution")
 
-    // Compliance section
     await scrollToSection(page, "[data-testid='compliance-features']")
-    const complianceCards = page.locator(
-      "[data-testid='compliance-features'] > div > div.grid > div"
-    )
-    await expect(complianceCards).toHaveCount(6)
-    await expect(page.getByText("MVP", { exact: true }).first()).toBeVisible()
-    await expect(
-      page.getByText("Roadmap", { exact: true }).first()
-    ).toBeVisible()
+    await expect(page.locator("[data-testid='compliance-features'] > div > div.grid > div")).toHaveCount(6)
+    await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible()
+    await expect(page.getByText("Entegrasyon hazır", { exact: true }).first()).toBeVisible()
     await screenshot(page, testInfo, "05-compliance")
 
-    // Platform demo
-    await scrollToSection(page, "section:has-text('Platformu canlı önizleme')")
-    await expect(page.getByRole("button", { name: "CRM" })).toBeVisible()
-    await screenshot(page, testInfo, "06-platform-demo")
-
-    // Services
     await scrollToSection(page, "section#services")
-    const serviceCards = page.locator("section#services > div > div.grid > div")
-    await expect(serviceCards).toHaveCount(11)
-    await screenshot(page, testInfo, "07-services")
+    await expect(page.getByRole("heading", { name: "ERP modülleri" })).toBeVisible()
+    await expect(page.getByText("CRM ve lead yönetimi")).toBeVisible()
+    await screenshot(page, testInfo, "06-services")
 
-    // How it works
+    await scrollToSection(page, "section#platform")
+    await expect(page.getByRole("heading", { name: "ERP iş akışı" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "CRM" })).toBeVisible()
+    await screenshot(page, testInfo, "07-platform-workflow")
+
     await scrollToSection(page, "section#how-it-works")
-    await expect(page.getByText("Ataberk Estate'e başvurun")).toBeVisible()
+    await expect(page.getByText("Lead veya malik kaydı açılır")).toBeVisible()
     await screenshot(page, testInfo, "08-how-it-works")
 
-    // CTA
     await scrollToSection(page, "section#contact")
-    await expect(
-      page.getByRole("link", { name: "Demo Talep Et" })
-    ).toBeVisible()
+    await expect(page.getByRole("link", { name: "Ürün görüşmesi planla" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Panele Giriş Yap" })).toBeVisible()
     await screenshot(page, testInfo, "09-cta")
 
-    // Footer
     await scrollToSection(page, "footer")
     await screenshot(page, testInfo, "10-footer", { fullPage: false })
-
-    // Full page screenshot
-    await screenshot(page, testInfo, "11-full-page", { fullPage: true })
 
     expect(issues).toEqual([])
   })
@@ -106,10 +74,8 @@ test.describe("Landing page journey", () => {
     await page.goto("/tr")
     await page.getByRole("link", { name: "Panele Giriş Yap" }).click()
     await expect(page).toHaveURL(/\/tr\/login/)
-    await expect(
-      page.getByRole("heading", { name: "1Çatı Giriş" })
-    ).toBeVisible()
-    await screenshot(page, testInfo, "12-login-from-cta")
+    await expect(page.getByRole("heading", { name: "1Çatı Giriş" })).toBeVisible()
+    await screenshot(page, testInfo, "11-login-from-cta")
   })
 
   test("language switcher changes locale", async ({ page }, testInfo) => {
@@ -122,9 +88,8 @@ test.describe("Landing page journey", () => {
     }
     await select.selectOption("en")
     await expect(page).toHaveURL("/en")
-    await screenshot(page, testInfo, "13-locale-en")
+    await screenshot(page, testInfo, "12-locale-en")
 
-    // Switch again to ensure no double locale prefix (e.g. /en/en)
     select = page.getByTestId("locale-switcher").filter({ visible: true })
     if (!(await select.isVisible())) {
       await page.getByTestId("menu-toggle").click()
@@ -134,6 +99,6 @@ test.describe("Landing page journey", () => {
     await expect(select).toHaveValue("en")
     await select.selectOption("de")
     await expect(page).toHaveURL("/de")
-    await screenshot(page, testInfo, "14-locale-de")
+    await screenshot(page, testInfo, "13-locale-de")
   })
 })

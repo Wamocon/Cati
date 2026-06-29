@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { motion, type Variants, useReducedMotion } from "framer-motion"
+import { Fragment } from "react"
 
 interface KineticHeadlineProps {
   text: string
@@ -46,9 +47,12 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
         {words.map((word, index) => {
           const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
           return (
-            <span key={index} className={cn("mr-[0.25em] inline-block", isHighlight && highlightClassName)}>
-              {word}
-            </span>
+            <Fragment key={index}>
+              <span className={cn("inline-block", isHighlight && highlightClassName)}>
+                {word}
+              </span>
+              {index < words.length - 1 ? " " : null}
+            </Fragment>
           )
         })}
       </h1>
@@ -60,13 +64,15 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
       {words.map((word, index) => {
         const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
         return (
-          <motion.span
-            key={index}
-            variants={child}
-            className={cn("mr-[0.25em] inline-block origin-bottom", isHighlight && highlightClassName)}
-          >
-            {word}
-          </motion.span>
+          <Fragment key={index}>
+            <motion.span
+              variants={child}
+              className={cn("inline-block origin-bottom", isHighlight && highlightClassName)}
+            >
+              {word}
+            </motion.span>
+            {index < words.length - 1 ? " " : null}
+          </Fragment>
         )
       })}
     </motion.h1>

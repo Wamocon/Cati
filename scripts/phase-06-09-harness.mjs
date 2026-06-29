@@ -57,6 +57,85 @@ function builtinGate(name, fn) {
   return { type: "builtin", name, fn }
 }
 
+function assert(condition, message) {
+  if (!condition) throw new Error(message)
+}
+
+function roleCookie(role) {
+  return `access_profile_role=${role}`
+}
+
+function apiUrl(baseUrl, pathname) {
+  return new URL(pathname, baseUrl).toString()
+}
+
+async function fetchJson(baseUrl, pathname, { role = "admin", expectedStatus = 200 } = {}) {
+  const response = await fetch(apiUrl(baseUrl, pathname), {
+    cache: "no-store",
+    headers: {
+      Cookie: roleCookie(role),
+    },
+  })
+
+  assert(
+    response.status === expectedStatus,
+    `GET ${pathname} as ${role} expected HTTP ${expectedStatus}, received ${response.status}`
+  )
+
+  const text = await response.text()
+  return text ? JSON.parse(text) : null
+}
+
+function validatePhase7Payload(payload, label) {
+  assert(payload.contractVersion === "phase-7-payment-restriction.v1", `${label}: unexpected contract version`)
+  assert(["supabase", "local-seed"].includes(payload.source), `${label}: invalid source`)
+  assert(Date.parse(payload.generatedAt), `${label}: invalid generatedAt`)
+  assert(payload.quality?.status !== "failed", `${label}: quality report failed`)
+  assert(payload.summary.openPaymentPlans >= 0, `${label}: open payment-plan count must be non-negative`)
+  assert(payload.summary.paymentPlansAtRisk >= 0, `${label}: at-risk payment-plan count must be non-negative`)
+  assert(payload.summary.depositExposureCents >= 0, `${label}: deposit exposure must be non-negative`)
+  assert(payload.summary.approvalQueue >= 0, `${label}: approval queue must be non-negative`)
+  assert(Array.isArray(payload.paymentPlans), `${label}: paymentPlans must be an array`)
+  assert(Array.isArray(payload.depositDecisions), `${label}: depositDecisions must be an array`)
+  assert(Array.isArray(payload.restrictionDecisions), `${label}: restrictionDecisions must be an array`)
+  assert(Array.isArray(payload.reconciliation), `${label}: reconciliation must be an array`)
+  assert(
+    payload.restrictionDecisions.every((item) => item.requiresHumanApproval === true),
+    `${label}: every restriction decision must require human approval`
+  )
+}
+
+async function verifyPhase7Api({ baseUrl }) {
+  const adminPayload = await fetchJson(baseUrl, "/api/site-management/payment-controls?limit=8", {
+    role: "admin",
+  })
+  validatePhase7Payload(adminPayload, "admin payment-controls API")
+
+  const accountantPayload = await fetchJson(baseUrl, "/api/site-management/payment-controls?limit=8", {
+    role: "accountant",
+  })
+  validatePhase7Payload(accountantPayload, "accountant payment-controls API")
+
+  await fetchJson(baseUrl, "/api/site-management/payment-controls?limit=8", {
+    role: "staff",
+    expectedStatus: 403,
+  })
+  await fetchJson(baseUrl, "/api/site-management/payment-controls?limit=8", {
+    role: "tenant",
+    expectedStatus: 403,
+  })
+
+  return {
+    source: adminPayload.source,
+    quality: adminPayload.quality.status,
+    paymentPlans: adminPayload.paymentPlans.length,
+    deposits: adminPayload.depositDecisions.length,
+    restrictions: adminPayload.restrictionDecisions.length,
+    reconciliation: adminPayload.reconciliation.length,
+    approvalQueue: adminPayload.summary.approvalQueue,
+  }
+}
+
 async function runCommand(gate, logFile) {
   return await new Promise((resolve) => {
     const started = Date.now()
@@ -91,7 +170,7 @@ async function runCommand(gate, logFile) {
 }
 
 async function runGate(gate, args, outDir) {
-  if ((args.skipE2e && gate.name === "dashboard-e2e") || (args.skipManualQa && gate.name === "manual-browser-qa")) {
+  if ((args.skipE2e && gate.name === "dashboard-e2e") || (args.skipManualQa && gate.name === "browser-audit")) {
     return { name: gate.name, skipped: true, attempts: [] }
   }
 
@@ -137,6 +216,8 @@ async function runGate(gate, args, outDir) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+  process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES =
+    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const outDir = path.join(rootDir, "quality", "results", `phase-06-09-harness-${timestamp}`)
   await fs.mkdir(outDir, { recursive: true })
@@ -144,12 +225,17 @@ async function main() {
 
   const gates = [
     builtinGate("dev-server-reachable", async ({ baseUrl }) => waitForUrl(baseUrl)),
+    builtinGate("phase7-api-contract-rbac", verifyPhase7Api),
     commandGate("typecheck", "npm run typecheck", webDir),
     commandGate("lint", "npm run lint", webDir),
     commandGate("dashboard-e2e", "npm run test:e2e -- e2e/dashboard.spec.ts --project=chromium", webDir, {
       PLAYWRIGHT_REUSE_SERVER: "true",
     }),
-    commandGate("manual-browser-qa", `node scripts/manual-phase-qa.mjs --base-url ${args.baseUrl}`, rootDir),
+    commandGate(
+      "browser-audit",
+      `node scripts/browser-audit.mjs --base-url ${args.baseUrl} --out-dir quality/browser-audit/phase-06-09`,
+      rootDir
+    ),
   ]
 
   console.log("Phase 6-9 harness")
@@ -169,7 +255,7 @@ async function main() {
 
   const report = {
     generatedAt: new Date().toISOString(),
-    scope: "Phases 6-9: viewing pipeline, sales payment plan, purchase file, buyer eligibility",
+    scope: "Operational regression for active finance/payment and adjacent dashboard workflows",
     baseUrl: args.baseUrl,
     maxAttempts: args.maxAttempts,
     passed: gateResults.every((result) => result.passed || result.skipped),

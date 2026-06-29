@@ -5,6 +5,7 @@ import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { LocaleSwitcher } from "@/components/locale-switcher"
 import {
   auditEvents,
   getPlatformControlSummary,
@@ -60,15 +61,16 @@ export default function SettingsPage() {
       icon: Globe,
       title: "Dil ve yerelleştirme",
       desc: "Türkçe ana kullanım, çok dilli sakin desteği ve resmi ton standardı.",
+      action: <LocaleSwitcher />,
     },
   ]
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">Platform & Audit Merkezi</h1>
+        <h1 className="text-2xl font-black text-foreground">Platform Yönetim Merkezi</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Phase 3 çıktıları: demo/gerçek auth ayrımı, RBAC yetki kapsamı, audit izi, güvenlik kontrolleri ve kullanıcı görünürlüğü.
+          Rol yetki kapsamı, denetim izi, güvenlik kontrolleri ve kullanıcı görünürlüğü tek yönetim alanında takip edilir.
         </p>
       </div>
 
@@ -104,7 +106,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Eye className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Yüksek risk audit</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Yüksek risk denetim</p>
               <p className="text-2xl font-black">{summary.highRiskAuditEvents}</p>
             </div>
           </div>
@@ -147,12 +149,15 @@ export default function SettingsPage() {
           </Card3D>
           {configurationItems.map((item) => (
             <Card3D key={item.title} glow={false}>
-              <div className="flex items-start gap-3">
-                <item.icon className="mt-0.5 h-5 w-5 text-primary" />
-                <div>
-                  <h3 className="text-sm font-bold text-card-foreground">{item.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.desc}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-card-foreground">{item.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
                 </div>
+                {"action" in item ? item.action : null}
               </div>
             </Card3D>
           ))}
@@ -191,7 +196,7 @@ export default function SettingsPage() {
           searchValue={(event) => `${event.actor} ${event.action} ${event.module} ${event.decision}`}
           pageSize={10}
           columns={[
-            { key: "id", header: "Audit", sortable: true, render: (event) => event.id },
+            { key: "id", header: "Denetim", sortable: true, render: (event) => event.id },
             { key: "actor", header: "Aktör", render: (event) => event.actor },
             { key: "module", header: "Modül", sortable: true, render: (event) => event.module },
             { key: "risk", header: "Risk", render: (event) => <StatusBadge variant={riskVariant(event.risk)}>{riskLabel(event.risk)}</StatusBadge> },
@@ -204,7 +209,7 @@ export default function SettingsPage() {
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Platform sürümü: <span className="font-mono text-foreground">1Çatı v2.5.0-phase-2-5</span>
+            Platform sürümü: <span className="font-mono text-foreground">1Çatı ERP v2.5.0</span>
           </p>
         </div>
       </Card3D>

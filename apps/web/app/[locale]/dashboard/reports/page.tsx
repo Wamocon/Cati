@@ -1,6 +1,6 @@
 "use client"
 
-import { BarChart3, Brain, CalendarClock, Download, FileSpreadsheet, Gauge, Sparkles } from "lucide-react"
+import { BarChart3, Brain, CalendarClock, Download, FileSpreadsheet, Gauge, Sparkles, TrendingUp } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
 import { PieChart } from "@/components/charts/pie-chart"
@@ -34,6 +34,9 @@ export default function ReportsPage() {
   const summary = getReportSummary()
   const debtAging = getDebtAging()
   const statusDistribution = getFlatStatusDistribution()
+  const latestCash = cashFlow.at(-1)?.collectedTry ?? 0
+  const previousCash = cashFlow.at(-2)?.collectedTry ?? latestCash
+  const cashDelta = latestCash - previousCash
 
   return (
     <div className="space-y-6">
@@ -41,6 +44,21 @@ export default function ReportsPage() {
         <h1 className="text-2xl font-black text-foreground">AI Rapor Merkezi</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           Yönetim kurulu, muhasebe, operasyon, güvenlik ve misafir ekipleri için otomatik raporlar ve karar özetleri.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-primary/15 bg-primary/[0.035] p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Haziran kapanis sinyali</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{formatTryShort(latestCash)}</p>
+          </div>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Son aya gore {cashDelta >= 0 ? "+" : ""}{formatTryShort(cashDelta)} tahsilat farki. AI raporlari sadece oneri uretir; onay insan rolunde kalir.
         </p>
       </div>
 
@@ -87,19 +105,19 @@ export default function ReportsPage() {
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-bold text-card-foreground">Tahsilat trendi</h2>
-            <StatusBadge variant="success">{formatTryShort(cashFlow.at(-1)?.collectedTry ?? 0)}</StatusBadge>
+            <StatusBadge variant="success">{formatTryShort(latestCash)}</StatusBadge>
           </div>
           <BarChart
             data={cashFlow.map((point) => ({ label: point.label, value: point.collectedTry, color: "var(--primary)" }))}
             formatValue={(value) => formatTryShort(value)}
-            height={240}
+            height={156}
           />
         </Card3D>
 
         <Card3D glow={false}>
           <h2 className="mb-1 text-sm font-bold text-card-foreground">Daire dağılımı</h2>
           <p className="mb-4 text-xs text-muted-foreground">Yönetim kuruluna uygun tek bakışlık portföy özeti.</p>
-          <PieChart data={statusDistribution} size={180} />
+          <PieChart data={statusDistribution} size={164} />
         </Card3D>
       </div>
 
@@ -136,6 +154,9 @@ export default function ReportsPage() {
           {
             key: "download",
             header: "Dışa aktar",
+            sticky: "right",
+            headerClassName: "text-center",
+            cellClassName: "text-center",
             render: (report) => (
               <DashboardActionButton
                 actionType="report.export.requested"

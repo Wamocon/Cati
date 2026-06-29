@@ -6,6 +6,21 @@ Build exactly the client-requested full end-to-end residential complex managemen
 
 The client requirement is the base scope. Our existing 1Cati strengths are added on top as premium differentiators: AI assistant, modern dashboard, multilingual UI, document workflows, calendar, analytics, polished UX, and mobile-responsive experience. The result is not just a basic site-management tool, but a premium AI-powered residential operations platform.
 
+## Current Checkpoint - 29 June 2026
+
+This plan defines the target product and implementation sequence. It is not a claim that every phase is already production complete.
+
+| Phase range | Status | Practical meaning |
+|---|---|---|
+| Phase 1-4 | Complete as local/product foundation | Scope, UX/RBAC, Supabase schema, site/block/floor/unit model, import validation and live dashboard foundation exist. |
+| Phase 5-7 | Complete as implementation foundation / review-ready slice | User/profile/role relationship surfaces, core finance ledger surfaces and payment/deposit/restriction controls are present with APIs, UI and harness coverage. They still need real-data validation, accounting/legal review, provider choices and UAT before production activation. |
+| Phase 8 | Next active build | Service catalogue and service-order flow should connect debt checks, payment/debit decisions, ticket creation, SLA and assignment using the Phase 5-7 foundation. |
+| Phase 9-15 | Accelerated delivery window | Tasks/SLA, booking/checkout, communications, PWA, integrations, AI premium layer and launch hardening are targeted for rapid Codex-assisted development by Wednesday 8 July 2026, with automated QA evidence collected per phase. |
+
+Parallel-session reconciliation on 26 June 2026 confirmed the 15-phase ERP dashboard model, RBAC-aware dashboard drilldowns, listings interaction fixes, local Supabase fixes, fuzzy search, Jira/Xray dry-run workflow and realtime dashboard refresh. The 27-29 June 2026 work completed the Phase 5-7 implementation foundation: people/roles, finance ledger surfaces, guarded payment-control API, finance-page control panel, landing/product UX cleanup, multilingual route fixes and QA gates for payment/deposit/restriction flows.
+
+Accelerated delivery target on 29 June 2026: complete remaining Phase 8-15 development by Wednesday 8 July 2026, excluding a full exploratory manual testing round. This target assumes continuous Codex-assisted execution, fast review loops, unit checks, automated E2E/regression scripts, browser smoke checks and no blocking client/provider credentials. A separate exploratory manual QA/UAT round should be planned after this target and may take additional days depending on scope and client availability.
+
 ## Market Benchmark
 
 ### Turkish Competitor Baseline
@@ -247,7 +262,7 @@ These are the apps/portals mentioned or implied by the client requirement and th
 | Payment systems/banks | Add provider adapter layer for bank/card integration |
 | Identity verification | Add identity status and external provider adapter |
 | Access cards/barriers | Add access-status model and integration adapter |
-| Camera systems | Add camera/event integration placeholder and later vendor adapter |
+| Camera systems | Add camera/event integration adapter boundary and later vendor adapter |
 | Reporting | Build financial, debt, service, staff, daily cash-flow reports |
 | Dashboard | Build income, expense, debt, task, KPI and AI insight dashboard |
 | API-first | Expose all modules through validated API/server-action boundaries |
@@ -506,7 +521,7 @@ Turkish site managers, accounting staff, service staff, owners, and tenants. The
 
 ## Delivery Phases - Reimagined Into 15 Buildable Phases
 
-The old 6-phase plan was too abstract for the size of the client request. The plan below splits the work into 15 smaller phases so each area has clear deliverables, backend impact, frontend/mobile scope, and acceptance criteria.
+The plan below splits the work into 15 smaller phases so each area has clear deliverables, backend impact, frontend/mobile scope, and acceptance criteria.
 
 ### Phase 1 - Discovery, Requirement Lock And Market Benchmark
 
@@ -767,20 +782,23 @@ Acceptance:
 
 Goal: Connect the CRM to real-world systems around the site.
 
+Decision source:
+- Use `docs/requirements/option-3-ai-site-crm/Third-Party-Integration-And-Vendor-Plan.md` for provider shortlist, Supabase Cloud Pro, external dependency cost register, adapter contracts and launch gates.
+
 Standard functionality:
-- Payment systems/banks, identity verification, access cards/barriers, camera systems, meter/billing and SMS/email/push.
+- External dependency cost register, Supabase Cloud Pro production setup, payment/card collection, bank import/reconciliation, SMS/email/push, wallet/top-up, identity, access cards/barriers, camera systems, meter/billing, monitoring and AI-provider gateway.
 
 Backend/API/database:
-- Integration adapter layer, webhooks, retry queue, integration logs, vendor credentials and failure handling.
+- Integration registry, adapter layer, provider sandbox/prod mode, signed webhooks, idempotency, retry/dead-letter queue, integration logs, vendor credentials, secret rotation, health metrics and failure handling.
 
 Frontend/mobile:
-- Integration settings, connection status, manual retry and event logs.
+- Integration settings, provider shortlist status, connection test, health, latency, queue length, manual retry, dead-letter review and event logs.
 
 AI/analytics:
 - AI integration anomaly alerts such as failed payment imports or unusual meter data.
 
 Acceptance:
-- Each integration has a test mode, audit trail, retry behavior and clear failure status.
+- Each external dependency has a named billing owner, cost status, Jira tracking label and production decision gate; each integration has a test mode, audit trail, retry behavior, clear failure status, manual fallback and production sign-off before live credentials are used.
 
 ### Phase 14 - AI Premium Layer And Advanced Analytics
 
@@ -823,31 +841,33 @@ AI/analytics:
 Acceptance:
 - UAT passes for service order, tenant move-in, checkout, late payment, debt restrictions, reports and mobile workflows.
 
-## Suggested Timeline
+## Timeline And Current Delivery Control
 
-- Next week: high-quality clickable Option 3 demo covering Phases 1-2 visually and showing the most important flows with realistic 769-flat demo data.
-- Weeks 2-4: Phases 3-5 foundation: auth, RBAC, audit, site/flat model, imports and users.
-- Weeks 5-8: Phases 6-8 finance, payments/deposits/restrictions and services.
-- Weeks 9-12: Phases 9-11 tasks, booking/move-in/checkout, communication, documents and notifications.
-- Weeks 13-16: Phase 12 mobile PWA and Phase 14 AI premium layer v1.
-- Weeks 17-24: Phase 13 integrations, deeper AI/analytics, native app packaging if required, and Phase 15 launch hardening.
+Accelerated planning assumption:
 
-This can be accelerated only by running parallel workstreams: product/design, backend/data, frontend/mobile, AI/analytics and QA. The first demo can be fast; the production-grade finance, integration and access-control work must be implemented carefully.
+| Date | Target delivery scope | Estimated Codex-assisted effort |
+|---|---|---:|
+| 29 June 2026 | Phase 1-7 implementation foundation and QA evidence complete | Complete |
+| 30 June 2026 | Phase 8 service catalogue and service-order flow | 10-14 hours |
+| 1 July 2026 | Phase 9 tasks, workforce, SLA and field reporting | 12-18 hours |
+| 2 July 2026 | Phase 10 booking, move-in and checkout | 16-22 hours |
+| 3 July 2026 | Phase 11 communication, notifications and documents | 12-18 hours |
+| 4 July 2026 | Phase 12 mobile PWA and installable mobile surfaces | 12-18 hours |
+| 5 July 2026 | Phase 13 external integration adapter layer and provider readiness screens | 12-18 hours |
+| 6 July 2026 | Phase 14 AI premium layer and advanced analytics v1 | 12-18 hours |
+| 8 July 2026 | Phase 15 final automated QA, security checks, UAT pack, training material and launch-readiness preparation | 18-28 hours |
 
-## Immediate Engineering Tasks
+Current control point: phases 1-7 are complete as an implementation foundation and review-ready delivery slice. Phases 8-15 are now under an accelerated delivery target to finish development by Wednesday 8 July 2026, excluding full exploratory manual testing. This target is aggressive but feasible only with continuous Codex-assisted execution, parallel automated QA and immediate correction of defects found by the harnesses.
 
-1. Fix locale routing bug so non-Turkish pages render correct messages.
-2. Replace real-estate CRM labels with site-management labels in a feature branch.
-3. Add demo data generator for 769 flats.
-4. Add data types for Site, Block, Flat, Occupancy, Account, Transaction, Deposit, ServiceOrder, Task, Booking.
-5. Build flat matrix dashboard.
-6. Build account ledger demo page.
-7. Build service order wizard with debt check.
-8. Build booking/check-in/check-out wizard.
-9. Update AI assistant with site-management intents.
-10. Add mobile resident/staff demo routes.
-11. Update pitch page for Option 3.
-12. Add E2E tests for the new demo flows.
+## Next Engineering Priorities
+
+1. Validate Phase 5-7 implementation foundation with real client data, accounting/legal review and UAT evidence before production activation.
+2. Confirm provider decisions for payments, bank reconciliation, SMS/email/push, access/security and monitoring before live credentials are issued.
+3. Execute Phase 8-15 development in the compressed 30 June to 8 July delivery window.
+4. Keep dashboard metrics tied to Supabase-backed APIs with realtime or polling refresh, not static-only cards.
+5. Harden RLS, RBAC and audit coverage for every write action before production UAT.
+6. Keep Jira/Xray synchronization aligned with this checkpoint; remote attachment uploads still require explicit approval because the package contains confidential material.
+7. Add Playwright coverage for each phase as it moves from active build to UAT-ready.
 
 ## Risks
 
@@ -858,9 +878,9 @@ This can be accelerated only by running parallel workstreams: product/design, ba
 - AI must be controlled with approval workflows for financial/access actions.
 - Migration from Excel/current system must be planned early.
 
-## Definition Of Done
+## Definition Of Done For Production Sign-Off
 
-- Every module uses real database tables, not mock-only data.
+- Every production module uses real database tables or approved external provider APIs, not mock-only data.
 - Every write action has RBAC, validation, audit log, and error handling.
 - Every financial rule has tests.
 - Every critical workflow has Playwright E2E coverage.

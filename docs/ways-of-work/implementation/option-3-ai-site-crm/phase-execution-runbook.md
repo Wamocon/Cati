@@ -1,7 +1,7 @@
 # Option 3 AI Site CRM - Phase Execution Runbook
 
-Date: 24 June 2026  
-Scope: Phase-wise implementation, automated harnesses, retry loops, quality loops, browser QA and manual testing.
+Last reviewed: 29 June 2026
+Scope: Phase-wise implementation, automated harnesses, retry loops, quality loops, browser QA, Jira/Xray dry-run review and manual testing.
 
 ---
 
@@ -21,11 +21,26 @@ No phase is complete just because code was written. A phase is complete when the
 
 ---
 
-## 2. Harness Commands
+## 2. Current Phase Control
+
+The current delivery model is the 15-phase ERP model in `docs/PROJECT-HANDBOOK.md` and `docs/ways-of-work/plan/option-3-ai-site-crm/implementation-plan.md`.
+
+| Phase range | Current state on 29 June 2026 | Delivery control |
+|---|---|---|
+| Phase 1-4 | Complete as local/product foundation | Maintain regression coverage and do not reopen unless production data exposes a gap. |
+| Phase 5-7 | Complete as implementation foundation / review-ready slice | Validate people/role relationships, ledger surfaces and payment/deposit/restriction controls with real client data, accounting/legal review and UAT before production activation. |
+| Phase 8 | Next active build | Build service catalogue and service-order flow on top of the Phase 7 debt/restriction gate. |
+| Phase 9-15 | Accelerated delivery window | Target remaining development and automated QA evidence by Wednesday 8 July 2026, excluding a full exploratory manual testing round. Do not mark complete without harness/browser evidence. |
+
+Delivery boundary: the 8 July 2026 target covers implementation, developer-side unit checks, automated E2E/regression scripts and browser smoke/manual spot checks. A full exploratory manual QA/UAT round is a separate activity after implementation and should be planned with additional days if required.
+
+---
+
+## 3. Harness Commands
 
 Run these from the repository root: `D:\Real Estate CRM\Cati`.
 
-### 2.1 Smoke Phase Harness
+### 3.1 Smoke Phase Harness
 
 ```powershell
 pnpm phase:harness -- --phase 1 --profile smoke --max-attempts 2
@@ -33,7 +48,7 @@ pnpm phase:harness -- --phase 1 --profile smoke --max-attempts 2
 
 Use this during active development. It runs fast checks and a browser smoke audit.
 
-### 2.2 Full Phase Harness
+### 3.2 Full Phase Harness
 
 ```powershell
 pnpm phase:harness -- --phase 1 --profile full --max-attempts 2
@@ -41,7 +56,47 @@ pnpm phase:harness -- --phase 1 --profile full --max-attempts 2
 
 Use this before phase sign-off. It runs lint, typecheck, build, Playwright E2E and browser audit.
 
-### 2.3 Browser Audit Only
+### 3.3 Phase 5-6 API, RBAC And Browser Harness
+
+```powershell
+pnpm phase:05-06 -- --base-url http://127.0.0.1:3104 --max-attempts 2
+```
+
+Use this when touching users, roles, people directory, finance ledger, export actions or AI prompts that mention user/finance data. It validates API contracts, RBAC boundaries, AI RBAC responses, desktop/mobile rendering and screenshot evidence for Phase 5 and Phase 6.
+
+### 3.4 Full Phase Continuity Harness
+
+```powershell
+pnpm phase:continuity -- --base-url http://127.0.0.1:3104
+```
+
+Use this before moving to a new phase. It validates that all 15 phases have coherent status, evidence, user guidance, route surfaces and role-specific AI behavior.
+
+### 3.5 Phase 6-9 Regression Harness
+
+```powershell
+pnpm phase:06-09
+```
+
+Use this when touching ledger, payments, documents, compliance, viewing/tour or residence/citizenship surfaces. It includes the Phase 7 payment-control API contract/RBAC gate and remains a focused regression harness for those workflows.
+
+Focused Phase 7 alias:
+
+```powershell
+pnpm phase:07 -- --base-url http://127.0.0.1:3104 --max-attempts 2
+```
+
+Use the focused alias when changing `payment-controls`, payment/deposit/restriction UI, reconciliation actions or finance-access guardrails.
+
+### 3.6 Jira/Xray Dry Run
+
+```powershell
+pnpm jira:sync -- --dry-run
+```
+
+Use this before any Jira/Xray update. The current dry-run model creates or updates 15 phase epics, phase stories, one documentation issue and Xray tests. Running `pnpm jira:sync` without `--dry-run` writes to remote Jira/Xray and may attach confidential documents, so it requires explicit approval.
+
+### 3.7 Browser Audit Only
 
 ```powershell
 pnpm build
@@ -50,7 +105,7 @@ pnpm browser:audit -- --start-server --server-mode start
 
 Use this for screenshot and console-error evidence.
 
-### 2.4 Manual Browser Session
+### 3.8 Manual Browser Session
 
 ```powershell
 pnpm build
@@ -61,7 +116,7 @@ This opens a headed browser and keeps it open for five minutes for manual inspec
 
 ---
 
-## 3. Retry Loop
+## 4. Retry Loop
 
 Each automated gate supports retry through the phase harness. The retry model is:
 
@@ -76,7 +131,7 @@ Do not continue to manual QA if build, typecheck or critical E2E checks fail.
 
 ---
 
-## 4. Quality Gates By Phase
+## 5. Quality Gates By Phase
 
 | Phase | Core Build Evidence | Browser Evidence | Manual QA Evidence |
 |---|---|---|---|
@@ -98,7 +153,7 @@ Do not continue to manual QA if build, typecheck or critical E2E checks fail.
 
 ---
 
-## 5. Manual Browser QA Checklist
+## 6. Manual Browser QA Checklist
 
 Use the browser audit script for screenshots, then manually verify:
 
@@ -114,11 +169,11 @@ Use the browser audit script for screenshots, then manually verify:
 - AI recommendations show source/confidence and do not execute sensitive actions directly.
 - Turkish wording is formal, clear and not overly technical.
 
-Record manual results in `quality/results/phase-XX-manual-notes.md`.
+Record manual results as a short Markdown note and promote only the relevant summary into the documentation tree. Generated screenshots, JSON reports and logs should stay disposable.
 
 ---
 
-## 6. Phase Implementation Cadence
+## 7. Phase Implementation Cadence
 
 For each phase:
 
@@ -135,7 +190,7 @@ For each phase:
 
 ---
 
-## 7. Stop Conditions
+## 8. Stop Conditions
 
 Stop the phase and resolve before continuing when:
 

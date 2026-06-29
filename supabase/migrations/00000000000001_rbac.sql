@@ -8,16 +8,12 @@ ALTER TABLE public.profiles
 ALTER TABLE public.profiles
   ADD CONSTRAINT profiles_role_check
   CHECK (role IN (
-    'super_admin',
-    'company_admin',
+    'admin',
     'manager',
-    'sales_consultant',
-    'listing_agent',
-    'property_manager',
     'accountant',
-    'maintenance',
-    'client',
-    'viewer'
+    'staff',
+    'owner',
+    'tenant'
   ));
 
 -- 2. Canonical role ordering / hierarchy level for UI sorting and inheritance checks.
@@ -29,16 +25,12 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
   SELECT CASE p_role
-    WHEN 'super_admin'      THEN 100
-    WHEN 'company_admin'    THEN 90
-    WHEN 'manager'          THEN 70
-    WHEN 'sales_consultant' THEN 50
-    WHEN 'listing_agent'    THEN 50
-    WHEN 'property_manager' THEN 50
-    WHEN 'accountant'       THEN 50
-    WHEN 'maintenance'      THEN 40
-    WHEN 'viewer'           THEN 20
-    WHEN 'client'           THEN 10
+    WHEN 'admin'      THEN 90
+    WHEN 'manager'    THEN 70
+    WHEN 'accountant' THEN 60
+    WHEN 'staff'      THEN 40
+    WHEN 'owner'      THEN 20
+    WHEN 'tenant'     THEN 10
     ELSE 0
   END;
 $$;
@@ -52,17 +44,13 @@ SECURITY DEFINER
 SET search_path = ''
 AS $$
   SELECT CASE p_role
-    WHEN 'super_admin'      THEN 'platform'
-    WHEN 'company_admin'    THEN 'company'
-    WHEN 'manager'          THEN 'office'
-    WHEN 'sales_consultant' THEN 'office'
-    WHEN 'listing_agent'    THEN 'office'
-    WHEN 'property_manager' THEN 'office'
-    WHEN 'accountant'       THEN 'office'
-    WHEN 'maintenance'      THEN 'office'
-    WHEN 'viewer'           THEN 'office'
-    WHEN 'client'           THEN 'personal'
-    ELSE 'personal'
+    WHEN 'admin'      THEN 'company'
+    WHEN 'manager'    THEN 'site'
+    WHEN 'accountant' THEN 'finance'
+    WHEN 'staff'      THEN 'field'
+    WHEN 'owner'      THEN 'owned_unit'
+    WHEN 'tenant'     THEN 'rented_unit'
+    ELSE 'rented_unit'
   END;
 $$;
 
@@ -74,7 +62,7 @@ STABLE
 SECURITY DEFINER
 SET search_path = ''
 AS $$
-  SELECT p_role IN ('super_admin', 'company_admin');
+  SELECT p_role = 'admin';
 $$;
 
 -- 5. Does the requesting user's role have a level >= the required level?
@@ -131,15 +119,14 @@ DECLARE
   requested_role text;
   safe_role text;
 BEGIN
-  requested_role := COALESCE(NEW.raw_user_meta_data->>'role', 'client');
+  requested_role := COALESCE(NEW.raw_user_meta_data->>'role', 'tenant');
 
   -- Validate against the canonical role set.
   safe_role := CASE
     WHEN requested_role IN (
-      'super_admin','company_admin','manager','sales_consultant',
-      'listing_agent','property_manager','accountant','maintenance','client','viewer'
+      'admin','manager','accountant','staff','owner','tenant'
     ) THEN requested_role
-    ELSE 'client'
+    ELSE 'tenant'
   END;
 
   INSERT INTO public.profiles (id, full_name, role, language)
@@ -147,7 +134,7 @@ BEGIN
     NEW.id,
     NEW.raw_user_meta_data->>'full_name',
     safe_role,
-    COALESCE(NEW.raw_user_meta_data->>'language', 'ru')
+    COALESCE(NEW.raw_user_meta_data->>'language', 'tr')
   );
 
   RETURN NEW;
