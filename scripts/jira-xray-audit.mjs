@@ -160,6 +160,14 @@ const report = {
     hasOldUatPlan: docsAttachments.includes("QA-UAT-Launch-Plan.docx"),
     attachments: docsAttachments,
   },
+  testExecutionIssues: activeIssues
+    .filter((issue) => issue.fields.issuetype.name === "Test Execution")
+    .map((issue) => ({
+      key: issue.key,
+      status: issue.fields.status.name,
+      summary: issue.fields.summary,
+      dueDate: issue.fields.duedate,
+    })),
   archivedReviewedCount: archived.issues?.length ?? 0,
 }
 

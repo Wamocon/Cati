@@ -1795,6 +1795,14 @@ function executionDescription(group, evidenceArtifacts, linkedTestCount) {
           : ["Fuer diese Test Execution ist aktuell keine lokale Nachweisdatei vorhanden."],
     },
     {
+      title: "Xray Run-Status-Regel",
+      items: [
+        "Manuelle und explorative Testlaeufe werden beim Sync bewusst auf TODO / Not Tested gesetzt, bis QA oder Client sie wirklich ausfuehrt.",
+        "Automatisierte Testlaeufe erhalten ihren Status aus der verlinkten JSON- oder JUnit-Nachweisdatei: PASSED, FAILED oder TODO bei fehlendem Nachweis.",
+        "Damit ist in Xray klar getrennt, was bereits automatisiert geprueft wurde und was noch manuell getestet werden muss.",
+      ],
+    },
+    {
       title: "Freigaberegel",
       items: [
         "Alle kritischen automatisierten Nachweise sollen bestanden sein, bevor die Kundenabnahme vorbereitet wird.",
@@ -1947,6 +1955,58 @@ function artifactsForKeys(artifactMap, keys) {
 
 function artifactsForAutomatedTest(artifactMap, test) {
   return artifactMap.get(test.evidenceKey) ?? null
+}
+
+function xrayRunStatusForArtifact(artifact) {
+  if (artifact?.status === "passed") return "PASSED"
+  if (artifact?.status === "failed") return "FAILED"
+  return "TODO"
+}
+
+function summarizeImportedRunStatuses(results) {
+  return results.reduce((acc, result) => {
+    acc[result.status] = (acc[result.status] ?? 0) + 1
+    return acc
+  }, {})
+}
+
+function automatedResultComment(test, artifact) {
+  if (!artifact) {
+    return `Automatisierter Test ist definiert, aber es wurde beim Sync kein lokaler Nachweis gefunden. Befehl: ${test.command}.`
+  }
+  return [
+    `Automatisierter Nachweis aus ${artifact.relativePath}.`,
+    `Status: ${artifact.status.toUpperCase()}.`,
+    `Kurzfassung: ${artifact.summaryText}.`,
+    `Befehl: ${test.command}.`,
+  ].join(" ")
+}
+
+function xrayResultsForExecution(manualPairs, automatedPairs, artifactMap) {
+  const manualResults = manualPairs.map(({ issue, test }) => ({
+    testKey: issue.key,
+    status: "TODO",
+    comment: `Nicht manuell ausgefuehrt. Dieser ${test.exploratory ? "explorative" : "funktionale"} Test muss manuell durch QA/Client-Team ausgefuehrt und danach bewertet werden.`,
+  }))
+
+  const automatedResults = automatedPairs.map(({ issue, test }) => {
+    const artifact = artifactMap.get(test.evidenceKey)
+    const status = xrayRunStatusForArtifact(artifact)
+    const evidenceTime = artifact?.generatedAt ?? artifact?.lastWriteTime ?? syncStartedAt
+    return {
+      testKey: issue.key,
+      status,
+      comment: automatedResultComment(test, artifact),
+      ...(status === "TODO"
+        ? {}
+        : {
+            start: evidenceTime,
+            finish: evidenceTime,
+          }),
+    }
+  })
+
+  return [...manualResults, ...automatedResults]
 }
 
 function manualTestMatchesExecution(test, group) {
@@ -2501,6 +2561,50 @@ async function xrayGraphql(token, query, variables) {
   return payload.data
 }
 
+async function xrayRest(token, pathname, options = {}) {
+  if (!token || !env.XRAY_BASE_URL) return null
+  const response = await fetch(`${env.XRAY_BASE_URL.replace(/\/$/, "")}${pathname}`, {
+    method: options.method ?? "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  })
+  const text = await response.text()
+  let data = null
+  if (text) {
+    try {
+      data = JSON.parse(text)
+    } catch {
+      data = text
+    }
+  }
+  if (!response.ok) {
+    const detail = typeof data === "string" ? data : JSON.stringify(data)
+    throw new Error(`${options.method ?? "GET"} Xray ${pathname} failed with ${response.status}: ${detail}`)
+  }
+  return data
+}
+
+async function importXrayExecutionResults(token, testExecutionKey, results) {
+  if (!token || results.length === 0) return { skipped: true, imported: 0, statuses: {} }
+  const imported = await xrayRest(token, "/api/v2/import/execution", {
+    method: "POST",
+    body: {
+      testExecutionKey,
+      tests: results,
+    },
+  })
+  return {
+    skipped: false,
+    imported: results.length,
+    statuses: summarizeImportedRunStatuses(results),
+    key: imported?.key ?? testExecutionKey,
+  }
+}
+
 async function getXrayStepCount(token, testIssueId) {
   const query = `
     query GetTestSteps($issueId: String!) {
@@ -2883,6 +2987,7 @@ async function main() {
   const allTestIssues = []
   const testExecutionIssues = []
   const qaEvidenceAttachmentSync = []
+  const xrayExecutionResultSync = []
   let testPlanIssue = null
   let manualTestSetIssue = null
   let exploratoryTestSetIssue = null
@@ -3078,11 +3183,15 @@ async function main() {
   for (const group of testExecutionGroups) {
     if (!testExecutionType) break
     const artifacts = artifactsForKeys(qaEvidenceByKey, group.evidenceKeys)
-    const groupTests = [
-      ...testIssues.filter((_, index) => manualTestMatchesExecution(manualTests[index], group)),
-      ...automatedTestIssues.filter((_, index) => automatedTestMatchesExecution(automatedTests[index], group)),
-    ]
+    const groupManualPairs = testIssues
+      .map((issue, index) => ({ issue, test: manualTests[index] }))
+      .filter(({ test }) => manualTestMatchesExecution(test, group))
+    const groupAutomatedPairs = automatedTestIssues
+      .map((issue, index) => ({ issue, test: automatedTests[index] }))
+      .filter(({ test }) => automatedTestMatchesExecution(test, group))
+    const groupTests = [...groupManualPairs.map(({ issue }) => issue), ...groupAutomatedPairs.map(({ issue }) => issue)]
     const allArtifactsPassed = artifacts.length > 0 && artifacts.every((artifact) => artifact.status === "passed")
+    const hasManualRunsPending = groupManualPairs.length > 0
     const startPhase = phases.find((phase) => phase.phase === Math.min(...group.phaseNumbers)) ?? phases[14]
     const endPhase = phases.find((phase) => phase.phase === Math.max(...group.phaseNumbers)) ?? phases[14]
     console.log(`Syncing test execution: ${group.summary}`)
@@ -3094,7 +3203,7 @@ async function main() {
       labels: ["xray", "test-execution", "qa-evidence", "option3", ...phaseLabelsForNumbers(group.phaseNumbers)],
       componentId: componentMap.get(group.component)?.id ?? componentMap.get("QA und Launch")?.id,
       versionId: versionMap.get("Release 3")?.id,
-      desiredStatus: allArtifactsPassed ? "done" : "in-progress",
+      desiredStatus: hasManualRunsPending ? "in-progress" : allArtifactsPassed ? "done" : "in-progress",
       startDate: phaseMeta(startPhase).startDate,
       dueDate: phaseMeta(endPhase).endDate,
       startDateFieldId: testExecutionStartDateFieldId,
@@ -3111,6 +3220,17 @@ async function main() {
         groupTests.map((issue) => issue.id)
       )
     }
+    const xrayResults = xrayResultsForExecution(groupManualPairs, groupAutomatedPairs, qaEvidenceByKey)
+    xrayExecutionResultSync.push({
+      issueKey: executionIssue.key,
+      ...(token
+        ? await importXrayExecutionResults(token, executionIssue.key, xrayResults)
+        : {
+            skipped: true,
+            imported: 0,
+            statuses: summarizeImportedRunStatuses(xrayResults),
+          }),
+    })
     qaEvidenceAttachmentSync.push({
       issueKey: executionIssue.key,
       ...(await attachQaEvidence(executionIssue.key, artifacts)),
@@ -3151,6 +3271,7 @@ async function main() {
     })),
     qaEvidenceAttachmentMode: skipQaAttachments ? "skipped" : "uploaded-latest-json-or-junit",
     qaEvidenceAttachmentSync,
+    xrayExecutionResultSync,
     managedDocumentationAttachmentCount: documentationAttachments.length,
     attachmentMode: skipAttachments ? "skipped" : "replace-managed-documentation-attachments",
     removedDocumentationAttachments: documentationAttachmentSync.removed,
