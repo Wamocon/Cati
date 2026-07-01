@@ -212,7 +212,7 @@ const phaseDetails = {
       "Gives field staff a mobile workflow and gives management evidence, SLA status and performance visibility.",
     deliverables: ["Task board", "Mobile staff view", "Media evidence and SLA reports"],
     dependencies: ["Phase 8 service tickets", "Staff groups", "Mobile upload policy"],
-    links: ["docs/requirements/option-3-ai-site-crm/PRD.md", "docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md"],
+    links: ["docs/requirements/option-3-ai-site-crm/PRD.md", "docs/requirements/option-3-ai-site-crm/QA-Client-Acceptance-Launch-Plan.md"],
   },
   10: {
     startDate: "2026-06-29",
@@ -278,7 +278,7 @@ const phaseDetails = {
       "Turns the portfolio rollout into a launchable product through functional QA, security checks, client acceptance preparation, training, runbooks, monitoring and hypercare.",
     deliverables: ["Functional QA evidence", "Security and performance checks", "Client acceptance preparation", "Launch runbook and training"],
     dependencies: ["All launch-critical phase gates", "Production data", "Client sign-off"],
-    links: ["docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md", "docs/ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md"],
+    links: ["docs/requirements/option-3-ai-site-crm/QA-Client-Acceptance-Launch-Plan.md", "docs/ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md"],
   },
 }
 
@@ -521,7 +521,7 @@ const documentationAttachments = [
   "docs/requirements/option-3-ai-site-crm/Implementation-Delivery-Plan.docx",
   "docs/requirements/option-3-ai-site-crm/Security-Compliance-Plan.docx",
   "docs/requirements/option-3-ai-site-crm/Data-Migration-Plan.docx",
-  "docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.docx",
+  "docs/requirements/option-3-ai-site-crm/QA-Client-Acceptance-Launch-Plan.docx",
   "docs/requirements/option-3-ai-site-crm/Requirements-Traceability-Matrix.docx",
   "docs/requirements/option-3-ai-site-crm/Market-Research-Annex.docx",
   "docs/requirements/option-3-ai-site-crm/Source-Register.docx",
@@ -538,6 +538,7 @@ const obsoleteDocumentationAttachmentNames = new Set([
   "Third-Party-Integration-And-Vendor-Plan.md",
   "implementation-plan.md",
   "phase-04-critical-qa-notes.md",
+  "QA-UAT-Launch-Plan.docx",
 ])
 
 const phases = [
@@ -571,6 +572,7 @@ const phases = [
       "Türkischsprachiges Designsystem mit Farben, Typografie, Statuslogik und Barrierefreiheit erstellen",
       "Rollenbezogene Navigation für Manager, Buchhaltung, Bewohner, Eigentümer und Personal entwerfen",
       "Kritische Workflows als klickbare mobile und Desktop-Prototypen abbilden",
+      "Oeffentliche Produkt-, Trust-, Review- und Legal-Seiten als eigene Inhalts- und QA-Abdeckung pflegen",
     ],
   },
   {
@@ -587,6 +589,7 @@ const phases = [
       "Supabase-Profile, Rollen und mandantenfähige Zugriffskontrolle implementieren",
       "Audit-Log für finanzielle, operative, Zugangs- und KI-Aktionen vorbereiten",
       "Lokale Access-Profile technisch von Produktiv-Authentifizierung trennen und in Produktion deaktiviert lassen",
+      "Produktive OAuth-Anbieter wie Google und Yandex provider-ready vorbereiten und Demo-Modus klar trennen",
     ],
   },
   {
@@ -619,6 +622,7 @@ const phases = [
       "Eigentümer-, Mieter-, Gast- und Personaldatensätze mit Wohnungsbeziehungen erstellen",
       "Dokumenten- und Identitätsstatus je Person mit Sichtbarkeitsregeln verwalten",
       "Rollenmatrix und Mandantenrechte für alle Module testen",
+      "Lead- und Vertriebsarbeitsbereich mit Suche, Pipeline-Status, Kontaktkanal und Rollenrechten nachvollziehbar abdecken",
     ],
   },
   {
@@ -788,6 +792,7 @@ const phases = [
       "Xray-Testfälle und Kundenabnahme-Szenarien für alle kritischen Workflows pflegen",
       "Sicherheits-, Performance-, RLS-, Mobile- und Browser-QA automatisieren",
       "Launch-Runbook, Supportprozess, Schulungsunterlagen und Abnahmeprotokoll erstellen",
+      "QA-Begriffe fuer Funktionstest, Systemtest, Regression, Exploration und Kundenabnahme sauber trennen",
     ],
   },
 ]
@@ -1043,6 +1048,54 @@ const tests = [
       ["Fehlgeschlagenen Job öffnen.", "Fehlergrund, Retry-Anzahl, Provider-Referenz und empfohlene Aktion sind sichtbar."],
       ["Manuelle Wiederholung auslösen.", "Der Job wird erneut verarbeitet oder begründet in Dead Letter verschoben."],
       ["Monitoring prüfen.", "Health, Latenz, Queue-Länge und letzter Erfolg sind aktuell."],
+    ],
+  },
+  {
+    uid: "test-022",
+    component: "Nutzer und Rollen",
+    summary: "Lead- und Vertriebsarbeitsbereich zeigt Pipeline, Suche und sichere Kontaktdaten",
+    precondition: "Ein Sales- oder Manager-Profil ist angemeldet. Es existieren Leads mit Status, Sprache, Kontaktkanal, Budget und Objektinteresse.",
+    steps: [
+      ["Lead-Arbeitsbereich oeffnen.", "Pipeline, Statusgruppen, naechste Aktion und verantwortliche Person sind sichtbar."],
+      ["Nach Name, Telefon, E-Mail, Sprache oder Objektinteresse suchen.", "Die Ergebnisliste wird korrekt gefiltert und zeigt Treffer ohne unberechtigte Daten."],
+      ["Einen Lead oeffnen und Kontaktkanal pruefen.", "Kontaktinformationen, Einwilligungsstatus, Quelle und Historie sind nachvollziehbar."],
+      ["Dieselbe Seite mit einer nicht berechtigten Rolle oeffnen.", "Sensible Lead- und Kontaktdaten sind verborgen oder der Zugriff wird blockiert."],
+    ],
+  },
+  {
+    uid: "test-023",
+    component: "UX und Design",
+    summary: "Oeffentliche Produkt-, Review-, Datenschutz- und Rechtsseiten bleiben auffindbar",
+    precondition: "Die Web-App ist im Browser gestartet und die oeffentlichen Seiten sind ohne Login erreichbar.",
+    steps: [
+      ["Landingpage, Plattform-/Produktseite und relevante Trust- oder Review-Bereiche oeffnen.", "Die Seiten laden ohne 404, leere Hauptbereiche oder blockierende Konsolenfehler."],
+      ["Datenschutz, Impressum oder Terms ueber Navigation oder Footer oeffnen.", "Rechtsseiten sind erreichbar und klar vom geschuetzten Dashboard getrennt."],
+      ["Sprache wechseln und dieselben Seiten erneut pruefen.", "Locale-Routing bleibt stabil und erzeugt keine doppelten Sprachsegmente."],
+      ["Desktop- und Mobile-Viewport vergleichen.", "Navigation, CTA, Texte und rechtliche Links bleiben bedienbar und lesbar."],
+    ],
+  },
+  {
+    uid: "test-024",
+    component: "Plattform und Sicherheit",
+    summary: "OAuth-Provider bleiben provider-ready und vom Demo-Login getrennt",
+    precondition: "Login- und Signup-Seite sind erreichbar. Produktive OAuth-Schluessel sind in der Testumgebung nicht zwingend gesetzt.",
+    steps: [
+      ["Login- oder Signup-Seite oeffnen.", "Lokale Access-Profile sind klar als Demo-/QA-Hilfe erkennbar."],
+      ["Google- und Yandex-Provideroptionen pruefen.", "Provider-ready Optionen sind sichtbar oder dokumentiert, aber ohne Keys nicht als produktiver Erfolg simuliert."],
+      ["OAuth ohne gueltige Konfiguration starten.", "Das System zeigt eine klare Fehlermeldung oder deaktivierten Zustand statt stiller Anmeldung."],
+      ["Produktionsannahme pruefen.", "Demo-Login bleibt von echter Supabase Auth getrennt und kann fuer Produktion deaktiviert werden."],
+    ],
+  },
+  {
+    uid: "test-025",
+    component: "QA und Launch",
+    summary: "QA-Begriffe trennen funktionale Tests, Kundenabnahme und Launch klar",
+    precondition: "Jira/Xray enthaelt Test Plan, Functional System Test Set, Exploratory Test Set, Automated Regression Test Set und das Dokumentationspaket.",
+    steps: [
+      ["Test Plan und Test Sets oeffnen.", "Funktionale Systemtests, explorative Tests und automatisierte Regression sind getrennt klassifiziert."],
+      ["Testfaelle und Testausfuehrungen pruefen.", "Jeder Test hat Zweck, Vorbedingung, Schritte, erwartete Ergebnisse, Datum, Ausfuehrungsfenster und Nachweisbezug."],
+      ["Dokumentationspaket und Launch-Plan pruefen.", "Der QA-Plan spricht von Kundenabnahme als separatem Gate und nicht als falscher Test-Set-Klassifizierung."],
+      ["Status- und Kommentarhistorie pruefen.", "Offene Produktionsfreigaben, Nachweise und manuelle Explorationsrunde sind transparent nachvollziehbar."],
     ],
   },
 ]
@@ -2071,6 +2124,21 @@ async function searchByUniqueLabel(label) {
   return result.issues?.[0] ?? null
 }
 
+async function searchAllByJql(jql, fields, maxResults = 100) {
+  const issues = []
+  let nextPageToken
+
+  do {
+    const body = { jql, fields, maxResults }
+    if (nextPageToken) body.nextPageToken = nextPageToken
+    const result = await jira("/rest/api/3/search/jql", { method: "POST", body })
+    issues.push(...(result.issues ?? []))
+    nextPageToken = result.nextPageToken
+  } while (nextPageToken)
+
+  return { issues }
+}
+
 function phaseDescription(phase) {
   const meta = phaseMeta(phase)
   return doc([
@@ -2172,8 +2240,10 @@ function storyLabels(phase, story) {
 }
 
 function phaseForTest(test) {
+  if (test.component === "UX und Design") return phases.find((phase) => phase.phase === 2)
   if (test.component === "Plattform und Sicherheit") return phases.find((phase) => phase.phase === 3)
   if (test.component === "Stammdaten") return phases.find((phase) => phase.phase === 4)
+  if (test.component === "Nutzer und Rollen") return phases.find((phase) => phase.phase === 5)
   if (test.component === "Finanzen") return phases.find((phase) => phase.phase === 7)
   if (test.component === "Services und Tickets") return phases.find((phase) => phase.phase === 8)
   if (test.component === "Buchung und Zugang") return phases.find((phase) => phase.phase === 10)
@@ -2765,7 +2835,7 @@ async function main() {
           "Implementation Delivery Plan",
           "Security Compliance Plan",
           "Data Migration Plan",
-          "QA/UAT Launch Plan",
+          "QA and Client Acceptance Launch Plan",
           "Requirements Traceability Matrix",
           "Market Research Annex",
           "Source Register",
@@ -3047,14 +3117,10 @@ async function main() {
     })
   }
 
-  const verification = await jira("/rest/api/3/search/jql", {
-    method: "POST",
-    body: {
-      jql: `project = ${projectKey} AND labels = "${syncLabel}" ORDER BY created ASC`,
-      fields: ["summary", "issuetype", "status"],
-      maxResults: 200,
-    },
-  })
+  const verification = await searchAllByJql(
+    `project = ${projectKey} AND labels = "${syncLabel}" ORDER BY created ASC`,
+    ["summary", "issuetype", "status"],
+  )
 
   const report = {
     syncedAt: new Date().toISOString(),
