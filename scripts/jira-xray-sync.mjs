@@ -27,6 +27,7 @@ const args = new Set(process.argv.slice(2))
 const dryRun = args.has("--dry-run") || env.JIRA_DRY_RUN === "1"
 const skipAttachments = args.has("--skip-attachments") || env.JIRA_SKIP_ATTACHMENTS === "1"
 const skipQaAttachments = args.has("--skip-qa-attachments") || env.JIRA_SKIP_QA_ATTACHMENTS === "1"
+const syncStartedAt = new Date().toISOString()
 const required = [
   "JIRA_BASE_URL",
   "JIRA_EMAIL",
@@ -1381,6 +1382,20 @@ const automatedTests = [
   },
 ]
 
+function automatedRunCommandsForEvidenceKeys(evidenceKeys) {
+  const evidenceSet = new Set(evidenceKeys)
+  const commands = automatedTests
+    .filter((test) => evidenceSet.has(test.evidenceKey))
+    .map((test) => `${test.summary}: ${test.command}`)
+  return commands.length > 0
+    ? commands
+    : ["Keine direkte Automatisierung ist fuer diese Ausfuehrung verlinkt. Explorative Schritte manuell pruefen und Ergebnis als Kommentar/Nachweis dokumentieren."]
+}
+
+function allAutomatedRunCommands() {
+  return automatedTests.map((test) => `${test.summary}: ${test.command}`)
+}
+
 const qaReportSpecs = [
   {
     key: "full-app-qa",
@@ -1612,6 +1627,19 @@ function testPlanDescription(functionalCount, exploratoryCount, automatedCount, 
       ],
     },
     {
+      title: "Datum und Transparenz",
+      items: [
+        `Letzter Jira/Xray-Sync: ${syncStartedAt}.`,
+        "Phase 01-14 ist als Implementierungsbasis abgeschlossen; Phase 15 laeuft bis zum Zieltermin 2026-07-08.",
+        "Jede Test Execution hat ein eigenes Due Date gemaess Phasenfenster und enthaelt die aktuell verlinkten QA-Nachweise.",
+        "Automatisierte Ergebnisdateien zeigen im Ticket ihr eigenes generatedAt oder lastWriteTime.",
+      ],
+    },
+    {
+      title: "Automatisierte Tests erneut ausfuehren",
+      items: allAutomatedRunCommands(),
+    },
+    {
       title: "Aktuelle automatisierte Nachweise",
       items:
         evidenceArtifacts.length > 0
@@ -1622,6 +1650,7 @@ function testPlanDescription(functionalCount, exploratoryCount, automatedCount, 
 }
 
 function testSetDescription({ title, purpose, testCount, labels, evidenceArtifacts = [] }) {
+  const automatedSet = labels.includes("automated")
   return doc([
     {
       title: "Zweck",
@@ -1639,6 +1668,22 @@ function testSetDescription({ title, purpose, testCount, labels, evidenceArtifac
         "Fehlgeschlagene Tests brauchen einen verlinkten Defect, einen Blocker-Kommentar oder eine bewusste Launch-Risiko-Entscheidung.",
       ],
     },
+    {
+      title: "Datum und Nachweisstand",
+      items: [
+        `Letzter Jira/Xray-Sync: ${syncStartedAt}.`,
+        "Der Zieltermin fuer das finale QA-/Launch-Readiness-Paket ist 2026-07-08.",
+        "Die neuesten automatisierten Nachweise werden unten mit Status, Kurzfassung und Ergebnisdatum referenziert.",
+      ],
+    },
+    ...(automatedSet
+      ? [
+          {
+            title: "Automatisierte Tests erneut ausfuehren",
+            items: allAutomatedRunCommands(),
+          },
+        ]
+      : []),
     ...(evidenceArtifacts.length > 0
       ? [
           {
@@ -1653,6 +1698,13 @@ function testSetDescription({ title, purpose, testCount, labels, evidenceArtifac
 function executionDescription(group, evidenceArtifacts, linkedTestCount) {
   const phasesInGroup = group.phaseNumbers.map((phase) => phases.find((item) => item.phase === phase)).filter(Boolean)
   const passed = evidenceArtifacts.length > 0 && evidenceArtifacts.every((artifact) => artifact.status === "passed")
+  const phaseMetasInGroup = phasesInGroup.map((phase) => phaseMeta(phase))
+  const groupStartDate = phaseMetasInGroup.reduce(
+    (earliest, meta) => (!earliest || meta.startDate < earliest ? meta.startDate : earliest),
+    ""
+  )
+  const groupEndDate = phaseMetasInGroup.reduce((latest, meta) => (!latest || meta.endDate > latest ? meta.endDate : latest), "")
+  const runCommands = automatedRunCommandsForEvidenceKeys(group.evidenceKeys)
   return doc([
     {
       title: "Ausfuehrungsumfang",
@@ -1663,8 +1715,21 @@ function executionDescription(group, evidenceArtifacts, linkedTestCount) {
       ],
     },
     {
+      title: "Datum und Ausfuehrungstransparenz",
+      items: [
+        `Letzter Jira/Xray-Sync: ${syncStartedAt}.`,
+        `Geplantes Ausfuehrungsfenster: ${groupStartDate} bis ${groupEndDate}.`,
+        `Due Date im Jira-Ticket: ${groupEndDate}.`,
+        "Die unten verlinkten QA-Nachweise enthalten generatedAt oder lastWriteTime fuer das konkrete lokale Testergebnis.",
+      ],
+    },
+    {
       title: "Funktionsumfang",
       items: phasesInGroup.map((phase) => `Phase ${String(phase.phase).padStart(2, "0")}: ${phase.title} - ${phase.outcome}`),
+    },
+    {
+      title: "Automatisierte Tests erneut ausfuehren",
+      items: runCommands,
     },
     {
       title: "Aktuelle automatisierte Ergebnisse",
@@ -2778,7 +2843,6 @@ async function main() {
     console.log("Syncing Xray/Jira functional system test set")
     manualTestSetIssue = await ensureIssue({
       uid: `${labelPrefix}-xray-testset-functional-system`,
-      lookupUid: `${labelPrefix}-xray-testset-e2e-uat`,
       summary: "Test Set - Funktionale Systemtests und kritische Geschaeftsprozesse",
       issueType: testSetType,
       description: testSetDescription({
