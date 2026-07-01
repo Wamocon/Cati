@@ -101,7 +101,8 @@ function ticketDraftMessage(language: unknown, title: string) {
 
 export function AiAssistant() {
   const t = useTranslations("aiAssistant")
-  const copy = assistantCopy[resolveAssistantLocale(useLocale())]
+  const locale = resolveAssistantLocale(useLocale())
+  const copy = assistantCopy[locale]
   const user = useUser()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -117,7 +118,7 @@ export function AiAssistant() {
   const [typing, setTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const messageIdRef = useRef(0)
-  const suggestions = getAiSuggestions(user.role)
+  const suggestions = getAiSuggestions(user.role, locale)
 
   useEffect(() => {
     if (scrollRef.current) {

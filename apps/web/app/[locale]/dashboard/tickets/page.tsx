@@ -227,6 +227,20 @@ function statusVariant(status: ServiceStatus) {
   return "warning"
 }
 
+function servicePriorityLabel(
+  priority: ServicePriority,
+  locale: ReturnType<typeof resolveDashboardLocale>
+) {
+  return localizeDashboardText(priorityLabels[priority], locale)
+}
+
+function serviceStatusLabel(
+  status: ServiceStatus,
+  locale: ReturnType<typeof resolveDashboardLocale>
+) {
+  return localizeDashboardText(serviceStatusLabels[status], locale)
+}
+
 function orderVariant(status: ServiceOrderRecord["status"]) {
   if (status === "completed") return "success"
   if (status === "blocked" || status === "payment_pending") return "danger"
@@ -854,8 +868,8 @@ export default function TicketsPage() {
                 <StatusBadge variant={taskReadinessVariant(task)}>{task.completionReadiness}%</StatusBadge>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
-                <StatusBadge variant={priorityVariant(task.priority)}>{priorityLabels[task.priority]}</StatusBadge>
-                <StatusBadge variant={statusVariant(task.status)}>{serviceStatusLabels[task.status]}</StatusBadge>
+                <StatusBadge variant={priorityVariant(task.priority)}>{servicePriorityLabel(task.priority, locale)}</StatusBadge>
+                <StatusBadge variant={statusVariant(task.status)}>{serviceStatusLabel(task.status, locale)}</StatusBadge>
                 {task.managerApprovalRequired && <StatusBadge variant="warning">{t("Yönetici")}</StatusBadge>}
               </div>
               <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -924,13 +938,13 @@ export default function TicketsPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge variant={priorityVariant(ticket.priority)}>
-                        {priorityLabels[ticket.priority]}
+                        {servicePriorityLabel(ticket.priority, locale)}
                       </StatusBadge>
                       <StatusBadge variant={statusVariant(ticket.status)}>
-                        {serviceStatusLabels[ticket.status]}
+                        {serviceStatusLabel(ticket.status, locale)}
                       </StatusBadge>
                       {ticket.debtBlocked && !clientView && (
-                        <StatusBadge variant="danger">Finans blokeli</StatusBadge>
+                        <StatusBadge variant="danger">{t("Finans blokeli")}</StatusBadge>
                       )}
                     </div>
                     <h3 className="mt-2 text-sm font-bold text-foreground">{ticket.title}</h3>
@@ -941,7 +955,7 @@ export default function TicketsPage() {
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="text-sm font-bold text-foreground">
-                      {maskFinance ? serviceStatusLabels[ticket.status] : formatTry(ticket.estimatedCostTry)}
+                      {maskFinance ? serviceStatusLabel(ticket.status, locale) : formatTry(ticket.estimatedCostTry)}
                     </p>
                     <p className="text-xs text-muted-foreground">SLA {ticket.slaHoursRemaining} {t("saat")}</p>
                   </div>
@@ -1032,24 +1046,24 @@ export default function TicketsPage() {
               `${ticket.id} ${ticket.flatNumber} ${ticket.title} ${ticket.assignee} ${ticket.requester}`
             }
             columns={[
-          { key: "id", header: "Talep", sortable: true, render: (ticket) => ticket.id },
-          { key: "flat", header: "Daire", sortable: true, render: (ticket) => ticket.flatNumber },
-          { key: "title", header: "Konu", render: (ticket) => ticket.title },
+          { key: "id", header: t("Talep"), sortable: true, render: (ticket) => ticket.id },
+          { key: "flat", header: t("Daire"), sortable: true, render: (ticket) => ticket.flatNumber },
+          { key: "title", header: t("Konu"), render: (ticket) => ticket.title },
           {
             key: "priority",
-            header: "Öncelik",
+            header: t("Öncelik"),
             render: (ticket) => (
               <StatusBadge variant={priorityVariant(ticket.priority)}>
-                {priorityLabels[ticket.priority]}
+                {servicePriorityLabel(ticket.priority, locale)}
               </StatusBadge>
             ),
           },
           {
             key: "status",
-            header: "Durum",
+            header: t("Durum"),
             render: (ticket) => (
               <StatusBadge variant={statusVariant(ticket.status)}>
-                {serviceStatusLabels[ticket.status]}
+                {serviceStatusLabel(ticket.status, locale)}
               </StatusBadge>
             ),
           },
@@ -1057,7 +1071,7 @@ export default function TicketsPage() {
             ? [
                 {
                   key: "assignee",
-                  header: "Sorumlu",
+                  header: t("Sorumlu"),
                   render: (ticket: ServiceTicket) => ticket.assignee,
                 },
               ]
@@ -1077,14 +1091,14 @@ export default function TicketsPage() {
             ? [
                 {
                   key: "payment",
-                  header: fieldView ? "Servis izni" : "Ödeme",
+                  header: fieldView ? t("Servis izni") : t("Ödeme"),
                   render: (ticket: ServiceTicket) =>
                     ticket.debtBlocked ? (
-                      <StatusBadge variant="danger">Blokeli</StatusBadge>
+                      <StatusBadge variant="danger">{t("Blokeli")}</StatusBadge>
                     ) : ticket.paymentVerified ? (
-                      <StatusBadge variant="success">Onaylı</StatusBadge>
+                      <StatusBadge variant="success">{t("Onaylı")}</StatusBadge>
                     ) : (
-                      <StatusBadge variant="warning">Kontrol</StatusBadge>
+                      <StatusBadge variant="warning">{t("Kontrol")}</StatusBadge>
                     ),
                 },
               ]
@@ -1093,7 +1107,7 @@ export default function TicketsPage() {
             ? [
                 {
                   key: "cost",
-                  header: "Maliyet",
+                  header: t("Maliyet"),
                   sortable: true,
                   sortValue: (ticket: ServiceTicket) => ticket.estimatedCostTry,
                   render: (ticket: ServiceTicket) => formatTry(ticket.estimatedCostTry),
@@ -1119,10 +1133,10 @@ export default function TicketsPage() {
             searchValue={(task) => `${task.id} ${task.ticketId} ${task.flatNumber} ${task.title} ${task.team} ${task.assignee}`}
             columns={[
               { key: "id", header: "Görev", sortable: true, render: (task) => task.id },
-              { key: "flat", header: "Daire", sortable: true, render: (task) => task.flatNumber },
+              { key: "flat", header: t("Daire"), sortable: true, render: (task) => task.flatNumber },
               { key: "title", header: "İş", render: (task) => task.title },
               { key: "team", header: "Ekip", sortable: true, render: (task) => task.team },
-              { key: "assignee", header: "Sorumlu", sortable: true, render: (task) => task.assignee },
+              { key: "assignee", header: t("Sorumlu"), sortable: true, render: (task) => task.assignee },
               {
                 key: "readiness",
                 header: "Hazır",
@@ -1132,8 +1146,8 @@ export default function TicketsPage() {
               },
               {
                 key: "priority",
-                header: "Öncelik",
-                render: (task) => <StatusBadge variant={priorityVariant(task.priority)}>{priorityLabels[task.priority]}</StatusBadge>,
+                header: t("Öncelik"),
+                render: (task) => <StatusBadge variant={priorityVariant(task.priority)}>{servicePriorityLabel(task.priority, locale)}</StatusBadge>,
               },
               {
                 key: "sla",

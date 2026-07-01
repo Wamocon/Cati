@@ -80,6 +80,9 @@ interface Kpi {
   href: string
 }
 
+type FocusedRole = "accountant" | "staff" | "owner" | "tenant"
+type RoleWorkspaceCardKey = "calendar" | "communications" | "documents" | "finance" | "reports" | "tickets"
+
 function copyText(
   template: string,
   values: Record<string, string | number> = {}
@@ -224,174 +227,126 @@ const phaseStatusMeta: Record<
 
 const roleWorkspaceConfig: Partial<
   Record<
-    Role,
+    FocusedRole,
     {
-      title: string
-      description: string
-      accessNotes: string[]
       cards: Array<{
         href: string
         resource: Resource
         icon: LucideIcon
-        title: string
-        description: string
+        copyKey: RoleWorkspaceCardKey
       }>
     }
   >
 > = {
   accountant: {
-    title: "Finans Çalışma Alanı",
-    description:
-      "Bu rol aidat, tahsilat, depozito, belge ve finans raporlarına odaklanır. Operasyon, kullanıcı ve ayar ekranları kapalıdır.",
-    accessNotes: [
-      "Kullanıcı yönetimi kapalı",
-      "Saha işi kapatma operasyon kanıtı olmadan yapılamaz",
-    ],
     cards: [
       {
         href: "/dashboard/finance",
         resource: "finance",
         icon: CreditCard,
-        title: "Finans & Aidat",
-        description: "Aidat, tahsilat, açık bakiye ve finans defteri kontrolleri.",
+        copyKey: "finance",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Ödeme, TAPU, sözleşme ve muhasebe evrakı takibi.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/reports",
         resource: "reports",
         icon: Brain,
-        title: "Raporlar",
-        description: "Finans ve tahsilat çıktıları, dışa aktarım ve kontrol raporları.",
+        copyKey: "reports",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Finans hatırlatmaları ve ilgili bildirim taslakları.",
+        copyKey: "communications",
       },
     ],
   },
   staff: {
-    title: "Saha Ekibi Çalışma Alanı",
-    description:
-      "Bu rol kendisine atanan servis, görev, rezervasyon, belge ve iletişim akışlarını görür. Finans, kullanıcı yönetimi ve ayarlar kapalıdır.",
-    accessNotes: [
-      "Finans defteri kapalı",
-      "İade, erişim kısıtı ve rol onayı kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Atanan işler, SLA, durum güncelleme ve saha notları.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Giriş, çıkış, gezinti, temizlik ve günlük görev takibi.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "İş kanıtı, fotoğraf ve operasyon dokümanları.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Operasyon ekibiyle mesaj ve bildirim akışı.",
+        copyKey: "communications",
       },
     ],
   },
   owner: {
-    title: "Malik Çalışma Alanı",
-    description:
-      "Bu rol kendi dairesiyle ilgili servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer maliklerin kayıtları ve şirket içi ekranlar kapalıdır.",
-    accessNotes: [
-      "Sadece kendi dairesi ve yetkili kayıtlar",
-      "Diğer malik, personel, rapor ve finans ekranları kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Kendi daireniz için servis talebi açın ve durum takip edin.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Kiralama, giriş-çıkış ve uygunluk takvimi.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Yetkili olduğunuz sözleşme, TAPU ve operasyon evrakı.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Yönetim ekibiyle güvenli mesajlaşma ve bildirimler.",
+        copyKey: "communications",
       },
     ],
   },
   tenant: {
-    title: "Kiracı Çalışma Alanı",
-    description:
-      "Bu rol yalnızca kendi kullanım alanındaki servis, rezervasyon, belge ve iletişim işlemlerini görür. Daire matrisi, finans defteri, raporlar ve kullanıcı yönetimi kapalıdır.",
-    accessNotes: [
-      "Sadece yetkili daire ve izin verilen işlemler",
-      "Malik kayıtları, raporlar, finans defteri ve diğer daireler kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Bakım talebi oluşturun ve mevcut taleplerin durumunu takip edin.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Giriş, çıkış ve yetkili rezervasyon akışları.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Yetkili olduğunuz kira ve operasyon belgeleri.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Yönetim ekibine mesaj gönderin ve bildirimleri takip edin.",
+        copyKey: "communications",
       },
     ],
   },
@@ -399,102 +354,50 @@ const roleWorkspaceConfig: Partial<
 
 const roleSceneConfig: Partial<
   Record<
-    Role,
+    FocusedRole,
     {
-      eyebrow: string
-      title: string
       metric: string
-      metricLabel: string
-      status: string
       accent: string
       icon: LucideIcon
-      bars: Array<{ label: string; value: number }>
-      timeline: Array<{ label: string; detail: string }>
+      bars: number[]
     }
   >
 > = {
   accountant: {
-    eyebrow: "Finans kontrol akışı",
-    title: "Tahsilat, belge ve onay tek ekranda",
     metric: "1.4M ₺",
-    metricLabel: "bu ay doğrulanan tahsilat",
-    status: "Finans verisi açık, operasyon verisi kapalı",
     accent: "from-emerald-500 via-cyan-500 to-amber-400",
     icon: CreditCard,
-    bars: [
-      { label: "Tahsilat", value: 88 },
-      { label: "Depozito", value: 62 },
-      { label: "Belge", value: 76 },
-    ],
-    timeline: [
-      { label: "Defter", detail: "Aidat ve bakiye kontrolü" },
-      { label: "Belge", detail: "Ödeme/TAPU evrakı" },
-      { label: "Rapor", detail: "Finans çıktısı" },
-    ],
+    bars: [88, 62, 76],
   },
   staff: {
-    eyebrow: "Saha operasyon akışı",
-    title: "Atanan işler, SLA ve kanıt üretimi",
     metric: "14",
-    metricLabel: "bugün görünür görev",
-    status: "Saha kuyruğu açık, finans ve kullanıcı yönetimi kapalı",
     accent: "from-teal-500 via-sky-500 to-lime-400",
     icon: TicketCheck,
-    bars: [
-      { label: "SLA", value: 72 },
-      { label: "Kanıt", value: 84 },
-      { label: "Rota", value: 58 },
-    ],
-    timeline: [
-      { label: "Talep", detail: "Atanan servis işi" },
-      { label: "Saha", detail: "Fotoğraf ve not" },
-      { label: "Kapatma", detail: "Yönetici kontrolü" },
-    ],
+    bars: [72, 84, 58],
   },
   owner: {
-    eyebrow: "Malik portal akışı",
-    title: "Kendi daireniz için net durum görünümü",
     metric: "4",
-    metricLabel: "yetkili işlem alanı",
-    status: "Sadece kendi dairesi, belge ve iletişim kapsamı",
     accent: "from-cyan-500 via-emerald-500 to-orange-300",
     icon: Building2,
-    bars: [
-      { label: "Servis", value: 68 },
-      { label: "Rezervasyon", value: 54 },
-      { label: "Belge", value: 81 },
-    ],
-    timeline: [
-      { label: "Daire", detail: "Yetkili kayıt" },
-      { label: "Servis", detail: "Talep ve durum" },
-      { label: "Mesaj", detail: "Yönetim iletişimi" },
-    ],
+    bars: [68, 54, 81],
   },
   tenant: {
-    eyebrow: "Kiracı portal akışı",
-    title: "Servis, rezervasyon ve belgeye hızlı erişim",
     metric: "4",
-    metricLabel: "açık kullanıcı modülü",
-    status: "Daire matrisi, finans ve raporlar kapalı",
     accent: "from-sky-500 via-teal-500 to-amber-300",
     icon: CalendarCheck,
-    bars: [
-      { label: "Servis", value: 64 },
-      { label: "Takvim", value: 71 },
-      { label: "Belge", value: 57 },
-    ],
-    timeline: [
-      { label: "Talep", detail: "Bakım veya destek" },
-      { label: "Takvim", detail: "Giriş/çıkış akışı" },
-      { label: "Belge", detail: "Yetkili evrak" },
-    ],
+    bars: [64, 71, 57],
   },
 }
 
-function RoleWorkspaceScene({ role }: { role: Role }) {
+function isFocusedRole(role: Role): role is FocusedRole {
+  return role === "accountant" || role === "staff" || role === "owner" || role === "tenant"
+}
+
+function RoleWorkspaceScene({ copy, role }: { copy: DashboardHomeCopy; role: FocusedRole }) {
   const config = roleSceneConfig[role]
   if (!config) return null
 
+  const sceneCopy = copy.roleScenes[role]
   const Icon = config.icon
 
   return (
@@ -530,23 +433,23 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                {config.eyebrow}
+                {sceneCopy.eyebrow}
               </p>
               <h2 className="mt-4 max-w-xl text-2xl font-black leading-tight sm:text-3xl 2xl:text-4xl">
-                {config.title}
+                {sceneCopy.title}
               </h2>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
               <Icon className="ml-auto h-5 w-5 text-emerald-200" />
               <p className="mt-3 text-3xl font-black">{config.metric}</p>
               <p className="mt-1 max-w-36 text-xs leading-5 text-white/70">
-                {config.metricLabel}
+                {sceneCopy.metricLabel}
               </p>
             </div>
           </div>
 
           <div className="mt-auto grid grid-cols-3 gap-2 sm:gap-3">
-            {config.timeline.map((item, index) => (
+            {sceneCopy.timeline.map((item, index) => (
               <motion.div
                 key={item.label}
                 className="min-w-0 rounded-xl border border-white/12 bg-white/[0.075] p-3 backdrop-blur transition-colors hover:bg-white/[0.12]"
@@ -570,10 +473,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                Canlı yetki filtresi
+                {copy.roleScenes.common.liveFilterLabel}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {config.status}
+                {sceneCopy.status}
               </h2>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -581,17 +484,17 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             </div>
           </div>
           <div className="mt-5 space-y-4">
-            {config.bars.map((bar, index) => (
-              <div key={bar.label} className="group">
+            {config.bars.map((value, index) => (
+              <div key={sceneCopy.bars[index]} className="group">
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-bold text-card-foreground">{bar.label}</span>
-                  <span className="font-black text-primary">{bar.value}%</span>
+                  <span className="font-bold text-card-foreground">{sceneCopy.bars[index]}</span>
+                  <span className="font-black text-primary">{value}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <motion.div
                     className={cn("h-full rounded-full bg-gradient-to-r", config.accent)}
                     initial={{ width: 0 }}
-                    animate={{ width: `${bar.value}%` }}
+                    animate={{ width: `${value}%` }}
                     transition={{ delay: 0.2 + index * 0.08, duration: 0.65 }}
                   />
                 </div>
@@ -605,10 +508,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             <BarChart3 className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-black text-card-foreground">
-                Çalışma alanı ritmi
+                {copy.roleScenes.common.rhythmTitle}
               </p>
               <p className="text-xs text-muted-foreground">
-                Hover ve kart geçişleri gerçek modül akışlarını gösterir.
+                {copy.roleScenes.common.rhythmDescription}
               </p>
             </div>
           </div>
@@ -844,12 +747,13 @@ function RoleFocusedDashboard({
   roleLabel,
 }: {
   copy: DashboardHomeCopy
-  role: Role
+  role: FocusedRole
   roleLabel: string
 }) {
   const config = roleWorkspaceConfig[role]
   if (!config) return null
 
+  const workspaceCopy = copy.roleWorkspaces[role]
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
@@ -860,10 +764,10 @@ function RoleFocusedDashboard({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black text-foreground md:text-3xl">
-          {config.title}
+          {workspaceCopy.title}
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {config.description} {copy.erpWorld.activeRole}:{" "}
+          {workspaceCopy.description} {copy.erpWorld.activeRole}:{" "}
           <span className="font-semibold text-foreground">{roleLabel}</span>.
         </p>
       </div>
@@ -881,33 +785,41 @@ function RoleFocusedDashboard({
         }}
       />
 
-      <RoleWorkspaceScene role={role} />
+      <RoleWorkspaceScene copy={copy} role={role} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <CommandLink
-            key={card.href}
-            href={card.href}
-            ariaLabel={card.title}
-            role={role}
+        {cards.map((card) => {
+          const cardCopies = workspaceCopy.cards as Record<
+            RoleWorkspaceCardKey,
+            { title: string; description: string }
           >
-            <Card3D glow={false}>
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <card.icon className="h-5 w-5" />
+          const cardCopy = cardCopies[card.copyKey]
+
+          return (
+            <CommandLink
+              key={card.href}
+              href={card.href}
+              ariaLabel={cardCopy.title}
+              role={role}
+            >
+              <Card3D glow={false}>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-black text-card-foreground">
+                      {cardCopy.title}
+                    </h2>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      {cardCopy.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm font-black text-card-foreground">
-                    {card.title}
-                  </h2>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                    {card.description}
-                  </p>
-                </div>
-              </div>
-            </Card3D>
-          </CommandLink>
-        ))}
+              </Card3D>
+            </CommandLink>
+          )
+        })}
       </div>
 
       <Card3D glow={false}>
@@ -915,16 +827,14 @@ function RoleFocusedDashboard({
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
             <h2 className="text-sm font-bold text-card-foreground">
-              Yetki sınırları
+              {copy.roleWorkspaces.common.boundariesTitle}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Bu ekranda şirket geneli daire matrisi, finans defteri, kullanıcı
-              yönetimi ve platform ayarları gösterilmez. Kapalı bir sayfa URL ile
-              açılırsa sistem sizi tekrar kendi çalışma alanınıza döndürür.
+              {copy.roleWorkspaces.common.boundariesBody}
             </p>
-            {config.accessNotes.length ? (
+            {workspaceCopy.accessNotes.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
-                {config.accessNotes.map((constraint) => (
+                {workspaceCopy.accessNotes.map((constraint) => (
                   <span
                     key={constraint}
                     className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground"
@@ -1172,7 +1082,7 @@ export default function DashboardHomePage() {
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabel = roleDef ? roleT(roleDef.labelKey.replace("roles.", "")) : user.role
 
-  if (roleWorkspaceConfig[user.role]) {
+  if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
     return <RoleFocusedDashboard copy={copy} role={user.role} roleLabel={roleLabel} />
   }
 

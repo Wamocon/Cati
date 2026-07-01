@@ -73,6 +73,7 @@ The documentation is intentionally divided by document type. This prevents a sin
 | Execution runbook | `docs/ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md` | Phase harnesses, QA cadence and stop conditions. |
 | Local Supabase runbook | `docs/local-supabase.md` | Working local Docker/Supabase setup, seed login, ports and cloud migration notes. |
 | Current DOCX package | `docs/1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
+| User handbook and manual testing mail | `docs/user-handbook/` | German user handbook DOCX and bilingual email draft for internal manual exploratory QA. |
 | Security/compliance | `docs/requirements/option-3-ai-site-crm/Security-Compliance-Plan.md` | KVKK-aware and OWASP ASVS-aligned delivery checklist. |
 | Data migration | `docs/requirements/option-3-ai-site-crm/Data-Migration-Plan.md` | Import, reconciliation and cutover rules. |
 | QA/UAT/launch | `docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md` | Mandatory UAT scenarios and launch gates. |

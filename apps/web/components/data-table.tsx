@@ -284,6 +284,7 @@ export function DataTable<T>({
                           type="checkbox"
                           checked={!hiddenColumns.has(column.key)}
                           onChange={() => toggleColumn(column.key)}
+                          suppressHydrationWarning
                           className="h-3.5 w-3.5 accent-primary"
                         />
                         <span className="min-w-0 truncate">{columnLabel(column.header)}</span>

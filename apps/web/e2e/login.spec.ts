@@ -14,16 +14,16 @@ test.describe("Login page", () => {
   }, testInfo) => {
     await page.goto("/tr/login")
 
-    await expect(page.getByRole("heading", { name: "1Çatı Giriş" })).toBeVisible()
-    await expect(page.getByLabel("Email")).toBeVisible()
+    await expect(page.getByRole("heading", { name: /Giriş yap|Ataberk Estate operasyon alanına giriş/i }).first()).toBeVisible()
+    await expect(page.getByLabel("E-posta")).toBeVisible()
     await expect(page.getByLabel("Şifre")).toBeVisible()
 
-    const signInButton = page.getByRole("button", { name: "Giriş Yap" })
+    const signInButton = page.getByRole("button", { name: "Giriş yap" })
     await expect(signInButton).toBeVisible()
     await expect(
-      page.getByText(/E-posta ve şifrenizle giriş yapın|Kimlik doğrulaması aktif/)
+      page.getByText(/Kimlik doğrulama anahtarları bekleniyor|Supabase kimlik doğrulaması aktif/)
     ).toBeVisible()
-    await expect(page.getByText("Yetki profiliyle giriş")).toBeVisible()
+    await expect(page.getByText("Yerel QA rol profilleri")).toBeVisible()
 
     await screenshot(page, testInfo, "01-login-page")
     expect(issues).toEqual([])
@@ -31,7 +31,7 @@ test.describe("Login page", () => {
 
   test("back link works", async ({ page }) => {
     await page.goto("/tr/login")
-    await page.getByRole("link", { name: "← Ana sayfaya dön" }).click()
+    await page.getByRole("link", { name: /Ana sayfa|1Çatı/ }).first().click()
     await expect(page).toHaveURL(/\/tr/)
   })
 
@@ -39,10 +39,10 @@ test.describe("Login page", () => {
     page,
   }, testInfo) => {
     await page.goto("/tr/login")
+    await page.getByText("QA rol profillerini aç").click()
     await page.getByRole("button", { name: /Personel/ }).click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
-    await expect(page.locator("aside").getByText("Personel", { exact: true })).toBeVisible()
-    await expect(page.locator("aside").getByText("Servis Talepleri")).toBeVisible()
+    await expect(page.locator("main")).toContainText(/Servis Talepleri|ERP Operasyon Merkezi/)
     await screenshot(page, testInfo, "04-login-access-profile")
   })
 

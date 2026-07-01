@@ -23,6 +23,7 @@ Current implementation checkpoint: phases 1-14 are complete as a demo/internal-Q
 | Execution runbook | `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md` | Harness commands, QA loop and stop conditions. |
 | Local Supabase | `local-supabase.md` | Local database setup, seed login and cloud migration notes. |
 | Current DOCX package | `1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
+| User handbook and manual testing mail | `user-handbook/` | German user handbook DOCX and bilingual manual exploratory testing email draft for internal QA. |
 
 ## Current Status Rule
 
@@ -53,6 +54,8 @@ Stakeholder `.docx` files are reading copies. For requirements and technical cha
 |---|---|
 | `requirements/option-3-ai-site-crm/qa/*.md` | Documentation QA notes retained as Markdown only. |
 | Generated screenshots, previews and JSON reports | Do not keep in the repository. Regenerate them from scripts when needed. |
+
+The user handbook DOCX may contain embedded application screenshots for explanation. Standalone raw screenshot files should not be retained after the DOCX is generated.
 
 Current repeatable QA commands:
 

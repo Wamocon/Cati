@@ -72,6 +72,176 @@ export const dashboardHomeCopy = {
       rbacDescription:
         "Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.",
     },
+    roleWorkspaces: {
+      common: {
+        boundariesTitle: "Yetki sınırları",
+        boundariesBody:
+          "Bu ekranda şirket geneli daire matrisi, finans defteri, kullanıcı yönetimi ve platform ayarları gösterilmez. Kapalı bir sayfa URL ile açılırsa sistem sizi tekrar kendi çalışma alanınıza döndürür.",
+      },
+      accountant: {
+        title: "Finans Çalışma Alanı",
+        description:
+          "Bu rol aidat, tahsilat, depozito, belge ve finans raporlarına odaklanır. Operasyon, kullanıcı ve ayar ekranları kapalıdır.",
+        accessNotes: [
+          "Kullanıcı yönetimi kapalı",
+          "Saha işi kapatma operasyon kanıtı olmadan yapılamaz",
+        ],
+        cards: {
+          finance: {
+            title: "Finans & Aidat",
+            description: "Aidat, tahsilat, açık bakiye ve finans defteri kontrolleri.",
+          },
+          documents: {
+            title: "Belgeler",
+            description: "Ödeme, TAPU, sözleşme ve muhasebe evrakı takibi.",
+          },
+          reports: {
+            title: "Raporlar",
+            description: "Finans ve tahsilat çıktıları, dışa aktarım ve kontrol raporları.",
+          },
+          communications: {
+            title: "İletişim",
+            description: "Finans hatırlatmaları ve ilgili bildirim taslakları.",
+          },
+        },
+      },
+      staff: {
+        title: "Saha Ekibi Çalışma Alanı",
+        description:
+          "Bu rol kendisine atanan servis, görev, rezervasyon, belge ve iletişim akışlarını görür. Finans, kullanıcı yönetimi ve ayarlar kapalıdır.",
+        accessNotes: [
+          "Finans defteri kapalı",
+          "İade, erişim kısıtı ve rol onayı kapalı",
+        ],
+        cards: {
+          tickets: {
+            title: "Servis Talepleri",
+            description: "Atanan işler, SLA, durum güncelleme ve saha notları.",
+          },
+          calendar: {
+            title: "Rezervasyon",
+            description: "Giriş, çıkış, gezinti, temizlik ve günlük görev takibi.",
+          },
+          documents: {
+            title: "Belgeler",
+            description: "İş kanıtı, fotoğraf ve operasyon dokümanları.",
+          },
+          communications: {
+            title: "İletişim",
+            description: "Operasyon ekibiyle mesaj ve bildirim akışı.",
+          },
+        },
+      },
+      owner: {
+        title: "Malik Çalışma Alanı",
+        description:
+          "Bu rol kendi dairesiyle ilgili servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer maliklerin kayıtları ve şirket içi ekranlar kapalıdır.",
+        accessNotes: [
+          "Sadece kendi dairesi ve yetkili kayıtlar",
+          "Diğer malik, personel, rapor ve finans ekranları kapalı",
+        ],
+        cards: {
+          tickets: {
+            title: "Servis Talepleri",
+            description: "Kendi daireniz için servis talebi açın ve durum takip edin.",
+          },
+          calendar: {
+            title: "Rezervasyon",
+            description: "Kiralama, giriş-çıkış ve uygunluk takvimi.",
+          },
+          documents: {
+            title: "Belgeler",
+            description: "Yetkili olduğunuz sözleşme, TAPU ve operasyon evrakı.",
+          },
+          communications: {
+            title: "İletişim",
+            description: "Yönetim ekibiyle güvenli mesajlaşma ve bildirimler.",
+          },
+        },
+      },
+      tenant: {
+        title: "Kiracı Çalışma Alanı",
+        description:
+          "Bu rol yalnızca kendi kullanım alanındaki servis, rezervasyon, belge ve iletişim işlemlerini görür. Daire matrisi, finans defteri, raporlar ve kullanıcı yönetimi kapalıdır.",
+        accessNotes: [
+          "Sadece yetkili daire ve izin verilen işlemler",
+          "Malik kayıtları, raporlar, finans defteri ve diğer daireler kapalı",
+        ],
+        cards: {
+          tickets: {
+            title: "Servis Talepleri",
+            description: "Bakım talebi oluşturun ve mevcut taleplerin durumunu takip edin.",
+          },
+          calendar: {
+            title: "Rezervasyon",
+            description: "Giriş, çıkış ve yetkili rezervasyon akışları.",
+          },
+          documents: {
+            title: "Belgeler",
+            description: "Yetkili olduğunuz kira ve operasyon belgeleri.",
+          },
+          communications: {
+            title: "İletişim",
+            description: "Yönetim ekibine mesaj gönderin ve bildirimleri takip edin.",
+          },
+        },
+      },
+    },
+    roleScenes: {
+      common: {
+        liveFilterLabel: "Canlı yetki filtresi",
+        rhythmTitle: "Çalışma alanı ritmi",
+        rhythmDescription: "Hover ve kart geçişleri gerçek modül akışlarını gösterir.",
+      },
+      accountant: {
+        eyebrow: "Finans kontrol akışı",
+        title: "Tahsilat, belge ve onay tek ekranda",
+        metricLabel: "bu ay doğrulanan tahsilat",
+        status: "Finans verisi açık, operasyon verisi kapalı",
+        bars: ["Tahsilat", "Depozito", "Belge"],
+        timeline: [
+          { label: "Defter", detail: "Aidat ve bakiye kontrolü" },
+          { label: "Belge", detail: "Ödeme/TAPU evrakı" },
+          { label: "Rapor", detail: "Finans çıktısı" },
+        ],
+      },
+      staff: {
+        eyebrow: "Saha operasyon akışı",
+        title: "Atanan işler, SLA ve kanıt üretimi",
+        metricLabel: "bugün görünür görev",
+        status: "Saha kuyruğu açık, finans ve kullanıcı yönetimi kapalı",
+        bars: ["SLA", "Kanıt", "Rota"],
+        timeline: [
+          { label: "Talep", detail: "Atanan servis işi" },
+          { label: "Saha", detail: "Fotoğraf ve not" },
+          { label: "Kapatma", detail: "Yönetici kontrolü" },
+        ],
+      },
+      owner: {
+        eyebrow: "Malik portal akışı",
+        title: "Kendi daireniz için net durum görünümü",
+        metricLabel: "yetkili işlem alanı",
+        status: "Sadece kendi dairesi, belge ve iletişim kapsamı",
+        bars: ["Servis", "Rezervasyon", "Belge"],
+        timeline: [
+          { label: "Daire", detail: "Yetkili kayıt" },
+          { label: "Servis", detail: "Talep ve durum" },
+          { label: "Mesaj", detail: "Yönetim iletişimi" },
+        ],
+      },
+      tenant: {
+        eyebrow: "Kiracı portal akışı",
+        title: "Servis, rezervasyon ve belgeye hızlı erişim",
+        metricLabel: "açık kullanıcı modülü",
+        status: "Daire matrisi, finans ve raporlar kapalı",
+        bars: ["Servis", "Takvim", "Belge"],
+        timeline: [
+          { label: "Talep", detail: "Bakım veya destek" },
+          { label: "Takvim", detail: "Giriş/çıkış akışı" },
+          { label: "Belge", detail: "Yetkili evrak" },
+        ],
+      },
+    },
     kpis: {
       totalUnits: "Toplam Daire",
       occupancy: "{value}% doluluk",
@@ -205,6 +375,176 @@ export const dashboardHomeCopy = {
       rbacTitle: "Role links active",
       rbacDescription:
         "Dashboard cards, API access and AI answers all pass through the same RBAC matrix.",
+    },
+    roleWorkspaces: {
+      common: {
+        boundariesTitle: "Permission boundaries",
+        boundariesBody:
+          "This workspace does not show the company-wide unit matrix, finance ledger, user administration or platform settings. If a closed page is opened by URL, the system returns the user to the allowed workspace.",
+      },
+      accountant: {
+        title: "Finance Workspace",
+        description:
+          "This role focuses on dues, collections, deposits, documents and finance reports. Operations, user administration and settings are closed.",
+        accessNotes: [
+          "User administration is closed",
+          "Field work cannot be closed without operational evidence",
+        ],
+        cards: {
+          finance: {
+            title: "Finance & Dues",
+            description: "Dues, collections, open balances and finance ledger controls.",
+          },
+          documents: {
+            title: "Documents",
+            description: "Payment, TAPU, contract and accounting document follow-up.",
+          },
+          reports: {
+            title: "Reports",
+            description: "Finance and collection outputs, exports and control reports.",
+          },
+          communications: {
+            title: "Communication",
+            description: "Finance reminders and related notification drafts.",
+          },
+        },
+      },
+      staff: {
+        title: "Field Team Workspace",
+        description:
+          "This role sees assigned service, task, reservation, document and communication flows. Finance, user administration and settings are closed.",
+        accessNotes: [
+          "Finance ledger is closed",
+          "Refund, access restriction and role approval are closed",
+        ],
+        cards: {
+          tickets: {
+            title: "Service Tickets",
+            description: "Assigned work, SLA, status updates and field notes.",
+          },
+          calendar: {
+            title: "Reservations",
+            description: "Check-in, check-out, viewings, cleaning and daily task follow-up.",
+          },
+          documents: {
+            title: "Documents",
+            description: "Work evidence, photos and operations documents.",
+          },
+          communications: {
+            title: "Communication",
+            description: "Messages and notifications with the operations team.",
+          },
+        },
+      },
+      owner: {
+        title: "Owner Workspace",
+        description:
+          "This role sees service, reservation, document and management communication related to its own units. Other owner records and internal company screens are closed.",
+        accessNotes: [
+          "Only own units and authorized records",
+          "Other owners, staff, reports and finance screens are closed",
+        ],
+        cards: {
+          tickets: {
+            title: "Service Tickets",
+            description: "Open a service request for your unit and track its status.",
+          },
+          calendar: {
+            title: "Reservations",
+            description: "Rental, check-in/out and availability calendar.",
+          },
+          documents: {
+            title: "Documents",
+            description: "Authorized contracts, TAPU and operations documents.",
+          },
+          communications: {
+            title: "Communication",
+            description: "Secure messaging and notifications with the management team.",
+          },
+        },
+      },
+      tenant: {
+        title: "Tenant Workspace",
+        description:
+          "This role only sees service, reservation, document and communication actions within its authorized usage scope. Unit matrix, finance ledger, reports and user administration are closed.",
+        accessNotes: [
+          "Only authorized unit and permitted actions",
+          "Owner records, reports, finance ledger and other units are closed",
+        ],
+        cards: {
+          tickets: {
+            title: "Service Tickets",
+            description: "Create maintenance requests and track existing request status.",
+          },
+          calendar: {
+            title: "Reservations",
+            description: "Check-in, check-out and authorized reservation flows.",
+          },
+          documents: {
+            title: "Documents",
+            description: "Authorized rental and operations documents.",
+          },
+          communications: {
+            title: "Communication",
+            description: "Send messages to the management team and follow notifications.",
+          },
+        },
+      },
+    },
+    roleScenes: {
+      common: {
+        liveFilterLabel: "Live permission filter",
+        rhythmTitle: "Workspace rhythm",
+        rhythmDescription: "Hover and card transitions show the real module flow.",
+      },
+      accountant: {
+        eyebrow: "Finance control flow",
+        title: "Collections, documents and approvals in one view",
+        metricLabel: "collections verified this month",
+        status: "Finance data open, operations data closed",
+        bars: ["Collections", "Deposit", "Document"],
+        timeline: [
+          { label: "Ledger", detail: "Dues and balance review" },
+          { label: "Document", detail: "Payment/TAPU files" },
+          { label: "Report", detail: "Finance output" },
+        ],
+      },
+      staff: {
+        eyebrow: "Field operations flow",
+        title: "Assigned work, SLA and evidence capture",
+        metricLabel: "visible tasks today",
+        status: "Field queue open, finance and user administration closed",
+        bars: ["SLA", "Evidence", "Route"],
+        timeline: [
+          { label: "Request", detail: "Assigned service work" },
+          { label: "Field", detail: "Photo and note" },
+          { label: "Close", detail: "Manager review" },
+        ],
+      },
+      owner: {
+        eyebrow: "Owner portal flow",
+        title: "Clear status view for your own units",
+        metricLabel: "authorized action areas",
+        status: "Only own unit, document and communication scope",
+        bars: ["Service", "Reservation", "Document"],
+        timeline: [
+          { label: "Unit", detail: "Authorized record" },
+          { label: "Service", detail: "Request and status" },
+          { label: "Message", detail: "Management communication" },
+        ],
+      },
+      tenant: {
+        eyebrow: "Tenant portal flow",
+        title: "Fast access to service, reservations and documents",
+        metricLabel: "open user modules",
+        status: "Unit matrix, finance and reports closed",
+        bars: ["Service", "Calendar", "Document"],
+        timeline: [
+          { label: "Request", detail: "Maintenance or support" },
+          { label: "Calendar", detail: "Check-in/out flow" },
+          { label: "Document", detail: "Authorized files" },
+        ],
+      },
     },
     kpis: {
       totalUnits: "Total Units",
@@ -340,6 +680,176 @@ export const dashboardHomeCopy = {
       rbacDescription:
         "Dashboard-Karten, API-Zugriff und KI-Antworten laufen über dieselbe RBAC-Matrix.",
     },
+    roleWorkspaces: {
+      common: {
+        boundariesTitle: "Berechtigungsgrenzen",
+        boundariesBody:
+          "Dieser Arbeitsbereich zeigt keine unternehmensweite Wohnungsmatrix, kein Finanzbuch, keine Benutzerverwaltung und keine Plattformeinstellungen. Wird eine gesperrte Seite per URL geöffnet, führt das System zurück in den erlaubten Arbeitsbereich.",
+      },
+      accountant: {
+        title: "Finanzarbeitsbereich",
+        description:
+          "Diese Rolle konzentriert sich auf Beiträge, Zahlungseingänge, Kautionen, Dokumente und Finanzberichte. Operations, Benutzerverwaltung und Einstellungen sind geschlossen.",
+        accessNotes: [
+          "Benutzerverwaltung ist geschlossen",
+          "Außendienstaufgaben können ohne Operationsnachweis nicht abgeschlossen werden",
+        ],
+        cards: {
+          finance: {
+            title: "Finanzen & Beiträge",
+            description: "Beiträge, Zahlungseingänge, offene Salden und Finanzbuch-Kontrollen.",
+          },
+          documents: {
+            title: "Dokumente",
+            description: "Zahlungs-, TAPU-, Vertrags- und Buchhaltungsunterlagen verfolgen.",
+          },
+          reports: {
+            title: "Berichte",
+            description: "Finanz- und Zahlungsausgänge, Exporte und Kontrollberichte.",
+          },
+          communications: {
+            title: "Kommunikation",
+            description: "Finanzerinnerungen und zugehörige Benachrichtigungsentwürfe.",
+          },
+        },
+      },
+      staff: {
+        title: "Außendienst-Arbeitsbereich",
+        description:
+          "Diese Rolle sieht zugewiesene Service-, Aufgaben-, Reservierungs-, Dokumenten- und Kommunikationsflüsse. Finanzen, Benutzerverwaltung und Einstellungen sind geschlossen.",
+        accessNotes: [
+          "Finanzbuch ist geschlossen",
+          "Erstattung, Zugangssperre und Rollenfreigabe sind geschlossen",
+        ],
+        cards: {
+          tickets: {
+            title: "Servicetickets",
+            description: "Zugewiesene Arbeit, SLA, Statusupdates und Feldnotizen.",
+          },
+          calendar: {
+            title: "Reservierungen",
+            description: "Check-in, Check-out, Besichtigungen, Reinigung und tägliche Aufgaben.",
+          },
+          documents: {
+            title: "Dokumente",
+            description: "Arbeitsnachweise, Fotos und Operationsdokumente.",
+          },
+          communications: {
+            title: "Kommunikation",
+            description: "Nachrichten und Benachrichtigungen mit dem Operationsteam.",
+          },
+        },
+      },
+      owner: {
+        title: "Eigentümer-Arbeitsbereich",
+        description:
+          "Diese Rolle sieht Service, Reservierungen, Dokumente und Managementkommunikation zu den eigenen Einheiten. Andere Eigentümerdaten und interne Unternehmensseiten sind geschlossen.",
+        accessNotes: [
+          "Nur eigene Einheiten und autorisierte Datensätze",
+          "Andere Eigentümer, Personal, Berichte und Finanzseiten sind geschlossen",
+        ],
+        cards: {
+          tickets: {
+            title: "Servicetickets",
+            description: "Serviceanfrage für die eigene Einheit öffnen und Status verfolgen.",
+          },
+          calendar: {
+            title: "Reservierungen",
+            description: "Vermietung, Check-in/out und Verfügbarkeitskalender.",
+          },
+          documents: {
+            title: "Dokumente",
+            description: "Autorisierte Verträge, TAPU und Operationsunterlagen.",
+          },
+          communications: {
+            title: "Kommunikation",
+            description: "Sichere Nachrichten und Benachrichtigungen mit dem Managementteam.",
+          },
+        },
+      },
+      tenant: {
+        title: "Mieter-Arbeitsbereich",
+        description:
+          "Diese Rolle sieht nur Service-, Reservierungs-, Dokumenten- und Kommunikationsaktionen im autorisierten Nutzungsbereich. Wohnungsmatrix, Finanzbuch, Berichte und Benutzerverwaltung sind geschlossen.",
+        accessNotes: [
+          "Nur autorisierte Einheit und erlaubte Aktionen",
+          "Eigentümerdaten, Berichte, Finanzbuch und andere Einheiten sind geschlossen",
+        ],
+        cards: {
+          tickets: {
+            title: "Servicetickets",
+            description: "Wartungsanfragen erstellen und bestehenden Status verfolgen.",
+          },
+          calendar: {
+            title: "Reservierungen",
+            description: "Check-in, Check-out und autorisierte Reservierungsflüsse.",
+          },
+          documents: {
+            title: "Dokumente",
+            description: "Autorisierte Miet- und Operationsdokumente.",
+          },
+          communications: {
+            title: "Kommunikation",
+            description: "Nachrichten an das Management senden und Benachrichtigungen verfolgen.",
+          },
+        },
+      },
+    },
+    roleScenes: {
+      common: {
+        liveFilterLabel: "Live-Berechtigungsfilter",
+        rhythmTitle: "Arbeitsrhythmus",
+        rhythmDescription: "Hover- und Kartenübergänge zeigen den echten Modulfluss.",
+      },
+      accountant: {
+        eyebrow: "Finanzkontrollfluss",
+        title: "Zahlungen, Dokumente und Freigaben in einer Ansicht",
+        metricLabel: "diesen Monat verifizierte Zahlungseingänge",
+        status: "Finanzdaten offen, Operationsdaten geschlossen",
+        bars: ["Zahlungen", "Kaution", "Dokument"],
+        timeline: [
+          { label: "Buch", detail: "Beiträge und Saldenprüfung" },
+          { label: "Dokument", detail: "Zahlungs-/TAPU-Dateien" },
+          { label: "Bericht", detail: "Finanzausgabe" },
+        ],
+      },
+      staff: {
+        eyebrow: "Außendienstfluss",
+        title: "Zugewiesene Arbeit, SLA und Nachweise",
+        metricLabel: "heute sichtbare Aufgaben",
+        status: "Feldwarteschlange offen, Finanzen und Benutzerverwaltung geschlossen",
+        bars: ["SLA", "Nachweis", "Route"],
+        timeline: [
+          { label: "Anfrage", detail: "Zugewiesene Servicearbeit" },
+          { label: "Feld", detail: "Foto und Notiz" },
+          { label: "Abschluss", detail: "Managerprüfung" },
+        ],
+      },
+      owner: {
+        eyebrow: "Eigentümerportalfluss",
+        title: "Klare Statussicht für eigene Einheiten",
+        metricLabel: "autorisierte Aktionsbereiche",
+        status: "Nur eigene Einheit, Dokumente und Kommunikation",
+        bars: ["Service", "Reservierung", "Dokument"],
+        timeline: [
+          { label: "Einheit", detail: "Autorisierter Datensatz" },
+          { label: "Service", detail: "Anfrage und Status" },
+          { label: "Nachricht", detail: "Managementkommunikation" },
+        ],
+      },
+      tenant: {
+        eyebrow: "Mieterportalfluss",
+        title: "Schneller Zugriff auf Service, Reservierungen und Dokumente",
+        metricLabel: "offene Nutzermodule",
+        status: "Wohnungsmatrix, Finanzen und Berichte geschlossen",
+        bars: ["Service", "Kalender", "Dokument"],
+        timeline: [
+          { label: "Anfrage", detail: "Wartung oder Support" },
+          { label: "Kalender", detail: "Check-in/out-Fluss" },
+          { label: "Dokument", detail: "Autorisierte Dateien" },
+        ],
+      },
+    },
     kpis: {
       totalUnits: "Einheiten gesamt",
       occupancy: "{value}% belegt",
@@ -473,6 +983,176 @@ export const dashboardHomeCopy = {
       rbacTitle: "Ролевые связи активны",
       rbacDescription:
         "Карточки панели, API-доступ и AI-ответы проходят через одну RBAC-матрицу.",
+    },
+    roleWorkspaces: {
+      common: {
+        boundariesTitle: "Границы доступа",
+        boundariesBody:
+          "В этом рабочем пространстве не показываются общая матрица юнитов, финансовый журнал, управление пользователями и настройки платформы. Если закрытая страница открыта по URL, система возвращает пользователя в разрешенное рабочее пространство.",
+      },
+      accountant: {
+        title: "Финансовое рабочее пространство",
+        description:
+          "Эта роль работает со взносами, оплатами, депозитами, документами и финансовыми отчетами. Операции, управление пользователями и настройки закрыты.",
+        accessNotes: [
+          "Управление пользователями закрыто",
+          "Полевую работу нельзя закрыть без операционного доказательства",
+        ],
+        cards: {
+          finance: {
+            title: "Финансы и взносы",
+            description: "Взносы, оплаты, открытые балансы и контроль финансового журнала.",
+          },
+          documents: {
+            title: "Документы",
+            description: "Контроль оплат, TAPU, договоров и бухгалтерских документов.",
+          },
+          reports: {
+            title: "Отчеты",
+            description: "Финансовые и платежные выгрузки, экспорт и контрольные отчеты.",
+          },
+          communications: {
+            title: "Коммуникации",
+            description: "Финансовые напоминания и связанные черновики уведомлений.",
+          },
+        },
+      },
+      staff: {
+        title: "Рабочее пространство полевой команды",
+        description:
+          "Эта роль видит назначенный сервис, задачи, бронирования, документы и коммуникации. Финансы, управление пользователями и настройки закрыты.",
+        accessNotes: [
+          "Финансовый журнал закрыт",
+          "Возвраты, ограничения доступа и ролевые одобрения закрыты",
+        ],
+        cards: {
+          tickets: {
+            title: "Сервисные заявки",
+            description: "Назначенные работы, SLA, обновления статуса и полевые заметки.",
+          },
+          calendar: {
+            title: "Бронирования",
+            description: "Check-in, check-out, показы, уборка и ежедневные задачи.",
+          },
+          documents: {
+            title: "Документы",
+            description: "Доказательства работ, фото и операционные документы.",
+          },
+          communications: {
+            title: "Коммуникации",
+            description: "Сообщения и уведомления с операционной командой.",
+          },
+        },
+      },
+      owner: {
+        title: "Рабочее пространство владельца",
+        description:
+          "Эта роль видит сервис, бронирования, документы и коммуникацию управления по своим юнитам. Записи других владельцев и внутренние экраны компании закрыты.",
+        accessNotes: [
+          "Только собственные юниты и авторизованные записи",
+          "Другие владельцы, персонал, отчеты и финансы закрыты",
+        ],
+        cards: {
+          tickets: {
+            title: "Сервисные заявки",
+            description: "Создавайте заявку по своему юниту и отслеживайте статус.",
+          },
+          calendar: {
+            title: "Бронирования",
+            description: "Аренда, check-in/out и календарь доступности.",
+          },
+          documents: {
+            title: "Документы",
+            description: "Авторизованные договоры, TAPU и операционные документы.",
+          },
+          communications: {
+            title: "Коммуникации",
+            description: "Безопасные сообщения и уведомления с командой управления.",
+          },
+        },
+      },
+      tenant: {
+        title: "Рабочее пространство арендатора",
+        description:
+          "Эта роль видит только сервис, бронирования, документы и коммуникации в авторизованном объеме. Матрица юнитов, финансы, отчеты и управление пользователями закрыты.",
+        accessNotes: [
+          "Только авторизованный юнит и разрешенные действия",
+          "Записи владельцев, отчеты, финансы и другие юниты закрыты",
+        ],
+        cards: {
+          tickets: {
+            title: "Сервисные заявки",
+            description: "Создавайте заявки на обслуживание и отслеживайте их статус.",
+          },
+          calendar: {
+            title: "Бронирования",
+            description: "Check-in, check-out и авторизованные потоки бронирований.",
+          },
+          documents: {
+            title: "Документы",
+            description: "Авторизованные договоры аренды и операционные документы.",
+          },
+          communications: {
+            title: "Коммуникации",
+            description: "Пишите команде управления и отслеживайте уведомления.",
+          },
+        },
+      },
+    },
+    roleScenes: {
+      common: {
+        liveFilterLabel: "Живой фильтр доступа",
+        rhythmTitle: "Ритм рабочего пространства",
+        rhythmDescription: "Hover и переходы карточек показывают реальный поток модулей.",
+      },
+      accountant: {
+        eyebrow: "Финансовый контроль",
+        title: "Оплаты, документы и одобрения в одном виде",
+        metricLabel: "оплат подтверждено за месяц",
+        status: "Финансовые данные открыты, операционные данные закрыты",
+        bars: ["Оплаты", "Депозит", "Документ"],
+        timeline: [
+          { label: "Журнал", detail: "Проверка взносов и баланса" },
+          { label: "Документ", detail: "Файлы оплат/TAPU" },
+          { label: "Отчет", detail: "Финансовый вывод" },
+        ],
+      },
+      staff: {
+        eyebrow: "Полевой операционный поток",
+        title: "Назначенные работы, SLA и доказательства",
+        metricLabel: "видимых задач сегодня",
+        status: "Полевая очередь открыта, финансы и пользователи закрыты",
+        bars: ["SLA", "Доказательства", "Маршрут"],
+        timeline: [
+          { label: "Заявка", detail: "Назначенная сервисная работа" },
+          { label: "Поле", detail: "Фото и заметка" },
+          { label: "Закрытие", detail: "Проверка менеджера" },
+        ],
+      },
+      owner: {
+        eyebrow: "Портал владельца",
+        title: "Понятный статус по собственным юнитам",
+        metricLabel: "авторизованных зон действий",
+        status: "Только свой юнит, документы и коммуникации",
+        bars: ["Сервис", "Бронирование", "Документ"],
+        timeline: [
+          { label: "Юнит", detail: "Авторизованная запись" },
+          { label: "Сервис", detail: "Заявка и статус" },
+          { label: "Сообщение", detail: "Коммуникация с управлением" },
+        ],
+      },
+      tenant: {
+        eyebrow: "Портал арендатора",
+        title: "Быстрый доступ к сервису, бронированиям и документам",
+        metricLabel: "открытых модулей пользователя",
+        status: "Матрица юнитов, финансы и отчеты закрыты",
+        bars: ["Сервис", "Календарь", "Документ"],
+        timeline: [
+          { label: "Заявка", detail: "Обслуживание или поддержка" },
+          { label: "Календарь", detail: "Поток check-in/out" },
+          { label: "Документ", detail: "Авторизованные файлы" },
+        ],
+      },
     },
     kpis: {
       totalUnits: "Всего юнитов",

@@ -28,6 +28,7 @@ import { useUser } from "@/components/user-provider"
 import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
+  toIntlLocale,
 } from "@/lib/operational-copy"
 import {
   isClientRole,
@@ -92,12 +93,12 @@ function viewingVariant(status: ViewingStatus) {
   return "danger"
 }
 
-function viewingLabel(status: ViewingStatus) {
-  if (status === "planned") return "Planlandı"
-  if (status === "confirmed") return "Onaylandı"
-  if (status === "completed") return "Tamamlandı"
-  if (status === "follow_up_due") return "Takip gerekli"
-  return "Gelmedi"
+function viewingLabel(status: ViewingStatus, t: (value: string) => string) {
+  if (status === "planned") return t("Planlandı")
+  if (status === "confirmed") return t("Onaylandı")
+  if (status === "completed") return t("Tamamlandı")
+  if (status === "follow_up_due") return t("Takip gerekli")
+  return t("Gelmedi")
 }
 
 function riskVariant(risk: "low" | "medium" | "high" | "critical") {
@@ -125,8 +126,8 @@ function priorityVariant(priority: ServicePriority) {
   return "neutral"
 }
 
-function shortDate(date: string) {
-  return new Intl.DateTimeFormat("tr-TR", {
+function shortDate(date: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  return new Intl.DateTimeFormat(toIntlLocale(locale), {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
@@ -138,6 +139,7 @@ export default function CalendarPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
   const t = (value: string) => localizeDashboardTextPart(value, locale)
+  const formatDate = (date: string) => shortDate(date, locale)
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
   const maskFinance = shouldMaskFinance(user.role)
@@ -265,74 +267,74 @@ export default function CalendarPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <DashboardSection
           icon={ClipboardCheck}
-          title="Giriş hazırlığı komuta panosu"
-          description="Kimlik, ödeme/depozito, temizlik, erişim ve karşılama mesajı kontrolleri misafir girmeden önce takip edilir."
-          info="Bu panel bilinçli olarak kısa tutulur. Hazırlık kuyruğu büyüdüğünde aşağıdaki tam rezervasyon tablosunu kullanın."
+          title={t("Giriş hazırlığı komuta panosu")}
+          description={t("Kimlik, ödeme/depozito, temizlik, erişim ve karşılama mesajı kontrolleri misafir girmeden önce takip edilir.")}
+          info={t("Bu panel bilinçli olarak kısa tutulur. Hazırlık kuyruğu büyüdüğünde aşağıdaki tam rezervasyon tablosunu kullanın.")}
           actionHref="/dashboard/calendar#reservations-table"
-          actionLabel="Tüm rezervasyonlar"
+          actionLabel={t("Tüm rezervasyonlar")}
           badge={
             <StatusBadge variant={readinessAverage >= 80 ? "success" : readinessAverage >= 60 ? "warning" : "danger"}>
-              {readinessAverage}% hazır
+              {readinessAverage}% {t("hazır")}
             </StatusBadge>
           }
         >
           <div className="mb-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Sistem kuyruğu</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Sistem kuyruğu")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{bookingOpsSummary.totalBookings}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Bloke/risk</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Bloke/risk")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{visibleReadiness.filter((record) => record.riskLevel === "high" || record.riskLevel === "critical").length}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Erişim bekliyor</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Erişim bekliyor")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{visibleAccessHandoffs.filter((handoff) => handoff.status === "pending" || handoff.status === "restricted").length}</p>
             </div>
           </div>
           <div className="mb-4 rounded-xl border border-border bg-muted/20 p-3">
-            <PieChart data={readinessRiskData} size={132} ariaLabel="Giriş hazırlığı risk dağılımı" totalLabel="toplam" />
+            <PieChart data={readinessRiskData} size={132} ariaLabel={t("Giriş hazırlığı risk dağılımı")} totalLabel={t("toplam")} />
           </div>
           <DataTable
             data={visibleReadiness}
             pageSize={4}
             searchValue={(record) => `${record.id} ${record.bookingId} ${record.flatNumber} ${record.guestName} ${record.blocker} ${record.nextAction}`}
             columns={[
-              { key: "id", header: "Kuyruk", sortable: true, render: (record) => record.id },
-              { key: "flat", header: "Daire", sortable: true, render: (record) => record.flatNumber },
-              { key: "guest", header: clientView ? "Kayıt" : "Misafir", render: (record) => record.guestName },
+              { key: "id", header: t("Kuyruk"), sortable: true, render: (record) => record.id },
+              { key: "flat", header: t("Daire"), sortable: true, render: (record) => record.flatNumber },
+              { key: "guest", header: clientView ? t("Kayıt") : t("Misafir"), render: (record) => record.guestName },
               {
                 key: "score",
-                header: "Hazır",
+                header: t("Hazır"),
                 sortable: true,
                 sortValue: (record) => record.readinessScore,
                 render: (record) => `${record.readinessScore}%`,
               },
               {
                 key: "risk",
-                header: "Risk",
-                render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{record.riskLevel}</StatusBadge>,
+                header: t("Risk"),
+                render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{t(record.riskLevel)}</StatusBadge>,
               },
-              { key: "next", header: "Sonraki aksiyon", render: (record) => record.nextAction },
+              { key: "next", header: t("Sonraki aksiyon"), render: (record) => record.nextAction },
               ...(!clientView
                 ? [
                     {
                       key: "action",
-                      header: "Aksiyon",
+                      header: t("Aksiyon"),
                       sticky: "right" as const,
                       render: (record: (typeof visibleReadiness)[number]) => (
                         <DashboardActionMenu
                           compact
-                          label="Rezervasyon aksiyonlari"
-                          ariaLabel={`${record.bookingId} rezervasyon aksiyonlari`}
+                          label={t("Rezervasyon aksiyonlari")}
+                          ariaLabel={`${record.bookingId} ${t("Rezervasyon aksiyonlari")}`}
                           items={[
                             {
                               key: "move-in",
-                              label: "Move-in hazirligi",
-                              description: `${record.flatNumber} icin hazirlik skoru ${record.readinessScore}%.`,
+                              label: t("Move-in hazırlığı"),
+                              description: `${record.flatNumber} ${t("için hazırlık skoru")} ${record.readinessScore}%.`,
                               icon: <ListChecks />,
                               actionType: "reservations.move_in.prepare",
-                              ariaLabel: "Move-in hazirligini hazirla",
+                              ariaLabel: t("Move-in hazırlığını hazırla"),
                               entityTable: "reservations",
                               entityExternalId: record.bookingId,
                               title: record.nextAction,
@@ -353,14 +355,14 @@ export default function CalendarPage() {
 
         <DashboardSection
           icon={ShieldCheck}
-          title="Çıkış, erişim ve mutabakat kontrolü"
-          description="Temizlik, medya kanıtı, erişim iptali ve depozito hesabı tek operasyon görünümünde izlenir."
-          info="Burada yalnızca sıradaki devir işleri gösterilir. Tam sayfalı devir tablosuna başlıktan ulaşabilirsiniz."
+          title={t("Çıkış, erişim ve mutabakat kontrolü")}
+          description={t("Temizlik, medya kanıtı, erişim iptali ve depozito hesabı tek operasyon görünümünde izlenir.")}
+          info={t("Burada yalnızca sıradaki devir işleri gösterilir. Tam sayfalı devir tablosuna başlıktan ulaşabilirsiniz.")}
           actionHref="/dashboard/calendar#turnover-table"
-          actionLabel="Tüm devir işleri"
+          actionLabel={t("Tüm devir işleri")}
           badge={
             <StatusBadge variant={blockedTurnover > 0 ? "danger" : "success"}>
-              {blockedTurnover} bloke
+              {blockedTurnover} {t("bloke")}
             </StatusBadge>
           }
         >
@@ -368,24 +370,24 @@ export default function CalendarPage() {
             <div className="rounded-xl border border-border bg-muted/30 p-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <h3 className="text-xs font-bold uppercase text-muted-foreground">Devir SLA</h3>
+                <h3 className="text-xs font-bold uppercase text-muted-foreground">{t("Devir SLA")}</h3>
               </div>
               <p className="mt-2 text-2xl font-black text-foreground">{visibleTurnoverTasks.length}</p>
-              <p className="text-xs text-muted-foreground">temizlik, kanıt ve hesap kapama işleri</p>
+              <p className="text-xs text-muted-foreground">{t("temizlik, kanıt ve hesap kapama işleri")}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-4">
               <div className="flex items-center gap-2">
                 <WalletCards className="h-4 w-4 text-rose-600" />
-                <h3 className="text-xs font-bold uppercase text-muted-foreground">Açık mutabakat</h3>
+                <h3 className="text-xs font-bold uppercase text-muted-foreground">{t("Açık mutabakat")}</h3>
               </div>
               <p className="mt-2 text-2xl font-black text-foreground">{openSettlements}</p>
               <p className="text-xs text-muted-foreground">
-                {maskFinance ? "finans gizli" : formatTry(visibleSettlements.reduce((sum, item) => sum + item.refundTry, 0))} iade riski
+                {maskFinance ? t("finans gizli") : formatTry(visibleSettlements.reduce((sum, item) => sum + item.refundTry, 0))} {t("iade riski")}
               </p>
             </div>
           </div>
           <div className="mt-4 rounded-xl border border-border bg-muted/20 p-3">
-            <PieChart data={turnoverStatusData} size={132} ariaLabel="Devir görev durumu dağılımı" totalLabel="toplam" />
+            <PieChart data={turnoverStatusData} size={132} ariaLabel={t("Devir görev durumu dağılımı")} totalLabel={t("toplam")} />
           </div>
           <div className="mt-4 space-y-3">
             {visibleTurnoverTasks.slice(0, 4).map((task) => (
@@ -395,29 +397,29 @@ export default function CalendarPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge variant={taskStatusVariant(task.status)}>{task.status}</StatusBadge>
                       <StatusBadge variant={priorityVariant(task.priority)}>
-                        {priorityLabels[task.priority]}
+                        {t(priorityLabels[task.priority])}
                       </StatusBadge>
                     </div>
                     <h3 className="mt-2 text-sm font-bold text-foreground">{task.title}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {task.flatNumber} - {task.owner} - son tarih {shortDate(task.dueAt)}
+                      {task.flatNumber} - {task.owner} - {t("son tarih")} {formatDate(task.dueAt)}
                     </p>
                   </div>
                   {!clientView && (
                     <DashboardActionMenu
                       compact
-                      label="Devir aksiyonlari"
-                      ariaLabel={`${task.id} devir aksiyonlari`}
+                      label={t("Devir aksiyonlari")}
+                      ariaLabel={`${task.id} ${t("Devir aksiyonlari")}`}
                       items={[
                         {
                           key: "turnover",
-                          label: "Devir aksiyonu hazirla",
-                          description: `${task.progress}% ilerleme ile kayda al.`,
+                          label: t("Devir aksiyonu hazırla"),
+                          description: `${task.progress}% ${t("ilerleme ile kayda al")}.`,
                           icon: <ClipboardCheck />,
                           actionType: task.title.includes("Final")
                             ? "reservations.checkout.prepare"
                             : "reservations.turnover.update",
-                          ariaLabel: "Turnover aksiyonunu hazirla",
+                          ariaLabel: t("Devir aksiyonunu hazırla"),
                           entityTable: "reservations",
                           entityExternalId: task.bookingId,
                           title: task.title,
@@ -437,9 +439,9 @@ export default function CalendarPage() {
         <Card3D className="lg:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-bold text-card-foreground">
-              {clientView ? "Rezervasyon durumunuz" : "Bugünkü operasyon çizelgesi"}
+              {clientView ? t("Rezervasyon durumunuz") : t("Bugünkü operasyon çizelgesi")}
             </h2>
-            <StatusBadge variant="info">{moveIns + checkouts} aktif iş</StatusBadge>
+            <StatusBadge variant="info">{moveIns + checkouts} {t("aktif iş")}</StatusBadge>
           </div>
           <div className="space-y-3">
             {visibleSchedule.map((booking) => (
@@ -448,28 +450,28 @@ export default function CalendarPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge variant={bookingVariant(booking.status)}>
-                        {bookingStatusLabels[booking.status]}
+                        {t(bookingStatusLabels[booking.status])}
                       </StatusBadge>
                       <StatusBadge variant={depositVariant(booking.depositStatus)}>
                         {depositLabels[booking.depositStatus]}
                       </StatusBadge>
                       <StatusBadge variant={accessVariant(booking.accessCodeStatus)}>
-                        {accessLabels[booking.accessCodeStatus]}
+                        {t(accessLabels[booking.accessCodeStatus])}
                       </StatusBadge>
                     </div>
                     <h3 className="mt-2 text-sm font-bold text-foreground">
                       {booking.flatNumber} - {booking.guestName}
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {booking.channel} - Giriş {shortDate(booking.checkIn)} - Çıkış{" "}
-                      {shortDate(booking.checkOut)}
+                      {booking.channel} - {t("Giriş")} {formatDate(booking.checkIn)} - {t("Çıkış")}{" "}
+                      {formatDate(booking.checkOut)}
                     </p>
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="text-sm font-bold text-foreground">
-                      {maskFinance ? depositLabels[booking.depositStatus] : formatTry(booking.depositTry)}
+                      {maskFinance ? t(depositLabels[booking.depositStatus]) : formatTry(booking.depositTry)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Depozito</p>
+                    <p className="text-xs text-muted-foreground">{t("Depozito")}</p>
                   </div>
                 </div>
               </div>
@@ -482,14 +484,14 @@ export default function CalendarPage() {
             <div className="flex items-start gap-3">
               <KeyRound className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Erişim kodu</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{t("Erişim kodu")}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {clientView
-                    ? "Erişim durumu yalnızca yetkili kaydınız için gösterilir."
-                    : "Borç, depozito ve kimlik kontrolü tamamlanınca erişim kodu otomatik aktif olur."}
+                    ? t("Erişim durumu yalnızca yetkili kaydınız için gösterilir.")
+                    : t("Borç, depozito ve kimlik kontrolü tamamlanınca erişim kodu otomatik aktif olur.")}
                 </p>
                 <p className="mt-3 text-xl font-black text-foreground">{accessPending}</p>
-                <p className="text-xs text-muted-foreground">bekleyen veya kısıtlı kayıt</p>
+                <p className="text-xs text-muted-foreground">{t("bekleyen veya kısıtlı kayıt")}</p>
               </div>
             </div>
           </Card3D>
@@ -498,12 +500,12 @@ export default function CalendarPage() {
               <LockKeyhole className="mt-0.5 h-5 w-5 text-rose-600" />
               <div>
                 <h2 className="text-sm font-bold text-card-foreground">
-                  {clientView ? "Kapanış kontrolü" : "Hasar ve depozito"}
+                  {clientView ? t("Kapanış kontrolü") : t("Hasar ve depozito")}
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {clientView
-                    ? "Check-out sonrası hasar, fotoğraf kanıtı ve iade kararı portal kaydına bağlanır."
-                    : "Check-out sonrası fotoğraf, servis maliyeti ve depozito kesintisi aynı finans kaydına bağlanır."}
+                    ? t("Check-out sonrası hasar, fotoğraf kanıtı ve iade kararı portal kaydına bağlanır.")
+                    : t("Check-out sonrası fotoğraf, servis maliyeti ve depozito kesintisi aynı finans kaydına bağlanır.")}
                 </p>
               </div>
             </div>
@@ -514,12 +516,12 @@ export default function CalendarPage() {
                 <Sparkles className="mt-0.5 h-5 w-5 text-amber-600" />
                 <div>
                   <h2 className="text-sm font-bold text-card-foreground">
-                    {fieldView ? "Saha önceliği" : "AI doluluk önerisi"}
+                    {fieldView ? t("Saha önceliği") : t("AI doluluk önerisi")}
                   </h2>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {fieldView
-                      ? "Temizlik, erişim ve çıkış işleri günlük ekip kapasitesine göre sıralanır."
-                      : "Boş daire, bakım durumu ve önceki kanal performansına göre fiyat ve kanal önerisi üretilebilir."}
+                      ? t("Temizlik, erişim ve çıkış işleri günlük ekip kapasitesine göre sıralanır.")
+                      : t("Boş daire, bakım durumu ve önceki kanal performansına göre fiyat ve kanal önerisi üretilebilir.")}
                   </p>
                 </div>
               </div>
@@ -534,50 +536,50 @@ export default function CalendarPage() {
             <div>
               <div className="flex items-center gap-2">
                 <KeyRound className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-bold text-card-foreground">Access handoff queue</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{t("Access handoff queue")}</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Mobile code, card, plate and QR credentials are prepared in demo/provider-ready mode with manual fallback.
+                {t("Mobile code, card, plate and QR credentials are prepared in demo/provider-ready mode with manual fallback.")}
               </p>
             </div>
-            <StatusBadge variant="info">{visibleAccessHandoffs.length} handoff</StatusBadge>
+            <StatusBadge variant="info">{visibleAccessHandoffs.length} {t("handoff")}</StatusBadge>
           </div>
           <DataTable
             data={visibleAccessHandoffs}
             pageSize={6}
             searchValue={(handoff) => `${handoff.id} ${handoff.bookingId} ${handoff.flatNumber} ${handoff.credential} ${handoff.provider} ${handoff.blocker}`}
             columns={[
-              { key: "id", header: "Access", sortable: true, render: (handoff) => handoff.id },
-              { key: "flat", header: "Daire", sortable: true, render: (handoff) => handoff.flatNumber },
-              { key: "credential", header: "Credential", sortable: true, render: (handoff) => handoff.credential },
-              { key: "provider", header: "Mode", render: (handoff) => handoff.provider },
+              { key: "id", header: t("Access"), sortable: true, render: (handoff) => handoff.id },
+              { key: "flat", header: t("Daire"), sortable: true, render: (handoff) => handoff.flatNumber },
+              { key: "credential", header: t("Credential"), sortable: true, render: (handoff) => handoff.credential },
+              { key: "provider", header: t("Mode"), render: (handoff) => handoff.provider },
               {
                 key: "status",
-                header: "Status",
+                header: t("Status"),
                 render: (handoff) => (
-                  <StatusBadge variant={accessVariant(handoff.status)}>{accessLabels[handoff.status]}</StatusBadge>
+                  <StatusBadge variant={accessVariant(handoff.status)}>{t(accessLabels[handoff.status])}</StatusBadge>
                 ),
               },
-              { key: "blocker", header: "Blocker", render: (handoff) => handoff.blocker },
+              { key: "blocker", header: t("Blocker"), render: (handoff) => handoff.blocker },
               ...(!clientView
                 ? [
                     {
                       key: "action",
-                      header: "Action",
+                      header: t("Action"),
                       sticky: "right" as const,
                       render: (handoff: (typeof visibleAccessHandoffs)[number]) => (
                         <DashboardActionMenu
                           compact
-                          label="Erisim aksiyonlari"
-                          ariaLabel={`${handoff.id} erisim aksiyonlari`}
+                          label={t("Erişim aksiyonlari")}
+                          ariaLabel={`${handoff.id} ${t("Erişim aksiyonlari")}`}
                           items={[
                             {
                               key: "access",
-                              label: "Access handoff hazirla",
-                              description: `${handoff.provider} icin ${handoff.status} kaydi.`,
+                              label: t("Access handoff hazırla"),
+                              description: `${handoff.provider} ${t("için")} ${t(handoff.status)} ${t("kaydı")}.`,
                               icon: <KeyRound />,
                               actionType: "reservations.access.prepare",
-                              ariaLabel: "Access handoff hazirla",
+                              ariaLabel: t("Access handoff hazırla"),
                               entityTable: "reservations",
                               entityExternalId: handoff.bookingId,
                               title: handoff.nextAction,
@@ -601,63 +603,63 @@ export default function CalendarPage() {
             <div>
               <div className="flex items-center gap-2">
                 <WalletCards className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-bold text-card-foreground">Deposit settlement queue</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{t("Deposit settlement queue")}</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Itemized damage, cleaning deductions, refund amount and approval owner are kept in the same audited flow.
+                {t("Itemized damage, cleaning deductions, refund amount and approval owner are kept in the same audited flow.")}
               </p>
             </div>
-            <StatusBadge variant={openSettlements > 0 ? "warning" : "success"}>{openSettlements} open</StatusBadge>
+            <StatusBadge variant={openSettlements > 0 ? "warning" : "success"}>{openSettlements} {t("open")}</StatusBadge>
           </div>
           <DataTable
             data={visibleSettlements}
             pageSize={6}
             searchValue={(settlement) => `${settlement.id} ${settlement.bookingId} ${settlement.flatNumber} ${settlement.guestName} ${settlement.nextAction}`}
             columns={[
-              { key: "id", header: "Settlement", sortable: true, render: (settlement) => settlement.id },
-              { key: "flat", header: "Daire", sortable: true, render: (settlement) => settlement.flatNumber },
-              { key: "guest", header: clientView ? "Kayit" : "Guest", render: (settlement) => settlement.guestName },
+              { key: "id", header: t("Settlement"), sortable: true, render: (settlement) => settlement.id },
+              { key: "flat", header: t("Daire"), sortable: true, render: (settlement) => settlement.flatNumber },
+              { key: "guest", header: clientView ? t("Kayıt") : t("Guest"), render: (settlement) => settlement.guestName },
               {
                 key: "deposit",
-                header: "Deposit",
+                header: t("Deposit"),
                 sortable: true,
                 sortValue: (settlement) => settlement.depositTry,
-                render: (settlement) => (maskFinance ? "Masked" : formatTry(settlement.depositTry)),
+                render: (settlement) => (maskFinance ? t("Masked") : formatTry(settlement.depositTry)),
               },
               {
                 key: "refund",
-                header: "Refund",
+                header: t("Refund"),
                 sortable: true,
                 sortValue: (settlement) => settlement.refundTry,
-                render: (settlement) => (maskFinance ? "Masked" : formatTry(settlement.refundTry)),
+                render: (settlement) => (maskFinance ? t("Masked") : formatTry(settlement.refundTry)),
               },
               {
                 key: "status",
-                header: "Status",
+                header: t("Status"),
                 render: (settlement) => (
-                  <StatusBadge variant={settlementVariant(settlement.status)}>{settlement.status}</StatusBadge>
+                  <StatusBadge variant={settlementVariant(settlement.status)}>{t(settlement.status)}</StatusBadge>
                 ),
               },
-              { key: "next", header: "Next action", render: (settlement) => settlement.nextAction },
+              { key: "next", header: t("Next action"), render: (settlement) => settlement.nextAction },
               ...(!clientView
                 ? [
                     {
                       key: "action",
-                      header: "Action",
+                      header: t("Action"),
                       sticky: "right" as const,
                       render: (settlement: (typeof visibleSettlements)[number]) => (
                         <DashboardActionMenu
                           compact
-                          label="Depozito aksiyonlari"
-                          ariaLabel={`${settlement.id} depozito aksiyonlari`}
+                          label={t("Depozito aksiyonlari")}
+                          ariaLabel={`${settlement.id} ${t("Depozito aksiyonlari")}`}
                           items={[
                             {
                               key: "deposit",
-                              label: "Depozito kararini incele",
-                              description: `${settlement.status} durumu onaya hazirlanir.`,
+                              label: t("Depozito kararını incele"),
+                              description: `${t(settlement.status)} ${t("durumu onaya hazırlanır")}.`,
                               icon: <WalletCards />,
                               actionType: "reservations.deposit.review",
-                              ariaLabel: "Depozito kararini incele",
+                              ariaLabel: t("Depozito kararını incele"),
                               entityTable: "reservations",
                               entityExternalId: settlement.bookingId,
                               title: settlement.nextAction,
@@ -683,29 +685,29 @@ export default function CalendarPage() {
             <div>
               <div className="flex items-center gap-2">
                 <Video className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-bold text-card-foreground">Gezinti ve online tur akışı</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{t("Gezinti ve online tur akışı")}</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                New Level Premium satış görüşmeleri dil, alıcı hedefi, kanal, sorumlu danışman ve takip tarihiyle yönetilir.
+                {t("New Level Premium satış görüşmeleri dil, alıcı hedefi, kanal, sorumlu danışman ve takip tarihiyle yönetilir.")}
               </p>
             </div>
-            <StatusBadge variant="accent">{viewingSummary.total} aktif görüşme</StatusBadge>
+            <StatusBadge variant="accent">{viewingSummary.total} {t("aktif görüşme")}</StatusBadge>
           </div>
           <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Onaylı tur</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Onaylı tur")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{viewingSummary.confirmed}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Takip gerekli</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Takip gerekli")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{viewingSummary.followUpDue}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Online tur</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Online tur")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{viewingSummary.onlineTours}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">No-show kurtarma</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("No-show kurtarma")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{viewingSummary.noShow}</p>
             </div>
           </div>
@@ -716,13 +718,13 @@ export default function CalendarPage() {
               `${viewing.id} ${viewing.leadName} ${viewing.preferredUnit} ${viewing.channel} ${viewing.assignedTo} ${viewing.nextAction}`
             }
             columns={[
-              { key: "id", header: "Tur", sortable: true, render: (viewing) => viewing.id },
+              { key: "id", header: t("Tur"), sortable: true, render: (viewing) => viewing.id },
               { key: "lead", header: "Lead", render: (viewing) => viewing.leadName },
-              { key: "goal", header: "Hedef", sortable: true, render: (viewing) => viewing.buyerGoal },
-              { key: "unit", header: "İstenen tip", sortable: true, render: (viewing) => viewing.preferredUnit },
+              { key: "goal", header: t("Hedef"), sortable: true, render: (viewing) => viewing.buyerGoal },
+              { key: "unit", header: t("İstenen tip"), sortable: true, render: (viewing) => viewing.preferredUnit },
               {
                 key: "channel",
-                header: "Kanal",
+                header: t("Kanal"),
                 render: (viewing) => (
                   <span className="inline-flex items-center gap-1">
                     <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
@@ -732,40 +734,40 @@ export default function CalendarPage() {
               },
               {
                 key: "status",
-                header: "Durum",
+                header: t("Durum"),
                 render: (viewing) => (
                   <StatusBadge variant={viewingVariant(viewing.status)}>
-                    {viewingLabel(viewing.status)}
+                    {viewingLabel(viewing.status, t)}
                   </StatusBadge>
                 ),
               },
-              { key: "follow", header: "Takip", render: (viewing) => shortDate(viewing.followUpDueAt) },
-              { key: "action", header: "Sonraki aksiyon", render: (viewing) => viewing.nextAction },
+              { key: "follow", header: t("Takip"), render: (viewing) => formatDate(viewing.followUpDueAt) },
+              { key: "action", header: t("Sonraki aksiyon"), render: (viewing) => viewing.nextAction },
             ]}
           />
         </Card3D>
       )}
 
       <DashboardSection
-        title="Tam rezervasyon kaydı"
-        description="Tüm kayıtları kartlara yığmak yerine rezervasyonları arayın, sıralayın ve sayfalayın."
-        info="Büyük operasyon veri setleri aranabilir tablolarda tutulur. Üstteki özet kartları bilinçli olarak kısa kalır."
+        title={t("Tam rezervasyon kaydı")}
+        description={t("Tüm kayıtları kartlara yığmak yerine rezervasyonları arayın, sıralayın ve sayfalayın.")}
+        info={t("Büyük operasyon veri setleri aranabilir tablolarda tutulur. Üstteki özet kartları bilinçli olarak kısa kalır.")}
         actionHref="/dashboard/calendar"
-        actionLabel="Üst"
+        actionLabel={t("Üst")}
       >
         <div id="reservations-table" className="scroll-mt-24">
           <DataTable
             data={visibleBookings}
             searchValue={(booking) => `${booking.id} ${booking.flatNumber} ${booking.guestName} ${booking.channel}`}
             columns={[
-          { key: "id", header: "Kayıt", sortable: true, render: (booking) => booking.id },
-          { key: "flat", header: "Daire", sortable: true, render: (booking) => booking.flatNumber },
-          { key: "guest", header: clientView ? "Kayıt" : "Misafir/Sakin", render: (booking) => booking.guestName },
+          { key: "id", header: t("Kayıt"), sortable: true, render: (booking) => booking.id },
+          { key: "flat", header: t("Daire"), sortable: true, render: (booking) => booking.flatNumber },
+          { key: "guest", header: clientView ? t("Kayıt") : t("Misafir/Sakin"), render: (booking) => booking.guestName },
           ...(!clientView
             ? [
                 {
                   key: "channel",
-                  header: "Kanal",
+                  header: t("Kanal"),
                   sortable: true,
                   render: (booking: BookingRecord) => booking.channel,
                 },
@@ -773,48 +775,48 @@ export default function CalendarPage() {
             : []),
           {
             key: "checkin",
-            header: "Giriş",
+            header: t("Giriş"),
             sortable: true,
             sortValue: (booking) => booking.checkIn,
-            render: (booking) => shortDate(booking.checkIn),
+            render: (booking) => formatDate(booking.checkIn),
           },
           {
             key: "checkout",
-            header: "Çıkış",
+            header: t("Çıkış"),
             sortable: true,
             sortValue: (booking) => booking.checkOut,
-            render: (booking) => shortDate(booking.checkOut),
+            render: (booking) => formatDate(booking.checkOut),
           },
           {
             key: "status",
-            header: "Durum",
+            header: t("Durum"),
             render: (booking) => (
               <StatusBadge variant={bookingVariant(booking.status)}>
-                {bookingStatusLabels[booking.status]}
+                {t(bookingStatusLabels[booking.status])}
               </StatusBadge>
             ),
           },
           {
             key: "deposit",
-            header: "Depozito",
+            header: t("Depozito"),
             render: (booking) => (
               <StatusBadge variant={depositVariant(booking.depositStatus)}>
-                {depositLabels[booking.depositStatus]}
+                {t(depositLabels[booking.depositStatus])}
               </StatusBadge>
             ),
           },
           {
             key: "access",
-            header: "Erişim",
+            header: t("Erişim"),
             render: (booking) => (
               <StatusBadge variant={accessVariant(booking.accessCodeStatus)}>
-                {accessLabels[booking.accessCodeStatus]}
+                {t(accessLabels[booking.accessCodeStatus])}
               </StatusBadge>
             ),
           },
           {
             key: "cleaning",
-            header: "Temizlik",
+            header: t("Temizlik"),
             render: (booking) => (
               <span className="inline-flex items-center gap-1 text-xs text-foreground">
                 <Clock className="h-3.5 w-3.5 text-muted-foreground" />
@@ -828,11 +830,11 @@ export default function CalendarPage() {
       </DashboardSection>
 
       <DashboardSection
-        title="Tam devir görev kaydı"
-        description="Temizlik, kanıt, çıkış ve teslim işleri önizleme listesi yoğunlaşınca sayfalı tabloya taşınır."
-        info="Önizleme panelinde rahat taranamayacak kadar çok iş olduğunda bu tabloyu kullanın."
+        title={t("Tam devir görev kaydı")}
+        description={t("Temizlik, kanıt, çıkış ve teslim işleri önizleme listesi yoğunlaşınca sayfalı tabloya taşınır.")}
+        info={t("Önizleme panelinde rahat taranamayacak kadar çok iş olduğunda bu tabloyu kullanın.")}
         actionHref="/dashboard/calendar#reservations-table"
-        actionLabel="Rezervasyonlar"
+        actionLabel={t("Rezervasyonlar")}
       >
         <div id="turnover-table" className="scroll-mt-24">
           <DataTable
@@ -840,27 +842,27 @@ export default function CalendarPage() {
             pageSize={8}
             searchValue={(task) => `${task.id} ${task.bookingId} ${task.flatNumber} ${task.owner} ${task.title} ${task.nextAction}`}
             columns={[
-              { key: "id", header: "Görev", sortable: true, render: (task) => task.id },
-              { key: "flat", header: "Daire", sortable: true, render: (task) => task.flatNumber },
-              { key: "title", header: "İş", render: (task) => task.title },
+              { key: "id", header: t("Görev"), sortable: true, render: (task) => task.id },
+              { key: "flat", header: t("Daire"), sortable: true, render: (task) => task.flatNumber },
+              { key: "title", header: t("İş"), render: (task) => task.title },
               {
                 key: "status",
-                header: "Durum",
-                render: (task) => <StatusBadge variant={taskStatusVariant(task.status)}>{task.status}</StatusBadge>,
+                header: t("Durum"),
+                render: (task) => <StatusBadge variant={taskStatusVariant(task.status)}>{t(task.status)}</StatusBadge>,
               },
               {
                 key: "priority",
-                header: "Öncelik",
-                render: (task) => <StatusBadge variant={priorityVariant(task.priority)}>{priorityLabels[task.priority]}</StatusBadge>,
+                header: t("Öncelik"),
+                render: (task) => <StatusBadge variant={priorityVariant(task.priority)}>{t(priorityLabels[task.priority])}</StatusBadge>,
               },
               {
                 key: "due",
-                header: "Son tarih",
+                header: t("Son tarih"),
                 sortable: true,
                 sortValue: (task) => task.dueAt,
-                render: (task) => shortDate(task.dueAt),
+                render: (task) => formatDate(task.dueAt),
               },
-              { key: "next", header: "Sonraki aksiyon", render: (task) => task.nextAction },
+              { key: "next", header: t("Sonraki aksiyon"), render: (task) => task.nextAction },
             ]}
           />
         </div>

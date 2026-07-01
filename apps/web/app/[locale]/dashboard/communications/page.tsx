@@ -87,6 +87,24 @@ const communicationsCopy = {
     templateActions: "Şablon aksiyonları",
     templateApprovalPrepare: "Şablonu onaya hazırla",
     templateApprovalAria: "Mesaj şablonunu onaya hazırla",
+    providerTitle: "Sağlayıcıya hazır simülasyon",
+    providerDescription: "SMS, e-posta, push ve portal mesajları şimdilik demo kuyruklarını kullanır; sözleşme ve API anahtarlarından sonra sağlayıcı adaptörleri açılır.",
+    providerCount: "yeniden deneme veya manuel inceleme isteyen teslim öğesi",
+    approvalTitle: "Onay ve yedek kanal",
+    approvalDescription: "Yanlış alıcı, eksik onay, abonelikten çıkış, finans itirazı ve başarısız sağlayıcı olayları yeniden göndermeden önce görünür kalır.",
+    approvalCount: "mevcut rol kapsamında onay sorunu",
+    notificationRulesTitle: "Bildirim kuralları",
+    notificationRulesDescription: "Kurallar üretim gönderiminden önce hedef önizleme, dil modu, onay kapısı ve yedek kanalı içerir.",
+    retryCount: "tekrar",
+    deliveryQueueTitle: "Teslim ve yeniden deneme kuyruğu",
+    deliveryQueueDescription: "Canlı sağlayıcı bağlanmadan önce teslim denemeleri, sağlayıcı modu ve tekrar zamanı izlenir.",
+    deliveryCount: "teslim",
+    templateLibraryTitle: "Çok dilli şablon kütüphanesi",
+    templateLibraryDescription: "TR, EN, DE ve RU şablonları değişken bazlı, onay farkında ve sağlayıcı adaptörlerine hazırdır.",
+    approvalCountLabel: "onay",
+    qualityGateTitle: "Role güvenli iletişim kalite kapısı",
+    qualityGateDescription: "Mevcut demo sözleşmesi {threads} akış, {rules} aktif kural ve {templates} çok dilli şablon izler.",
+    phaseReady: "Faz 11 UAT hazır",
   },
   en: {
     title: "Communication Center",
@@ -132,6 +150,24 @@ const communicationsCopy = {
     templateActions: "Template actions",
     templateApprovalPrepare: "Prepare template for approval",
     templateApprovalAria: "Prepare message template for approval",
+    providerTitle: "Provider-ready simulation",
+    providerDescription: "SMS, email, push and portal messages use demo queues for now; provider adapters open after contracts and API keys are approved.",
+    providerCount: "delivery items needing retry or manual review",
+    approvalTitle: "Approval and fallback channel",
+    approvalDescription: "Wrong recipient, missing consent, unsubscribe, finance dispute and failed provider events stay visible before any resend.",
+    approvalCount: "consent issues in current role scope",
+    notificationRulesTitle: "Notification rules",
+    notificationRulesDescription: "Rules include target preview, language mode, approval gate and fallback channel before production sending.",
+    retryCount: "retries",
+    deliveryQueueTitle: "Delivery and retry queue",
+    deliveryQueueDescription: "Delivery attempts, provider mode and next retry time are tracked before a live provider is connected.",
+    deliveryCount: "deliveries",
+    templateLibraryTitle: "Multilingual template library",
+    templateLibraryDescription: "TR, EN, DE and RU templates are variable-based, approval-aware and ready for provider adapters.",
+    approvalCountLabel: "approval",
+    qualityGateTitle: "Role-safe communication quality gate",
+    qualityGateDescription: "Current demo contract tracks {threads} threads, {rules} active rules and {templates} multilingual templates.",
+    phaseReady: "Phase 11 ready for UAT",
   },
   de: {
     title: "Kommunikationszentrale",
@@ -177,6 +213,24 @@ const communicationsCopy = {
     templateActions: "Vorlagenaktionen",
     templateApprovalPrepare: "Vorlage zur Freigabe vorbereiten",
     templateApprovalAria: "Nachrichtenvorlage zur Freigabe vorbereiten",
+    providerTitle: "Provider-ready Simulation",
+    providerDescription: "SMS, E-Mail, Push und Portalnachrichten nutzen vorerst Demo-Queues; Provider-Adapter werden nach Verträgen und API-Schlüsseln aktiviert.",
+    providerCount: "Zustellungen mit Retry oder manueller Prüfung",
+    approvalTitle: "Freigabe und Ersatzkanal",
+    approvalDescription: "Falscher Empfänger, fehlende Einwilligung, Abmeldung, Finanzwiderspruch und Providerfehler bleiben vor erneutem Versand sichtbar.",
+    approvalCount: "Einwilligungsprobleme im aktuellen Rollenbereich",
+    notificationRulesTitle: "Benachrichtigungsregeln",
+    notificationRulesDescription: "Regeln enthalten Zielvorschau, Sprachmodus, Freigabeschritt und Ersatzkanal vor Produktionsversand.",
+    retryCount: "Wiederholungen",
+    deliveryQueueTitle: "Zustell- und Wiederholungsqueue",
+    deliveryQueueDescription: "Zustellversuche, Provider-Modus und nächste Wiederholung werden vor Live-Provider-Anbindung verfolgt.",
+    deliveryCount: "Zustellungen",
+    templateLibraryTitle: "Mehrsprachige Vorlagenbibliothek",
+    templateLibraryDescription: "TR-, EN-, DE- und RU-Vorlagen sind variablenbasiert, freigabebewusst und provider-ready.",
+    approvalCountLabel: "Freigabe",
+    qualityGateTitle: "Rollensichere Kommunikationsqualitätsprüfung",
+    qualityGateDescription: "Der aktuelle Demo-Vertrag verfolgt {threads} Verläufe, {rules} aktive Regeln und {templates} mehrsprachige Vorlagen.",
+    phaseReady: "Phase 11 bereit für UAT",
   },
   ru: {
     title: "Центр коммуникаций",
@@ -222,6 +276,24 @@ const communicationsCopy = {
     templateActions: "Действия шаблона",
     templateApprovalPrepare: "Подготовить шаблон к одобрению",
     templateApprovalAria: "Подготовить шаблон сообщения к одобрению",
+    providerTitle: "Симуляция готовности провайдера",
+    providerDescription: "SMS, email, push и сообщения портала пока используют демо-очереди; адаптеры провайдеров включаются после договоров и API-ключей.",
+    providerCount: "доставок для повтора или ручной проверки",
+    approvalTitle: "Одобрение и резервный канал",
+    approvalDescription: "Неверный получатель, отсутствие согласия, отписка, финансовый спор и ошибка провайдера видны до повторной отправки.",
+    approvalCount: "проблем согласия в текущей роли",
+    notificationRulesTitle: "Правила уведомлений",
+    notificationRulesDescription: "Правила включают предпросмотр цели, язык, шаг одобрения и резервный канал до production-отправки.",
+    retryCount: "повторов",
+    deliveryQueueTitle: "Очередь доставки и повторов",
+    deliveryQueueDescription: "Попытки доставки, режим провайдера и время повтора отслеживаются до подключения live-провайдера.",
+    deliveryCount: "доставок",
+    templateLibraryTitle: "Многоязычная библиотека шаблонов",
+    templateLibraryDescription: "Шаблоны TR, EN, DE и RU основаны на переменных, учитывают одобрение и готовы к адаптерам провайдеров.",
+    approvalCountLabel: "одобрение",
+    qualityGateTitle: "Контроль качества коммуникаций по ролям",
+    qualityGateDescription: "Текущий демо-контракт отслеживает {threads} диалогов, {rules} активных правил и {templates} многоязычных шаблонов.",
+    phaseReady: "Фаза 11 готова к UAT",
   },
 } as const
 
@@ -598,12 +670,12 @@ export default function CommunicationsPage() {
             <div className="flex items-start gap-3">
               <Smartphone className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Sağlayıcıya hazır simülasyon</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.providerTitle}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  SMS, e-posta, push ve portal mesajları şimdilik demo kuyruklarını kullanır; sözleşme ve API anahtarlarından sonra sağlayıcı adaptörleri açılır.
+                  {copy.providerDescription}
                 </p>
                 <p className="mt-3 text-xl font-black text-foreground">{summary.deliveryFailures}</p>
-                <p className="text-xs text-muted-foreground">yeniden deneme veya manuel inceleme isteyen teslim öğesi</p>
+                <p className="text-xs text-muted-foreground">{copy.providerCount}</p>
               </div>
             </div>
           </Card3D>
@@ -611,12 +683,12 @@ export default function CommunicationsPage() {
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Onay ve yedek kanal</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.approvalTitle}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Yanlış alıcı, eksik onay, abonelikten çıkış, finans itirazı ve başarısız sağlayıcı olayları yeniden göndermeden önce görünür kalır.
+                  {copy.approvalDescription}
                 </p>
                 <p className="mt-3 text-xl font-black text-foreground">{consentIssues}</p>
-                <p className="text-xs text-muted-foreground">mevcut rol kapsamında onay sorunu</p>
+                <p className="text-xs text-muted-foreground">{copy.approvalCount}</p>
               </div>
             </div>
           </Card3D>
@@ -629,13 +701,13 @@ export default function CommunicationsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <BellRing className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-bold text-card-foreground">Bildirim kuralları</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.notificationRulesTitle}</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Kurallar üretim gönderiminden önce hedef önizleme, dil modu, onay kapısı ve yedek kanalı içerir.
+                {copy.notificationRulesDescription}
               </p>
             </div>
-            <StatusBadge variant={deliveryIssues > 0 ? "warning" : "success"}>{deliveryIssues} tekrar</StatusBadge>
+            <StatusBadge variant={deliveryIssues > 0 ? "warning" : "success"}>{deliveryIssues} {copy.retryCount}</StatusBadge>
           </div>
           <DataTable
             data={visibleRules}
@@ -695,13 +767,13 @@ export default function CommunicationsPage() {
             <div>
               <div className="flex items-center gap-2">
                 <RefreshCcw className="h-5 w-5 text-primary" />
-                <h2 className="text-sm font-bold text-card-foreground">Teslim ve yeniden deneme kuyruğu</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.deliveryQueueTitle}</h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Canlı sağlayıcı bağlanmadan önce teslim denemeleri, sağlayıcı modu ve tekrar zamanı izlenir.
+                {copy.deliveryQueueDescription}
               </p>
             </div>
-            <StatusBadge variant="info">{visibleDeliveries.length} teslim</StatusBadge>
+            <StatusBadge variant="info">{visibleDeliveries.length} {copy.deliveryCount}</StatusBadge>
           </div>
           <DataTable
             data={visibleDeliveries}
@@ -764,14 +836,14 @@ export default function CommunicationsPage() {
           <div>
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">Multilingual template library</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{copy.templateLibraryTitle}</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              TR, EN, DE and RU templates are variable-based, approval-aware and ready for provider adapters.
+              {copy.templateLibraryDescription}
             </p>
           </div>
           <StatusBadge variant={summary.pendingApprovals > 0 ? "warning" : "success"}>
-            {summary.pendingApprovals} approval
+            {summary.pendingApprovals} {copy.approvalCountLabel}
           </StatusBadge>
         </div>
         <DataTable
@@ -836,13 +908,17 @@ export default function CommunicationsPage() {
           <div className="flex items-start gap-3">
             <Users className="mt-0.5 h-5 w-5 text-primary" />
             <div>
-              <h2 className="text-sm font-bold text-card-foreground">Role-safe communication quality gate</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{copy.qualityGateTitle}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Current demo contract tracks {summary.openThreads} threads, {summary.activeRules} active rules and {summary.multilingualTemplates} multilingual templates.
+                {formatCopy(copy.qualityGateDescription, {
+                  threads: summary.openThreads,
+                  rules: summary.activeRules,
+                  templates: summary.multilingualTemplates,
+                })}
               </p>
             </div>
           </div>
-          <StatusBadge variant="success">Phase 11 ready-for-UAT</StatusBadge>
+          <StatusBadge variant="success">{copy.phaseReady}</StatusBadge>
         </div>
       </Card3D>
     </div>

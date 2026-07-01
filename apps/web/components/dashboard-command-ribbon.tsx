@@ -315,6 +315,62 @@ function formatRibbonText(template: string, values: Record<string, string | numb
   )
 }
 
+const commandValueCopy: Record<keyof typeof ribbonCopy, Record<string, string>> = {
+  tr: {},
+  en: {
+    "Malik kaydı bekliyor": "Owner record pending",
+    "Sakin kaydı bekliyor": "Resident record pending",
+    "Kaynak bekliyor": "Source pending",
+    "satış planı": "sales plan",
+    " blok": " block",
+    " gun": " days",
+    " saat": " hours",
+    "blocked": "blocked",
+    "restricted": "restricted",
+    "overdue": "overdue",
+    "sold": "sold",
+    "Kiracı": "Tenant",
+    "Malik": "Owner",
+  },
+  de: {
+    "Malik kaydı bekliyor": "Eigentümerdatensatz ausstehend",
+    "Sakin kaydı bekliyor": "Bewohnerdatensatz ausstehend",
+    "Kaynak bekliyor": "Quelle ausstehend",
+    "satış planı": "Verkaufsplan",
+    " blok": " Block",
+    " gun": " Tage",
+    " saat": " Stunden",
+    "blocked": "blockiert",
+    "restricted": "eingeschränkt",
+    "overdue": "überfällig",
+    "sold": "verkauft",
+    "Kiracı": "Mieter",
+    "Malik": "Eigentümer",
+  },
+  ru: {
+    "Malik kaydı bekliyor": "Запись владельца ожидает данных",
+    "Sakin kaydı bekliyor": "Запись жителя ожидает данных",
+    "Kaynak bekliyor": "Источник ожидает данных",
+    "satış planı": "план продажи",
+    " blok": " блок",
+    " gun": " дней",
+    " saat": " часов",
+    "blocked": "заблокировано",
+    "restricted": "ограничено",
+    "overdue": "просрочено",
+    "sold": "продано",
+    "Kiracı": "Арендатор",
+    "Malik": "Владелец",
+  },
+}
+
+function localizeCommandValue(value: string, locale: keyof typeof ribbonCopy) {
+  return Object.entries(commandValueCopy[locale]).reduce(
+    (current, [source, target]) => current.split(source).join(target),
+    value
+  )
+}
+
 const scopeOrder: CommandScope[] = [
   "portfolio",
   "service",
@@ -835,7 +891,8 @@ function buildCommandIndex(role: Role): CommandItem[] {
 
 export function DashboardCommandRibbon() {
   const user = useUser()
-  const copy = ribbonCopy[resolveRibbonLocale(useLocale())]
+  const locale = resolveRibbonLocale(useLocale())
+  const copy = ribbonCopy[locale]
   const [query, setQuery] = useState("")
   const [scope, setScope] = useState<CommandScope | "all">("all")
   const [attentionOnly, setAttentionOnly] = useState(false)
@@ -1029,14 +1086,14 @@ export function DashboardCommandRibbon() {
                             <Icon className="h-4 w-4" />
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate text-sm font-black text-foreground">{item.title}</span>
-                            <span className="mt-0.5 block truncate text-xs font-semibold text-muted-foreground">{item.subtitle}</span>
+                            <span className="block truncate text-sm font-black text-foreground">{localizeCommandValue(item.title, locale)}</span>
+                            <span className="mt-0.5 block truncate text-xs font-semibold text-muted-foreground">{localizeCommandValue(item.subtitle, locale)}</span>
                           </span>
                         </div>
                         <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
                       </div>
                       <div className="mt-2 flex min-w-0 items-center justify-between gap-2">
-                        <span className="min-w-0 truncate text-xs text-muted-foreground">{item.meta}</span>
+                        <span className="min-w-0 truncate text-xs text-muted-foreground">{localizeCommandValue(item.meta, locale)}</span>
                         <StatusBadge variant={priorityVariant(item.priority)}>{copy.priorities[item.priority]}</StatusBadge>
                       </div>
                     </Link>
@@ -1193,9 +1250,9 @@ export function DashboardCommandRibbon() {
                           <Icon className="h-4 w-4" />
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-black text-foreground">{item.title}</span>
-                          <span className="mt-0.5 block truncate text-xs font-semibold text-muted-foreground">{item.subtitle}</span>
-                          <span className="mt-1 block truncate text-xs text-muted-foreground">{item.meta}</span>
+                          <span className="block truncate text-sm font-black text-foreground">{localizeCommandValue(item.title, locale)}</span>
+                          <span className="mt-0.5 block truncate text-xs font-semibold text-muted-foreground">{localizeCommandValue(item.subtitle, locale)}</span>
+                          <span className="mt-1 block truncate text-xs text-muted-foreground">{localizeCommandValue(item.meta, locale)}</span>
                         </span>
                         <StatusBadge variant={priorityVariant(item.priority)}>{copy.priorities[item.priority]}</StatusBadge>
                       </div>

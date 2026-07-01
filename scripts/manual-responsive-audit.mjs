@@ -55,6 +55,7 @@ const defaultDashboardRoutes = [
   "/tr/dashboard/documents",
   "/tr/dashboard/reports",
   "/tr/dashboard/communications",
+  "/tr/dashboard/offline",
   "/tr/dashboard/users",
   "/tr/dashboard/settings",
 ]

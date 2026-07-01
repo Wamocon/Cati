@@ -811,7 +811,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
 
   await runFlow("flow-communications-broadcast", "manager", desktop, "/dashboard/communications", [
     async (page) => {
-      await page.getByRole("heading", { name: /Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByLabel(/Toplu bildirim hazirla/i).click()
       return "communication broadcast action is clickable"
     },

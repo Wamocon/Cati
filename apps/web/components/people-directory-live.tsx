@@ -18,6 +18,7 @@ import {
   resolveDashboardLocale,
   toIntlLocale,
 } from "@/lib/operational-copy"
+import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { hasPermission } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -83,6 +84,13 @@ function residentLine(resident: PeopleDirectoryResident, t: (value: string) => s
     resident.preferredLanguage.toUpperCase(),
   ].join(" / ")
 }
+
+const peopleMetricLabels = {
+  tr: ["Personel", "Sakin", "Malik / Kiracı", "Riskli kayıt"],
+  en: ["Staff", "Residents", "Owner / tenant", "Risk records"],
+  de: ["Personal", "Bewohner", "Eigentümer / Mieter", "Risiko"],
+  ru: ["Персонал", "Жители", "Владелец / арендатор", "Риск"],
+} as const
 
 export function PeopleDirectoryLive() {
   const user = useUser()
@@ -234,10 +242,10 @@ export function PeopleDirectoryLive() {
 
       <div className="grid gap-3 py-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Personel", data?.summary.staffTotal ?? 0],
-          ["Sakin", data?.summary.residentTotal ?? 0],
-          ["Malik / Kiracı", (data?.summary.owners ?? 0) + (data?.summary.tenants ?? 0)],
-          ["Riskli kayıt", data?.summary.highRiskResidents ?? 0],
+          [peopleMetricLabels[locale][0], data?.summary.staffTotal ?? 0],
+          [peopleMetricLabels[locale][1], data?.summary.residentTotal ?? 0],
+          [peopleMetricLabels[locale][2], (data?.summary.owners ?? 0) + (data?.summary.tenants ?? 0)],
+          [peopleMetricLabels[locale][3], data?.summary.highRiskResidents ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
             <p className="text-xs font-bold uppercase text-muted-foreground">{t(String(label))}</p>
@@ -288,7 +296,7 @@ export function PeopleDirectoryLive() {
             <div key={`${resident.id}-${resident.unitNo ?? "no-unit"}`} className="rounded-lg border border-border/70 bg-background/70 p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-foreground">{resident.fullName}</p>
+                  <p className="truncate text-sm font-bold text-foreground">{localizeOperationalValue(resident.fullName, locale)}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{residentLine(resident, t)}</p>
                 </div>
                 <StatusBadge variant={statusVariant(resident.identityStatus)}>
@@ -316,7 +324,7 @@ export function PeopleDirectoryLive() {
               <div className="mt-4 space-y-2">
                 {(data?.roleCoverage ?? []).slice(0, 6).map((role) => (
                   <div key={role.id} className="flex items-center justify-between gap-3 rounded-lg bg-background/80 p-2">
-                    <span className="truncate text-xs font-bold text-foreground">{role.roleLabel}</span>
+                    <span className="truncate text-xs font-bold text-foreground">{t(role.roleLabel)}</span>
                     <span className="text-xs font-black text-muted-foreground">{role.usersCount}</span>
                   </div>
                 ))}

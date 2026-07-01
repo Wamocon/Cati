@@ -129,6 +129,30 @@ export interface ClientActionResult {
   status: "logged" | "locally-logged" | "approved" | "rejected" | "completed" | "failed"
 }
 
+export interface ClientActionRequestRecord {
+  id: string
+  companyId: string | null
+  actionType: string
+  entityTable: string | null
+  entityId: string | null
+  entityExternalId: string | null
+  title: string | null
+  status: string
+  requestedBy: string | null
+  metadata: Record<string, unknown>
+  createdAt: string | null
+}
+
+export interface MaterializedTicketResult {
+  id: string
+  ticketNo: string
+  source: DataSource
+}
+
+const localClientActionRequests = new Map<string, ClientActionRequestRecord>()
+const localMaterializedTickets: ServiceTicket[] = []
+let localActionSequence = 0
+
 export interface Phase4Unit {
   id: string
   unitNo: string
@@ -1847,7 +1871,7 @@ function buildServiceTicketingQuality(
 
 function localSeedServiceTicketQueueData(limit = 24, warning?: string): ServiceTicketQueueData {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
-  const tickets = serviceTickets.slice(0, safeLimit)
+  const tickets = [...localMaterializedTickets, ...serviceTickets].slice(0, safeLimit)
   const catalog = serviceCatalogItems
   const orders = serviceOrders.slice(0, safeLimit)
   const tasks = workforceTasks.slice(0, safeLimit)
@@ -1864,7 +1888,7 @@ function localSeedServiceTicketQueueData(limit = 24, warning?: string): ServiceT
     orders,
     workforceTasks: tasks,
     strategy: ticketStrategy(),
-    recentActions: siteActivities.slice(0, 4),
+    recentActions: [...localActionRows(5), ...siteActivities.slice(0, 4)].slice(0, 5),
     warning,
   }
 }
@@ -2532,6 +2556,149 @@ function isUuid(value: string | null | undefined) {
   )
 }
 
+function normalizeActionRequestRow(row: unknown): ClientActionRequestRecord | null {
+  const record = asRecord(row)
+  const id = asString(record.id)
+  const actionType = asString(record.action_type)
+  if (!id || !actionType) return null
+
+  return {
+    id,
+    companyId: asNullableString(record.company_id),
+    actionType,
+    entityTable: asNullableString(record.entity_table),
+    entityId: asNullableString(record.entity_id),
+    entityExternalId: asNullableString(record.entity_external_id),
+    title: asNullableString(record.title),
+    status: asString(record.status, "queued"),
+    requestedBy: asNullableString(record.requested_by),
+    metadata: asRecord(record.metadata),
+    createdAt: asNullableString(record.created_at),
+  }
+}
+
+function storeLocalClientAction(
+  input: ClientActionInput,
+  status: ClientActionResult["status"] = "locally-logged"
+): ClientActionResult {
+  const id = `local-action-${Date.now()}-${++localActionSequence}`
+  localClientActionRequests.set(id, {
+    id,
+    companyId: "local-company",
+    actionType: input.actionType,
+    entityTable: input.entityTable ?? null,
+    entityId: input.entityId ?? null,
+    entityExternalId: input.entityExternalId ?? null,
+    title: input.title ?? null,
+    status,
+    requestedBy: asNullableString(asRecord(input.metadata?.workflow).requestedById),
+    metadata: input.metadata ?? {},
+    createdAt: new Date().toISOString(),
+  })
+
+  return {
+    id,
+    source: "local-seed",
+    status,
+  }
+}
+
+function localActionRows(limit = 5) {
+  return Array.from(localClientActionRequests.values())
+    .sort((a, b) => Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? ""))
+    .slice(0, limit)
+    .map((action) => ({
+      id: action.id,
+      action_type: action.actionType,
+      title: action.title,
+      status: action.status,
+      entity_table: action.entityTable,
+      entity_external_id: action.entityExternalId,
+      metadata: action.metadata,
+      created_at: action.createdAt,
+    }))
+}
+
+function isTicketCreateRequest(action: ClientActionRequestRecord) {
+  return (
+    action.entityTable === "service_tickets" &&
+    (action.actionType === "ticket.create.request" ||
+      action.actionType === "ticket.create.ai_draft")
+  )
+}
+
+function actionProposedPayload(action: ClientActionRequestRecord) {
+  const proposedPayload = asRecord(action.metadata.proposedPayload)
+  const workflowPayload = asRecord(asRecord(action.metadata.workflow).proposedPayload)
+  return Object.keys(proposedPayload).length > 0 ? proposedPayload : workflowPayload
+}
+
+function ticketTitleFromAction(action: ClientActionRequestRecord) {
+  const proposedPayload = actionProposedPayload(action)
+  return asString(proposedPayload.title, action.title ?? "Approved service ticket")
+}
+
+function ticketPriorityForDb(value: unknown) {
+  const priority = asString(value, "normal")
+  if (priority === "urgent" || priority === "high" || priority === "low") return priority
+  return "normal"
+}
+
+function ticketPriorityForView(value: unknown): ServiceTicket["priority"] {
+  return mapTicketPriority(ticketPriorityForDb(value))
+}
+
+function ticketDueAt(priority: string) {
+  const hours = priority === "urgent" ? 4 : priority === "high" ? 12 : 48
+  return new Date(Date.now() + hours * 3_600_000).toISOString()
+}
+
+function localMaterializeTicket(action: ClientActionRequestRecord): MaterializedTicketResult {
+  const existingTicketId = asNullableString(asRecord(action.metadata.workflow).materializedTicketId)
+  const existingTicket = existingTicketId
+    ? localMaterializedTickets.find((ticket) => ticket.id === existingTicketId)
+    : null
+
+  if (existingTicket) {
+    return {
+      id: existingTicket.id,
+      ticketNo: existingTicket.id,
+      source: "local-seed",
+    }
+  }
+
+  const proposedPayload = actionProposedPayload(action)
+  const priority = ticketPriorityForDb(proposedPayload.priority)
+  const dueAt = ticketDueAt(priority)
+  const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}-${localMaterializedTickets.length + 1}`
+  const unitNo = asNullableString(proposedPayload.unitNo) ?? action.entityExternalId ?? "Unassigned"
+
+  localMaterializedTickets.unshift({
+    id: ticketNo,
+    flatId: `unit-${unitNo}`,
+    flatNumber: unitNo,
+    title: ticketTitleFromAction(action),
+    category: asString(proposedPayload.category, "general"),
+    priority: ticketPriorityForView(priority),
+    status: "open",
+    assignee: "Operations queue",
+    requester: "Approved workflow",
+    openedAt: new Date().toISOString(),
+    dueAt,
+    slaHoursRemaining: slaHoursRemaining(dueAt),
+    debtBlocked: false,
+    paymentVerified: true,
+    mediaCount: 0,
+    estimatedCostTry: 0,
+  })
+
+  return {
+    id: ticketNo,
+    ticketNo,
+    source: "local-seed",
+  }
+}
+
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   if (!isSupabaseConfigured()) {
     return localSeedSnapshot("External data service is not configured; using local seed data.")
@@ -3023,11 +3190,7 @@ export async function logClientAction(
   input: ClientActionInput
 ): Promise<ClientActionResult> {
   if (!isSupabaseConfigured()) {
-    return {
-      id: `local-action-${Date.now()}`,
-      source: "local-seed",
-      status: "locally-logged",
-    }
+    return storeLocalClientAction(input)
   }
 
   try {
@@ -3048,12 +3211,139 @@ export async function logClientAction(
     }
   } catch (error) {
     if (canUseLocalSeedFallback()) {
-      return {
-        id: `local-action-${Date.now()}`,
-        source: "local-seed",
-        status: "locally-logged",
-      }
+      return storeLocalClientAction(input)
     }
+    throw error
+  }
+}
+
+export async function getClientActionRequest(
+  id: string
+): Promise<ClientActionRequestRecord | null> {
+  const localAction = localClientActionRequests.get(id)
+  if (localAction) return localAction
+
+  if (!isSupabaseConfigured() || !isUuid(id)) return null
+
+  try {
+    const supabase = await createDataClient()
+    const { data, error } = await supabase
+      .from("client_action_requests")
+      .select("id, company_id, action_type, entity_table, entity_id, entity_external_id, title, status, requested_by, metadata, created_at")
+      .eq("id", id)
+      .single()
+
+    if (error) throw error
+    return normalizeActionRequestRow(data)
+  } catch (error) {
+    if (canUseLocalSeedFallback()) return localClientActionRequests.get(id) ?? null
+    throw error
+  }
+}
+
+export async function materializeApprovedTicketRequest({
+  request,
+  decidedById,
+  decidedByRole,
+}: {
+  request: ClientActionRequestRecord
+  decidedById: string
+  decidedByRole: string
+}): Promise<MaterializedTicketResult | null> {
+  if (!isTicketCreateRequest(request)) return null
+
+  const existingTicketId = asNullableString(asRecord(request.metadata.workflow).materializedTicketId)
+  if (existingTicketId) {
+    return {
+      id: existingTicketId,
+      ticketNo: existingTicketId,
+      source: isSupabaseConfigured() && isUuid(existingTicketId) ? "supabase" : "local-seed",
+    }
+  }
+
+  if (!isSupabaseConfigured() || !isUuid(request.id) || !request.companyId) {
+    return localMaterializeTicket(request)
+  }
+
+  const proposedPayload = actionProposedPayload(request)
+  const unitNo = asNullableString(proposedPayload.unitNo)
+  const priority = ticketPriorityForDb(proposedPayload.priority)
+  const dueAt = ticketDueAt(priority)
+
+  try {
+    const supabase = await createDataClient()
+    const unitResponse = unitNo
+      ? await supabase
+          .from("units")
+          .select("id, site_id")
+          .eq("company_id", request.companyId)
+          .eq("unit_no", unitNo)
+          .maybeSingle()
+      : { data: null, error: null }
+
+    if (unitResponse.error) throw unitResponse.error
+
+    const unit = asRecord(unitResponse.data)
+    let siteId = asNullableString(unit.site_id)
+
+    if (!siteId) {
+      const { data: siteData, error: siteError } = await supabase
+        .from("sites")
+        .select("id")
+        .eq("company_id", request.companyId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      if (siteError) throw siteError
+      siteId = asNullableString(asRecord(siteData).id)
+    }
+
+    if (!siteId) throw new Error("No site is available for approved ticket materialization.")
+
+    const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}`
+    const { data: ticketData, error: ticketError } = await supabase
+      .from("service_tickets")
+      .insert({
+        company_id: request.companyId,
+        site_id: siteId,
+        unit_id: asNullableString(unit.id),
+        ticket_no: ticketNo,
+        title: ticketTitleFromAction(request),
+        description: asNullableString(proposedPayload.description),
+        category: asString(proposedPayload.category, "general"),
+        priority,
+        status: "open",
+        sla_due_at: dueAt,
+        estimated_cost_cents: 0,
+        requires_finance_approval: false,
+        created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
+      })
+      .select("id, ticket_no")
+      .single()
+
+    if (ticketError) throw ticketError
+
+    const ticketId = asString(asRecord(ticketData).id, ticketNo)
+    await supabase.from("service_ticket_events").insert({
+      company_id: request.companyId,
+      ticket_id: ticketId,
+      event_type: "created_from_approved_request",
+      body: `Approved by ${decidedByRole}`,
+      actor_profile_id: isUuid(decidedById) ? decidedById : null,
+      metadata: {
+        actionRequestId: request.id,
+        actionType: request.actionType,
+      },
+    })
+
+    return {
+      id: ticketId,
+      ticketNo: asString(asRecord(ticketData).ticket_no, ticketNo),
+      source: "supabase",
+    }
+  } catch (error) {
+    if (canUseLocalSeedFallback()) return localMaterializeTicket(request)
     throw error
   }
 }
@@ -3061,10 +3351,27 @@ export async function logClientAction(
 export async function updateClientActionRequestStatus({
   id,
   status,
+  metadata,
 }: {
   id: string
   status: "approved" | "rejected" | "completed" | "failed"
+  metadata?: Record<string, unknown>
 }): Promise<ClientActionResult> {
+  const localAction = localClientActionRequests.get(id)
+  if (localAction) {
+    localClientActionRequests.set(id, {
+      ...localAction,
+      status,
+      metadata: metadata ?? localAction.metadata,
+    })
+
+    return {
+      id,
+      source: "local-seed",
+      status,
+    }
+  }
+
   if (!isSupabaseConfigured() || !isUuid(id)) {
     return {
       id,
@@ -3077,7 +3384,7 @@ export async function updateClientActionRequestStatus({
     const supabase = await createDataClient()
     const { data, error } = await supabase
       .from("client_action_requests")
-      .update({ status })
+      .update(metadata ? { status, metadata } : { status })
       .eq("id", id)
       .select("id")
       .single()

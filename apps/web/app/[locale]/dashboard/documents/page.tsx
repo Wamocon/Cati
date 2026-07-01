@@ -66,11 +66,11 @@ function documentVariant(status: DocumentVaultRecord["status"]) {
   return "danger"
 }
 
-function documentLabel(status: DocumentVaultRecord["status"]) {
-  if (status === "verified") return "Doğrulandı"
-  if (status === "pending") return "Bekliyor"
-  if (status === "missing") return "Eksik"
-  return "Süresi doldu"
+function documentLabel(status: DocumentVaultRecord["status"], t: (value: string) => string) {
+  if (status === "verified") return t("Doğrulandı")
+  if (status === "pending") return t("Bekliyor")
+  if (status === "missing") return t("Eksik")
+  return t("Süresi doldu")
 }
 
 function checklistVariant(status: PurchaseDocumentStatus) {
@@ -79,12 +79,12 @@ function checklistVariant(status: PurchaseDocumentStatus) {
   return "danger"
 }
 
-function checklistLabel(status: PurchaseDocumentStatus) {
-  if (status === "verified") return "Doğrulandı"
-  if (status === "pending") return "Bekliyor"
-  if (status === "missing") return "Eksik"
-  if (status === "expired") return "Süresi doldu"
-  return "Reddedildi"
+function checklistLabel(status: PurchaseDocumentStatus, t: (value: string) => string) {
+  if (status === "verified") return t("Doğrulandı")
+  if (status === "pending") return t("Bekliyor")
+  if (status === "missing") return t("Eksik")
+  if (status === "expired") return t("Süresi doldu")
+  return t("Reddedildi")
 }
 
 function packetVariant(status: DocumentPacketRecord["status"]) {
@@ -142,7 +142,7 @@ function DocumentUploadPanel({
 
       setState("success")
       setMessage(
-        `${payload.upload?.originalFilename ?? "Document"} saved for review (${payload.storageMode}).`
+        `${payload.upload?.originalFilename ?? t("Document")} ${t("saved for review")} (${payload.storageMode}).`
       )
       form.reset()
       setFileName("")
@@ -184,7 +184,7 @@ function DocumentUploadPanel({
               >
                 {uploadCategories.map((category) => (
                   <option key={category} value={category}>
-                    {category}
+                    {t(category)}
                   </option>
                 ))}
               </select>
@@ -207,7 +207,7 @@ function DocumentUploadPanel({
               >
                 {retentionOptions.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label}
+                    {t(option.label)}
                   </option>
                 ))}
               </select>
@@ -274,6 +274,33 @@ export default function DocumentsPage() {
   const summary = restrictedView ? summarizeDocuments(visibleDocuments) : getDocumentSummary()
   const packetSummary = getDocumentPacketSummary()
   const purchaseSummary = getPurchaseChecklistSummary()
+  const localizeRetentionRule = (rule: string) => {
+    const sourcePrefix = "Kaynak: "
+    const ocrPrefix = "OCR / insan onayı gerekli: "
+
+    if (rule.startsWith(sourcePrefix)) return `${t("Kaynak")}: ${rule.slice(sourcePrefix.length)}`
+    if (rule.startsWith(ocrPrefix)) return `${t("OCR / insan onayı gerekli")}: ${rule.slice(ocrPrefix.length)}`
+    return t(rule)
+  }
+  const localizedVisibleDocuments = visibleDocuments.map((document) => ({
+    ...document,
+    category: t(document.category),
+    retentionRule: localizeRetentionRule(document.retentionRule),
+  }))
+  const localizedVisiblePackets = visiblePackets.map((packet) => ({
+    ...packet,
+    title: t(packet.title),
+    audience: t(packet.audience),
+    retentionClass: t(packet.retentionClass),
+    nextAction: t(packet.nextAction),
+  }))
+  const localizedPurchaseChecklist = purchaseChecklist.map((document) => ({
+    ...document,
+    documentType: t(document.documentType),
+    owner: t(document.owner),
+    risk: t(document.risk),
+    nextAction: t(document.nextAction),
+  }))
 
   const pageIntro = clientView
     ? t("Yetkili dairenize bağlı sözleşme, kimlik, depozito, servis ve uyum belgelerini güvenli portal görünümünde takip edin.")
@@ -294,16 +321,16 @@ export default function DocumentsPage() {
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{pageIntro}</p>
         </div>
         <DashboardActionMenu
-          label="Aksiyonlar"
-          ariaLabel="Belge sayfasi aksiyonlari"
+          label={t("Aksiyonlar")}
+          ariaLabel={t("Belge sayfasi aksiyonlari")}
           items={[
             {
               key: "upload",
-              label: "Belge yukle",
-              description: "Yukleme talebi denetim kaydina eklenir.",
+              label: t("Belge yukle"),
+              description: t("Yukleme talebi denetim kaydina eklenir."),
               icon: <UploadCloud />,
               actionType: "document.upload.requested",
-              ariaLabel: "Belge yukle",
+              ariaLabel: t("Belge yukle"),
               entityTable: "documents",
               title: "Document upload requested",
               metadata: { source: "documents-page", role: user.role },
@@ -360,64 +387,64 @@ export default function DocumentsPage() {
           <div>
             <div className="flex items-center gap-2">
               <FileCheck2 className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">Document packet board</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{t("Document packet board")}</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Move-in, checkout, owner statement, KYC/TAPU and service-proof packets track required files, signatures, retention and next action.
+              {t("Move-in, checkout, owner statement, KYC/TAPU and service-proof packets track required files, signatures, retention and next action.")}
             </p>
           </div>
           <StatusBadge variant={packetSummary.missingOrReview > 0 ? "warning" : "success"}>
-            {packetSummary.completionRate}% packet completion
+            {packetSummary.completionRate}% {t("packet completion")}
           </StatusBadge>
         </div>
         <DataTable
-          data={visiblePackets}
+          data={localizedVisiblePackets}
           pageSize={8}
           searchValue={(packet) => `${packet.id} ${packet.title} ${packet.audience} ${packet.relatedEntity} ${packet.retentionClass} ${packet.nextAction}`}
           columns={[
-            { key: "id", header: "Packet", sortable: true, render: (packet) => packet.id },
-            { key: "title", header: "Title", render: (packet) => packet.title },
-            { key: "audience", header: "Audience", sortable: true, render: (packet) => packet.audience },
-            { key: "related", header: "Related", render: (packet) => packet.relatedEntity },
+            { key: "id", header: t("Packet"), sortable: true, render: (packet) => packet.id },
+            { key: "title", header: t("Title"), render: (packet) => packet.title },
+            { key: "audience", header: t("Audience"), sortable: true, render: (packet) => packet.audience },
+            { key: "related", header: t("Related"), render: (packet) => packet.relatedEntity },
             {
               key: "progress",
-              header: "Progress",
+              header: t("Progress"),
               sortable: true,
               sortValue: (packet) => packet.completedDocuments / Math.max(packet.requiredDocuments, 1),
               render: (packet) => `${packet.completedDocuments}/${packet.requiredDocuments}`,
             },
             {
               key: "status",
-              header: "Status",
-              render: (packet) => <StatusBadge variant={packetVariant(packet.status)}>{packet.status}</StatusBadge>,
+              header: t("Status"),
+              render: (packet) => <StatusBadge variant={packetVariant(packet.status)}>{t(packet.status)}</StatusBadge>,
             },
             {
               key: "signature",
-              header: "Signature",
+              header: t("Signature"),
               render: (packet) => (
-                <StatusBadge variant={signatureVariant(packet.signatureStatus)}>{packet.signatureStatus}</StatusBadge>
+                <StatusBadge variant={signatureVariant(packet.signatureStatus)}>{t(packet.signatureStatus)}</StatusBadge>
               ),
             },
-            { key: "next", header: "Next action", render: (packet) => packet.nextAction },
+            { key: "next", header: t("Next action"), render: (packet) => packet.nextAction },
             {
               key: "actions",
-              header: "Action",
+              header: t("Action"),
               sticky: "right",
               headerClassName: "text-center",
               cellClassName: "text-center",
               render: (packet) => (
                 <DashboardActionMenu
                   compact
-                  label="Paket aksiyonlari"
-                  ariaLabel={`${packet.id} belge paketi aksiyonlari`}
+                  label={t("Paket aksiyonlari")}
+                  ariaLabel={`${packet.id} ${t("belge paketi aksiyonlari")}`}
                   items={[
                     {
                       key: "prepare",
-                      label: "Paketi hazirla",
-                      description: `${packet.completedDocuments}/${packet.requiredDocuments} belge tamam.`,
+                      label: t("Paketi hazirla"),
+                      description: `${packet.completedDocuments}/${packet.requiredDocuments} ${t("belge tamam")}.`,
                       icon: <FileText />,
                       actionType: "document.packet.prepare",
-                      ariaLabel: "Belge paketini hazirla",
+                      ariaLabel: t("Belge paketini hazirla"),
                       entityTable: "document_packets",
                       entityExternalId: packet.id,
                       title: packet.title,
@@ -436,7 +463,7 @@ export default function DocumentsPage() {
       </Card3D>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        {visibleDocuments.slice(0, 3).map((document) => (
+        {localizedVisibleDocuments.slice(0, 3).map((document) => (
           <Card3D key={document.id} glow={false}>
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -444,7 +471,7 @@ export default function DocumentsPage() {
               </div>
               <div className="min-w-0">
                 <StatusBadge variant={documentVariant(document.status)}>
-                  {documentLabel(document.status)}
+                  {documentLabel(document.status, t)}
                 </StatusBadge>
                 <h2 className="mt-2 text-sm font-bold text-card-foreground">{document.category}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">{document.retentionRule}</p>
@@ -461,59 +488,59 @@ export default function DocumentsPage() {
               <div className="flex items-center gap-2">
                 <Gavel className="h-5 w-5 text-primary" />
                 <h2 className="text-sm font-bold text-card-foreground">
-                  Satış dosyası, TAPU, KYC ve EIDS kontrolü
+                  {t("Satış dosyası, TAPU, KYC ve EIDS kontrolü")}
                 </h2>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Satış dosyası; alıcı kimliği, TAPU, EIDS, rezervasyon, satış sözleşmesi ve ödeme planı olmadan sonraki adıma geçmez.
+                {t("Satış dosyası; alıcı kimliği, TAPU, EIDS, rezervasyon, satış sözleşmesi ve ödeme planı olmadan sonraki adıma geçmez.")}
               </p>
             </div>
             <StatusBadge variant={purchaseSummary.highRisk > 0 ? "danger" : "success"}>
-              {purchaseSummary.highRisk} yüksek risk
+              {purchaseSummary.highRisk} {t("yüksek risk")}
             </StatusBadge>
           </div>
           <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Satış belgesi</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Satış belgesi")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{purchaseSummary.total}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Doğrulandı</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Doğrulandı")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{purchaseSummary.verified}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Bekliyor</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Bekliyor")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{purchaseSummary.pending}</p>
             </div>
             <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Eksik</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Eksik")}</p>
               <p className="mt-1 text-2xl font-black text-foreground">{purchaseSummary.missing}</p>
             </div>
           </div>
           <DataTable
-            data={purchaseChecklist}
+            data={localizedPurchaseChecklist}
             pageSize={6}
             searchValue={(document) =>
               `${document.id} ${document.dealName} ${document.buyerName} ${document.documentType} ${document.nextAction}`
             }
             columns={[
-              { key: "id", header: "Kontrol", sortable: true, render: (document) => document.id },
-              { key: "deal", header: "Deal", render: (document) => document.dealName },
-              { key: "buyer", header: "Alıcı", render: (document) => document.buyerName },
-              { key: "type", header: "Belge tipi", sortable: true, render: (document) => document.documentType },
-              { key: "owner", header: "Sorumlu", render: (document) => document.owner },
+              { key: "id", header: t("Kontrol"), sortable: true, render: (document) => document.id },
+              { key: "deal", header: t("Deal"), render: (document) => document.dealName },
+              { key: "buyer", header: t("Alıcı"), render: (document) => document.buyerName },
+              { key: "type", header: t("Belge tipi"), sortable: true, render: (document) => document.documentType },
+              { key: "owner", header: t("Sorumlu"), render: (document) => document.owner },
               {
                 key: "status",
-                header: "Durum",
+                header: t("Durum"),
                 render: (document) => (
                   <StatusBadge variant={checklistVariant(document.status)}>
-                    {checklistLabel(document.status)}
+                    {checklistLabel(document.status, t)}
                   </StatusBadge>
                 ),
               },
               {
                 key: "risk",
-                header: "Risk",
+                header: t("Risk"),
                 render: (document) => (
                   <span className="inline-flex items-center gap-1">
                     <ShieldAlert className="h-3.5 w-3.5 text-muted-foreground" />
@@ -521,59 +548,59 @@ export default function DocumentsPage() {
                   </span>
                 ),
               },
-              { key: "next", header: "Sonraki aksiyon", render: (document) => document.nextAction },
+              { key: "next", header: t("Sonraki aksiyon"), render: (document) => document.nextAction },
             ]}
           />
         </Card3D>
       )}
 
       <DataTable
-        data={visibleDocuments}
+        data={localizedVisibleDocuments}
         searchValue={(document) =>
           `${document.id} ${document.flatNumber} ${document.ownerName} ${document.name} ${document.category}`
         }
         columns={[
-          { key: "id", header: "Belge", sortable: true, render: (document) => document.id },
-          { key: "flat", header: "Daire", sortable: true, render: (document) => document.flatNumber },
+          { key: "id", header: t("Belge"), sortable: true, render: (document) => document.id },
+          { key: "flat", header: t("Daire"), sortable: true, render: (document) => document.flatNumber },
           ...(!clientView
             ? [
                 {
                   key: "owner",
-                  header: fieldView ? "Kapsam" : "Malik",
-                  render: (document: DocumentVaultRecord) => document.ownerName,
+                  header: fieldView ? t("Kapsam") : t("Malik"),
+                  render: (document: (typeof localizedVisibleDocuments)[number]) => document.ownerName,
                 },
               ]
             : []),
-          { key: "name", header: "Dosya", render: (document) => document.name },
-          { key: "category", header: "Kategori", sortable: true, render: (document) => document.category },
+          { key: "name", header: t("Dosya"), render: (document) => document.name },
+          { key: "category", header: t("Kategori"), sortable: true, render: (document) => document.category },
           {
             key: "status",
-            header: "Durum",
+            header: t("Durum"),
             render: (document) => (
               <StatusBadge variant={documentVariant(document.status)}>
-                {documentLabel(document.status)}
+                {documentLabel(document.status, t)}
               </StatusBadge>
             ),
           },
-          { key: "retention", header: "Kural", render: (document) => document.retentionRule },
+          { key: "retention", header: t("Kural"), render: (document) => document.retentionRule },
           {
             key: "actions",
-            header: "İşlem",
+            header: t("İşlem"),
             sticky: "right",
             headerClassName: "text-center",
             cellClassName: "text-center",
             render: (document) => (
               <DashboardActionMenu
                 compact
-                label="Belge aksiyonlari"
-                ariaLabel={`${document.id} belge aksiyonlari`}
+                label={t("Belge aksiyonlari")}
+                ariaLabel={`${document.id} ${t("Belge aksiyonlari")}`}
                 items={[
                   {
                     key: "view",
-                    label: "Belgeyi goruntule",
+                    label: t("Belgeyi goruntule"),
                     icon: <Eye />,
                     actionType: "document.view.requested",
-                    ariaLabel: "Belgeyi goruntule",
+                    ariaLabel: t("Belgeyi goruntule"),
                     entityTable: "documents",
                     entityExternalId: document.id,
                     title: document.name,
@@ -585,10 +612,10 @@ export default function DocumentsPage() {
                   },
                   {
                     key: "download",
-                    label: "Belgeyi indir",
+                    label: t("Belgeyi indir"),
                     icon: <Download />,
                     actionType: "document.download.requested",
-                    ariaLabel: "Belgeyi indir",
+                    ariaLabel: t("Belgeyi indir"),
                     entityTable: "documents",
                     entityExternalId: document.id,
                     title: document.name,

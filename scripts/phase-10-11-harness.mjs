@@ -286,7 +286,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
 
     await run("phase11-communications-desktop", "manager", "/dashboard/communications", desktop, [
       async (page) => {
-        await page.getByRole("heading", { name: /Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+        await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.getByRole("heading", { name: /Delivery and retry queue/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.getByLabel(/Bildirim teslimini yeniden dene/i).first().click()
         return "communication inbox, retry queue and retry action are visible"
@@ -307,7 +307,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
 
     await run("phase10-11-mobile-client", "tenant", "/dashboard/communications", mobile, [
       async (page) => {
-        await page.getByRole("heading", { name: /Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+        await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.getByText(/Open threads/i).first().waitFor({ state: "visible", timeout: 10_000 })
         return "tenant communication page renders on mobile"
       },

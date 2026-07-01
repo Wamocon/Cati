@@ -147,15 +147,14 @@ export function FinanceLiveLedger() {
 
   const currency = data?.summary.currency ?? "TRY"
   const latestEntries = useMemo(() => data?.entries.slice(0, 5) ?? [], [data])
-  const lastUpdated = useMemo(() => {
-    if (!data?.generatedAt) return null
-    return new Intl.DateTimeFormat(intlLocale, {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(data.generatedAt))
-  }, [data])
+  const lastUpdated = data?.generatedAt
+    ? new Intl.DateTimeFormat(intlLocale, {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(data.generatedAt))
+    : null
   const failedQualityChecks = useMemo(
     () => data?.quality.checks.filter((check) => check.status === "failed") ?? [],
     [data]

@@ -37,7 +37,7 @@ export type AiLanguage = "tr" | "en" | "de" | "ru"
 export function detectAiLanguage(prompt: string): AiLanguage {
   const lower = prompt.toLocaleLowerCase("tr-TR")
   if (/[а-яё]/i.test(prompt)) return "ru"
-  if (/\b(und|oder|bitte|danke|bericht|zahlung|schulden|buchung|zugang|heute|warum)\b/i.test(lower)) return "de"
+  if (/\b(und|oder|bitte|danke|bericht|zahlung|schulden|buchung|zugang|heute|warum|serviceticket|serviceanfrage|störung|stoerung|reparatur|wohnung|dringend|defekt)\b/i.test(lower)) return "de"
   if (/\b(the|and|or|please|report|payment|debt|booking|access|today|summary|image|photo|integration)\b/i.test(lower)) return "en"
   return "tr"
 }
@@ -167,7 +167,30 @@ const aiIntentMatchers: Array<{ resource: Resource; patterns: string[] }> = [
   },
   {
     resource: "tickets",
-    patterns: ["bakım", "maintenance", "service", "servis", "sla", "talep", "ticket"],
+    patterns: [
+      "arıza",
+      "ariza",
+      "bakım",
+      "bakim",
+      "defekt",
+      "maintenance",
+      "reparatur",
+      "ремонт",
+      "service",
+      "serviceanfrage",
+      "serviceticket",
+      "servis",
+      "sla",
+      "störung",
+      "stoerung",
+      "talep",
+      "ticket",
+      "заявк",
+      "неисправ",
+      "поломк",
+      "сервис",
+      "тикет",
+    ],
   },
 ]
 
@@ -423,7 +446,20 @@ function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclu
   if (role === "manager" && (lower.includes("summary") || lower.includes("operations") || lower.includes("plan") || lower.includes("heute"))) return copy.managerSummary
   if (role === "accountant" && (lower.includes("finance") || lower.includes("collection") || lower.includes("payment") || lower.includes("zahlung"))) return copy.accountantSummary
   if (lower.includes("debt") || lower.includes("collection") || lower.includes("schulden") || lower.includes("долг")) return copy.debt
-  if (lower.includes("service") || lower.includes("ticket") || lower.includes("sla") || lower.includes("сервис")) return copy.service
+  if (
+    lower.includes("service") ||
+    lower.includes("ticket") ||
+    lower.includes("sla") ||
+    lower.includes("serviceticket") ||
+    lower.includes("serviceanfrage") ||
+    lower.includes("störung") ||
+    lower.includes("stoerung") ||
+    lower.includes("reparatur") ||
+    lower.includes("сервис") ||
+    lower.includes("заявк") ||
+    lower.includes("тикет") ||
+    lower.includes("ремонт")
+  ) return copy.service
   if (lower.includes("access") || lower.includes("zugang") || lower.includes("доступ")) return copy.access
   if (lower.includes("booking") || lower.includes("check") || lower.includes("buchung") || lower.includes("бронир")) return copy.booking
   if (lower.includes("route") || lower.includes("technical") || lower.includes("techniker") || lower.includes("маршрут")) return copy.route
@@ -436,46 +472,125 @@ function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclu
   return copy.summary || copy.default
 }
 
-export function getAiSuggestions(role: Role): AiSuggestion[] {
+const aiSuggestionCopy: Record<AiLanguage, Record<string, Omit<AiSuggestion, "id">>> = {
+  tr: {
+    summary: { label: "Günlük özet", prompt: "Bugünkü site operasyonlarını özetle." },
+    "debt-risk": { label: "Borç riski", prompt: "Bugün hangi daireler için borç aksiyonu gerekiyor?" },
+    "service-priority": { label: "Servis önceliği", prompt: "Servis taleplerini SLA ve borç durumuna göre önceliklendir." },
+    "finance-summary": { label: "Finans özeti", prompt: "Tahsilatları ve açık finans işlerini özetle." },
+    "portfolio-health": { label: "Portföy sağlığı", prompt: "769 dairelik portföy sağlığını analiz et." },
+    automation: { label: "Otomasyon fırsatı", prompt: "Sırada hangi iş akışları otomatikleştirilmeli?" },
+    "cash-flow": { label: "Nakit akışı", prompt: "Tahsilatları ve açık borcu özetle." },
+    operations: { label: "Operasyon planı", prompt: "Bugünkü operasyon planını oluştur." },
+    "access-control": { label: "Erişim kontrolü", prompt: "Kısıtlı erişim risklerini göster." },
+    legal: { label: "Yasal takip", prompt: "Hangi daireler yasal takip aşamasına taşınmalı?" },
+    route: { label: "Teknik rota", prompt: "Bugün için teknisyen rotasını oluştur." },
+    blocked: { label: "Blokeli servis", prompt: "Hangi servis talepleri borç nedeniyle blokeli?" },
+    "my-flat": { label: "Daire durumu", prompt: "Dairemin durumu nedir?" },
+    rentals: { label: "Kiralama", prompt: "Rezervasyon, belge ve açık servis durumumu göster." },
+    "my-reservation": { label: "Rezervasyonum", prompt: "Rezervasyonumu ve yetkili belgelerimi göster." },
+    "my-service": { label: "Servis talebim", prompt: "Açık servis taleplerimi göster." },
+  },
+  en: {
+    summary: { label: "Daily summary", prompt: "Summarize today's site operations." },
+    "debt-risk": { label: "Debt risk", prompt: "Which units need debt action today?" },
+    "service-priority": { label: "Service priority", prompt: "Prioritize service tickets by SLA and debt status." },
+    "finance-summary": { label: "Finance summary", prompt: "Summarize collections and open finance work." },
+    "portfolio-health": { label: "Portfolio health", prompt: "Analyze the full 769-unit portfolio health." },
+    automation: { label: "Automation opportunity", prompt: "Which workflows should be automated next?" },
+    "cash-flow": { label: "Cash flow", prompt: "Summarize collections and outstanding debt." },
+    operations: { label: "Operations plan", prompt: "Create today's operations plan." },
+    "access-control": { label: "Access control", prompt: "Show restricted access risks." },
+    legal: { label: "Legal follow-up", prompt: "Which units should move to legal follow-up?" },
+    route: { label: "Technician route", prompt: "Build the technician route for today." },
+    blocked: { label: "Blocked service", prompt: "Which service tickets are blocked by debt?" },
+    "my-flat": { label: "Unit status", prompt: "What is the status of my unit?" },
+    rentals: { label: "Rentals", prompt: "Show my reservation, documents and open service status." },
+    "my-reservation": { label: "My reservation", prompt: "Show my reservation and authorized documents." },
+    "my-service": { label: "My service request", prompt: "Show my open service requests." },
+  },
+  de: {
+    summary: { label: "Tagesübersicht", prompt: "Fasse den heutigen Standortbetrieb zusammen." },
+    "debt-risk": { label: "Schuldenrisiko", prompt: "Welche Einheiten brauchen heute eine Schuldenaktion?" },
+    "service-priority": { label: "Servicepriorität", prompt: "Priorisiere Servicetickets nach SLA und Schuldenstatus." },
+    "finance-summary": { label: "Finanzübersicht", prompt: "Fasse Zahlungseingänge und offene Finanzarbeit zusammen." },
+    "portfolio-health": { label: "Portfoliogesundheit", prompt: "Analysiere die Gesundheit des gesamten Portfolios mit 769 Einheiten." },
+    automation: { label: "Automatisierungschance", prompt: "Welche Workflows sollten als Nächstes automatisiert werden?" },
+    "cash-flow": { label: "Cashflow", prompt: "Fasse Zahlungseingänge und offene Schulden zusammen." },
+    operations: { label: "Operationsplan", prompt: "Erstelle den heutigen Operationsplan." },
+    "access-control": { label: "Zugangskontrolle", prompt: "Zeige Risiken durch eingeschränkten Zugang." },
+    legal: { label: "Rechtliche Nachverfolgung", prompt: "Welche Einheiten sollten in die rechtliche Nachverfolgung wechseln?" },
+    route: { label: "Technikerroute", prompt: "Erstelle die Technikerroute für heute." },
+    blocked: { label: "Blockierter Service", prompt: "Welche Servicetickets sind wegen Schulden blockiert?" },
+    "my-flat": { label: "Einheitenstatus", prompt: "Wie ist der Status meiner Einheit?" },
+    rentals: { label: "Vermietung", prompt: "Zeige meine Reservierung, Dokumente und offenen Servicestatus." },
+    "my-reservation": { label: "Meine Reservierung", prompt: "Zeige meine Reservierung und autorisierten Dokumente." },
+    "my-service": { label: "Meine Serviceanfrage", prompt: "Zeige meine offenen Serviceanfragen." },
+  },
+  ru: {
+    summary: { label: "Дневная сводка", prompt: "Кратко опишите сегодняшние операции объекта." },
+    "debt-risk": { label: "Риск долга", prompt: "Какие юниты сегодня требуют действия по долгу?" },
+    "service-priority": { label: "Приоритет сервиса", prompt: "Расставьте сервисные заявки по SLA и статусу долга." },
+    "finance-summary": { label: "Финансовая сводка", prompt: "Суммируйте оплаты и открытые финансовые задачи." },
+    "portfolio-health": { label: "Состояние портфеля", prompt: "Проанализируйте состояние всего портфеля из 769 юнитов." },
+    automation: { label: "Возможность автоматизации", prompt: "Какие рабочие процессы нужно автоматизировать следующими?" },
+    "cash-flow": { label: "Денежный поток", prompt: "Суммируйте оплаты и открытый долг." },
+    operations: { label: "Операционный план", prompt: "Создайте операционный план на сегодня." },
+    "access-control": { label: "Контроль доступа", prompt: "Покажите риски ограниченного доступа." },
+    legal: { label: "Юридический контроль", prompt: "Какие юниты нужно перевести в юридическое сопровождение?" },
+    route: { label: "Маршрут техника", prompt: "Составьте маршрут техника на сегодня." },
+    blocked: { label: "Заблокированный сервис", prompt: "Какие сервисные заявки заблокированы из-за долга?" },
+    "my-flat": { label: "Статус юнита", prompt: "Какой статус моего юнита?" },
+    rentals: { label: "Аренда", prompt: "Покажите мою бронь, документы и открытый статус сервиса." },
+    "my-reservation": { label: "Моя бронь", prompt: "Покажите мою бронь и авторизованные документы." },
+    "my-service": { label: "Моя сервисная заявка", prompt: "Покажите мои открытые сервисные заявки." },
+  },
+}
+
+function suggestion(id: keyof typeof aiSuggestionCopy.en, language: AiLanguage): AiSuggestion {
+  return { id, ...aiSuggestionCopy[language][id] }
+}
+
+export function getAiSuggestions(role: Role, language: AiLanguage = "tr"): AiSuggestion[] {
   const common: AiSuggestion[] =
     role === "admin" || role === "manager"
       ? [
-          { id: "summary", label: "Günlük özet", prompt: "Give me today's site operations summary." },
-          { id: "debt-risk", label: "Borç riski", prompt: "Which flats need debt action today?" },
-          { id: "service-priority", label: "Servis önceliği", prompt: "Prioritize service tickets by SLA and debt status." },
+          suggestion("summary", language),
+          suggestion("debt-risk", language),
+          suggestion("service-priority", language),
         ]
       : role === "accountant"
         ? [
-            { id: "finance-summary", label: "Finans özeti", prompt: "Summarize collections and open finance work." },
-            { id: "debt-risk", label: "Borç riski", prompt: "Which accounts need finance follow-up today?" },
+            suggestion("finance-summary", language),
+            suggestion("debt-risk", language),
           ]
         : []
 
   const roleSpecific: Record<Role, AiSuggestion[]> = {
     admin: [
-      { id: "portfolio-health", label: "Portföy sağlığı", prompt: "Analyze the full 769-flat portfolio health." },
-      { id: "automation", label: "Otomasyon fırsatı", prompt: "Which workflows should be automated next?" },
-      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
+      suggestion("portfolio-health", language),
+      suggestion("automation", language),
+      suggestion("cash-flow", language),
     ],
     manager: [
-      { id: "operations", label: "Operasyon planı", prompt: "Create today's operations plan." },
-      { id: "access-control", label: "Erişim kontrolü", prompt: "Show restricted access risks." },
+      suggestion("operations", language),
+      suggestion("access-control", language),
     ],
     accountant: [
-      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
-      { id: "legal", label: "Yasal takip", prompt: "Which flats should move to legal follow-up?" },
+      suggestion("cash-flow", language),
+      suggestion("legal", language),
     ],
     staff: [
-      { id: "route", label: "Teknik rota", prompt: "Build the technician route for today." },
-      { id: "blocked", label: "Blokeli servis", prompt: "Which service tickets are blocked by debt?" },
+      suggestion("route", language),
+      suggestion("blocked", language),
     ],
     owner: [
-      { id: "my-flat", label: "Daire durumu", prompt: "What is the status of my flat?" },
-      { id: "rentals", label: "Kiralama", prompt: "Show my reservation, documents and open service status." },
+      suggestion("my-flat", language),
+      suggestion("rentals", language),
     ],
     tenant: [
-      { id: "my-reservation", label: "Rezervasyonum", prompt: "Show my reservation and authorized documents." },
-      { id: "my-service", label: "Servis talebim", prompt: "Show my open service requests." },
+      suggestion("my-reservation", language),
+      suggestion("my-service", language),
     ],
   }
 

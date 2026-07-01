@@ -180,6 +180,8 @@ async function main() {
     const routes = [
       "/tr",
       "/tr/login",
+      "/tr/signup",
+      "/tr/platform",
       "/tr/dashboard",
       "/tr/dashboard/listings",
       "/tr/dashboard/leads",
@@ -189,6 +191,8 @@ async function main() {
       "/tr/dashboard/finance",
       "/tr/dashboard/documents",
       "/tr/dashboard/reports",
+      "/tr/dashboard/communications",
+      "/tr/dashboard/offline",
       "/tr/dashboard/users",
       "/tr/dashboard/settings",
     ]

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
   type ClientActionInput,
+  getClientActionRequest,
   logClientAction,
+  materializeApprovedTicketRequest,
   updateClientActionRequestStatus,
 } from "@/lib/site-management-repository"
 import { getUserProfile } from "@/lib/auth"
@@ -36,6 +38,40 @@ function asDecisionStatus(value: unknown) {
     value === "failed"
     ? value
     : null
+}
+
+function withDecisionMetadata({
+  metadata,
+  status,
+  decidedById,
+  decidedByRole,
+  materializedTicket,
+}: {
+  metadata: Record<string, unknown>
+  status: NonNullable<ReturnType<typeof asDecisionStatus>>
+  decidedById: string
+  decidedByRole: string
+  materializedTicket: { id: string; ticketNo: string; source: string } | null
+}) {
+  const workflow = asRecord(metadata.workflow)
+  return {
+    ...metadata,
+    workflow: {
+      ...workflow,
+      status,
+      decisionStatus: status,
+      decidedById,
+      decidedByRole,
+      decidedAt: new Date().toISOString(),
+      ...(materializedTicket
+        ? {
+            materializedTicketId: materializedTicket.id,
+            materializedTicketNo: materializedTicket.ticketNo,
+            materializedTicketSource: materializedTicket.source,
+          }
+        : {}),
+    },
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -135,8 +171,6 @@ export async function PATCH(request: NextRequest) {
   const payload = asRecord(body)
   const actionId = asString(payload.id)
   const status = asDecisionStatus(payload.status)
-  const actionType = asString(payload.actionType) ?? "ticket.update.request"
-  const entityTable = asString(payload.entityTable) ?? "service_tickets"
 
   if (!actionId || !status) {
     return NextResponse.json(
@@ -150,7 +184,18 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
-  const workflowAction = resolveWorkflowAction(actionType, entityTable)
+  const storedRequest = await getClientActionRequest(actionId)
+  if (!storedRequest) {
+    return NextResponse.json(
+      { error: "Action request was not found." },
+      { status: 404 }
+    )
+  }
+
+  const workflowAction = resolveWorkflowAction(
+    storedRequest.actionType,
+    storedRequest.entityTable
+  )
   const canApproveByPermission = hasAnyPermission(profile.role, workflowAction.resource, [
     "approve",
     "manage",
@@ -165,7 +210,25 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const result = await updateClientActionRequestStatus({ id: actionId, status })
+    const materializedTicket =
+      status === "approved"
+        ? await materializeApprovedTicketRequest({
+            request: storedRequest,
+            decidedById: profile.id,
+            decidedByRole: profile.role,
+          })
+        : null
+    const result = await updateClientActionRequestStatus({
+      id: actionId,
+      status,
+      metadata: withDecisionMetadata({
+        metadata: storedRequest.metadata,
+        status,
+        decidedById: profile.id,
+        decidedByRole: profile.role,
+        materializedTicket,
+      }),
+    })
     return NextResponse.json(
       {
         ...result,
@@ -173,6 +236,7 @@ export async function PATCH(request: NextRequest) {
           ...workflowAction,
           decisionStatus: status,
           decidedByRole: profile.role,
+          materializedTicket,
         },
       },
       { status: 200 }

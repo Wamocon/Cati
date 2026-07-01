@@ -42,6 +42,17 @@ const pageCopy = {
     googleNotice: "Google girişi üretim için hazırlanabilir. Canlıya almak için Google OAuth istemcisi ve Supabase provider ayarı gerekir.",
     yandexNotice: "Yandex ID, Rusça konuşan malik/kiracı kitlesi için provider-ready olarak planlandı. Canlıya almak için Yandex OAuth ve redirect onayı gerekir.",
     magicNotice: "Magic link / tek kullanımlık e-posta girişi kontrollü onboarding için hazırlanabilir; kullanıcı yine rol ve portföy onayı bekler.",
+    providerDetails: {
+      google: "Workspace / Gmail",
+      yandex: "Rusça malik/kiracı için uygun",
+      magic: "Şifresiz e-posta daveti",
+    },
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "E-posta magic link",
+    },
+    imageAlt: "New Level Premium masterplan ve ERP operasyon bağlamı",
     proof: ["New Level Premium portföy alanı", "Finans, servis ve belge merkezi", "Malik, kiracı ve ekip erişimi"],
   },
   en: {
@@ -72,6 +83,17 @@ const pageCopy = {
     googleNotice: "Google sign-in can be activated for production after Google OAuth client and Supabase provider configuration.",
     yandexNotice: "Yandex ID is planned for Russian-speaking owners and tenants. Production needs Yandex OAuth and approved redirect settings.",
     magicNotice: "Magic link / one-time email sign-in can support controlled onboarding; users still wait for role and portfolio approval.",
+    providerDetails: {
+      google: "Workspace / Gmail",
+      yandex: "RU owner/tenant fit",
+      magic: "Passwordless invite",
+    },
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "Email magic link",
+    },
+    imageAlt: "New Level Premium masterplan and ERP operations context",
     proof: ["New Level Premium portfolio workspace", "Finance, service and document center", "Owner, tenant and team access"],
   },
   de: {
@@ -102,6 +124,17 @@ const pageCopy = {
     googleNotice: "Google Login kann für Produktion aktiviert werden, sobald Google OAuth Client und Supabase Provider konfiguriert sind.",
     yandexNotice: "Yandex ID ist für russischsprachige Eigentümer und Mieter vorgesehen. Produktion braucht Yandex OAuth und Redirect-Freigabe.",
     magicNotice: "Magic Link / Einmal-E-Mail eignet sich für kontrolliertes Onboarding; Rolle und Portfolio müssen trotzdem freigegeben werden.",
+    providerDetails: {
+      google: "Workspace / Gmail",
+      yandex: "Passend für russischsprachige Eigentümer/Mieter",
+      magic: "Passwortlose E-Mail-Einladung",
+    },
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "E-Mail-Magic-Link",
+    },
+    imageAlt: "New Level Premium Masterplan und ERP-Operationskontext",
     proof: ["New Level Premium Portfolio", "Finanz-, Service- und Dokumentenbereich", "Eigentümer-, Mieter- und Teamzugang"],
   },
   ru: {
@@ -132,6 +165,17 @@ const pageCopy = {
     googleNotice: "Вход через Google можно включить после настройки Google OAuth Client и Supabase provider.",
     yandexNotice: "Yandex ID запланирован для русскоязычных владельцев и арендаторов. Для live нужны Yandex OAuth и подтвержденные redirect-настройки.",
     magicNotice: "Magic link / одноразовый e-mail подходит для контролируемого onboarding; роль и портфель все равно подтверждает администратор.",
+    providerDetails: {
+      google: "Workspace / Gmail",
+      yandex: "Подходит владельцам/арендаторам на русском",
+      magic: "Одноразовая ссылка по e-mail",
+    },
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "Одноразовая ссылка по e-mail",
+    },
+    imageAlt: "Masterplan New Level Premium и контекст ERP-операций",
     proof: ["Рабочая область New Level Premium", "Финансовый, сервисный и документный центр", "Доступ владельцев, арендаторов и команды"],
   },
 } as const
@@ -140,19 +184,16 @@ const providerOptions = [
   {
     key: "google",
     label: "Google",
-    detail: "Workspace / Gmail",
     noticeKey: "googleNotice",
   },
   {
     key: "yandex",
     label: "Yandex ID",
-    detail: "RU owner/tenant fit",
     noticeKey: "yandexNotice",
   },
   {
     key: "magic",
     label: "Email magic link",
-    detail: "Passwordless invite",
     noticeKey: "magicNotice",
   },
 ] as const
@@ -267,8 +308,8 @@ export default function LoginPage() {
   async function handleProvider(provider: (typeof providerOptions)[number]) {
     setError(null)
     setProviderNotice({
-      detail: provider.detail,
-      label: provider.label,
+      detail: t.providerDetails[provider.key],
+      label: t.providerLabels[provider.key],
       notice: t[provider.noticeKey],
     })
     if (provider.key !== "google") return
@@ -288,7 +329,7 @@ export default function LoginPage() {
         <section className="relative hidden overflow-hidden lg:block">
           <Image
             src="/new-level-premium/masterplan-aerial.jpg"
-            alt="New Level Premium masterplan and ERP operations context"
+            alt={t.imageAlt}
             fill
             sizes="50vw"
             className="object-cover"
@@ -341,7 +382,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-1 items-center px-5 py-8 sm:px-8">
-            <div className="mx-auto grid w-full max-w-5xl gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(340px,0.75fr)]">
+            <div className="mx-auto grid w-full max-w-5xl gap-6 2xl:grid-cols-[minmax(420px,0.95fr)_minmax(320px,0.75fr)]">
               <div className="rounded-3xl border border-border bg-card p-5 shadow-2xl shadow-black/[0.06] sm:p-7">
                 <div className="mb-7">
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">{t.eyebrow}</p>
@@ -352,13 +393,13 @@ export default function LoginPage() {
                 </div>
 
                 <details className="mb-6 rounded-2xl border border-border bg-muted/25 p-3">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-1 py-1 text-left [&::-webkit-details-marker]:hidden">
-                    <span className="min-w-0">
+                  <summary className="flex cursor-pointer list-none flex-col items-start gap-3 rounded-xl px-1 py-1 text-left sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
+                    <span className="min-w-0 flex-1">
                       <span className="block text-sm font-black text-card-foreground">{t.providerSummary}</span>
                       <span className="mt-1 block line-clamp-2 text-xs leading-5 text-muted-foreground">{t.providerIntro}</span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <span className="hidden rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-primary sm:inline-flex">
+                    <span className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
+                      <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-primary">
                         {t.providerReady}
                       </span>
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -378,8 +419,8 @@ export default function LoginPage() {
                             <Logo className={provider.key === "magic" ? "text-primary" : undefined} />
                           </span>
                           <span className="min-w-0">
-                            <span className="block truncate text-sm font-black text-card-foreground">{provider.label}</span>
-                            <span className="block truncate text-xs text-muted-foreground">{provider.detail}</span>
+                            <span className="block truncate text-sm font-black text-card-foreground">{t.providerLabels[provider.key]}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{t.providerDetails[provider.key]}</span>
                           </span>
                         </button>
                       )

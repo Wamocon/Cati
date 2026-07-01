@@ -7,6 +7,8 @@ import {
   getAiRoleSystemInstruction,
 } from "@/lib/ai-responses"
 import { getUserProfile } from "@/lib/auth"
+import { hasAnyPermission } from "@/lib/rbac"
+import { canAccessUnitForRole, isClientRole, normalizeUnitNo } from "@/lib/role-scoped-views"
 import {
   completeWithLocalAi,
   isLocalAiConfigured,
@@ -42,31 +44,195 @@ function wantsTicketDraft(message: string) {
   const lower = message.toLocaleLowerCase("tr-TR")
   const ticketWords = [
     "ticket",
+    "service ticket",
     "service request",
+    "serviceanfrage",
+    "serviceticket",
+    "störung",
+    "stoerung",
+    "reparatur",
+    "wartung",
+    "defekt",
     "servis talep",
     "servis kayd",
-    "talep aç",
-    "talep olustur",
+    "talep",
     "talep oluştur",
     "arıza",
     "ariza",
+    "bakım",
+    "bakim",
+    "заявк",
+    "тикет",
+    "сервис",
+    "ремонт",
+    "поломк",
+    "неисправ",
   ]
   const createWords = [
     "create",
     "open",
     "raise",
     "submit",
+    "fix",
+    "repair",
+    "send",
+    "dispatch",
     "aç",
     "ac",
     "oluştur",
     "olustur",
     "kaydet",
+    "gönder",
+    "gonder",
+    "yönlendir",
+    "yonlendir",
+    "erstellen",
+    "öffnen",
+    "oeffnen",
+    "anlegen",
+    "melden",
+    "einreichen",
+    "beheben",
+    "reparieren",
+    "senden",
+    "создай",
+    "создать",
+    "открой",
+    "открыть",
+    "оформи",
+    "зарегистрируй",
+    "подай",
+    "отправь",
+    "отправьте",
+  ]
+  const issueWords = [
+    "leak",
+    "water",
+    "door",
+    "handle",
+    "broken",
+    "stuck",
+    "electric",
+    "plumbing",
+    "su",
+    "kaçak",
+    "kacak",
+    "kapı",
+    "kapi",
+    "kol",
+    "bozuk",
+    "sıkıştı",
+    "sikisti",
+    "wasser",
+    "leck",
+    "tür",
+    "tuer",
+    "griff",
+    "kaputt",
+    "klemmt",
+    "strom",
+    "вода",
+    "протеч",
+    "двер",
+    "ручк",
+    "слом",
+    "застр",
+    "электр",
   ]
 
   return (
-    ticketWords.some((word) => lower.includes(word)) &&
-    createWords.some((word) => lower.includes(word))
+    createWords.some((word) => lower.includes(word)) &&
+    (ticketWords.some((word) => lower.includes(word)) ||
+      issueWords.some((word) => lower.includes(word)))
   )
+}
+
+function extractUnitNo(message: string) {
+  const patterns = [
+    /\b(?:unit|flat|apartment|apt|daire|wohnung|einheit|квартира|апартамент|юнит)\s*([a-zçğıöşü]-?\d{1,4})\b/i,
+    /\b([a-zçğıöşü]-\d{2,4})\b/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = message.match(pattern)
+    if (match?.[1]) return normalizeUnitNo(match[1])
+  }
+
+  return null
+}
+
+function detectTicketCategory(message: string) {
+  const lower = message.toLocaleLowerCase("tr-TR")
+  if (/water|leak|plumb|su|kaçak|kacak|wasser|leck|протеч|вода/.test(lower)) return "plumbing"
+  if (/electric|power|light|elektrik|strom|электр|свет/.test(lower)) return "electrical"
+  if (/door|handle|lock|key|kapı|kapi|kilit|tür|tuer|schloss|двер|замок|ключ|ручк/.test(lower)) return "access-maintenance"
+  if (/clean|temizlik|reinigung|уборк/.test(lower)) return "cleaning"
+  if (/service|servis|wartung|maintenance|bakım|bakim|ремонт|сервис/.test(lower)) return "maintenance"
+  return "general"
+}
+
+function detectTicketPriority(message: string) {
+  return /urgent|critical|emergency|acil|kritik|hemen|dringend|sofort|kritisch|сроч|критич|авар/i.test(message)
+    ? "urgent"
+    : "normal"
+}
+
+function containsAny(text: string, terms: string[]) {
+  const lower = text.toLocaleLowerCase("tr-TR")
+  return terms.some((term) => lower.includes(term))
+}
+
+function isLikelySameLanguage(text: string, language: ReturnType<typeof detectAiLanguage>) {
+  const trimmed = text.trim()
+  if (!trimmed) return false
+
+  if (language === "ru") {
+    const cyrillic = trimmed.match(/[\u0400-\u04ff]/g)?.length ?? 0
+    return cyrillic >= 8
+  }
+
+  if (language === "de") {
+    return containsAny(trimmed, [
+      " der ",
+      " die ",
+      " das ",
+      " und ",
+      " für ",
+      "freigabe",
+      "wohnung",
+      "service",
+      "ticket",
+      "nicht",
+      "wird",
+    ])
+  }
+
+  if (language === "tr") {
+    return containsAny(trimmed, [
+      " ve ",
+      " için ",
+      "servis",
+      "talep",
+      "onay",
+      "daire",
+      "borç",
+      "gerek",
+      "oluştur",
+      "kaydı",
+    ])
+  }
+
+  return containsAny(trimmed, [
+    " the ",
+    " and ",
+    " for ",
+    "service",
+    "ticket",
+    "approval",
+    "request",
+    "unit",
+    "requires",
+  ])
 }
 
 function buildTicketDraft(message: string) {
@@ -75,8 +241,9 @@ function buildTicketDraft(message: string) {
   return {
     title: title || "AI service ticket draft",
     description: compact,
-    category: "general",
-    priority: /urgent|acil|kritik|critical/i.test(compact) ? "urgent" : "normal",
+    category: detectTicketCategory(compact),
+    priority: detectTicketPriority(compact),
+    unitNo: extractUnitNo(compact),
   }
 }
 
@@ -106,21 +273,27 @@ export async function POST(request: Request) {
   const roleProfile = getAiRoleProfile(role)
   const accessDecision = getAiAccessDecision(message, role, language)
   const deterministicContext = generateAiResponse(message, role, language)
+  const requestedTicketDraft = wantsTicketDraft(message)
 
   let ticketDraft:
     | {
         id: string
         status: string
         title: string
+        category: string
+        priority: string
+        unitNo: string | null
         requiresHumanApproval: boolean
       }
     | null = null
 
-  if (wantsTicketDraft(message)) {
+  if (requestedTicketDraft) {
+    const workflowAction = resolveWorkflowAction("ticket.create.ai_draft", "service_tickets")
     const ticketAccess = getAiAccessDecision("service ticket create", role, language)
-    if (ticketAccess.allowed) {
-      const workflowAction = resolveWorkflowAction("ticket.create.ai_draft", "service_tickets")
-      const draft = buildTicketDraft(message)
+    const canCreateTicketDraft = hasAnyPermission(role, workflowAction.resource, workflowAction.requiredActions)
+    const draft = buildTicketDraft(message)
+    const hasUnitScope = !isClientRole(role) || canAccessUnitForRole(role, draft.unitNo)
+    if (ticketAccess.allowed && canCreateTicketDraft && hasUnitScope) {
       try {
         const result = await logClientAction({
           actionType: "ticket.create.ai_draft",
@@ -146,6 +319,9 @@ export async function POST(request: Request) {
           id: result.id,
           status: "submitted",
           title: draft.title,
+          category: draft.category,
+          priority: draft.priority,
+          unitNo: draft.unitNo,
           requiresHumanApproval: workflowAction.requiresHumanApproval,
         }
       } catch {
@@ -158,6 +334,18 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply: deterministicContext,
       source: "rbac-guard",
+      role,
+      roleProfile,
+      language,
+      resource: accessDecision.resource,
+      ticketDraft,
+    })
+  }
+
+  if (requestedTicketDraft) {
+    return NextResponse.json({
+      reply: deterministicContext,
+      source: "deterministic-fallback",
       role,
       roleProfile,
       language,
@@ -201,10 +389,13 @@ export async function POST(request: Request) {
         },
       ],
     })
+    const guardedContent = isLikelySameLanguage(completion.content, language)
+      ? completion.content
+      : deterministicContext
 
     return NextResponse.json({
-      reply: completion.content,
-      source: "local-ai",
+      reply: guardedContent,
+      source: guardedContent === completion.content ? "local-ai" : "deterministic-language-guard",
       role,
       roleProfile,
       language,

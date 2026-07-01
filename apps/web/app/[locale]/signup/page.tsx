@@ -37,6 +37,12 @@ const copy = {
     firstStepItems: ["Profil bilgilerini doğrula", "Yetkili modülleri incele", "İlk yönetici onayını bekle"],
     productionGateText: "Üretim erişimi, rol ve portföy kapsamı yönetici tarafından onaylandıktan sonra açılır.",
     providerNotice: "Provider seçimi talebe not olarak eklenir. Canlı OAuth henüz demo modunda tutulur.",
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "E-posta magic link",
+    },
+    imageAlt: "New Level Premium mobilyalı iç mekan ve malik-kiracı onboarding bağlamı",
     success: "Talep alındı. E-posta doğrulaması ve yönetici onayı tamamlandığında erişim açılır.",
     authMissing: "Auth anahtarları bu ortamda kapalı. Talep için info@ataberkestate.com adresine yazın.",
     error: "Talep gönderilemedi. Bilgileri kontrol edip tekrar deneyin.",
@@ -69,6 +75,12 @@ const copy = {
     firstStepItems: ["Confirm profile details", "Review allowed modules", "Wait for first administrator approval"],
     productionGateText: "Production access opens only after an administrator approves the role and portfolio scope.",
     providerNotice: "Provider choice is recorded as request context. Live OAuth remains in demo mode for now.",
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "Email magic link",
+    },
+    imageAlt: "New Level Premium furnished interior for owner and tenant onboarding",
     success: "Request received. Access opens after email verification and administrator approval.",
     authMissing: "Auth keys are disabled in this environment. Contact info@ataberkestate.com for access.",
     error: "Request could not be sent. Check the details and try again.",
@@ -101,6 +113,12 @@ const copy = {
     firstStepItems: ["Profildaten bestätigen", "Freigegebene Module prüfen", "Erste Administratorfreigabe abwarten"],
     productionGateText: "Produktionszugang wird erst nach Administratorfreigabe von Rolle und Portfolio geöffnet.",
     providerNotice: "Provider-Auswahl wird als Kontext gespeichert. Live OAuth bleibt vorerst Demo-Modus.",
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "E-Mail-Magic-Link",
+    },
+    imageAlt: "Möblierter Innenraum von New Level Premium für Eigentümer- und Mieter-Onboarding",
     success: "Anfrage erhalten. Zugang folgt nach E-Mail-Bestätigung und Administratorfreigabe.",
     authMissing: "Auth-Schlüssel sind in dieser Umgebung deaktiviert. Bitte info@ataberkestate.com kontaktieren.",
     error: "Anfrage konnte nicht gesendet werden. Angaben prüfen und erneut versuchen.",
@@ -133,6 +151,12 @@ const copy = {
     firstStepItems: ["Проверить профиль", "Посмотреть доступные модули", "Дождаться первого одобрения администратора"],
     productionGateText: "Production-доступ открывается только после одобрения роли и портфеля администратором.",
     providerNotice: "Выбор провайдера сохраняется как контекст запроса. Live OAuth пока остается в demo-режиме.",
+    providerLabels: {
+      google: "Google",
+      yandex: "Yandex ID",
+      magic: "Одноразовая ссылка по e-mail",
+    },
+    imageAlt: "Меблированный интерьер New Level Premium для подключения владельцев и арендаторов",
     success: "Запрос получен. Доступ откроется после проверки e-mail и одобрения администратором.",
     authMissing: "Auth-ключи отключены в этой среде. Напишите на info@ataberkestate.com.",
     error: "Запрос не отправлен. Проверьте данные и попробуйте снова.",
@@ -144,9 +168,9 @@ const copy = {
 } as const
 
 const identityOptions = [
-  { key: "google", label: "Google" },
-  { key: "yandex", label: "Yandex ID" },
-  { key: "magic", label: "Email magic link" },
+  { key: "google" },
+  { key: "yandex" },
+  { key: "magic" },
 ] as const
 
 const identityLogos = {
@@ -248,7 +272,7 @@ export default function SignupPage() {
                           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-center text-sm font-black leading-tight text-foreground transition hover:bg-muted aria-pressed:border-primary/40 aria-pressed:bg-primary/10 aria-pressed:text-primary"
                         >
                           <Logo className={option.key === "magic" ? "shrink-0 text-primary" : "shrink-0"} />
-                          <span className="min-w-0">{option.label}</span>
+                          <span className="min-w-0">{t.providerLabels[option.key]}</span>
                         </button>
                       )
                     })}
@@ -400,7 +424,7 @@ export default function SignupPage() {
         <section className="relative hidden overflow-hidden bg-[#061a17] text-white lg:block">
           <Image
             src="/new-level-premium/showroom-bedroom.jpg"
-            alt="New Level Premium furnished interior for owner and tenant onboarding"
+            alt={t.imageAlt}
             fill
             sizes="42vw"
             className="object-cover"

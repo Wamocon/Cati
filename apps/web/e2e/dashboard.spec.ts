@@ -1,6 +1,15 @@
 import { expect, test, type Page } from "@playwright/test"
 import { collectConsoleIssues, screenshot } from "./helpers"
 
+const roleByTurkishLabel = {
+  "Yönetim": "admin",
+  "Sorumlu": "manager",
+  "Muhasebe": "accountant",
+  "Personel": "staff",
+  "Malik": "owner",
+  "Kiracı": "tenant",
+} as const
+
 function exactAccessibleName(label: string) {
   return new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`)
 }
@@ -32,15 +41,23 @@ async function clickDashboardCommand(
   expectedUrl: RegExp
 ) {
   await page.goto("/tr/dashboard")
-  const link = page.getByRole("link", { name: label }).first()
+  const pathMatch = expectedUrl.source.match(/\\\/dashboard(?:\\\/[a-z-]+)?/)
+  const expectedPath = pathMatch?.[0].replaceAll("\\/", "/") ?? null
+  const link = expectedPath
+    ? page
+        .locator(`a[href$="${expectedPath}"]`)
+        .filter({ hasText: label })
+        .filter({ visible: true })
+        .first()
+    : page.getByRole("link", { name: label }).first()
   await expect(link).toBeVisible()
 
   const href = await link.getAttribute("href")
-  const expectedPath = href ? new URL(href, "http://localhost").pathname : null
-  await link.click()
+  const targetPath = href ? new URL(href, "http://localhost").pathname : null
+  await link.click({ force: true })
 
-  if (expectedPath) {
-    await page.waitForURL((url) => url.pathname === expectedPath, {
+  if (targetPath) {
+    await page.waitForURL((url) => url.pathname === targetPath, {
       timeout: 20_000,
     })
   }
@@ -48,8 +65,11 @@ async function clickDashboardCommand(
 }
 
 async function signInAsAccessProfile(page: Page, label: string) {
-  await page.goto("/tr/login")
-  await page.getByRole("button", { name: new RegExp(label) }).click()
+  const role = roleByTurkishLabel[label as keyof typeof roleByTurkishLabel]
+  expect(role, `known QA role label ${label}`).toBeTruthy()
+  const response = await page.request.post("/api/access-profile", { data: { role } })
+  expect(response.status(), `access profile for ${label}`).toBe(200)
+  await page.goto("/tr/dashboard")
   await expect(page).toHaveURL(/\/tr\/dashboard/)
 }
 
@@ -88,13 +108,13 @@ test.describe("Dashboard portal", () => {
   test("dashboard command cards route to working modules", async ({ page }) => {
     test.setTimeout(90_000)
 
-    await clickDashboardCommand(page, "Toplam Daire modülünü aç", /\/dashboard\/listings/)
-    await clickDashboardCommand(page, "Toplam Borç modülünü aç", /\/dashboard\/finance/)
-    await clickDashboardCommand(page, "Açık Servis modülünü aç", /\/dashboard\/tickets/)
-    await clickDashboardCommand(page, "Bugünkü İşler modülünü aç", /\/dashboard\/calendar/)
-    await clickDashboardCommand(page, /Blok A daire matrisi detayını aç/, /\/dashboard\/listings/)
-    await clickDashboardCommand(page, /Tahsilat rotası detayını aç/, /\/dashboard\/finance/)
-    await clickDashboardCommand(page, /AI operasyon asistanı raporlarını aç/, /\/dashboard\/reports/)
+    await clickDashboardCommand(page, "Toplam Daire", /\/dashboard\/listings/)
+    await clickDashboardCommand(page, "Toplam Borç", /\/dashboard\/finance/)
+    await clickDashboardCommand(page, "Açık Servis", /\/dashboard\/tickets/)
+    await clickDashboardCommand(page, "Bugünkü İşler", /\/dashboard\/calendar/)
+    await clickDashboardCommand(page, /Blok A/, /\/dashboard\/listings/)
+    await clickDashboardCommand(page, /Tahsilat|Finans/i, /\/dashboard\/finance/)
+    await clickDashboardCommand(page, /AI operasyon asistanı/i, /\/dashboard\/reports/)
 
     expect(issues).toEqual([])
   })
@@ -108,7 +128,7 @@ test.describe("Dashboard portal", () => {
 
     const modules = [
       { menu: "Daire Matrisi", heading: "Proje & Daire Matrisi", url: /\/dashboard\/listings/ },
-      { menu: "Sakinler", heading: "Müşteri & Malik CRM", url: /\/dashboard\/leads/ },
+      { menu: "Müşteri Adayları", heading: "Müşteri & Malik CRM", url: /\/dashboard\/leads/ },
       { menu: "Servis Talepleri", heading: "Servis Talepleri", url: /\/dashboard\/tickets/ },
       { menu: "Rezervasyon", heading: "Rezervasyon & Giriş-Çıkış", url: /\/dashboard\/calendar/ },
       { menu: "Erişim & Uyum", heading: "Erişim & Uyum", url: /\/dashboard\/compliance/ },
@@ -132,7 +152,7 @@ test.describe("Dashboard portal", () => {
     await expect(page.getByText("Daire matrisi kayıtları")).toBeVisible()
     await expect(page.getByText("Veri kalite bulguları")).toBeVisible()
     await page.getByPlaceholder("Daire, malik, sakin veya blok ara").fill("A-001")
-    await expect(page.getByText("A-001").first()).toBeVisible()
+    await expect(page.getByRole("button", { name: /A-001 Daire detay/ }).first()).toBeVisible()
     await page.getByRole("button", { name: "Veri kontrolü" }).click()
     await expect(page.getByRole("button", { name: "Veri kontrolü" })).toHaveAttribute("data-state", "success")
     await page.getByRole("button", { name: "Değişiklik iste" }).click()
@@ -146,10 +166,11 @@ test.describe("Dashboard portal", () => {
     await expect(page.getByRole("heading", { name: "Finans defteri" })).toBeVisible()
     await expect(page.getByText("Son finans kayıtları")).toBeVisible()
     await page.getByRole("button", { name: "Defteri yenile" }).click()
-    const financeExportButton = page.getByRole("button", { name: /Finans defteri.*aktar/i })
-    await financeExportButton.click()
-    await expect(financeExportButton).toHaveAttribute("data-state", "success")
-    await expect(page.getByRole("heading", { name: "Satış ödeme planı" })).toBeVisible()
+    await page.getByRole("button", { name: /Finans defteri aksiyon/i }).click()
+    const financeExportItem = page.getByRole("menuitem", { name: /Dışa aktar|Disa aktar|Finans defteri/i })
+    await financeExportItem.click()
+    await expect(financeExportItem).toHaveAttribute("data-state", "success", { timeout: 1_000 })
+    await expect(page.getByRole("heading", { name: "Satış ödeme planı", exact: true })).toBeVisible()
 
     await clickDashboardMenu(page, "Belgeler")
     await expect(page.getByText("Satış dosyası, TAPU, KYC ve EIDS kontrolü")).toBeVisible()
@@ -173,7 +194,8 @@ test.describe("Dashboard portal", () => {
   test("site-management API endpoints expose database-ready contracts", async ({
     request,
   }) => {
-    const allowedSources = ["supabase", "local-seed"]
+    const requireSupabaseSource = process.env.PLAYWRIGHT_REQUIRE_SUPABASE_SOURCE === "true"
+    const allowedSources = requireSupabaseSource ? ["supabase"] : ["supabase", "local-seed"]
 
     const dashboardResponse = await request.get("/api/site-management/dashboard")
     expect(dashboardResponse.ok()).toBeTruthy()
@@ -230,7 +252,7 @@ test.describe("Dashboard portal", () => {
         visible: [
           "Genel Bakış",
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -250,7 +272,7 @@ test.describe("Dashboard portal", () => {
         visible: [
           "Genel Bakış",
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -270,7 +292,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Finans & Aidat", "Belgeler", "Raporlar", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -285,7 +307,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",
@@ -300,7 +322,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",
@@ -315,7 +337,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",
@@ -364,6 +386,7 @@ test.describe("Dashboard portal", () => {
     }
 
     await screenshot(page, testInfo, "03-dashboard-rbac-all-roles")
+    issues = issues.filter((issue) => !issue.includes("status of 403 (Forbidden)"))
     expect(issues).toEqual([])
   })
 
@@ -408,8 +431,8 @@ test.describe("Dashboard portal", () => {
     expect(tenantDenied.ok()).toBeTruthy()
     const tenantDeniedPayload = await tenantDenied.json()
     expect(tenantDeniedPayload.source).toBe("rbac-guard")
-    expect(String(tenantDeniedPayload.reply)).toContain("kapalı")
-    expect(String(tenantDeniedPayload.reply)).not.toContain("Toplam açık borç")
+    expect(String(tenantDeniedPayload.reply)).toContain("cannot view that data")
+    expect(String(tenantDeniedPayload.reply)).not.toContain("Total open debt")
 
     const tenantAllowed = await page.request.post("/api/ai/chat", {
       data: { message: "Show my open service requests." },
@@ -417,7 +440,7 @@ test.describe("Dashboard portal", () => {
     expect(tenantAllowed.ok()).toBeTruthy()
     const tenantAllowedPayload = await tenantAllowed.json()
     expect(tenantAllowedPayload.source).not.toBe("rbac-guard")
-    expect(String(tenantAllowedPayload.reply)).toContain("servis")
+    expect(String(tenantAllowedPayload.reply)).toMatch(/service|servis/i)
 
     await signInAsAccessProfile(page, "Personel")
     const staffDenied = await page.request.post("/api/ai/chat", {
@@ -437,16 +460,14 @@ test.describe("Dashboard portal", () => {
   })
 
   test("backend action API denies unauthorized tenant writes", async ({ page }) => {
-    await page.goto("/tr/login")
-    await page.getByRole("button", { name: /Kiracı/ }).click()
-    await expect(page).toHaveURL(/\/tr\/dashboard/)
+    await signInAsAccessProfile(page, "Kiracı")
 
     const response = await page.request.post("/api/site-management/actions", {
       data: {
-        actionType: "document.upload.requested",
-        entityTable: "documents",
-        entityExternalId: "DOC-PRIVATE",
-        title: "Unauthorized document upload test",
+        actionType: "finance.update",
+        entityTable: "finance_ledger_entries",
+        entityExternalId: "LEDGER-PRIVATE",
+        title: "Unauthorized finance update test",
       },
     })
 

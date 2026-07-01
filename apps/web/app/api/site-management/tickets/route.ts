@@ -4,11 +4,19 @@ import { hasAnyPermission } from "@/lib/rbac"
 import {
   getServiceTicketQueueData,
   logClientAction,
+  type ServiceTicketQueueData,
 } from "@/lib/site-management-repository"
 import {
   buildWorkflowMetadata,
   resolveWorkflowAction,
 } from "@/lib/action-catalog"
+import {
+  canAccessUnitForRole,
+  isClientRole,
+  normalizeUnitNo,
+  visibleServiceTicketsForRole,
+} from "@/lib/role-scoped-views"
+import type { Role } from "@/lib/rbac"
 
 export const dynamic = "force-dynamic"
 
@@ -36,6 +44,74 @@ function readPriority(value: unknown) {
     : "normal"
 }
 
+function scopeTicketQueueForRole(
+  data: ServiceTicketQueueData,
+  role: Role
+): ServiceTicketQueueData {
+  const tickets = visibleServiceTicketsForRole(role, data.tickets)
+  if (tickets.length === data.tickets.length) return data
+
+  const ticketIds = new Set(tickets.map((ticket) => ticket.id))
+  const orders = data.orders.filter((order) => ticketIds.has(order.ticketId))
+  const workforceTasks = data.workforceTasks.filter((task) => ticketIds.has(task.ticketId))
+  const openTickets = tickets.filter(
+    (ticket) => ticket.status !== "closed" && ticket.status !== "resolved"
+  )
+  const estimatedCostCents = tickets.reduce(
+    (sum, ticket) => sum + ticket.estimatedCostTry * 100,
+    0
+  )
+
+  return {
+    ...data,
+    tickets,
+    orders,
+    workforceTasks,
+    summary: {
+      ...data.summary,
+      totalTickets: tickets.length,
+      openTickets: openTickets.length,
+      overdueTickets: tickets.filter((ticket) => ticket.slaHoursRemaining < 0).length,
+      urgentTickets: tickets.filter((ticket) => ticket.priority === "urgent").length,
+      financeBlockedTickets: tickets.filter((ticket) => ticket.debtBlocked).length,
+      approvalRequiredTickets: tickets.filter((ticket) => ticket.debtBlocked).length,
+      mediaEvidenceCount: tickets.reduce((sum, ticket) => sum + ticket.mediaCount, 0),
+      estimatedCostCents,
+      averageSlaHoursRemaining:
+        tickets.length > 0
+          ? Math.round(
+              tickets.reduce((sum, ticket) => sum + ticket.slaHoursRemaining, 0) /
+                tickets.length
+            )
+          : 0,
+      serviceOrders: orders.length,
+      readyForDispatchOrders: orders.filter(
+        (order) =>
+          order.status === "assigned" ||
+          order.status === "task_created" ||
+          order.paymentDecision === "paid_or_debit_approved" ||
+          order.paymentDecision === "no_charge"
+      ).length,
+      blockedOrders: orders.filter(
+        (order) => order.status === "blocked" || order.debtCheckStatus === "blocked"
+      ).length,
+      openWorkforceTasks: workforceTasks.filter(
+        (task) => task.status !== "closed" && task.status !== "resolved"
+      ).length,
+      slaBreachTasks: workforceTasks.filter((task) => task.slaHoursRemaining < 0).length,
+      managerApprovalTasks: workforceTasks.filter((task) => task.managerApprovalRequired).length,
+      fieldTeams: new Set(workforceTasks.map((task) => task.team)).size,
+      averageCompletionReadiness:
+        workforceTasks.length > 0
+          ? Math.round(
+              workforceTasks.reduce((sum, task) => sum + task.completionReadiness, 0) /
+                workforceTasks.length
+            )
+          : 0,
+    },
+  }
+}
+
 export async function GET(request: NextRequest) {
   const profile = await getUserProfile()
   if (!profile) {
@@ -52,7 +128,7 @@ export async function GET(request: NextRequest) {
   try {
     const limit = readLimit(request.nextUrl.searchParams.get("limit"))
     const data = await getServiceTicketQueueData({ limit })
-    return NextResponse.json(data)
+    return NextResponse.json(scopeTicketQueueForRole(data, profile.role))
   } catch {
     return NextResponse.json(
       { error: "Service ticket data is unavailable." },
@@ -89,7 +165,7 @@ export async function POST(request: NextRequest) {
   const title = asString(payload.title)
   const description = asString(payload.description)
   const category = asString(payload.category) ?? "general"
-  const unitNo = asString(payload.unitNo)
+  const unitNo = normalizeUnitNo(asString(payload.unitNo))
   const priority = readPriority(payload.priority)
   const origin = payload.origin === "ai" ? "ai" : "api"
 
@@ -104,6 +180,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "Ticket description must be 1200 characters or fewer." },
       { status: 400 }
+    )
+  }
+
+  if (isClientRole(profile.role) && !unitNo) {
+    return NextResponse.json(
+      { error: "A unit number is required for owner and tenant service tickets." },
+      { status: 400 }
+    )
+  }
+
+  if (!canAccessUnitForRole(profile.role, unitNo)) {
+    return NextResponse.json(
+      { error: "Your role is not allowed to create service tickets for this unit." },
+      { status: 403 }
     )
   }
 

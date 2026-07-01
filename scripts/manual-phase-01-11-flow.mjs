@@ -440,7 +440,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
 
     await runStep("09-communications-actions", { role: "manager", pathname: "/dashboard/communications" }, [
       async (page) => {
-        await page.getByRole("heading", { name: /Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+        await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.getByRole("heading", { name: /Guest lifecycle experience/i }).waitFor({ state: "visible", timeout: 10_000 })
         await clickAndEnsureNoError(page, page.getByLabel(/Guest lifecycle mesajini hazirla/i), "guest lifecycle message")
         await clickAndEnsureNoError(page, page.getByLabel(/Toplu bildirim hazirla/i), "broadcast prepare")
@@ -454,7 +454,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
     await runStep("10-documents-packet-actions", { role: "manager", pathname: "/dashboard/documents" }, [
       async (page) => {
         await page.getByRole("heading", { name: /Document packet board/i }).waitFor({ state: "visible", timeout: 10_000 })
-        await page.getByRole("heading", { name: /Secure document upload/i }).waitFor({ state: "visible", timeout: 10_000 })
+        await page.getByRole("heading", { name: /Güvenli belge yükleme|Secure document upload/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.waitForTimeout(2500)
         const uploadFile = path.join(localTempDir, "manual-browser-upload.pdf")
         await fs.mkdir(localTempDir, { recursive: true })
@@ -462,7 +462,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
         await page.locator('input[name="file"]').setInputFiles(uploadFile)
         await page.locator('input[name="title"]').fill("Browser flow document upload")
         await page.locator('input[name="flatNumber"]').fill("A-001")
-        await clickAndEnsureNoError(page, page.getByRole("button", { name: /Upload for review/i }), "document upload")
+        await clickAndEnsureNoError(page, page.getByRole("button", { name: /İncelemeye yükle|Upload for review/i }), "document upload")
         await page.getByText(/saved for review/i).waitFor({ state: "visible", timeout: 10_000 })
         await clickAndEnsureNoError(page, page.getByLabel(/Belge paketini hazirla/i), "document packet prepare")
         await clickAndEnsureNoError(page, page.locator('button[aria-label*="Belgeyi"]').first(), "document view/download")
@@ -487,7 +487,7 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
 
     await runStep("12-role-scoped-mobile-tenant", { role: "tenant", pathname: "/dashboard/communications", viewport: mobile }, [
       async (page) => {
-        await page.getByRole("heading", { name: /Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+        await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
         await page.goto(apiUrl(baseUrl, localizedPath("/dashboard/finance")), { waitUntil: "domcontentloaded", timeout: 30_000 })
         await page.getByText(/kapal/i).first().waitFor({ state: "visible", timeout: 10_000 })
         return "tenant mobile communications renders and tenant finance is blocked"

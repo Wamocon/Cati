@@ -25,6 +25,25 @@ export function isClientRole(role: Role) {
   return role === "owner" || role === "tenant"
 }
 
+export function normalizeUnitNo(unitNo: string | null | undefined) {
+  return typeof unitNo === "string" && unitNo.trim()
+    ? unitNo.trim().toLocaleUpperCase("tr-TR")
+    : null
+}
+
+export function accessibleUnitsForRole(role: Role) {
+  if (role === "owner") return ownerUnits
+  if (role === "tenant") return tenantUnits
+  return null
+}
+
+export function canAccessUnitForRole(role: Role, unitNo: string | null | undefined) {
+  const unitScope = accessibleUnitsForRole(role)
+  if (!unitScope) return true
+  const normalizedUnitNo = normalizeUnitNo(unitNo)
+  return Boolean(normalizedUnitNo && unitScope.has(normalizedUnitNo))
+}
+
 export function isFieldRole(role: Role) {
   return role === "staff"
 }
