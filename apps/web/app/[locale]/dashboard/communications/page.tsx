@@ -1,144 +1,340 @@
 "use client"
 
-import { BellRing, Mail, MessageSquareText, Send, Smartphone, Users } from "lucide-react"
+import {
+  BellRing,
+  CalendarCheck2,
+  FileText,
+  HeartHandshake,
+  Languages,
+  Mail,
+  MessageCircleWarning,
+  MessageSquareText,
+  RefreshCcw,
+  Send,
+  Smartphone,
+  Users,
+} from "lucide-react"
+import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
-import { isClientRole, isFieldRole } from "@/lib/role-scoped-views"
-import type { Role } from "@/lib/rbac"
+import {
+  isClientRole,
+  isFieldRole,
+  visibleCommunicationThreadsForRole,
+  visibleGuestLifecycleEventsForRole,
+  visibleMessageTemplatesForRole,
+  visibleNotificationDeliveriesForRole,
+  visibleNotificationRulesForRole,
+} from "@/lib/role-scoped-views"
+import {
+  communicationThreads,
+  getCommunicationSummary,
+  guestLifecycleEvents,
+  messageTemplates,
+  notificationDeliveries,
+  notificationRules,
+  type CommunicationThreadRecord,
+  type GuestLifecycleEventRecord,
+  type MessageTemplateRecord,
+  type NotificationRuleRecord,
+} from "@/lib/site-management-data"
 
-const conversations = [
-  {
-    id: "COM-301",
-    channel: "WhatsApp",
-    audience: "Malik",
-    subject: "Aidat borcu ve erişim uyarısı",
-    owner: "Muhasebe",
-    status: "needs_reply",
-    priority: "high",
-    lastMessage: "Ödeme planı bugün onay bekliyor.",
+const communicationsCopy = {
+  tr: {
+    title: "İletişim Merkezi",
+    introClient: "Portal mesajları, bildirimler ve yönetim yanıtları yetkili hesap ve daire kapsamınıza göre filtrelenir.",
+    introField: "Saha ekipleri görev mesajlarını, SLA uyarılarını, rota yanıtlarını ve medya kanıtı takibini finans gürültüsü olmadan görür.",
+    introDefault: "Omnichannel gelen kutusu, bildirim kuralları, yeniden gönderim kuyruğu ve çok dilli şablonlar denetimli tek çalışma alanında yönetilir.",
+    openThreads: "Açık akışlar",
+    urgentFollowUp: "Acil takip",
+    activeRules: "Aktif kurallar",
+    fourLanguageTemplates: "4 dilli şablon",
+    lifecycleTitle: "Misafir yolculuğu deneyimi",
+    lifecycleDescription: "Teşekkür, varış öncesi, giriş günü, ilk gece konfor kontrolü, çıkış ve geri bildirim adımları izin, risk ve durdurma kurallarıyla sıralanır.",
+    journeySteps: "yolculuk adımı",
+    suppressed: "durduruldu",
+    antiSpamTitle: "Anti-spam korumaları",
+    antiSpamDescription: "Mesajlar sade kalır: her an için tek faydalı temas, tekrarlı konfor kontrolü yok, depozito, servis veya şikayet riski açıkken yorum isteği yok.",
+    feedbackScope: "geri bildirim veya telafi anı kapsamda",
+    edgeTitle: "Uç durum yönetimi",
+    edgeDescription: "İptal edilen rezervasyon, ödenmemiş kayıt, eksik izin, blokeli erişim ve depozito itirazı sistemi otomatik gönderimden inceleme veya sadece portal moduna alır.",
+    portalConversations: "Portal görüşmeleri",
+    omnichannelInbox: "Omnichannel gelen kutusu",
+    inboxDescription: "Her görüşme izin ve dil durumuyla birlikte daire, rezervasyon, finans kalemi, görev veya belge paketiyle ilişkilidir.",
+    actions: "Aksiyonlar",
+    lifecycleActions: "Yolculuk aksiyonları",
+    lifecycleMessagePrepare: "Yolculuk mesajı hazırla",
+    lifecycleMessageAria: "Misafir yolculuğu mesajını hazırla",
+    communicationActionsAria: "İletişim merkezi aksiyonları",
+    broadcastPrepare: "Toplu bildirim hazırla",
+    broadcastDescription: "{count} görünür mesaj akışı için taslak.",
+    broadcastTitle: "Toplu bildirim taslağı hazırlandı",
+    messageActions: "Mesaj aksiyonları",
+    replyDraft: "Cevap taslağı hazırla",
+    replyDraftAria: "Cevap taslağı hazırla",
+    ruleActions: "Kural aksiyonları",
+    ruleReview: "Bildirim kuralını incele",
+    ruleReviewAria: "Bildirim kuralını incele",
+    approvalGateOpen: "Onay kapısı açık.",
+    ruleStatusReview: "Kural durumu kontrol edilir.",
+    deliveryActions: "Teslim aksiyonları",
+    retryDelivery: "Teslimi yeniden dene",
+    retryDeliveryAria: "Bildirim teslimini yeniden dene",
+    deliveryRetryDescription: "{channel} için {attempts} deneme kaydı.",
+    templateActions: "Şablon aksiyonları",
+    templateApprovalPrepare: "Şablonu onaya hazırla",
+    templateApprovalAria: "Mesaj şablonunu onaya hazırla",
   },
-  {
-    id: "COM-302",
-    channel: "Portal",
-    audience: "Kiracı",
-    subject: "Klima servis randevusu",
-    owner: "Personel",
-    status: "in_progress",
-    priority: "medium",
-    lastMessage: "Teknisyen fotoğraf raporu ekleyecek.",
+  en: {
+    title: "Communication Center",
+    introClient: "Portal messages, notifications and management replies are filtered to your authorized account and unit scope.",
+    introField: "Field teams see task messages, SLA alerts, route replies and media-proof follow-up without finance-only noise.",
+    introDefault: "Omnichannel inbox, notification rules, delivery retry queue and multilingual templates are managed in one audited workspace.",
+    openThreads: "Open threads",
+    urgentFollowUp: "Urgent follow-up",
+    activeRules: "Active rules",
+    fourLanguageTemplates: "4-language templates",
+    lifecycleTitle: "Guest lifecycle experience",
+    lifecycleDescription: "Booking thank-you, pre-arrival, arrival, first-night comfort check, checkout and post-stay feedback are sequenced with consent, risk and suppression rules.",
+    journeySteps: "journey steps",
+    suppressed: "suppressed",
+    antiSpamTitle: "Anti-spam guardrails",
+    antiSpamDescription: "Messages stay subtle: one useful touch per moment, no repeated comfort check, no public-review ask while deposit, service or complaint risk is open.",
+    feedbackScope: "feedback or recovery moments in scope",
+    edgeTitle: "Edge-case handling",
+    edgeDescription: "Cancelled bookings, unpaid reservations, missing consent, blocked access and deposit disputes switch the system from automated sending to review or portal-only mode.",
+    portalConversations: "Portal conversations",
+    omnichannelInbox: "Omnichannel inbox",
+    inboxDescription: "Every conversation is tied to a unit, booking, finance item, task or document packet with consent and language state.",
+    actions: "Actions",
+    lifecycleActions: "Lifecycle actions",
+    lifecycleMessagePrepare: "Prepare lifecycle message",
+    lifecycleMessageAria: "Prepare guest lifecycle message",
+    communicationActionsAria: "Communication center actions",
+    broadcastPrepare: "Prepare broadcast",
+    broadcastDescription: "Draft for {count} visible message streams.",
+    broadcastTitle: "Broadcast draft prepared",
+    messageActions: "Message actions",
+    replyDraft: "Prepare reply draft",
+    replyDraftAria: "Prepare reply draft",
+    ruleActions: "Rule actions",
+    ruleReview: "Review notification rule",
+    ruleReviewAria: "Review notification rule",
+    approvalGateOpen: "Approval gate is open.",
+    ruleStatusReview: "Rule status will be checked.",
+    deliveryActions: "Delivery actions",
+    retryDelivery: "Retry delivery",
+    retryDeliveryAria: "Retry notification delivery",
+    deliveryRetryDescription: "{attempts} delivery attempts for {channel}.",
+    templateActions: "Template actions",
+    templateApprovalPrepare: "Prepare template for approval",
+    templateApprovalAria: "Prepare message template for approval",
   },
-  {
-    id: "COM-303",
-    channel: "Team",
-    audience: "Operasyon",
-    subject: "Bugünkü check-out ve depozito kontrolü",
-    owner: "Sorumlu",
-    status: "ready",
-    priority: "high",
-    lastMessage: "Temizlik, hasar ve iade kontrolü aynı akışta.",
+  de: {
+    title: "Kommunikationszentrale",
+    introClient: "Portalnachrichten, Benachrichtigungen und Verwaltungsantworten werden auf Ihr autorisiertes Konto und Ihre Wohnung begrenzt.",
+    introField: "Feldteams sehen Aufgabenmeldungen, SLA-Warnungen, Routenantworten und Mediennachweise ohne reine Finanzmeldungen.",
+    introDefault: "Omnichannel-Posteingang, Benachrichtigungsregeln, Wiederholungsqueue und mehrsprachige Vorlagen werden in einem auditierten Arbeitsbereich verwaltet.",
+    openThreads: "Offene Verläufe",
+    urgentFollowUp: "Dringende Nachverfolgung",
+    activeRules: "Aktive Regeln",
+    fourLanguageTemplates: "4-sprachige Vorlagen",
+    lifecycleTitle: "Gäste-Journey",
+    lifecycleDescription: "Danke-Nachricht, Voranreise, Ankunft, erste Komfortprüfung, Checkout und Feedback werden mit Einwilligung, Risiko und Sperrregeln sequenziert.",
+    journeySteps: "Journey-Schritte",
+    suppressed: "unterdrückt",
+    antiSpamTitle: "Anti-Spam-Leitplanken",
+    antiSpamDescription: "Nachrichten bleiben zurückhaltend: ein nützlicher Kontakt pro Moment, keine wiederholte Komfortprüfung und keine Bewertungsbitte bei offenem Kautions-, Service- oder Beschwerderisiko.",
+    feedbackScope: "Feedback- oder Recovery-Momente im Umfang",
+    edgeTitle: "Sonderfallsteuerung",
+    edgeDescription: "Stornierte Buchungen, unbezahlte Reservierungen, fehlende Einwilligung, gesperrter Zugang und Kautionsstreit wechseln von Automatik zu Prüfung oder Portal-only.",
+    portalConversations: "Portalgespräche",
+    omnichannelInbox: "Omnichannel-Posteingang",
+    inboxDescription: "Jedes Gespräch ist mit Wohnung, Buchung, Finanzposten, Aufgabe oder Dokumentenpaket inklusive Einwilligung und Sprache verbunden.",
+    actions: "Aktionen",
+    lifecycleActions: "Journey-Aktionen",
+    lifecycleMessagePrepare: "Journey-Nachricht vorbereiten",
+    lifecycleMessageAria: "Gäste-Journey-Nachricht vorbereiten",
+    communicationActionsAria: "Aktionen der Kommunikationszentrale",
+    broadcastPrepare: "Broadcast vorbereiten",
+    broadcastDescription: "Entwurf für {count} sichtbare Nachrichtenverläufe.",
+    broadcastTitle: "Broadcast-Entwurf vorbereitet",
+    messageActions: "Nachrichtenaktionen",
+    replyDraft: "Antwortentwurf vorbereiten",
+    replyDraftAria: "Antwortentwurf vorbereiten",
+    ruleActions: "Regelaktionen",
+    ruleReview: "Benachrichtigungsregel prüfen",
+    ruleReviewAria: "Benachrichtigungsregel prüfen",
+    approvalGateOpen: "Freigabeschritt ist aktiv.",
+    ruleStatusReview: "Regelstatus wird geprüft.",
+    deliveryActions: "Zustellaktionen",
+    retryDelivery: "Zustellung erneut versuchen",
+    retryDeliveryAria: "Benachrichtigungszustellung erneut versuchen",
+    deliveryRetryDescription: "{attempts} Zustellversuche für {channel}.",
+    templateActions: "Vorlagenaktionen",
+    templateApprovalPrepare: "Vorlage zur Freigabe vorbereiten",
+    templateApprovalAria: "Nachrichtenvorlage zur Freigabe vorbereiten",
   },
-  {
-    id: "COM-304",
-    channel: "Email",
-    audience: "Malik",
-    subject: "Aylık finans raporu hazır",
-    owner: "Muhasebe",
-    status: "ready",
-    priority: "low",
-    lastMessage: "Rapor sadece ilgili malik için paylaşılacak.",
+  ru: {
+    title: "Центр коммуникаций",
+    introClient: "Сообщения портала, уведомления и ответы управления фильтруются по вашему аккаунту и доступной квартире.",
+    introField: "Полевые команды видят сообщения по задачам, SLA-уведомления, ответы по маршрутам и контроль медиа-доказательств без финансового шума.",
+    introDefault: "Омниканальный входящий поток, правила уведомлений, очередь повторной доставки и многоязычные шаблоны управляются в одном аудируемом рабочем пространстве.",
+    openThreads: "Открытые диалоги",
+    urgentFollowUp: "Срочное сопровождение",
+    activeRules: "Активные правила",
+    fourLanguageTemplates: "Шаблоны на 4 языках",
+    lifecycleTitle: "Путь гостя",
+    lifecycleDescription: "Благодарность за бронирование, подготовка к приезду, день заезда, первая проверка комфорта, выезд и обратная связь идут с учетом согласий, рисков и правил остановки.",
+    journeySteps: "шагов пути",
+    suppressed: "остановлено",
+    antiSpamTitle: "Антиспам-правила",
+    antiSpamDescription: "Сообщения остаются ненавязчивыми: одно полезное касание в нужный момент, без повторных проверок комфорта и без просьбы об отзыве при открытом риске депозита, сервиса или жалобы.",
+    feedbackScope: "моментов обратной связи или восстановления",
+    edgeTitle: "Обработка исключений",
+    edgeDescription: "Отмененные бронирования, неоплаченные резервы, отсутствие согласия, заблокированный доступ и споры по депозиту переводят отправку в режим проверки или только портала.",
+    portalConversations: "Диалоги портала",
+    omnichannelInbox: "Омниканальный входящий поток",
+    inboxDescription: "Каждый диалог связан с квартирой, бронированием, финансовой позицией, задачей или пакетом документов, включая согласие и язык.",
+    actions: "Действия",
+    lifecycleActions: "Действия по пути гостя",
+    lifecycleMessagePrepare: "Подготовить сообщение",
+    lifecycleMessageAria: "Подготовить сообщение по пути гостя",
+    communicationActionsAria: "Действия центра коммуникаций",
+    broadcastPrepare: "Подготовить рассылку",
+    broadcastDescription: "Черновик для {count} видимых диалогов.",
+    broadcastTitle: "Черновик рассылки подготовлен",
+    messageActions: "Действия сообщения",
+    replyDraft: "Подготовить черновик ответа",
+    replyDraftAria: "Подготовить черновик ответа",
+    ruleActions: "Действия правила",
+    ruleReview: "Проверить правило уведомления",
+    ruleReviewAria: "Проверить правило уведомления",
+    approvalGateOpen: "Шаг одобрения активен.",
+    ruleStatusReview: "Статус правила будет проверен.",
+    deliveryActions: "Действия доставки",
+    retryDelivery: "Повторить доставку",
+    retryDeliveryAria: "Повторить доставку уведомления",
+    deliveryRetryDescription: "{attempts} попыток доставки для {channel}.",
+    templateActions: "Действия шаблона",
+    templateApprovalPrepare: "Подготовить шаблон к одобрению",
+    templateApprovalAria: "Подготовить шаблон сообщения к одобрению",
   },
-]
+} as const
 
-const notificationRules = [
-  { id: "NTF-01", trigger: "Borç > 0", target: "Malik/Kiracı", channel: "WhatsApp + E-posta", owner: "Muhasebe" },
-  { id: "NTF-02", trigger: "SLA < 4 saat", target: "Personel + Sorumlu", channel: "Push + Team", owner: "Sorumlu" },
-  { id: "NTF-03", trigger: "Check-in bugün", target: "Kiracı/Misafir", channel: "Push + SMS", owner: "Operasyon" },
-  { id: "NTF-04", trigger: "Belge eksik", target: "Malik", channel: "Portal + E-posta", owner: "Yönetim" },
-]
-
-type Conversation = (typeof conversations)[number]
-type NotificationRule = (typeof notificationRules)[number]
-
-function visibleConversationsForRole(role: Role) {
-  if (role === "owner") {
-    return conversations.filter((item) => item.audience === "Malik")
-  }
-
-  if (role === "tenant") {
-    return conversations.filter((item) => item.audience === "Kiracı")
-  }
-
-  if (role === "staff") {
-    return conversations.filter((item) => item.audience === "Operasyon" || item.owner === "Personel")
-  }
-
-  if (role === "accountant") {
-    return conversations.filter((item) => item.audience === "Malik" || item.owner === "Muhasebe")
-  }
-
-  return conversations
+function resolveCommunicationsLocale(locale: string): keyof typeof communicationsCopy {
+  return locale in communicationsCopy ? (locale as keyof typeof communicationsCopy) : "tr"
 }
 
-function visibleNotificationRulesForRole(role: Role) {
-  if (role === "owner") {
-    return notificationRules.filter((item) => item.target.includes("Malik"))
-  }
-
-  if (role === "tenant") {
-    return notificationRules.filter((item) => item.target.includes("Kiracı"))
-  }
-
-  if (role === "staff") {
-    return notificationRules.filter((item) => item.target.includes("Personel") || item.owner === "Operasyon")
-  }
-
-  if (role === "accountant") {
-    return notificationRules.filter((item) => item.owner === "Muhasebe" || item.target.includes("Malik"))
-  }
-
-  return notificationRules
+function formatCopy(template: string, values: Record<string, string | number>) {
+  return Object.entries(values).reduce(
+    (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
+    template
+  )
 }
 
-function statusVariant(status: string) {
-  if (status === "needs_reply") return "danger"
+function statusVariant(status: CommunicationThreadRecord["status"]) {
+  if (status === "needs_reply" || status === "blocked") return "danger"
   if (status === "in_progress") return "warning"
   return "success"
 }
 
-function statusLabel(status: string) {
-  if (status === "needs_reply") return "Cevap gerekli"
-  if (status === "in_progress") return "İşlemde"
-  return "Hazır"
+function statusLabel(status: CommunicationThreadRecord["status"]) {
+  if (status === "needs_reply") return "Reply needed"
+  if (status === "in_progress") return "In progress"
+  if (status === "blocked") return "Blocked"
+  return "Ready"
 }
 
-function priorityVariant(priority: string) {
-  if (priority === "high") return "danger"
+function priorityVariant(priority: CommunicationThreadRecord["priority"]) {
+  if (priority === "urgent" || priority === "high") return "danger"
   if (priority === "medium") return "warning"
   return "neutral"
 }
 
+function ruleVariant(status: NotificationRuleRecord["status"]) {
+  if (status === "active") return "success"
+  if (status === "review") return "warning"
+  return "neutral"
+}
+
+function deliveryVariant(status: string) {
+  if (status === "delivered" || status === "sent") return "success"
+  if (status === "queued" || status === "manual_review") return "warning"
+  return "danger"
+}
+
+function templateVariant(status: MessageTemplateRecord["approvalStatus"]) {
+  if (status === "approved") return "success"
+  if (status === "needs_review") return "warning"
+  return "neutral"
+}
+
+function lifecycleVariant(status: GuestLifecycleEventRecord["status"]) {
+  if (status === "sent" || status === "ready") return "success"
+  if (status === "queued" || status === "needs_review") return "warning"
+  return "neutral"
+}
+
+function lifecycleStageLabel(stage: GuestLifecycleEventRecord["stage"]) {
+  if (stage === "booking_confirmed") return "Booking"
+  if (stage === "pre_arrival") return "Pre-arrival"
+  if (stage === "arrival_day") return "Arrival"
+  if (stage === "in_stay") return "In-stay"
+  if (stage === "checkout") return "Checkout"
+  return "Feedback"
+}
+
+function lifecycleToneVariant(tone: GuestLifecycleEventRecord["tone"]) {
+  if (tone === "risk") return "danger"
+  if (tone === "feedback" || tone === "service") return "info"
+  if (tone === "warm") return "success"
+  return "neutral"
+}
+
+function shortDate(date: string) {
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(date))
+}
+
 export default function CommunicationsPage() {
+  const copy = communicationsCopy[resolveCommunicationsLocale(useLocale())]
   const user = useUser()
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
-  const visibleConversations = visibleConversationsForRole(user.role)
-  const visibleRules = visibleNotificationRulesForRole(user.role)
-  const urgent = visibleConversations.filter((item) => item.priority === "high").length
-  const ready = visibleConversations.filter((item) => item.status === "ready").length
+  const visibleThreads = visibleCommunicationThreadsForRole(user.role, communicationThreads)
+  const visibleRules = visibleNotificationRulesForRole(user.role, notificationRules)
+  const visibleDeliveries = visibleNotificationDeliveriesForRole(user.role, notificationDeliveries)
+  const visibleTemplates = visibleMessageTemplatesForRole(user.role, messageTemplates)
+  const visibleLifecycle = visibleGuestLifecycleEventsForRole(user.role, guestLifecycleEvents)
+  const summary = getCommunicationSummary()
+  const urgent = visibleThreads.filter((item) => item.priority === "high" || item.priority === "urgent").length
+  const consentIssues = visibleThreads.filter((item) => item.consentStatus !== "ok").length
+  const deliveryIssues = visibleDeliveries.filter(
+    (item) => item.status === "failed" || item.status === "manual_review"
+  ).length
+  const feedbackOrRecovery = visibleLifecycle.filter(
+    (item) => item.stage === "post_stay_feedback" || item.sentimentSignal === "recovery"
+  ).length
+  const suppressedLifecycle = visibleLifecycle.filter((item) => item.status === "suppressed").length
 
   const intro = clientView
-    ? "Portal mesajları, bildirimler ve yönetim yanıtları yalnızca yetkili kaydınız kapsamında gösterilir."
+    ? copy.introClient
     : fieldView
-      ? "Saha ekibi için görev mesajları, SLA bildirimleri ve operasyon yanıtları sadeleştirilmiş görünümde tutulur."
-      : "Yönetim sohbeti, ekip içi koordinasyon, bildirim kuralları ve müşteri cevap takibi tek sayfada yönetilir."
+      ? copy.introField
+      : copy.introDefault
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">İletişim Merkezi</h1>
+        <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{intro}</p>
       </div>
 
@@ -147,8 +343,8 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <MessageSquareText className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Açık konuşma</p>
-              <p className="text-2xl font-black">{visibleConversations.length}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.openThreads}</p>
+              <p className="text-2xl font-black">{visibleThreads.length}</p>
             </div>
           </div>
         </Card3D>
@@ -156,7 +352,7 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <BellRing className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Acil takip</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.urgentFollowUp}</p>
               <p className="text-2xl font-black">{urgent}</p>
             </div>
           </div>
@@ -165,20 +361,133 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <Send className="h-8 w-8 text-teal-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Hazır mesaj</p>
-              <p className="text-2xl font-black">{ready}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.activeRules}</p>
+              <p className="text-2xl font-black">{visibleRules.filter((rule) => rule.status === "active").length}</p>
             </div>
           </div>
         </Card3D>
         <Card3D glow={false}>
           <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-amber-600" />
+            <Languages className="h-8 w-8 text-amber-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Rol kuralı</p>
-              <p className="text-2xl font-black">{visibleRules.length}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.fourLanguageTemplates}</p>
+              <p className="text-2xl font-black">{visibleTemplates.filter((template) => template.languages.length >= 4).length}</p>
             </div>
           </div>
         </Card3D>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <Card3D glow={false}>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="h-5 w-5 text-primary" />
+                <h2 className="text-sm font-bold text-card-foreground">{copy.lifecycleTitle}</h2>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {copy.lifecycleDescription}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge variant="info">{visibleLifecycle.length} {copy.journeySteps}</StatusBadge>
+              <StatusBadge variant={suppressedLifecycle > 0 ? "warning" : "success"}>
+                {suppressedLifecycle} {copy.suppressed}
+              </StatusBadge>
+            </div>
+          </div>
+          <DataTable
+            data={visibleLifecycle}
+            searchValue={(item) => `${item.id} ${item.bookingId} ${item.flatNumber} ${item.guestName} ${item.stage} ${item.title} ${item.body} ${item.edgeCase}`}
+            pageSize={8}
+            columns={[
+              { key: "id", header: "Step", sortable: true, render: (item) => item.id },
+              { key: "booking", header: "Booking", sortable: true, render: (item) => item.bookingId },
+              { key: "guest", header: clientView ? "Record" : "Guest", render: (item) => item.guestName },
+              {
+                key: "stage",
+                header: "Moment",
+                sortable: true,
+                render: (item) => lifecycleStageLabel(item.stage),
+              },
+              { key: "channel", header: "Channel", sortable: true, render: (item) => item.channel },
+              {
+                key: "tone",
+                header: "Tone",
+                render: (item) => <StatusBadge variant={lifecycleToneVariant(item.tone)}>{item.tone}</StatusBadge>,
+              },
+              {
+                key: "status",
+                header: "Status",
+                render: (item) => <StatusBadge variant={lifecycleVariant(item.status)}>{item.status}</StatusBadge>,
+              },
+              { key: "timing", header: "Timing", render: (item) => item.timing },
+              { key: "text", header: "Text", render: (item) => item.body },
+              ...(!clientView
+                ? [
+                    {
+                      key: "action",
+                      header: "Action",
+                      sticky: "right" as const,
+                      render: (item: GuestLifecycleEventRecord) => (
+                        <DashboardActionMenu
+                          compact
+                          label={copy.lifecycleActions}
+                          ariaLabel={`${item.id} ${copy.lifecycleActions}`}
+                          items={[
+                            {
+                              key: "message",
+                              label: copy.lifecycleMessagePrepare,
+                              description: `${item.channel} / ${item.status}`,
+                              icon: <CalendarCheck2 />,
+                              actionType: "guest_lifecycle.message.prepare",
+                              ariaLabel: copy.lifecycleMessageAria,
+                              entityTable: "guest_lifecycle_events",
+                              entityExternalId: item.id,
+                              title: item.title,
+                              metadata: {
+                                bookingId: item.bookingId,
+                                stage: item.stage,
+                                channel: item.channel,
+                                status: item.status,
+                              },
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Card3D>
+
+        <div className="space-y-4">
+          <Card3D glow={false}>
+            <div className="flex items-start gap-3">
+              <MessageCircleWarning className="mt-0.5 h-5 w-5 text-amber-600" />
+              <div>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.antiSpamTitle}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy.antiSpamDescription}
+                </p>
+                <p className="mt-3 text-xl font-black text-foreground">{feedbackOrRecovery}</p>
+                <p className="text-xs text-muted-foreground">{copy.feedbackScope}</p>
+              </div>
+            </div>
+          </Card3D>
+          <Card3D glow={false}>
+            <div className="flex items-start gap-3">
+              <CalendarCheck2 className="mt-0.5 h-5 w-5 text-primary" />
+              <div>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.edgeTitle}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {copy.edgeDescription}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
@@ -186,72 +495,100 @@ export default function CommunicationsPage() {
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-bold text-card-foreground">
-                {clientView ? "Portal konuşmaları" : "Müşteri ve ekip konuşmaları"}
+                {clientView ? copy.portalConversations : copy.omnichannelInbox}
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {clientView
-                  ? "Kanal, konu, son mesaj ve durum bilgisi yetki kapsamınıza göre filtrelenir."
-                  : "Her konuşmada kanal, sorumlu ekip, öncelik ve son aksiyon görünür."}
+                {copy.inboxDescription}
               </p>
             </div>
             {!clientView && !fieldView && (
-              <DashboardActionButton
-                actionType="communication.broadcast.prepare"
-                ariaLabel="Toplu bildirim hazırla"
-                entityTable="communications"
-                entityExternalId="broadcast"
-                title="Toplu bildirim taslağı hazırlandı"
-                successLabel="Taslak hazır"
-                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted"
-              >
-                <Send className="h-4 w-4" />
-                Toplu bildirim
-              </DashboardActionButton>
+              <DashboardActionMenu
+                label={copy.actions}
+                ariaLabel={copy.communicationActionsAria}
+                items={[
+                  {
+                    key: "broadcast",
+                    label: copy.broadcastPrepare,
+                    description: formatCopy(copy.broadcastDescription, { count: visibleThreads.length }),
+                    icon: <Send />,
+                    actionType: "communication.broadcast.prepare",
+                    ariaLabel: copy.broadcastPrepare,
+                    entityTable: "communications",
+                    entityExternalId: "broadcast",
+                    title: copy.broadcastTitle,
+                    metadata: { visibleThreads: visibleThreads.length, role: user.role },
+                  },
+                ]}
+              />
             )}
           </div>
 
           <DataTable
-            data={visibleConversations}
-            searchValue={(item) => `${item.id} ${item.channel} ${item.audience} ${item.subject} ${item.owner}`}
+            data={visibleThreads}
+            searchValue={(item) => `${item.id} ${item.channel} ${item.audience} ${item.subject} ${item.owner} ${item.relatedEntity} ${item.nextAction}`}
             pageSize={10}
             columns={[
-              { key: "id", header: "Kayıt", sortable: true, render: (item) => item.id },
-              { key: "channel", header: "Kanal", sortable: true, render: (item) => item.channel },
+              { key: "id", header: "Thread", sortable: true, render: (item) => item.id },
+              { key: "channel", header: "Channel", sortable: true, render: (item) => item.channel },
               ...(!clientView
                 ? [
                     {
                       key: "audience",
-                      header: "Kitle",
-                      render: (item: Conversation) => item.audience,
+                      header: "Audience",
+                      render: (item: CommunicationThreadRecord) => item.audience,
                     },
                   ]
                 : []),
-              { key: "subject", header: "Konu", render: (item) => item.subject },
-              ...(!clientView
-                ? [
-                    {
-                      key: "owner",
-                      header: "Sorumlu",
-                      render: (item: Conversation) => item.owner,
-                    },
-                  ]
-                : []),
+              { key: "subject", header: "Subject", render: (item) => item.subject },
               {
                 key: "priority",
-                header: "Öncelik",
+                header: "Priority",
                 render: (item) => (
                   <StatusBadge variant={priorityVariant(item.priority)}>{item.priority}</StatusBadge>
                 ),
               },
               {
                 key: "status",
-                header: "Durum",
+                header: "Status",
                 render: (item) => (
-                  <StatusBadge variant={statusVariant(item.status)}>
-                    {statusLabel(item.status)}
-                  </StatusBadge>
+                  <StatusBadge variant={statusVariant(item.status)}>{statusLabel(item.status)}</StatusBadge>
                 ),
               },
+              { key: "language", header: "Lang", sortable: true, render: (item) => item.language.toUpperCase() },
+              { key: "next", header: "Next action", render: (item) => item.nextAction },
+              ...(!clientView
+                ? [
+                    {
+                      key: "action",
+                      header: "Action",
+                      sticky: "right" as const,
+                      render: (item: CommunicationThreadRecord) => (
+                        <DashboardActionMenu
+                          compact
+                          label={copy.messageActions}
+                          ariaLabel={`${item.id} ${copy.messageActions}`}
+                          items={[
+                            {
+                              key: "reply",
+                              label: copy.replyDraft,
+                              description: `${item.channel} / ${item.language.toUpperCase()}`,
+                              icon: <MessageSquareText />,
+                              actionType: "communication.reply.prepare",
+                              ariaLabel: copy.replyDraftAria,
+                              entityTable: "communications",
+                              entityExternalId: item.id,
+                              title: item.nextAction,
+                              metadata: {
+                                relatedEntity: item.relatedEntity,
+                                channel: item.channel,
+                              },
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
             ]}
           />
         </Card3D>
@@ -261,12 +598,12 @@ export default function CommunicationsPage() {
             <div className="flex items-start gap-3">
               <Smartphone className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Bildirim mantığı</h2>
+                <h2 className="text-sm font-bold text-card-foreground">Sağlayıcıya hazır simülasyon</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {clientView
-                    ? "Bildirimler yanlış kişiye gitmeyecek şekilde daire ve rol kapsamıyla sınırlandırılır."
-                    : "Push, SMS, WhatsApp ve e-posta aynı olaydan tetiklenebilir; hassas finans ve erişim kararları insan onayı olmadan uygulanmaz."}
+                  SMS, e-posta, push ve portal mesajları şimdilik demo kuyruklarını kullanır; sözleşme ve API anahtarlarından sonra sağlayıcı adaptörleri açılır.
                 </p>
+                <p className="mt-3 text-xl font-black text-foreground">{summary.deliveryFailures}</p>
+                <p className="text-xs text-muted-foreground">yeniden deneme veya manuel inceleme isteyen teslim öğesi</p>
               </div>
             </div>
           </Card3D>
@@ -274,40 +611,240 @@ export default function CommunicationsPage() {
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">
-                  {clientView ? "Yanıt takibi" : "Negatif durumlar"}
-                </h2>
+                <h2 className="text-sm font-bold text-card-foreground">Onay ve yedek kanal</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {clientView
-                    ? "Yönetim yanıtı, servis randevusu ve belge talebi aynı konuşma geçmişinde kalır."
-                    : "Yanlış alıcı, kapalı kanal, borç ihtilafı, dil uyumsuzluğu ve tekrar eden mesajlar audit kuyruğuna düşer."}
+                  Yanlış alıcı, eksik onay, abonelikten çıkış, finans itirazı ve başarısız sağlayıcı olayları yeniden göndermeden önce görünür kalır.
                 </p>
+                <p className="mt-3 text-xl font-black text-foreground">{consentIssues}</p>
+                <p className="text-xs text-muted-foreground">mevcut rol kapsamında onay sorunu</p>
               </div>
             </div>
           </Card3D>
         </div>
       </div>
 
-      <DataTable
-        data={visibleRules}
-        searchValue={(item) => `${item.id} ${item.trigger} ${item.target} ${item.channel} ${item.owner}`}
-        pageSize={10}
-        columns={[
-          { key: "id", header: "Kural", sortable: true, render: (item) => item.id },
-          { key: "trigger", header: "Tetikleyici", render: (item) => item.trigger },
-          { key: "target", header: "Hedef", render: (item) => item.target },
-          { key: "channel", header: "Kanal", render: (item) => item.channel },
-          ...(!clientView
-            ? [
-                {
-                  key: "owner",
-                  header: "Sahip",
-                  render: (item: NotificationRule) => item.owner,
-                },
-              ]
-            : []),
-        ]}
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card3D glow={false}>
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <BellRing className="h-5 w-5 text-primary" />
+                <h2 className="text-sm font-bold text-card-foreground">Bildirim kuralları</h2>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Kurallar üretim gönderiminden önce hedef önizleme, dil modu, onay kapısı ve yedek kanalı içerir.
+              </p>
+            </div>
+            <StatusBadge variant={deliveryIssues > 0 ? "warning" : "success"}>{deliveryIssues} tekrar</StatusBadge>
+          </div>
+          <DataTable
+            data={visibleRules}
+            searchValue={(item) => `${item.id} ${item.trigger} ${item.target} ${item.channel} ${item.owner} ${item.failover}`}
+            pageSize={8}
+            columns={[
+              { key: "id", header: "Kural", sortable: true, render: (item) => item.id },
+              { key: "trigger", header: "Tetikleyici", render: (item) => item.trigger },
+              { key: "target", header: "Hedef", render: (item) => item.target },
+              { key: "channel", header: "Kanal", render: (item) => item.channel },
+              {
+                key: "status",
+                header: "Durum",
+                render: (item) => <StatusBadge variant={ruleVariant(item.status)}>{item.status}</StatusBadge>,
+              },
+              ...(!clientView
+                ? [
+                    {
+                      key: "action",
+                      header: "Aksiyon",
+                      sticky: "right" as const,
+                      render: (item: NotificationRuleRecord) => (
+                        <DashboardActionMenu
+                          compact
+                          label={copy.ruleActions}
+                          ariaLabel={`${item.id} ${copy.ruleActions}`}
+                          items={[
+                            {
+                              key: "review",
+                              label: copy.ruleReview,
+                              description: item.approvalRequired
+                                ? copy.approvalGateOpen
+                                : copy.ruleStatusReview,
+                              icon: <BellRing />,
+                              actionType: "notification.rule.review",
+                              ariaLabel: copy.ruleReviewAria,
+                              entityTable: "notifications",
+                              entityExternalId: item.id,
+                              title: item.trigger,
+                              metadata: {
+                                owner: item.owner,
+                                approvalRequired: item.approvalRequired,
+                              },
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Card3D>
+
+        <Card3D glow={false}>
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <RefreshCcw className="h-5 w-5 text-primary" />
+                <h2 className="text-sm font-bold text-card-foreground">Teslim ve yeniden deneme kuyruğu</h2>
+              </div>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Canlı sağlayıcı bağlanmadan önce teslim denemeleri, sağlayıcı modu ve tekrar zamanı izlenir.
+              </p>
+            </div>
+            <StatusBadge variant="info">{visibleDeliveries.length} teslim</StatusBadge>
+          </div>
+          <DataTable
+            data={visibleDeliveries}
+            searchValue={(item) => `${item.id} ${item.ruleId} ${item.recipient} ${item.channel} ${item.status} ${item.providerMode}`}
+            pageSize={8}
+            columns={[
+              { key: "id", header: "Teslim", sortable: true, render: (item) => item.id },
+              { key: "recipient", header: "Alıcı", render: (item) => item.recipient },
+              { key: "channel", header: "Kanal", sortable: true, render: (item) => item.channel },
+              {
+                key: "status",
+                header: "Durum",
+                render: (item) => <StatusBadge variant={deliveryVariant(item.status)}>{item.status}</StatusBadge>,
+              },
+              { key: "mode", header: "Mod", render: (item) => item.providerMode },
+              { key: "retry", header: "Tekrar", render: (item) => shortDate(item.nextRetryAt) },
+              ...(!clientView
+                ? [
+                    {
+                      key: "action",
+                      header: "Aksiyon",
+                      sticky: "right" as const,
+                      render: (item: (typeof visibleDeliveries)[number]) => (
+                        <DashboardActionMenu
+                          compact
+                          label={copy.deliveryActions}
+                          ariaLabel={`${item.id} ${copy.deliveryActions}`}
+                          items={[
+                            {
+                              key: "retry",
+                              label: copy.retryDelivery,
+                              description: formatCopy(copy.deliveryRetryDescription, {
+                                attempts: item.attempts,
+                                channel: item.channel,
+                              }),
+                              icon: <RefreshCcw />,
+                              actionType: "notification.delivery.retry",
+                              ariaLabel: copy.retryDeliveryAria,
+                              entityTable: "notification_deliveries",
+                              entityExternalId: item.id,
+                              title: item.status,
+                              metadata: {
+                                ruleId: item.ruleId,
+                                attempts: item.attempts,
+                              },
+                            },
+                          ]}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        </Card3D>
+      </div>
+
+      <Card3D glow={false}>
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-bold text-card-foreground">Multilingual template library</h2>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              TR, EN, DE and RU templates are variable-based, approval-aware and ready for provider adapters.
+            </p>
+          </div>
+          <StatusBadge variant={summary.pendingApprovals > 0 ? "warning" : "success"}>
+            {summary.pendingApprovals} approval
+          </StatusBadge>
+        </div>
+        <DataTable
+          data={visibleTemplates}
+          searchValue={(item) => `${item.id} ${item.title} ${item.useCase} ${item.owner} ${item.preview} ${item.variables.join(" ")}`}
+          pageSize={8}
+          columns={[
+            { key: "id", header: "Template", sortable: true, render: (item) => item.id },
+            { key: "title", header: "Title", render: (item) => item.title },
+            { key: "useCase", header: "Use case", sortable: true, render: (item) => item.useCase },
+            { key: "channel", header: "Channel", render: (item) => item.channel },
+            { key: "languages", header: "Languages", render: (item) => item.languages.map((language) => language.toUpperCase()).join(", ") },
+            {
+              key: "status",
+              header: "Approval",
+              render: (item) => (
+                <StatusBadge variant={templateVariant(item.approvalStatus)}>{item.approvalStatus}</StatusBadge>
+              ),
+            },
+            { key: "preview", header: "Preview", render: (item) => item.preview },
+            ...(!clientView && !fieldView
+              ? [
+                  {
+                    key: "action",
+                    header: "Action",
+                    sticky: "right" as const,
+                    render: (item: MessageTemplateRecord) => (
+                      <DashboardActionMenu
+                        compact
+                        label={copy.templateActions}
+                        ariaLabel={`${item.id} ${copy.templateActions}`}
+                        items={[
+                          {
+                            key: "approval",
+                            label: copy.templateApprovalPrepare,
+                            description: item.languages
+                              .map((language) => language.toUpperCase())
+                              .join(", "),
+                            icon: <Languages />,
+                            actionType: "message_template.approve.prepare",
+                            ariaLabel: copy.templateApprovalAria,
+                            entityTable: "message_templates",
+                            entityExternalId: item.id,
+                            title: item.title,
+                            metadata: {
+                              useCase: item.useCase,
+                              languages: item.languages,
+                            },
+                          },
+                        ]}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      </Card3D>
+
+      <Card3D glow={false}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Users className="mt-0.5 h-5 w-5 text-primary" />
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">Role-safe communication quality gate</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Current demo contract tracks {summary.openThreads} threads, {summary.activeRules} active rules and {summary.multilingualTemplates} multilingual templates.
+              </p>
+            </div>
+          </div>
+          <StatusBadge variant="success">Phase 11 ready-for-UAT</StatusBadge>
+        </div>
+      </Card3D>
     </div>
   )
 }

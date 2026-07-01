@@ -1,8 +1,16 @@
 import { createClient, createServiceRoleClient } from "@/lib/supabase/server"
 import { isAccessProfileEnabled, isSupabaseConfigured } from "@/lib/auth"
+import { normalizeSearchText } from "@/lib/search"
 import {
+  accessHandoffs,
+  aiImageWorkflows,
+  aiPremiumRecommendations,
+  bookingReadinessRecords,
   bookings,
   cashFlow,
+  communicationThreads,
+  depositSettlements,
+  documentPackets,
   documentVault,
   flats,
   getBlockOverview,
@@ -13,16 +21,24 @@ import {
   getImportSummary,
   getPaymentPlanSummary,
   getSummary,
+  guestLifecycleEvents,
   importBatches,
   importFindings,
+  integrationProviders,
+  messageTemplates,
+  mobileWebCapabilities,
+  notificationDeliveries,
+  offlineSyncQueue,
   paymentPlans,
   roleCoverage,
+  roleOnboardingPlans,
   residents,
   serviceCatalogItems,
   serviceOrders,
   serviceTickets,
   siteActivities,
   staffMembers,
+  turnoverTasks,
   workforceTasks,
   type BookingRecord,
   type DebtAccount,
@@ -110,7 +126,7 @@ export interface ClientActionInput {
 export interface ClientActionResult {
   id: string
   source: DataSource
-  status: "logged" | "locally-logged"
+  status: "logged" | "locally-logged" | "approved" | "rejected" | "completed" | "failed"
 }
 
 export interface Phase4Unit {
@@ -2011,19 +2027,61 @@ function buildSupabaseRestrictionQueue(units: Array<Record<string, unknown>>, li
     })
 }
 
+function normalizeOperationalSearch(value: string) {
+  return normalizeSearchText(value)
+}
+
+function operationalSearchText(record: OperationalSearchResult) {
+  return normalizeOperationalSearch(
+    `${record.title} ${record.summary ?? ""} ${record.entityExternalId ?? ""} ${JSON.stringify(record.metadata)}`
+  )
+}
+
+function operationalSearchRank(record: OperationalSearchResult, normalizedQuery: string) {
+  const externalId = normalizeOperationalSearch(record.entityExternalId ?? "")
+  const title = normalizeOperationalSearch(record.title)
+  if (externalId === normalizedQuery || title === normalizedQuery) return 0
+  if (externalId.startsWith(normalizedQuery) || title.startsWith(normalizedQuery)) return 0.25
+  if (operationalSearchText(record).includes(normalizedQuery)) return record.rank
+  return 99
+}
+
 function localSeedSearch(query: string, limit: number): OperationalSearchResult[] {
-  const normalized = query.trim().toLowerCase()
+  const normalized = normalizeOperationalSearch(query.trim())
   if (!normalized) return []
 
   const records: OperationalSearchResult[] = [
     ...flats.map((flat) => ({
       entityTable: "units",
       entityId: null,
-      entityExternalId: flat.id,
-      title: `${flat.number} unit`,
-      summary: `${flat.ownerName} ${flat.residentName} ${flat.status} ${flat.paymentStatus}`,
+      entityExternalId: flat.displayNumber || flat.number || flat.id,
+      title: `${flat.displayNumber} ${flat.number} unit`,
+      summary: `${flat.block} ${flat.floorLabel} ${flat.type} ${flat.areaText ?? ""} ${flat.ownerName} ${flat.residentName} ${flat.status} ${flat.saleStatus} ${flat.accessStatus} ${flat.paymentStatus} ${flat.priceSource ?? ""} ${flat.sourceNotes ?? ""}`,
       rank: 1,
-      metadata: { unitNo: flat.number },
+      metadata: {
+        unitId: flat.id,
+        unitNo: flat.number,
+        displayNumber: flat.displayNumber,
+        block: flat.block,
+      },
+    })),
+    ...paymentPlans.map((plan) => ({
+      entityTable: "payment_plans",
+      entityId: null,
+      entityExternalId: plan.id,
+      title: plan.dealName,
+      summary: `${plan.buyerName} ${plan.unitType} ${plan.status} ${plan.approvalBlocker}`,
+      rank: 1,
+      metadata: { buyerName: plan.buyerName, unitType: plan.unitType },
+    })),
+    ...serviceCatalogItems.map((service) => ({
+      entityTable: "service_catalog",
+      entityId: null,
+      entityExternalId: service.code,
+      title: service.name,
+      summary: `${service.id} ${service.category} ${service.team} ${service.serviceLevel} ${service.debtPolicy}`,
+      rank: 1,
+      metadata: { serviceId: service.id, team: service.team },
     })),
     ...serviceTickets.map((ticket) => ({
       entityTable: "service_tickets",
@@ -2034,6 +2092,69 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       rank: 1,
       metadata: { ticketNo: ticket.id },
     })),
+    ...serviceOrders.map((order) => ({
+      entityTable: "service_orders",
+      entityId: null,
+      entityExternalId: order.orderNo,
+      title: `${order.orderNo} ${order.catalogItemName}`,
+      summary: `${order.ticketId} ${order.flatNumber} ${order.requester} ${order.status} ${order.nextAction}`,
+      rank: 1,
+      metadata: { ticketId: order.ticketId, flatNumber: order.flatNumber },
+    })),
+    ...workforceTasks.map((task) => ({
+      entityTable: "workforce_tasks",
+      entityId: null,
+      entityExternalId: task.id,
+      title: `${task.id} ${task.title}`,
+      summary: `${task.ticketId} ${task.flatNumber} ${task.team} ${task.assignee} ${task.status} ${task.fieldNote}`,
+      rank: 1,
+      metadata: { ticketId: task.ticketId, flatNumber: task.flatNumber },
+    })),
+    ...bookings.map((booking) => ({
+      entityTable: "reservations",
+      entityId: null,
+      entityExternalId: booking.id,
+      title: `${booking.id} ${booking.guestName}`,
+      summary: `${booking.flatNumber} ${booking.channel} ${booking.status} ${booking.depositStatus} ${booking.accessCodeStatus} ${booking.cleaningStatus}`,
+      rank: 1,
+      metadata: { flatNumber: booking.flatNumber, channel: booking.channel },
+    })),
+    ...bookingReadinessRecords.map((record) => ({
+      entityTable: "booking_readiness",
+      entityId: null,
+      entityExternalId: record.id,
+      title: `${record.id} ${record.guestName}`,
+      summary: `${record.bookingId} ${record.flatNumber} ${record.riskLevel} ${record.blocker} ${record.nextAction}`,
+      rank: 1,
+      metadata: { bookingId: record.bookingId, flatNumber: record.flatNumber },
+    })),
+    ...turnoverTasks.map((task) => ({
+      entityTable: "turnover_tasks",
+      entityId: null,
+      entityExternalId: task.id,
+      title: `${task.id} ${task.title}`,
+      summary: `${task.bookingId} ${task.flatNumber} ${task.owner} ${task.status} ${task.priority}`,
+      rank: 1,
+      metadata: { bookingId: task.bookingId, flatNumber: task.flatNumber },
+    })),
+    ...accessHandoffs.map((handoff) => ({
+      entityTable: "access_handoffs",
+      entityId: null,
+      entityExternalId: handoff.id,
+      title: `${handoff.id} ${handoff.credential}`,
+      summary: `${handoff.bookingId} ${handoff.flatNumber} ${handoff.status} ${handoff.provider} ${handoff.blocker}`,
+      rank: 1,
+      metadata: { bookingId: handoff.bookingId, flatNumber: handoff.flatNumber },
+    })),
+    ...depositSettlements.map((settlement) => ({
+      entityTable: "deposit_settlements",
+      entityId: null,
+      entityExternalId: settlement.id,
+      title: `${settlement.id} ${settlement.guestName}`,
+      summary: `${settlement.bookingId} ${settlement.flatNumber} ${settlement.status} ${settlement.nextAction}`,
+      rank: 1,
+      metadata: { bookingId: settlement.bookingId, flatNumber: settlement.flatNumber },
+    })),
     ...residents.map((resident) => ({
       entityTable: "residents",
       entityId: null,
@@ -2042,6 +2163,96 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       summary: `${resident.flatNumber} ${resident.phone} ${resident.email} ${resident.language}`,
       rank: 1,
       metadata: { flatNumber: resident.flatNumber },
+    })),
+    ...communicationThreads.map((thread) => ({
+      entityTable: "communication_threads",
+      entityId: null,
+      entityExternalId: thread.id,
+      title: `${thread.id} ${thread.subject}`,
+      summary: `${thread.channel} ${thread.audience} ${thread.status} ${thread.priority} ${thread.relatedEntity} ${thread.nextAction}`,
+      rank: 1,
+      metadata: { channel: thread.channel, relatedEntity: thread.relatedEntity },
+    })),
+    ...notificationDeliveries.map((delivery) => ({
+      entityTable: "notification_deliveries",
+      entityId: null,
+      entityExternalId: delivery.id,
+      title: `${delivery.id} ${delivery.recipient}`,
+      summary: `${delivery.ruleId} ${delivery.channel} ${delivery.status} ${delivery.relatedEntity} ${delivery.providerMode}`,
+      rank: 1,
+      metadata: { relatedEntity: delivery.relatedEntity, channel: delivery.channel },
+    })),
+    ...guestLifecycleEvents.map((event) => ({
+      entityTable: "guest_lifecycle_events",
+      entityId: null,
+      entityExternalId: event.id,
+      title: `${event.id} ${event.title}`,
+      summary: `${event.bookingId} ${event.flatNumber} ${event.guestName} ${event.stage} ${event.channel} ${event.status} ${event.edgeCase} ${event.body}`,
+      rank: 1,
+      metadata: { bookingId: event.bookingId, flatNumber: event.flatNumber, stage: event.stage },
+    })),
+    ...messageTemplates.map((template) => ({
+      entityTable: "message_templates",
+      entityId: null,
+      entityExternalId: template.id,
+      title: template.title,
+      summary: `${template.useCase} ${template.channel} ${template.owner} ${template.approvalStatus} ${template.languages.join(" ")} ${template.preview}`,
+      rank: 1,
+      metadata: { templateId: template.id, useCase: template.useCase },
+    })),
+    ...roleOnboardingPlans.map((plan) => ({
+      entityTable: "role_onboarding_plans",
+      entityId: null,
+      entityExternalId: `ONBOARD-${plan.role.toUpperCase()}`,
+      title: plan.title,
+      summary: `${plan.audience} ${plan.inviteMode} ${plan.identityOptions.join(" ")} ${plan.requiredChecks.join(" ")} ${plan.firstRunSteps.join(" ")}`,
+      rank: 1,
+      metadata: { role: plan.role, defaultChannel: plan.defaultChannel },
+    })),
+    ...mobileWebCapabilities.map((item) => ({
+      entityTable: "mobile_web_capabilities",
+      entityId: null,
+      entityExternalId: item.id,
+      title: `${item.id} ${item.title}`,
+      summary: `${item.audience} ${item.surface} ${item.status} ${item.priority} ${item.description} ${item.evidence}`,
+      rank: 1,
+      metadata: { surface: item.surface, status: item.status },
+    })),
+    ...offlineSyncQueue.map((item) => ({
+      entityTable: "offline_sync_jobs",
+      entityId: null,
+      entityExternalId: item.id,
+      title: `${item.id} ${item.action}`,
+      summary: `${item.role} ${item.module} ${item.status} ${item.device} ${item.retryPolicy} ${item.dataScope} ${item.guardrail}`,
+      rank: 1,
+      metadata: { role: item.role, module: item.module, status: item.status },
+    })),
+    ...integrationProviders.map((item) => ({
+      entityTable: "integration_providers",
+      entityId: null,
+      entityExternalId: item.id,
+      title: `${item.id} ${item.provider}`,
+      summary: `${item.category} ${item.mode} ${item.status} ${item.idealNow} ${item.scalePath} ${item.requiredFromClient} ${item.fallback}`,
+      rank: 1,
+      metadata: { category: item.category, status: item.status, riskLevel: item.riskLevel },
+    })),
+    ...aiPremiumRecommendations.map((item) => ({
+      entityTable: "ai_recommendations",
+      entityId: null,
+      entityExternalId: item.id,
+      title: `${item.id} ${item.title}`,
+      summary: `${item.mode} ${item.audience} ${item.status} confidence ${item.confidence} ${item.languageSupport.join(" ")} ${item.recommendation} ${item.humanApproval}`,
+      rank: 1,
+      metadata: { mode: item.mode, audience: item.audience, status: item.status },
+    })),
+    ...aiImageWorkflows.map((item) => ({
+      entityTable: "ai_image_workflows",
+      entityId: null,
+      entityExternalId: item.id,
+      title: `${item.id} ${item.title}`,
+      summary: `${item.source} ${item.status} ${item.aiUse} ${item.guardrail} ${item.output}`,
+      rank: 1,
+      metadata: { source: item.source, status: item.status },
     })),
     ...documentVault.map((document) => ({
       entityTable: "documents",
@@ -2052,14 +2263,24 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       rank: 1,
       metadata: { documentId: document.id },
     })),
+    ...documentPackets.map((packet) => ({
+      entityTable: "document_packets",
+      entityId: null,
+      entityExternalId: packet.id,
+      title: `${packet.id} ${packet.title}`,
+      summary: `${packet.audience} ${packet.relatedEntity} ${packet.status} ${packet.signatureStatus} ${packet.nextAction}`,
+      rank: 1,
+      metadata: { relatedEntity: packet.relatedEntity, audience: packet.audience },
+    })),
   ]
 
   return records
-    .filter((record) =>
-      `${record.title} ${record.summary ?? ""} ${record.entityExternalId ?? ""}`
-        .toLowerCase()
-        .includes(normalized)
-    )
+    .filter((record) => operationalSearchText(record).includes(normalized))
+    .map((record) => ({
+      ...record,
+      rank: operationalSearchRank(record, normalized),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title, "tr", { numeric: true }))
     .slice(0, Math.min(Math.max(limit, 1), 50))
 }
 
@@ -2070,12 +2291,13 @@ function localSeedPhase4SiteData(
 ): Phase4SiteData {
   const summary = getSummary()
   const importSummary = getImportSummary()
-  const normalized = query.trim().toLowerCase()
+  const normalized = normalizeSearchText(query)
   const filteredFlats = flats
     .filter((flat) => {
       if (!normalized) return true
-      return `${flat.number} ${flat.displayNumber} ${flat.block} ${flat.ownerName} ${flat.residentName} ${flat.paymentStatus} ${flat.status} ${flat.saleStatus} ${flat.priceSource ?? ""} ${flat.areaText ?? ""}`
-        .toLowerCase()
+      return normalizeSearchText(
+        `${flat.number} ${flat.displayNumber} ${flat.block} ${flat.floorLabel} ${flat.type} ${flat.ownerName} ${flat.residentName} ${flat.paymentStatus} ${flat.status} ${flat.saleStatus} ${flat.accessStatus} ${flat.priceSource ?? ""} ${flat.areaText ?? ""} ${flat.sourceNotes ?? ""}`
+      )
         .includes(normalized)
     })
     .slice(0, Math.min(Math.max(limit, 1), 1000))
@@ -2454,7 +2676,7 @@ export async function getFinanceLedgerData({
         .limit(1000),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, created_at")
+        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
         .eq("entity_table", "finance_ledger_entries")
         .order("created_at", { ascending: false })
         .limit(5),
@@ -2544,7 +2766,7 @@ export async function getPeopleDirectoryData({
         .order("users_count", { ascending: false }),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, created_at")
+        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
         .in("entity_table", ["profiles", "staff_members", "role_coverage", "residents", "unit_residents"])
         .order("created_at", { ascending: false })
         .limit(5),
@@ -2744,7 +2966,7 @@ export async function getServiceTicketQueueData({
         .limit(safeLimit),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, created_at")
+        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
         .in("entity_table", ["service_tickets", "service_catalog", "service_orders", "workforce_tasks", "media_reports"])
         .order("created_at", { ascending: false })
         .limit(5),
@@ -2830,6 +3052,49 @@ export async function logClientAction(
         id: `local-action-${Date.now()}`,
         source: "local-seed",
         status: "locally-logged",
+      }
+    }
+    throw error
+  }
+}
+
+export async function updateClientActionRequestStatus({
+  id,
+  status,
+}: {
+  id: string
+  status: "approved" | "rejected" | "completed" | "failed"
+}): Promise<ClientActionResult> {
+  if (!isSupabaseConfigured() || !isUuid(id)) {
+    return {
+      id,
+      source: "local-seed",
+      status,
+    }
+  }
+
+  try {
+    const supabase = await createDataClient()
+    const { data, error } = await supabase
+      .from("client_action_requests")
+      .update({ status })
+      .eq("id", id)
+      .select("id")
+      .single()
+
+    if (error) throw error
+
+    return {
+      id: typeof data?.id === "string" ? data.id : id,
+      source: "supabase",
+      status,
+    }
+  } catch (error) {
+    if (canUseLocalSeedFallback()) {
+      return {
+        id,
+        source: "local-seed",
+        status,
       }
     }
     throw error

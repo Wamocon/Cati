@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, type ReactNode } from "react"
+import { useMemo, useRef, useState } from "react"
 import {
   Building2,
   CheckCircle2,
@@ -11,15 +11,18 @@ import {
   Home,
   KeyRound,
   LockKeyhole,
+  MoreHorizontal,
   RefreshCw,
   UploadCloud,
   WalletCards,
   Wrench,
+  type LucideIcon,
 } from "lucide-react"
 import { useLocale } from "next-intl"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
 import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
 import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
@@ -51,6 +54,53 @@ import {
 } from "@/lib/unit-matrix-copy"
 
 type UnitSignalFilter = "all" | "occupied" | "vacant" | "restricted" | "debt" | "service"
+type UnitActionKey = "detail" | "debt" | "service"
+
+type UnitActionOption = {
+  actionType: string
+  description: string
+  icon: LucideIcon
+  key: UnitActionKey
+  label: string
+  toneClassName: string
+}
+
+type ActiveUnitAction = {
+  description: string
+  flatId: string
+  flatNumber: string
+  key: UnitActionKey
+  label: string
+}
+
+function getUnitActionOptions(copy: UnitMatrixCopy): UnitActionOption[] {
+  return [
+    {
+      actionType: "unit.detail.view",
+      description: copy.actions.detailHint,
+      icon: Eye,
+      key: "detail",
+      label: copy.actions.detailOpen,
+      toneClassName: "text-foreground",
+    },
+    {
+      actionType: "unit.debt.view",
+      description: copy.actions.debtHint,
+      icon: WalletCards,
+      key: "debt",
+      label: copy.actions.debtOpen,
+      toneClassName: "text-amber-700 dark:text-amber-300",
+    },
+    {
+      actionType: "unit.service.view",
+      description: copy.actions.serviceHint,
+      icon: Wrench,
+      key: "service",
+      label: copy.actions.serviceHistory,
+      toneClassName: "text-primary",
+    },
+  ]
+}
 
 function flatVariant(status: FlatStatus) {
   if (status === "occupied") return "success"
@@ -113,41 +163,57 @@ function matchesSignalFilter(flat: FlatRecord, filter: UnitSignalFilter) {
   return flat.serviceOpen > 0
 }
 
-function UnitActionButton({
-  actionType,
-  children,
+function UnitActionsMenu({
   className,
+  compact = false,
+  copy,
   flat,
-  successLabel,
-  title,
+  onActionStart,
 }: {
-  actionType: string
-  children: ReactNode
   className?: string
+  compact?: boolean
+  copy: UnitMatrixCopy
   flat: FlatRecord
-  successLabel?: string
-  title: string
+  onActionStart?: (flat: FlatRecord, action: UnitActionOption) => void
 }) {
+  const options = getUnitActionOptions(copy)
+  const metadata = {
+    accessStatus: flat.accessStatus,
+    balanceTry: flat.balanceTry,
+    block: flat.block,
+    flatNumber: flat.number,
+    paymentStatus: flat.paymentStatus,
+    serviceOpen: flat.serviceOpen,
+  }
+
   return (
-    <DashboardActionButton
-      actionType={actionType}
-      ariaLabel={title}
-      className={className}
-      entityExternalId={flat.id}
-      entityTable="units"
-      metadata={{
-        accessStatus: flat.accessStatus,
-        balanceTry: flat.balanceTry,
-        block: flat.block,
-        flatNumber: flat.number,
-        paymentStatus: flat.paymentStatus,
-        serviceOpen: flat.serviceOpen,
+    <DashboardActionMenu
+      compact={compact}
+      label={copy.actions.menu}
+      ariaLabel={`${flat.number} ${copy.actions.menu}`}
+      buttonClassName={cn(
+        compact ? "bg-background text-primary" : "w-full min-h-11 text-sm",
+        className
+      )}
+      items={options.map((option) => {
+        const Icon = option.icon
+        return {
+          key: option.key,
+          actionType: option.actionType,
+          label: option.label,
+          description: option.description,
+          icon: <Icon className={option.toneClassName} />,
+          entityTable: "units",
+          entityExternalId: flat.id,
+          title: `${flat.number} ${option.label}`,
+          metadata,
+        }
+      })}
+      onActionStart={(item) => {
+        const action = options.find((option) => option.key === item.key)
+        if (action) onActionStart?.(flat, action)
       }}
-      successLabel={successLabel}
-      title={title}
-    >
-      {children}
-    </DashboardActionButton>
+    />
   )
 }
 
@@ -160,6 +226,8 @@ export default function ListingsPage() {
   const [selectedBlock, setSelectedBlock] = useState("all")
   const [selectedSignal, setSelectedSignal] = useState<UnitSignalFilter>("all")
   const [selectedFlatId, setSelectedFlatId] = useState(flats[0]?.id ?? "")
+  const [activeUnitAction, setActiveUnitAction] = useState<ActiveUnitAction | null>(null)
+  const selectedUnitRef = useRef<HTMLDivElement>(null)
 
   const filteredFlats = useMemo(
     () =>
@@ -172,7 +240,23 @@ export default function ListingsPage() {
 
   const matrixPreview = filteredFlats.slice(0, 192)
   const selectedFlat = filteredFlats.find((flat) => flat.id === selectedFlatId) ?? filteredFlats[0] ?? null
+  const selectedAction =
+    selectedFlat && activeUnitAction?.flatId === selectedFlat.id ? activeUnitAction : null
   const filtersActive = selectedBlock !== "all" || selectedSignal !== "all"
+
+  function handleUnitAction(flat: FlatRecord, action: UnitActionOption) {
+    setSelectedFlatId(flat.id)
+    setActiveUnitAction({
+      description: action.description,
+      flatId: flat.id,
+      flatNumber: flat.number,
+      key: action.key,
+      label: action.label,
+    })
+    window.requestAnimationFrame(() => {
+      selectedUnitRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    })
+  }
 
   const signalCards = [
     {
@@ -415,8 +499,16 @@ export default function ListingsPage() {
           </div>
         )}
         {selectedFlat && (
-          <div className="mt-5 grid gap-4 border-t border-border/70 pt-5 lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="rounded-xl border border-border/70 bg-muted/25 p-4">
+          <div
+            ref={selectedUnitRef}
+            className="mt-5 grid scroll-mt-28 gap-4 border-t border-border/70 pt-5 lg:grid-cols-[1.2fr_0.8fr]"
+          >
+            <div
+              className={cn(
+                "rounded-xl border border-border/70 bg-muted/25 p-4",
+                selectedAction?.key === "detail" && "ring-2 ring-primary/35"
+              )}
+            >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{copy.matrix.selected}</p>
@@ -451,53 +543,53 @@ export default function ListingsPage() {
                     {selectedFlat.priceSource ? selectedFlat.priceSource.replace("6. PRICE LIST 💶\\", "") : selectedFlat.sourceNotes ?? copy.summary.missing}
                   </p>
                 </div>
-                <div className="rounded-lg bg-background/70 p-3">
+                <div
+                  className={cn(
+                    "rounded-lg bg-background/70 p-3",
+                    selectedAction?.key === "debt" && "ring-2 ring-amber-500/45"
+                  )}
+                >
                   <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.currentDebt}</p>
                   <p className="mt-1 text-sm font-semibold text-foreground">{formatTry(selectedFlat.balanceTry)}</p>
                 </div>
-                <div className="rounded-lg bg-background/70 p-3">
+                <div
+                  className={cn(
+                    "rounded-lg bg-background/70 p-3",
+                    selectedAction?.key === "service" && "ring-2 ring-primary/40"
+                  )}
+                >
                   <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.openService}</p>
                   <p className="mt-1 text-sm font-semibold text-foreground">{selectedFlat.serviceOpen}</p>
                 </div>
               </div>
             </div>
             <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-              <h3 className="text-sm font-black text-foreground">{copy.actions.title}</h3>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                {copy.actions.auditDescription}
-              </p>
-              <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-                <UnitActionButton
-                  actionType="unit.detail.view"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground hover:bg-muted"
-                  flat={selectedFlat}
-                  successLabel={copy.actions.detailOpen}
-                  title={`${selectedFlat.number} ${copy.actions.detailOpen}`}
-                >
-                  <Eye className="h-4 w-4" />
-                  {copy.actions.detailOpen}
-                </UnitActionButton>
-                <UnitActionButton
-                  actionType="unit.debt.view"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm font-bold text-amber-700 hover:bg-amber-500/15 dark:text-amber-300"
-                  flat={selectedFlat}
-                  successLabel={copy.actions.debtOpen}
-                  title={`${selectedFlat.number} ${copy.actions.debtOpen}`}
-                >
-                  <WalletCards className="h-4 w-4" />
-                  {copy.actions.debtOpen}
-                </UnitActionButton>
-                <UnitActionButton
-                  actionType="unit.service.view"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/15"
-                  flat={selectedFlat}
-                  successLabel={copy.actions.serviceHistory}
-                  title={`${selectedFlat.number} ${copy.actions.serviceHistory}`}
-                >
-                  <Wrench className="h-4 w-4" />
-                  {copy.actions.serviceHistory}
-                </UnitActionButton>
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-black text-foreground">{copy.actions.title}</h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    {copy.actions.auditDescription}
+                  </p>
+                </div>
+                <MoreHorizontal className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
               </div>
+              <div className="mt-4 rounded-lg border border-border/70 bg-muted/30 p-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground">
+                  {copy.actions.currentContext}
+                </p>
+                <p className="mt-1 text-sm font-black text-foreground">
+                  {selectedFlat.number} · {selectedAction?.label ?? copy.actions.detailOpen}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {selectedAction?.description ?? copy.actions.menuHint}
+                </p>
+              </div>
+              <UnitActionsMenu
+                className="mt-4"
+                copy={copy}
+                flat={selectedFlat}
+                onActionStart={handleUnitAction}
+              />
             </div>
           </div>
         )}
@@ -733,30 +825,14 @@ export default function ListingsPage() {
             key: "actions",
             header: copy.actions.actionColumn,
             sticky: "right",
-            cellClassName: "min-w-[210px]",
+            cellClassName: "min-w-[128px]",
             render: (flat) => (
-              <div className="flex flex-wrap gap-2">
-                <UnitActionButton
-                  actionType="unit.detail.view"
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-muted"
-                  flat={flat}
-                  successLabel={copy.actions.detailOpen}
-                  title={`${flat.number} ${copy.actions.detailOpen}`}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  {copy.actions.open}
-                </UnitActionButton>
-                <UnitActionButton
-                  actionType="unit.service.view"
-                  className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/15"
-                  flat={flat}
-                  successLabel={copy.actions.serviceHistory}
-                  title={`${flat.number} ${copy.actions.serviceHistory}`}
-                >
-                  <Wrench className="h-3.5 w-3.5" />
-                  {copy.actions.service}
-                </UnitActionButton>
-              </div>
+              <UnitActionsMenu
+                compact
+                copy={copy}
+                flat={flat}
+                onActionStart={handleUnitAction}
+              />
             ),
           },
         ]}

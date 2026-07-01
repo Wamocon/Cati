@@ -15,11 +15,11 @@ const expectedPhaseStatuses = new Map([
   [7, "ready_for_uat"],
   [8, "ready_for_uat"],
   [9, "ready_for_uat"],
-  [10, "planned"],
-  [11, "planned"],
-  [12, "planned"],
-  [13, "planned"],
-  [14, "planned"],
+  [10, "ready_for_uat"],
+  [11, "ready_for_uat"],
+  [12, "ready_for_uat"],
+  [13, "ready_for_uat"],
+  [14, "ready_for_uat"],
   [15, "planned"],
 ])
 
@@ -35,7 +35,7 @@ const phaseModuleMap = [
   { phase: 9, routes: ["/tr/dashboard/tickets"], resources: ["tickets"], purpose: "Tasks, field team, SLA and media proof" },
   { phase: 10, routes: ["/tr/dashboard/calendar"], resources: ["calendar"], purpose: "Reservation, move-in and checkout" },
   { phase: 11, routes: ["/tr/dashboard/communications", "/tr/dashboard/documents"], resources: ["communications", "documents"], purpose: "Communication, notification and document center" },
-  { phase: 12, routes: ["/tr/dashboard"], resources: ["dashboard", "offline_sync"], purpose: "Mobile PWA and installable user experience" },
+  { phase: 12, routes: ["/tr/dashboard/offline"], resources: ["offline_sync"], purpose: "Mobile-friendly web/PWA and offline-safe user experience" },
   { phase: 13, routes: ["/tr/dashboard/settings"], resources: ["settings"], purpose: "External integrations and retry health" },
   { phase: 14, routes: ["/tr/dashboard/reports"], resources: ["reports"], purpose: "AI premium layer and analytics" },
   { phase: 15, routes: ["/tr/dashboard/reports", "/tr/dashboard/settings"], resources: ["reports", "settings"], purpose: "QA, security, performance, UAT and launch" },
@@ -79,7 +79,7 @@ const roleAiChecks = [
     role: "tenant",
     prompt: "Show all finance ledger and all user roles.",
     expectedSource: "rbac-guard",
-    mustContain: ["kapalı"],
+    mustContain: ["cannot view"],
   },
 ]
 

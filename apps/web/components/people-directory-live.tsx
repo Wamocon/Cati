@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useLocale } from "next-intl"
 import {
   Download,
   Languages,
@@ -9,9 +10,14 @@ import {
   Users,
 } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
+import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+  toIntlLocale,
+} from "@/lib/operational-copy"
 import { hasPermission } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -39,8 +45,8 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 0 }).format(value)
+function formatNumber(value: number, locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value)
 }
 
 function statusVariant(status: string) {
@@ -66,13 +72,13 @@ function staffRoleLabel(role: string) {
   return "Personel"
 }
 
-function staffLine(member: PeopleDirectoryStaffMember) {
-  return [member.team, member.phone ?? "telefon yok", member.language.toUpperCase()].join(" / ")
+function staffLine(member: PeopleDirectoryStaffMember, t: (value: string) => string) {
+  return [member.team, member.phone ?? t("telefon yok"), member.language.toUpperCase()].join(" / ")
 }
 
-function residentLine(resident: PeopleDirectoryResident) {
+function residentLine(resident: PeopleDirectoryResident, t: (value: string) => string) {
   return [
-    resident.unitNo ?? "Daire bağlantısı yok",
+    resident.unitNo ?? t("Daire bağlantısı yok"),
     resident.preferredChannel,
     resident.preferredLanguage.toUpperCase(),
   ].join(" / ")
@@ -80,6 +86,9 @@ function residentLine(resident: PeopleDirectoryResident) {
 
 export function PeopleDirectoryLive() {
   const user = useUser()
+  const locale = resolveDashboardLocale(useLocale())
+  const intlLocale = toIntlLocale(locale)
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const [data, setData] = useState<PeopleDirectoryData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const canExportDirectory = hasPermission(user.role, "users", "export")
@@ -145,15 +154,14 @@ export function PeopleDirectoryLive() {
     () => data?.residents.slice(0, 5) ?? [],
     [data]
   )
-  const lastUpdated = useMemo(() => {
-    if (!data?.generatedAt) return null
-    return new Intl.DateTimeFormat("tr-TR", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(data.generatedAt))
-  }, [data])
+  const lastUpdated = data?.generatedAt
+    ? new Intl.DateTimeFormat(intlLocale, {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(data.generatedAt))
+    : null
   const failedQualityChecks = useMemo(
     () => data?.quality.checks.filter((check) => check.status === "failed") ?? [],
     [data]
@@ -166,16 +174,15 @@ export function PeopleDirectoryLive() {
           <div className="flex flex-wrap items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
             <h2 className="text-base font-black text-card-foreground">
-              Kişi ve rol dizini
+              {t("Kişi ve rol dizini")}
             </h2>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Personel, malik, kiracı, misafir ve rol kapsamı tek dizinden yönetilir.
-            Ekip yükü, erişim kapsamı ve riskli kayıtlar aynı ekranda takip edilir.
+            {t("Personel, malik, kiracı, misafir ve rol kapsamı tek dizinden yönetilir. Ekip yükü, erişim kapsamı ve riskli kayıtlar aynı ekranda takip edilir.")}
           </p>
           {lastUpdated && (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              Son güncelleme: {lastUpdated}
+              {t("Son güncelleme")}: {lastUpdated}
             </p>
           )}
         </div>
@@ -188,34 +195,40 @@ export function PeopleDirectoryLive() {
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
           >
             <RefreshCw className={cn("h-4 w-4", requestState === "loading" && "animate-spin")} />
-            Kişi verisini yenile
+            {t("Kişi verisini yenile")}
           </button>
           {canExportDirectory && (
-          <DashboardActionButton
-            actionType="users.directory.export"
-            ariaLabel="Kişi dizini dışa aktarım isteği oluştur"
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
-            entityTable="profiles"
-            metadata={{ source: data?.source ?? "unknown", phase: 5 }}
-            successLabel="Dışa aktarım isteği alındı"
-            title="Kişi dizini dışa aktarım isteği"
-          >
-            <Download className="h-4 w-4" />
-            Dışa aktar
-          </DashboardActionButton>
+            <DashboardActionMenu
+              label="Aksiyonlar"
+              ariaLabel="Kisi dizini aksiyonlari"
+              buttonClassName="border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              items={[
+                {
+                  key: "export",
+                  label: "Disa aktar",
+                  description: "Kisi dizini dis aktarim istegi olusturur.",
+                  icon: <Download />,
+                  actionType: "users.directory.export",
+                  ariaLabel: "Kisi dizini disa aktarim istegi olustur",
+                  entityTable: "profiles",
+                  title: "Kisi dizini disa aktarim istegi",
+                  metadata: { source: data?.source ?? "unknown", phase: 5 },
+                },
+              ]}
+            />
           )}
         </div>
       </div>
 
       {requestState === "error" && (
         <div role="alert" className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-          Kişi dizini şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.
+          {t("Kişi dizini şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.")}
         </div>
       )}
 
       {failedQualityChecks.length > 0 && (
         <div role="alert" className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          Kişi dizini kalite kontrolü dikkat istiyor: {failedQualityChecks.map((check) => check.label).join(", ")}
+          {t("Kişi dizini kalite kontrolü dikkat istiyor")}: {failedQualityChecks.map((check) => t(check.label)).join(", ")}
         </div>
       )}
 
@@ -227,9 +240,9 @@ export function PeopleDirectoryLive() {
           ["Riskli kayıt", data?.summary.highRiskResidents ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
-            <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground">{t(String(label))}</p>
             <p className="mt-1 text-xl font-black text-foreground">
-              {formatNumber(Number(value))}
+              {formatNumber(Number(value), intlLocale)}
             </p>
           </div>
         ))}
@@ -239,26 +252,26 @@ export function PeopleDirectoryLive() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
             <ShieldCheck className="h-4 w-4" />
-            Personel iş yükü
+            {t("Personel iş yükü")}
           </div>
           {topStaff.map((member) => (
             <div key={member.id} className="rounded-lg border border-border/70 bg-background/70 p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-foreground">{member.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{staffLine(member)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{staffLine(member, t)}</p>
                 </div>
                 <StatusBadge variant={statusVariant(member.status)}>
-                  {staffRoleLabel(member.role)}
+                  {t(staffRoleLabel(member.role))}
                 </StatusBadge>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-muted/50 p-2">
-                  <p className="text-muted-foreground">Görev</p>
+                  <p className="text-muted-foreground">{t("Görev")}</p>
                   <p className="font-black">{member.activeTasks}</p>
                 </div>
                 <div className="rounded-lg bg-muted/50 p-2">
-                  <p className="text-muted-foreground">Kapsam</p>
+                  <p className="text-muted-foreground">{t("Kapsam")}</p>
                   <p className="font-black">{member.accessScope}</p>
                 </div>
               </div>
@@ -269,24 +282,24 @@ export function PeopleDirectoryLive() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
             <Users className="h-4 w-4" />
-            Sakin bağlantıları
+            {t("Sakin bağlantıları")}
           </div>
           {topResidents.map((resident) => (
             <div key={`${resident.id}-${resident.unitNo ?? "no-unit"}`} className="rounded-lg border border-border/70 bg-background/70 p-3">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-foreground">{resident.fullName}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{residentLine(resident)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{residentLine(resident, t)}</p>
                 </div>
                 <StatusBadge variant={statusVariant(resident.identityStatus)}>
-                  {relationshipLabel(resident.relationship)}
+                  {t(relationshipLabel(resident.relationship))}
                 </StatusBadge>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <StatusBadge variant={statusVariant(resident.status)}>
-                  {resident.status}
+                  {t(resident.status)}
                 </StatusBadge>
-                <span className="font-bold text-muted-foreground">Risk {resident.riskScore}</span>
+                <span className="font-bold text-muted-foreground">{t("Risk")} {resident.riskScore}</span>
               </div>
             </div>
           ))}
@@ -296,10 +309,9 @@ export function PeopleDirectoryLive() {
           <div className="flex items-start gap-3">
             <Languages className="mt-0.5 h-5 w-5 text-primary" />
             <div className="w-full min-w-0">
-              <h3 className="text-sm font-black text-foreground">Rol kapsamı</h3>
+              <h3 className="text-sm font-black text-foreground">{t("Rol kapsamı")}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Rol matrisi kullanıcı görünürlüğü, finans onayı, erişim kısıtı ve
-                dışa aktarım yetkisini ayrı ayrı tutar.
+                {t("Rol matrisi kullanıcı görünürlüğü, finans onayı, erişim kısıtı ve dışa aktarım yetkisini ayrı ayrı tutar.")}
               </p>
               <div className="mt-4 space-y-2">
                 {(data?.roleCoverage ?? []).slice(0, 6).map((role) => (
@@ -311,11 +323,11 @@ export function PeopleDirectoryLive() {
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-muted-foreground">Onaycı</p>
+                  <p className="text-muted-foreground">{t("Onaycı")}</p>
                   <p className="text-lg font-black">{data?.summary.financeApprovers ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-muted-foreground">Denetim</p>
+                  <p className="text-muted-foreground">{t("Denetim")}</p>
                   <p className="text-lg font-black">{data?.recentActions.length ?? 0}</p>
                 </div>
               </div>

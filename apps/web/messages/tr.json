@@ -360,7 +360,15 @@
     "count": "{count} kayıt",
     "empty": "Sonuç bulunamadı",
     "previous": "Önceki",
-    "next": "Sonraki"
+    "next": "Sonraki",
+    "options": "Ayarlar",
+    "tableTools": "Tablo araçları",
+    "rowsPerPage": "Sayfa başına satır",
+    "columns": "Sütunlar",
+    "reset": "Sıfırla",
+    "exportCsv": "CSV dışa aktar",
+    "stickyHintLabel": "Sabit işlem sütunu bilgisi",
+    "stickyHint": "İşlem sütunu sağda sabit kalır; geniş tablolarda yatay kaydırma sırasında aksiyonlar görünür kalır."
   },
   "dashboardHome": {
     "loading": "Kontrol paneli hazırlanıyor...",

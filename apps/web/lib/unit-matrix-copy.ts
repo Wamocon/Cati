@@ -29,10 +29,16 @@ export type UnitMatrixCopy = {
   actions: {
     actionColumn: string
     auditDescription: string
+    currentContext: string
+    debtHint: string
     debtOpen: string
+    detailHint: string
     detailOpen: string
+    menu: string
+    menuHint: string
     open: string
     service: string
+    serviceHint: string
     serviceHistory: string
     title: string
   }
@@ -162,13 +168,19 @@ export type UnitMatrixCopy = {
 export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
   en: {
     actions: {
-      actionColumn: "Action",
-      auditDescription: "These actions create an audit event and appear in the live operation stream.",
-      debtOpen: "Open debt status",
-      detailOpen: "Open detail",
+      actionColumn: "Actions",
+      auditDescription: "Actions update the selected unit context and create an audit event for the live operation stream.",
+      currentContext: "Current target",
+      debtHint: "Balance and payment follow-up for this unit.",
+      debtOpen: "View debt status",
+      detailHint: "Sale, source, resident and access data in one unit record.",
+      detailOpen: "View unit detail",
+      menu: "Actions",
+      menuHint: "Sale, finance and service follow-up share the same unit record.",
       open: "Open",
       service: "Service",
-      serviceHistory: "Service history",
+      serviceHint: "Open technical requests and service history for this unit.",
+      serviceHistory: "View service history",
       title: "Unit actions",
     },
     common: {
@@ -300,13 +312,19 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
   },
   tr: {
     actions: {
-      actionColumn: "Aksiyon",
-      auditDescription: "Bu aksiyonlar backend audit kaydı oluşturur ve canlı operasyon akışında görünür.",
-      debtOpen: "Borç durumunu aç",
-      detailOpen: "Detayı aç",
+      actionColumn: "Aksiyonlar",
+      auditDescription: "Aksiyonlar seçili daire bağlamını günceller ve canlı operasyon akışı için audit kaydı oluşturur.",
+      currentContext: "Geçerli hedef",
+      debtHint: "Bu daire için bakiye ve ödeme takip durumu.",
+      debtOpen: "Borç durumunu görüntüle",
+      detailHint: "Satış, kaynak, sakin ve erişim verisi tek daire kaydında.",
+      detailOpen: "Daire detayını görüntüle",
+      menu: "Aksiyonlar",
+      menuHint: "Satış, finans ve servis takibi aynı daire kaydında birleşir.",
       open: "Aç",
       service: "Servis",
-      serviceHistory: "Servis geçmişi",
+      serviceHint: "Bu daire için açık teknik talepler ve servis geçmişi.",
+      serviceHistory: "Servis geçmişini görüntüle",
       title: "Daire aksiyonları",
     },
     common: {
@@ -434,13 +452,19 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
   },
   de: {
     actions: {
-      actionColumn: "Aktion",
-      auditDescription: "Diese Aktionen erzeugen einen Audit-Eintrag und erscheinen im Live-Operationsstrom.",
-      debtOpen: "Schuldenstatus öffnen",
-      detailOpen: "Details öffnen",
+      actionColumn: "Aktionen",
+      auditDescription: "Aktionen aktualisieren den ausgewählten Wohnungskontext und erzeugen einen Audit-Eintrag für den Live-Operationsstrom.",
+      currentContext: "Aktuelles Ziel",
+      debtHint: "Saldo und Zahlungsnachverfolgung für diese Wohnung.",
+      debtOpen: "Schuldenstatus anzeigen",
+      detailHint: "Verkauf, Quelle, Bewohner und Zugang in einem Wohnungsdatensatz.",
+      detailOpen: "Wohnungsdetails anzeigen",
+      menu: "Aktionen",
+      menuHint: "Verkauf, Finanzen und Service bleiben im selben Wohnungsdatensatz.",
       open: "Öffnen",
       service: "Service",
-      serviceHistory: "Serviceverlauf",
+      serviceHint: "Offene technische Anliegen und Serviceverlauf für diese Wohnung.",
+      serviceHistory: "Serviceverlauf anzeigen",
       title: "Wohnungsaktionen",
     },
     common: {
@@ -568,13 +592,19 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
   },
   ru: {
     actions: {
-      actionColumn: "Действие",
-      auditDescription: "Эти действия создают аудит-событие и появляются в живом операционном потоке.",
-      debtOpen: "Открыть долг",
-      detailOpen: "Открыть детали",
+      actionColumn: "Действия",
+      auditDescription: "Действия обновляют контекст выбранной квартиры и создают аудит-событие для живого операционного потока.",
+      currentContext: "Текущая цель",
+      debtHint: "Баланс и контроль оплаты по этой квартире.",
+      debtOpen: "Показать статус долга",
+      detailHint: "Продажа, источник, жилец и доступ в одной записи квартиры.",
+      detailOpen: "Показать детали квартиры",
+      menu: "Действия",
+      menuHint: "Продажи, финансы и сервис ведутся в одной записи квартиры.",
       open: "Открыть",
       service: "Сервис",
-      serviceHistory: "История сервиса",
+      serviceHint: "Открытые технические заявки и история сервиса по этой квартире.",
+      serviceHistory: "Показать историю сервиса",
       title: "Действия по квартире",
     },
     common: {

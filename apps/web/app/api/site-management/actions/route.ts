@@ -2,9 +2,17 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   type ClientActionInput,
   logClientAction,
+  updateClientActionRequestStatus,
 } from "@/lib/site-management-repository"
 import { getUserProfile } from "@/lib/auth"
-import { hasAnyPermission, type Action, type Resource } from "@/lib/rbac"
+import { hasAnyPermission } from "@/lib/rbac"
+import {
+  buildWorkflowMetadata,
+  resolveWorkflowAction,
+  type WorkflowOrigin,
+} from "@/lib/action-catalog"
+import { visibleOfflineSyncQueueForRole } from "@/lib/role-scoped-views"
+import { offlineSyncQueue } from "@/lib/site-management-data"
 
 export const dynamic = "force-dynamic"
 
@@ -17,51 +25,17 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 
-function resourceForEntityTable(entityTable: string | null): Resource {
-  if (
-    entityTable === "units" ||
-    entityTable === "site_blocks" ||
-    entityTable === "site_floors" ||
-    entityTable === "import_batches" ||
-    entityTable === "import_findings"
-  ) return "listings"
-  if (
-    entityTable === "service_tickets" ||
-    entityTable === "service_catalog" ||
-    entityTable === "service_orders" ||
-    entityTable === "workforce_tasks" ||
-    entityTable === "media_reports"
-  ) return "tickets"
-  if (entityTable === "bookings" || entityTable === "reservations") return "calendar"
-  if (entityTable === "documents" || entityTable === "purchase_documents") return "documents"
-  if (
-    entityTable === "finance" ||
-    entityTable === "accounts" ||
-    entityTable === "transactions" ||
-    entityTable === "finance_ledger_entries" ||
-    entityTable === "payment_transactions"
-  ) return "finance"
-  if (
-    entityTable === "profiles" ||
-    entityTable === "staff_members" ||
-    entityTable === "role_coverage" ||
-    entityTable === "residents" ||
-    entityTable === "unit_residents"
-  ) return "users"
-  if (entityTable === "communications" || entityTable === "notifications") return "communications"
-  if (entityTable === "access" || entityTable === "compliance") return "eids_compliance"
-  if (entityTable === "reports") return "reports"
-  return "listings"
+function asOrigin(value: unknown): WorkflowOrigin {
+  return value === "api" || value === "ai" || value === "import" ? value : "ui"
 }
 
-function requiredActionsForActionType(actionType: string): Action[] {
-  if (actionType.includes(".view")) return ["view"]
-  if (actionType.includes(".export")) return ["export"]
-  if (actionType.includes(".download")) return ["export", "view"]
-  if (actionType.includes(".upload") || actionType.includes(".create") || actionType.includes(".prepare")) return ["create", "manage"]
-  if (actionType.includes(".approve")) return ["approve", "manage"]
-  if (actionType.includes(".assign")) return ["assign", "manage"]
-  return ["create", "update", "manage", "approve", "assign"]
+function asDecisionStatus(value: unknown) {
+  return value === "approved" ||
+    value === "rejected" ||
+    value === "completed" ||
+    value === "failed"
+    ? value
+    : null
 }
 
 export async function POST(request: NextRequest) {
@@ -86,13 +60,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const clientMetadata = asRecord(payload.metadata)
   const input: ClientActionInput = {
     actionType,
     entityTable: asString(payload.entityTable),
     entityId: asString(payload.entityId),
     entityExternalId: asString(payload.entityExternalId),
     title: asString(payload.title),
-    metadata: asRecord(payload.metadata),
+    metadata: clientMetadata,
   }
 
   const profile = await getUserProfile()
@@ -100,20 +75,111 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
-  const resource = resourceForEntityTable(input.entityTable ?? null)
-  if (!hasAnyPermission(profile.role, resource, requiredActionsForActionType(actionType))) {
+  const workflowAction = resolveWorkflowAction(actionType, input.entityTable ?? null)
+  if (!hasAnyPermission(profile.role, workflowAction.resource, workflowAction.requiredActions)) {
     return NextResponse.json(
       { error: "Your role is not allowed to perform this action." },
       { status: 403 }
     )
   }
 
+  if (input.entityTable === "offline_sync_jobs") {
+    const allowedQueue = visibleOfflineSyncQueueForRole(profile.role, offlineSyncQueue)
+    const requestedId = input.entityExternalId ?? input.entityId
+    const canAccessQueueItem = Boolean(
+      requestedId && allowedQueue.some((item) => item.id === requestedId)
+    )
+
+    if (!canAccessQueueItem) {
+      return NextResponse.json(
+        { error: "Your role is not allowed to access this offline sync item." },
+        { status: 403 }
+      )
+    }
+  }
+
   try {
-    const result = await logClientAction(input)
-    return NextResponse.json(result, { status: 201 })
+    const result = await logClientAction({
+      ...input,
+      metadata: {
+        ...clientMetadata,
+        ...buildWorkflowMetadata({
+          action: workflowAction,
+          origin: asOrigin(clientMetadata.origin),
+          requestedByRole: profile.role,
+          requestedById: profile.id,
+        }),
+      },
+    })
+    return NextResponse.json({ ...result, workflow: workflowAction }, { status: 201 })
   } catch {
     return NextResponse.json(
       { error: "Action could not be logged." },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  let body: unknown
+
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON." },
+      { status: 400 }
+    )
+  }
+
+  const payload = asRecord(body)
+  const actionId = asString(payload.id)
+  const status = asDecisionStatus(payload.status)
+  const actionType = asString(payload.actionType) ?? "ticket.update.request"
+  const entityTable = asString(payload.entityTable) ?? "service_tickets"
+
+  if (!actionId || !status) {
+    return NextResponse.json(
+      { error: "A valid action id and status are required." },
+      { status: 400 }
+    )
+  }
+
+  const profile = await getUserProfile()
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+  }
+
+  const workflowAction = resolveWorkflowAction(actionType, entityTable)
+  const canApproveByPermission = hasAnyPermission(profile.role, workflowAction.resource, [
+    "approve",
+    "manage",
+  ])
+  const canApproveByRole = workflowAction.approvalRoles.includes(profile.role)
+
+  if (!canApproveByPermission && !canApproveByRole) {
+    return NextResponse.json(
+      { error: "Your role is not allowed to approve this action." },
+      { status: 403 }
+    )
+  }
+
+  try {
+    const result = await updateClientActionRequestStatus({ id: actionId, status })
+    return NextResponse.json(
+      {
+        ...result,
+        workflow: {
+          ...workflowAction,
+          decisionStatus: status,
+          decidedByRole: profile.role,
+        },
+      },
+      { status: 200 }
+    )
+  } catch {
+    return NextResponse.json(
+      { error: "Action request status could not be updated." },
       { status: 500 }
     )
   }

@@ -206,7 +206,7 @@ async function verifyPhaseStatus({ baseUrl }) {
   assert((payload.phases ?? []).length >= 15, "phase-status must expose the 15-phase ERP model")
   assert(phaseByNumber.get(5)?.status === "ready_for_uat", "Phase 5 must be ready_for_uat")
   assert(phaseByNumber.get(6)?.status === "ready_for_uat", "Phase 6 must be ready_for_uat")
-  assert(phaseByNumber.get(7)?.status === "in_progress", "Phase 7 must remain in_progress")
+  assert(phaseByNumber.get(7)?.status === "ready_for_uat", "Phase 7 must be ready_for_uat")
 
   return {
     phases: payload.phases.length,

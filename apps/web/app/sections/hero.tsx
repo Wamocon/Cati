@@ -69,7 +69,7 @@ export function Hero() {
   return (
     <section
       ref={rootRef}
-      className="relative min-h-[calc(100svh-104px)] overflow-hidden bg-[#061a17] text-white"
+      className="relative min-h-[calc(100svh-64px)] overflow-hidden bg-[#061a17] text-white"
     >
       <div ref={imageRef} className="absolute inset-0">
         <Image
@@ -86,28 +86,28 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
 
       <div className="relative z-10 container">
-        <div className="flex min-h-[calc(100svh-104px)] flex-col justify-center gap-10 py-16 md:py-24">
-          <div className="max-w-4xl">
+        <div className="flex min-h-[calc(100svh-64px)] flex-col justify-center gap-8 py-10 sm:py-14 lg:py-16 2xl:py-20">
+          <div className="max-w-5xl">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-black tracking-[0.08em] text-emerald-50 shadow-sm backdrop-blur"
+              className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-black tracking-[0.06em] text-emerald-50 shadow-sm backdrop-blur sm:tracking-[0.08em]"
             >
               <Sparkles className="h-3.5 w-3.5 text-emerald-200" />
-              1Cati ERP - {t("badge")}
+              1Çatı ERP - {t("badge")}
             </motion.div>
 
             <KineticHeadline
               text={t("headline")}
-              className="max-w-4xl text-5xl leading-[0.98] font-black tracking-tight text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.35)] sm:text-6xl lg:text-7xl xl:text-8xl"
+              className="max-w-5xl text-4xl leading-[1.05] font-black tracking-tight text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.35)] sm:text-5xl md:text-6xl xl:text-7xl 2xl:text-8xl"
             />
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="mt-6 max-w-2xl text-lg leading-8 text-white/78"
+              className="mt-5 max-w-2xl text-base leading-7 text-white/82 sm:text-lg sm:leading-8"
             >
               {t("subheadline")}
             </motion.p>
@@ -116,21 +116,21 @@ export function Hero() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.5 }}
-              className="mt-8 flex flex-col items-start gap-3 sm:flex-row"
+              className="mt-7 flex w-full flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-start"
             >
               <Link
                 href="#platform"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-8 text-base font-black text-[#061a17] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-emerald-50"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-[#061a17] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-emerald-50 sm:px-8 sm:text-base"
               >
                 <LayoutDashboard className="h-4 w-4" />
-                {t("ctaPrimary")}
+                <span className="min-w-0 text-center leading-tight">{t("ctaPrimary")}</span>
               </Link>
               <Link
                 href={`/${locale}/login`}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/12 px-8 text-base font-bold text-white shadow-sm backdrop-blur transition hover:bg-white/18"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/12 px-5 py-3 text-sm font-bold text-white shadow-sm backdrop-blur transition hover:bg-white/18 sm:px-8 sm:text-base"
               >
                 <ShieldCheck className="h-4 w-4" />
-                {t("ctaSecondary")}
+                <span className="min-w-0 text-center leading-tight">{t("ctaSecondary")}</span>
               </Link>
             </motion.div>
 

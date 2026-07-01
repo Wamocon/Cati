@@ -360,7 +360,15 @@
     "count": "{count} records",
     "empty": "No results found",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "options": "Options",
+    "tableTools": "Table tools",
+    "rowsPerPage": "Rows per page",
+    "columns": "Columns",
+    "reset": "Reset",
+    "exportCsv": "Export CSV",
+    "stickyHintLabel": "Sticky action column information",
+    "stickyHint": "The action column stays fixed on the right so actions remain visible while wide tables scroll horizontally."
   },
   "dashboardRefresh": {
     "refresh": "Refresh data",

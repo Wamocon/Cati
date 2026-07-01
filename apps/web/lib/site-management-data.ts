@@ -176,6 +176,70 @@ export interface BookingRecord {
   cleaningStatus: "scheduled" | "in_progress" | "done" | "blocked"
 }
 
+export type ReadinessStepStatus = "done" | "pending" | "blocked"
+
+export interface ReadinessStep {
+  label: string
+  owner: string
+  status: ReadinessStepStatus
+}
+
+export interface BookingReadinessRecord {
+  id: string
+  bookingId: string
+  flatNumber: string
+  guestName: string
+  readinessScore: number
+  riskLevel: "low" | "medium" | "high" | "critical"
+  steps: ReadinessStep[]
+  blocker: string
+  nextAction: string
+}
+
+export interface TurnoverTaskRecord {
+  id: string
+  bookingId: string
+  flatNumber: string
+  title: string
+  owner: string
+  status: "queued" | "in_progress" | "ready" | "blocked"
+  priority: ServicePriority
+  dueAt: string
+  slaHoursRemaining: number
+  progress: number
+  evidenceRequired: boolean
+  checklist: string[]
+  dependency: string
+  nextAction: string
+}
+
+export interface AccessHandoffRecord {
+  id: string
+  bookingId: string
+  flatNumber: string
+  credential: "mobile_code" | "card" | "plate" | "qr"
+  provider: "demo" | "Salto KS" | "Hikvision" | "Dormakaba" | "Parasut task"
+  status: AccessStatus
+  validFrom: string
+  validUntil: string
+  blocker: string
+  nextAction: string
+}
+
+export interface DepositSettlementRecord {
+  id: string
+  bookingId: string
+  flatNumber: string
+  guestName: string
+  depositTry: number
+  proposedDeductionTry: number
+  refundTry: number
+  status: "not_started" | "evidence_needed" | "manager_review" | "finance_ready" | "closed"
+  evidenceCount: number
+  approvalOwner: string
+  nextAction: string
+}
+
 export interface ViewingRecord {
   id: string
   leadName: string
@@ -292,6 +356,194 @@ export interface DocumentVaultRecord {
   size: string
   updatedAt: string
   retentionRule: string
+}
+
+export interface CommunicationThreadRecord {
+  id: string
+  channel: "WhatsApp" | "Portal" | "Email" | "SMS" | "Push" | "Team"
+  audience: "Malik" | "Kiraci" | "Misafir" | "Personel" | "Operasyon" | "Muhasebe"
+  subject: string
+  owner: string
+  status: "needs_reply" | "in_progress" | "ready" | "blocked"
+  priority: ServicePriority
+  language: "tr" | "en" | "de" | "ru"
+  relatedEntity: string
+  consentStatus: "ok" | "missing" | "opted_out"
+  sentiment: "positive" | "neutral" | "risk"
+  lastMessage: string
+  nextAction: string
+}
+
+export interface NotificationRuleRecord {
+  id: string
+  trigger: string
+  target: string
+  channel: "WhatsApp + E-posta" | "Push + SMS" | "Portal + E-posta" | "Team + Push"
+  owner: string
+  status: "active" | "review" | "disabled"
+  languageMode: "single" | "multilingual"
+  approvalRequired: boolean
+  failover: string
+}
+
+export interface NotificationDeliveryRecord {
+  id: string
+  ruleId: string
+  recipient: string
+  channel: "WhatsApp" | "Email" | "SMS" | "Push" | "Portal"
+  status: "queued" | "sent" | "delivered" | "failed" | "manual_review"
+  relatedEntity: string
+  attempts: number
+  lastAttemptAt: string
+  nextRetryAt: string
+  providerMode: "demo" | "provider_ready" | "manual"
+}
+
+export interface MessageTemplateRecord {
+  id: string
+  title: string
+  useCase:
+    | "booking_confirmation"
+    | "pre_arrival"
+    | "move_in"
+    | "in_stay"
+    | "checkout"
+    | "post_stay"
+    | "debt"
+    | "service"
+    | "document"
+    | "announcement"
+    | "onboarding"
+  languages: Array<"tr" | "en" | "de" | "ru">
+  channel: "WhatsApp" | "Email" | "SMS" | "Push" | "Portal"
+  owner: string
+  approvalStatus: "approved" | "needs_review" | "draft"
+  variables: string[]
+  preview: string
+}
+
+export interface GuestLifecycleEventRecord {
+  id: string
+  bookingId: string
+  flatNumber: string
+  guestName: string
+  stage: "booking_confirmed" | "pre_arrival" | "arrival_day" | "in_stay" | "checkout" | "post_stay_feedback"
+  channel: "WhatsApp" | "Email" | "SMS" | "Push" | "Portal" | "Call"
+  timing: string
+  status: "ready" | "queued" | "sent" | "suppressed" | "needs_review"
+  tone: "warm" | "informational" | "service" | "feedback" | "risk"
+  title: string
+  body: string
+  fallback: string
+  edgeCase: string
+  consentRequired: boolean
+  sentimentSignal: "none" | "positive" | "watch" | "recovery"
+  owner: string
+  nextAction: string
+}
+
+export interface RoleOnboardingPlanRecord {
+  role: "admin" | "manager" | "accountant" | "staff" | "owner" | "tenant"
+  title: string
+  audience: string
+  inviteMode: "admin_invite" | "request_approval" | "provider_ready"
+  identityOptions: string[]
+  requiredChecks: string[]
+  firstRunSteps: string[]
+  defaultChannel: "Portal" | "Email" | "WhatsApp" | "Push"
+  productionGate: string
+}
+
+export interface MobileWebCapabilityRecord {
+  id: string
+  title: string
+  audience: "manager" | "staff" | "resident" | "all"
+  surface: "Responsive Web" | "Installable PWA" | "Offline Queue" | "Touch UX" | "Accessibility"
+  status: "ready" | "simulation" | "provider_ready" | "needs_device_test"
+  priority: "core" | "important" | "later"
+  description: string
+  evidence: string
+  qaSignal: string
+}
+
+export interface OfflineSyncRecord {
+  id: string
+  role: "manager" | "staff" | "owner" | "tenant"
+  module: "tickets" | "calendar" | "documents" | "communications" | "dashboard"
+  action: string
+  status: "synced" | "queued" | "conflict" | "read_only_cached"
+  device: string
+  lastSyncAt: string
+  retryPolicy: string
+  dataScope: string
+  guardrail: string
+}
+
+export interface IntegrationProviderRecord {
+  id: string
+  category:
+    | "Supabase"
+    | "Payments"
+    | "Banking"
+    | "SMS"
+    | "Email"
+    | "Access"
+    | "Camera"
+    | "Identity"
+    | "Ticketing"
+  provider: string
+  mode: "live" | "simulation" | "placeholder" | "provider_ready"
+  status: "connected" | "demo_ready" | "blocked_pending_client" | "manual_fallback"
+  idealNow: string
+  scalePath: string
+  requiredFromClient: string
+  dataHandled: string
+  fallback: string
+  riskLevel: "low" | "medium" | "high"
+}
+
+export interface AiRecommendationRecord {
+  id: string
+  mode:
+    | "daily_briefing"
+    | "service_triage"
+    | "debt_risk"
+    | "booking_review"
+    | "report_draft"
+    | "integration_advice"
+    | "natural_language_search"
+  title: string
+  audience: "admin" | "manager" | "accountant" | "staff" | "resident"
+  status: "ready" | "human_review" | "provider_ready"
+  confidence: number
+  languageSupport: Array<"tr" | "en" | "de" | "ru">
+  sourceRecords: string[]
+  recommendation: string
+  humanApproval: string
+  modelFit: string
+}
+
+export interface AiImageWorkflowRecord {
+  id: string
+  title: string
+  source: "service_photo" | "checkout_photo" | "document_scan" | "camera_event"
+  status: "mock_ready" | "provider_ready" | "human_review"
+  aiUse: string
+  guardrail: string
+  output: string
+}
+
+export interface DocumentPacketRecord {
+  id: string
+  title: string
+  audience: "owner" | "tenant" | "guest" | "buyer" | "staff" | "management"
+  relatedEntity: string
+  status: "complete" | "missing_items" | "signature_pending" | "review"
+  requiredDocuments: number
+  completedDocuments: number
+  signatureStatus: "not_required" | "sent" | "signed" | "blocked"
+  retentionClass: "legal" | "finance" | "service" | "guest"
+  nextAction: string
 }
 
 export interface ReportCardRecord {
@@ -889,6 +1141,219 @@ export const bookings: BookingRecord[] = ([
     }
   })
 
+function readinessStepsForBooking(booking: BookingRecord): ReadinessStep[] {
+  const depositReady =
+    booking.depositStatus === "held" ||
+    booking.depositStatus === "not_required" ||
+    booking.depositStatus === "refund_ready"
+  const accessReady = booking.accessCodeStatus === "active"
+  const cleaningReady = booking.cleaningStatus === "done"
+  const checkoutFlow = booking.status === "checkout_today" || booking.status === "deposit_review"
+
+  return [
+    {
+      label: "Identity and guest profile",
+      owner: "Front office",
+      status: booking.status === "precheck_pending" ? "pending" : "done",
+    },
+    {
+      label: checkoutFlow ? "Checkout evidence" : "Deposit/payment gate",
+      owner: checkoutFlow ? "Operations" : "Finance",
+      status: depositReady ? "done" : booking.depositStatus === "deduction_pending" ? "blocked" : "pending",
+    },
+    {
+      label: checkoutFlow ? "Damage inspection" : "Cleaning checklist",
+      owner: "Housekeeping",
+      status: cleaningReady ? "done" : booking.cleaningStatus === "blocked" ? "blocked" : "pending",
+    },
+    {
+      label: checkoutFlow ? "Access revoke" : "Access handoff",
+      owner: "Security",
+      status: accessReady ? "done" : booking.accessCodeStatus === "restricted" ? "blocked" : "pending",
+    },
+    {
+      label: checkoutFlow ? "Final statement" : "Welcome message",
+      owner: "Support",
+      status: booking.status === "deposit_review" ? "pending" : "done",
+    },
+  ]
+}
+
+function readinessRisk(steps: ReadinessStep[], booking: BookingRecord): BookingReadinessRecord["riskLevel"] {
+  const blocked = steps.filter((step) => step.status === "blocked").length
+  const pending = steps.filter((step) => step.status === "pending").length
+
+  if (blocked >= 2 || booking.accessCodeStatus === "restricted") return "critical"
+  if (blocked > 0 || booking.status === "deposit_review") return "high"
+  if (pending >= 2 || booking.status === "precheck_pending") return "medium"
+  return "low"
+}
+
+function readinessNextAction(booking: BookingRecord, steps: ReadinessStep[]) {
+  const blocked = steps.find((step) => step.status === "blocked")
+  if (blocked) return `${blocked.owner}: unblock ${blocked.label.toLowerCase()} before guest flow continues`
+  const pending = steps.find((step) => step.status === "pending")
+  if (pending) return `${pending.owner}: finish ${pending.label.toLowerCase()}`
+  if (booking.status === "checkout_today") return "Close inspection and prepare deposit statement"
+  if (booking.status === "move_in_today") return "Send final arrival instruction and monitor access log"
+  return "Keep booking monitored in normal queue"
+}
+
+export const bookingReadinessRecords: BookingReadinessRecord[] = bookings.map((booking) => {
+  const steps = readinessStepsForBooking(booking)
+  const done = steps.filter((step) => step.status === "done").length
+  const blocker = steps.find((step) => step.status === "blocked")?.label ?? "No hard blocker"
+
+  return {
+    id: `READY-${booking.id.replace("BKG-", "")}`,
+    bookingId: booking.id,
+    flatNumber: booking.flatNumber,
+    guestName: booking.guestName,
+    readinessScore: Math.round((done / steps.length) * 100),
+    riskLevel: readinessRisk(steps, booking),
+    steps,
+    blocker,
+    nextAction: readinessNextAction(booking, steps),
+  }
+})
+
+export const turnoverTasks: TurnoverTaskRecord[] = bookings
+  .filter((booking) => booking.status !== "cancelled")
+  .flatMap((booking, index) => {
+    const checkoutMode = booking.status === "checkout_today" || booking.status === "deposit_review"
+    const cleaningStatus: TurnoverTaskRecord["status"] =
+      booking.cleaningStatus === "done"
+        ? "ready"
+        : booking.cleaningStatus === "in_progress"
+          ? "in_progress"
+          : booking.cleaningStatus === "blocked"
+            ? "blocked"
+            : "queued"
+    const inspectionProgress =
+      booking.depositStatus === "refund_ready"
+        ? 90
+        : booking.depositStatus === "deduction_pending"
+          ? 45
+          : checkoutMode
+            ? 35
+            : 15
+    const cleaningPriority: ServicePriority =
+      checkoutMode ? "high" : booking.status === "move_in_today" ? "urgent" : "medium"
+    const operationsStatus: TurnoverTaskRecord["status"] =
+      booking.accessCodeStatus === "restricted" || booking.depositStatus === "deduction_pending"
+        ? "blocked"
+        : booking.accessCodeStatus === "active"
+          ? "ready"
+          : "queued"
+    const operationsPriority: ServicePriority = checkoutMode ? "high" : "medium"
+
+    const tasks: TurnoverTaskRecord[] = [
+      {
+        id: `TURN-${booking.id.replace("BKG-", "")}-CLEAN`,
+        bookingId: booking.id,
+        flatNumber: booking.flatNumber,
+        title: checkoutMode ? "Checkout clean and damage sweep" : "Move-in cleaning handover",
+        owner: "Housekeeping",
+        status: cleaningStatus,
+        priority: cleaningPriority,
+        dueAt: checkoutMode ? booking.checkOut : booking.checkIn,
+        slaHoursRemaining: checkoutMode ? index - 2 : 6 + index,
+        progress: booking.cleaningStatus === "done" ? 100 : booking.cleaningStatus === "in_progress" ? 65 : 25,
+        evidenceRequired: true,
+        checklist: ["Room photos", "Linen/minibar state", "Meter/access note", "Supervisor closeout"],
+        dependency: checkoutMode ? "Guest checkout time confirmed" : "Payment and identity precheck",
+        nextAction: checkoutMode ? "Upload damage evidence and supervisor closeout" : "Confirm cleaning handover before guest arrival",
+      },
+      {
+        id: `TURN-${booking.id.replace("BKG-", "")}-OPS`,
+        bookingId: booking.id,
+        flatNumber: booking.flatNumber,
+        title: checkoutMode ? "Final statement package" : "Arrival instruction package",
+        owner: checkoutMode ? "Finance" : "Guest support",
+        status: operationsStatus,
+        priority: operationsPriority,
+        dueAt: checkoutMode ? booking.checkOut : booking.checkIn,
+        slaHoursRemaining: checkoutMode ? index : 8 + index,
+        progress: inspectionProgress,
+        evidenceRequired: checkoutMode,
+        checklist: checkoutMode
+          ? ["Damage evidence", "Deposit math", "Manager approval", "Resident statement"]
+          : ["Welcome message", "Access credential", "House rules", "Emergency contact"],
+        dependency: checkoutMode ? "Inspection evidence complete" : "Access credential issued",
+        nextAction: checkoutMode ? "Prepare final statement for finance approval" : "Send arrival instructions after access check",
+      },
+    ]
+    return tasks
+  })
+  .slice(0, 14)
+
+export const accessHandoffs: AccessHandoffRecord[] = bookings
+  .filter((booking) => booking.status !== "cancelled")
+  .map((booking, index) => ({
+    id: `ACC-HO-${booking.id.replace("BKG-", "")}`,
+    bookingId: booking.id,
+    flatNumber: booking.flatNumber,
+    credential: (["mobile_code", "card", "plate", "qr"] as const)[index % 4],
+    provider: (["demo", "Salto KS", "Hikvision", "Dormakaba", "demo"] as const)[index % 5],
+    status: booking.accessCodeStatus,
+    validFrom: booking.checkIn,
+    validUntil: booking.checkOut,
+    blocker:
+      booking.accessCodeStatus === "restricted"
+        ? "Debt/deposit gate requires manager approval"
+        : booking.accessCodeStatus === "pending"
+          ? "Waiting for identity, payment or arrival time"
+          : "No blocker",
+    nextAction:
+      booking.accessCodeStatus === "active"
+        ? "Monitor first access event"
+        : booking.status === "checkout_today"
+          ? "Prepare revoke command after checkout"
+          : "Prepare credential in demo queue",
+  }))
+
+export const depositSettlements: DepositSettlementRecord[] = bookings
+  .filter((booking) => booking.depositTry > 0)
+  .map((booking, index) => {
+    const proposedDeductionTry =
+      booking.depositStatus === "deduction_pending"
+        ? Math.round(booking.depositTry * (index % 2 === 0 ? 0.35 : 0.22))
+        : booking.depositStatus === "refund_ready"
+          ? 0
+          : booking.status === "checkout_today"
+            ? Math.round(booking.depositTry * 0.12)
+            : 0
+    const status: DepositSettlementRecord["status"] =
+      booking.depositStatus === "refund_ready"
+        ? "finance_ready"
+        : booking.depositStatus === "deduction_pending"
+          ? "manager_review"
+          : booking.status === "checkout_today"
+            ? "evidence_needed"
+            : "not_started"
+
+    return {
+      id: `SET-${booking.id.replace("BKG-", "")}`,
+      bookingId: booking.id,
+      flatNumber: booking.flatNumber,
+      guestName: booking.guestName,
+      depositTry: booking.depositTry,
+      proposedDeductionTry,
+      refundTry: Math.max(0, booking.depositTry - proposedDeductionTry),
+      status,
+      evidenceCount: status === "manager_review" ? 4 : status === "evidence_needed" ? 1 : 2,
+      approvalOwner: status === "finance_ready" ? "Finance" : "Operations manager",
+      nextAction:
+        status === "finance_ready"
+          ? "Create refund payment request"
+          : status === "manager_review"
+            ? "Approve itemized deductions with media evidence"
+            : status === "evidence_needed"
+              ? "Upload checkout inspection photos"
+              : "Wait until checkout window opens",
+    }
+  })
+
 export const viewingPipeline: ViewingRecord[] = [
   {
     id: "VIEW-601",
@@ -1255,6 +1720,971 @@ export const documentVault: DocumentVaultRecord[] = newLevelPremiumDataset.docum
       : `OCR / insan onayı gerekli: ${document.path}`,
 }))
 
+export const communicationThreads: CommunicationThreadRecord[] = [
+  {
+    id: "COM-301",
+    channel: "WhatsApp",
+    audience: "Malik",
+    subject: "Aidat balance and access warning",
+    owner: "Finance",
+    status: "needs_reply",
+    priority: "high",
+    language: "tr",
+    relatedEntity: "FIN-90PLUS",
+    consentStatus: "ok",
+    sentiment: "risk",
+    lastMessage: "Payment plan needs approval today before access restriction is prepared.",
+    nextAction: "Finance to send approved payment-plan link and log response",
+  },
+  {
+    id: "COM-302",
+    channel: "Portal",
+    audience: "Kiraci",
+    subject: "Air-condition service appointment",
+    owner: "Resident support",
+    status: "in_progress",
+    priority: "medium",
+    language: "en",
+    relatedEntity: "SRV-202",
+    consentStatus: "ok",
+    sentiment: "neutral",
+    lastMessage: "Technician will attach photo report after the visit.",
+    nextAction: "Confirm visit slot and keep resident in the same thread",
+  },
+  {
+    id: "COM-303",
+    channel: "Team",
+    audience: "Operasyon",
+    subject: "Today checkout and deposit control",
+    owner: "Operations",
+    status: "ready",
+    priority: "high",
+    language: "tr",
+    relatedEntity: "BKG-502",
+    consentStatus: "ok",
+    sentiment: "neutral",
+    lastMessage: "Cleaning, damage evidence and refund decision are linked in one flow.",
+    nextAction: "Supervisor to approve inspection package",
+  },
+  {
+    id: "COM-304",
+    channel: "Email",
+    audience: "Malik",
+    subject: "Monthly owner finance report ready",
+    owner: "Finance",
+    status: "ready",
+    priority: "low",
+    language: "de",
+    relatedEntity: "RPT-02",
+    consentStatus: "ok",
+    sentiment: "positive",
+    lastMessage: "Report is shared only with the relevant owner account.",
+    nextAction: "Send secure portal link after final review",
+  },
+  {
+    id: "COM-305",
+    channel: "SMS",
+    audience: "Misafir",
+    subject: "Move-in access code precheck",
+    owner: "Guest support",
+    status: "blocked",
+    priority: "urgent",
+    language: "ru",
+    relatedEntity: "BKG-503",
+    consentStatus: "missing",
+    sentiment: "risk",
+    lastMessage: "SMS consent is missing; use portal and manual call fallback.",
+    nextAction: "Collect consent or switch to portal-only message",
+  },
+  {
+    id: "COM-306",
+    channel: "Push",
+    audience: "Personel",
+    subject: "SLA breach prevention",
+    owner: "Operations",
+    status: "in_progress",
+    priority: "urgent",
+    language: "tr",
+    relatedEntity: "TASK-204",
+    consentStatus: "ok",
+    sentiment: "neutral",
+    lastMessage: "Field route needs media evidence before closeout.",
+    nextAction: "Team lead to confirm ETA and upload proof",
+  },
+  {
+    id: "COM-307",
+    channel: "Portal",
+    audience: "Muhasebe",
+    subject: "Deposit settlement approval",
+    owner: "Finance",
+    status: "needs_reply",
+    priority: "high",
+    language: "tr",
+    relatedEntity: "SET-508",
+    consentStatus: "ok",
+    sentiment: "risk",
+    lastMessage: "Damage deduction needs manager approval and final statement.",
+    nextAction: "Finance to review itemized deduction before refund",
+  },
+]
+
+export const notificationRules: NotificationRuleRecord[] = [
+  {
+    id: "NTF-01",
+    trigger: "Debt balance greater than zero and access risk",
+    target: "Owner / tenant by unit relation",
+    channel: "WhatsApp + E-posta",
+    owner: "Finance",
+    status: "active",
+    languageMode: "multilingual",
+    approvalRequired: true,
+    failover: "Portal inbox and manual call",
+  },
+  {
+    id: "NTF-02",
+    trigger: "SLA below 4 hours",
+    target: "Staff and operations manager",
+    channel: "Team + Push",
+    owner: "Operations",
+    status: "active",
+    languageMode: "single",
+    approvalRequired: false,
+    failover: "Team lead phone call",
+  },
+  {
+    id: "NTF-03",
+    trigger: "Check-in today",
+    target: "Guest / tenant",
+    channel: "Push + SMS",
+    owner: "Guest support",
+    status: "review",
+    languageMode: "multilingual",
+    approvalRequired: false,
+    failover: "Portal inbox",
+  },
+  {
+    id: "NTF-04",
+    trigger: "Missing document or signature",
+    target: "Owner / buyer",
+    channel: "Portal + E-posta",
+    owner: "Backoffice",
+    status: "active",
+    languageMode: "multilingual",
+    approvalRequired: false,
+    failover: "Manual document desk task",
+  },
+  {
+    id: "NTF-05",
+    trigger: "Checkout settlement ready",
+    target: "Finance and operations manager",
+    channel: "Team + Push",
+    owner: "Finance",
+    status: "active",
+    languageMode: "single",
+    approvalRequired: true,
+    failover: "Daily finance queue",
+  },
+]
+
+export const notificationDeliveries: NotificationDeliveryRecord[] = [
+  {
+    id: "DLV-7001",
+    ruleId: "NTF-01",
+    recipient: "A-14 owner",
+    channel: "WhatsApp",
+    status: "delivered",
+    relatedEntity: "FIN-90PLUS",
+    attempts: 1,
+    lastAttemptAt: isoDaysFromAnchor(0, 8),
+    nextRetryAt: isoDaysFromAnchor(0, 18),
+    providerMode: "demo",
+  },
+  {
+    id: "DLV-7002",
+    ruleId: "NTF-03",
+    recipient: "BKG-503 guest",
+    channel: "SMS",
+    status: "manual_review",
+    relatedEntity: "BKG-503",
+    attempts: 0,
+    lastAttemptAt: isoDaysFromAnchor(0, 9),
+    nextRetryAt: isoDaysFromAnchor(0, 12),
+    providerMode: "manual",
+  },
+  {
+    id: "DLV-7003",
+    ruleId: "NTF-02",
+    recipient: "Technical staff route",
+    channel: "Push",
+    status: "sent",
+    relatedEntity: "TASK-204",
+    attempts: 1,
+    lastAttemptAt: isoDaysFromAnchor(0, 10),
+    nextRetryAt: isoDaysFromAnchor(0, 14),
+    providerMode: "provider_ready",
+  },
+  {
+    id: "DLV-7004",
+    ruleId: "NTF-04",
+    recipient: "NLP-PH-217 buyer",
+    channel: "Email",
+    status: "queued",
+    relatedEntity: "DOCBUY-806",
+    attempts: 0,
+    lastAttemptAt: isoDaysFromAnchor(0, 11),
+    nextRetryAt: isoDaysFromAnchor(0, 13),
+    providerMode: "demo",
+  },
+  {
+    id: "DLV-7005",
+    ruleId: "NTF-05",
+    recipient: "Finance desk",
+    channel: "Portal",
+    status: "failed",
+    relatedEntity: "SET-508",
+    attempts: 2,
+    lastAttemptAt: isoDaysFromAnchor(0, 12),
+    nextRetryAt: isoDaysFromAnchor(0, 15),
+    providerMode: "demo",
+  },
+]
+
+export const guestLifecycleEvents: GuestLifecycleEventRecord[] = [
+  {
+    id: "GX-BOOK-501",
+    bookingId: "BKG-501",
+    flatNumber: "A-012",
+    guestName: "Murat A.",
+    stage: "booking_confirmed",
+    channel: "WhatsApp",
+    timing: "Immediately after booking confirmation",
+    status: "sent",
+    tone: "warm",
+    title: "Thank you and booking received",
+    body: "Thank you, Murat. Your New Level Premium stay is confirmed. We will keep the useful arrival details in one secure portal thread.",
+    fallback: "Portal inbox copy is kept if WhatsApp fails.",
+    edgeCase: "Do not send if booking is unpaid, duplicated or cancelled within the grace window.",
+    consentRequired: true,
+    sentimentSignal: "positive",
+    owner: "Guest support",
+    nextAction: "Keep the thread open for arrival questions",
+  },
+  {
+    id: "GX-PRE-503",
+    bookingId: "BKG-503",
+    flatNumber: "A-038",
+    guestName: "Corporate Group",
+    stage: "pre_arrival",
+    channel: "Portal",
+    timing: "48 hours before arrival",
+    status: "needs_review",
+    tone: "informational",
+    title: "Quiet pre-arrival checklist",
+    body: "Your arrival checklist is ready: ID upload, deposit status, arrival time and house rules. Please complete it before access is released.",
+    fallback: "Manual call task if portal is not opened within 12 hours.",
+    edgeCase: "Hold access details until identity, deposit and consent checks are complete.",
+    consentRequired: false,
+    sentimentSignal: "watch",
+    owner: "Guest support",
+    nextAction: "Collect ID scan and house-rules signature",
+  },
+  {
+    id: "GX-ARR-510",
+    bookingId: "BKG-510",
+    flatNumber: "D-087",
+    guestName: "Olga I.",
+    stage: "arrival_day",
+    channel: "Push",
+    timing: "Morning of arrival",
+    status: "queued",
+    tone: "service",
+    title: "Arrival day welcome",
+    body: "Welcome to New Level Premium. Your access method, Wi-Fi and support contact are available in the portal. We are here if anything feels unclear.",
+    fallback: "Switch to SMS only if portal push is not delivered.",
+    edgeCase: "Suppress if access is restricted or room readiness is below 80%.",
+    consentRequired: true,
+    sentimentSignal: "none",
+    owner: "Operations",
+    nextAction: "Monitor first access event and route guest questions",
+  },
+  {
+    id: "GX-STAY-505",
+    bookingId: "BKG-505",
+    flatNumber: "A-092",
+    guestName: "Sergey Petrov",
+    stage: "in_stay",
+    channel: "Portal",
+    timing: "After first night",
+    status: "ready",
+    tone: "service",
+    title: "Subtle comfort check",
+    body: "We hope everything is comfortable. If you need towels, cleaning or technical support, you can send one request from this thread.",
+    fallback: "No repeated reminder; show support card in portal only.",
+    edgeCase: "Do not send more than one comfort check unless the guest starts a conversation.",
+    consentRequired: false,
+    sentimentSignal: "none",
+    owner: "Resident support",
+    nextAction: "Keep as passive portal card unless guest replies",
+  },
+  {
+    id: "GX-OUT-502",
+    bookingId: "BKG-502",
+    flatNumber: "A-023",
+    guestName: "Nina Volkova",
+    stage: "checkout",
+    channel: "Email",
+    timing: "Evening before checkout",
+    status: "queued",
+    tone: "informational",
+    title: "Checkout guidance without pressure",
+    body: "Tomorrow's checkout is scheduled. Please leave cards on the table, check personal items and use the portal if you need a late-checkout request.",
+    fallback: "Portal inbox copy and housekeeping task remain visible.",
+    edgeCase: "Send manager review instead of guest message if deposit deduction is already disputed.",
+    consentRequired: true,
+    sentimentSignal: "watch",
+    owner: "Operations",
+    nextAction: "Confirm cleaning slot and access revoke timing",
+  },
+  {
+    id: "GX-FB-508",
+    bookingId: "BKG-508",
+    flatNumber: "C-046",
+    guestName: "Anna K.",
+    stage: "post_stay_feedback",
+    channel: "Portal",
+    timing: "24 hours after checkout close",
+    status: "suppressed",
+    tone: "feedback",
+    title: "Thank you and private feedback",
+    body: "Thank you for staying with us. If anything could have been better, please tell us privately first so the team can close it properly.",
+    fallback: "Send public-review request only after no open service, deposit or complaint risk remains.",
+    edgeCase: "Suppressed because checkout deposit has a pending deduction review.",
+    consentRequired: false,
+    sentimentSignal: "recovery",
+    owner: "Guest support",
+    nextAction: "Wait for deposit settlement before feedback request",
+  },
+]
+
+export const roleOnboardingPlans: RoleOnboardingPlanRecord[] = [
+  {
+    role: "admin",
+    title: "Administrator access setup",
+    audience: "Internal platform administrator",
+    inviteMode: "admin_invite",
+    identityOptions: ["Email/password", "Google Workspace SSO", "2FA before production"],
+    requiredChecks: ["Management approval", "Export permission review", "Audit responsibility accepted"],
+    firstRunSteps: ["Confirm company profile", "Review roles", "Check security settings"],
+    defaultChannel: "Email",
+    productionGate: "Enable only after named admin approval and backup admin assignment.",
+  },
+  {
+    role: "manager",
+    title: "Operations manager onboarding",
+    audience: "Site manager / responsible operator",
+    inviteMode: "admin_invite",
+    identityOptions: ["Google sign-in", "Email magic link", "Yandex ID for RU-speaking operators"],
+    requiredChecks: ["Portfolio scope", "Approval limits", "Provider simulation acknowledgement"],
+    firstRunSteps: ["Open dashboard", "Check today queue", "Review service and booking alerts"],
+    defaultChannel: "Portal",
+    productionGate: "Connect live providers only after contracts and API keys are approved.",
+  },
+  {
+    role: "accountant",
+    title: "Finance workspace onboarding",
+    audience: "Accounting and collection team",
+    inviteMode: "admin_invite",
+    identityOptions: ["Email/password", "Google sign-in"],
+    requiredChecks: ["Finance approval limits", "Banking permission", "Debt restriction policy"],
+    firstRunSteps: ["Review ledger", "Confirm payment-control queue", "Check deposit settlements"],
+    defaultChannel: "Email",
+    productionGate: "Requires finance/legal sign-off before live payment or banking integration.",
+  },
+  {
+    role: "staff",
+    title: "Field staff mobile onboarding",
+    audience: "Technicians, cleaning, security and guest support",
+    inviteMode: "request_approval",
+    identityOptions: ["Phone/email invite", "Google sign-in", "Yandex ID where needed"],
+    requiredChecks: ["Team assignment", "Task scope", "No finance visibility"],
+    firstRunSteps: ["Open assigned tasks", "Confirm daily route", "Upload first proof photo"],
+    defaultChannel: "Push",
+    productionGate: "Device and staff roster must be approved before real access cards/cameras are connected.",
+  },
+  {
+    role: "owner",
+    title: "Owner portal onboarding",
+    audience: "Property owner / seller",
+    inviteMode: "request_approval",
+    identityOptions: ["Email magic link", "Google sign-in", "Yandex ID for Russian-language owners"],
+    requiredChecks: ["Unit ownership match", "Preferred language", "Communication consent"],
+    firstRunSteps: ["Confirm profile", "Review documents", "Check statements and service history"],
+    defaultChannel: "Portal",
+    productionGate: "Owner must be matched to original unit data before production access.",
+  },
+  {
+    role: "tenant",
+    title: "Tenant / guest portal onboarding",
+    audience: "Tenant, guest or authorized resident",
+    inviteMode: "request_approval",
+    identityOptions: ["Email magic link", "Yandex ID", "Google sign-in"],
+    requiredChecks: ["Booking/unit relation", "Consent", "Identity or house-rule acceptance"],
+    firstRunSteps: ["Open welcome thread", "Complete pre-arrival checklist", "Use support request if needed"],
+    defaultChannel: "Portal",
+    productionGate: "Access credentials are hidden until booking, deposit and consent rules pass.",
+  },
+]
+
+export const mobileWebCapabilities: MobileWebCapabilityRecord[] = [
+  {
+    id: "MW-RESP-01",
+    title: "One responsive web app, no native app dependency",
+    audience: "all",
+    surface: "Responsive Web",
+    status: "ready",
+    priority: "core",
+    description: "Dashboard, service, booking, document and communication flows stay in the same Next.js web app and adapt to phone, tablet and desktop.",
+    evidence: "Shared RBAC, locale routing, mobile sidebar and responsive tables are reused across modules.",
+    qaSignal: "No horizontal overflow on 390px mobile smoke checks.",
+  },
+  {
+    id: "MW-PWA-02",
+    title: "Installable web shell",
+    audience: "all",
+    surface: "Installable PWA",
+    status: "provider_ready",
+    priority: "core",
+    description: "Manifest and service-worker shell allow a browser install target when HTTPS production hosting is enabled.",
+    evidence: "Manifest route, service worker registration and app icons are provider-ready.",
+    qaSignal: "Manifest and service worker are discoverable in browser QA.",
+  },
+  {
+    id: "MW-FIELD-03",
+    title: "Staff field flow from phone",
+    audience: "staff",
+    surface: "Touch UX",
+    status: "ready",
+    priority: "core",
+    description: "Technicians and cleaning staff can view assigned jobs, SLA, route slot, checklist and proof requirements on mobile.",
+    evidence: "Tickets, calendar and communications are RBAC-visible for staff and hidden from finance.",
+    qaSignal: "Staff mobile smoke covers tickets and calendar.",
+  },
+  {
+    id: "MW-OFFLINE-04",
+    title: "Offline-safe read and retry queue",
+    audience: "all",
+    surface: "Offline Queue",
+    status: "simulation",
+    priority: "important",
+    description: "Critical records can be represented as safe read-only snapshots and queued-write scenarios for demo. Production write sync needs an IndexedDB queue, retry worker, idempotent server API and conflict approval flow.",
+    evidence: "Current app has a PWA shell and demo queue records; sensitive finance, access and deposit writes remain blocked until server approval.",
+    qaSignal: "Demo queue records expose retry policy, scope and guardrail; live write queue is not enabled.",
+  },
+  {
+    id: "MW-A11Y-05",
+    title: "Accessible mobile operations",
+    audience: "all",
+    surface: "Accessibility",
+    status: "ready",
+    priority: "important",
+    description: "Touch targets, skip link, labels, reduced-motion support and clear role-scoped navigation are kept across the web app.",
+    evidence: "Buttons use labels/icons, tables remain searchable, and denied pages explain role scope.",
+    qaSignal: "Browser smoke checks h1, labels and mobile overflow.",
+  },
+]
+
+export const offlineSyncQueue: OfflineSyncRecord[] = [
+  {
+    id: "OFF-9001",
+    role: "staff",
+    module: "tickets",
+    action: "Upload before/after proof for TASK-204",
+    status: "queued",
+    device: "Technician Android Chrome",
+    lastSyncAt: isoDaysFromAnchor(0, 9),
+    retryPolicy: "Retry when online, then manager review after 3 failed attempts",
+    dataScope: "Assigned task only, no finance values",
+    guardrail: "Cannot close job until media reaches server",
+  },
+  {
+    id: "OFF-9002",
+    role: "manager",
+    module: "dashboard",
+    action: "Read daily operation snapshot",
+    status: "read_only_cached",
+    device: "Manager iPhone Safari",
+    lastSyncAt: isoDaysFromAnchor(0, 8),
+    retryPolicy: "Refresh on reconnect",
+    dataScope: "KPI snapshot, no write action",
+    guardrail: "Stale badge remains visible until refresh",
+  },
+  {
+    id: "OFF-9003",
+    role: "tenant",
+    module: "communications",
+    action: "Draft support message from portal thread",
+    status: "queued",
+    device: "Resident mobile browser",
+    lastSyncAt: isoDaysFromAnchor(0, 10),
+    retryPolicy: "Send once online, preserve local timestamp",
+    dataScope: "Own booking/thread only",
+    guardrail: "No broadcast or staff thread access",
+  },
+  {
+    id: "OFF-9004",
+    role: "owner",
+    module: "documents",
+    action: "Open monthly owner statement",
+    status: "synced",
+    device: "Owner tablet browser",
+    lastSyncAt: isoDaysFromAnchor(0, 11),
+    retryPolicy: "Use secure cached copy for 24 hours",
+    dataScope: "Own unit documents only",
+    guardrail: "Expired or changed documents require fresh server check",
+  },
+  {
+    id: "OFF-9005",
+    role: "manager",
+    module: "calendar",
+    action: "Resolve checkout/deposit conflict",
+    status: "conflict",
+    device: "Operations desktop fallback",
+    lastSyncAt: isoDaysFromAnchor(0, 12),
+    retryPolicy: "Manual compare before write",
+    dataScope: "Booking BKG-508 and settlement SET-508",
+    guardrail: "Deposit refund stays blocked until finance approval",
+  },
+]
+
+export const integrationProviders: IntegrationProviderRecord[] = [
+  {
+    id: "INT-SUPA-01",
+    category: "Supabase",
+    provider: "Supabase PostgreSQL/Auth/Realtime/Storage",
+    mode: "live",
+    status: "connected",
+    idealNow: "Keep as the main app backend and source of truth.",
+    scalePath: "Add production RLS audit, backups, storage policies and realtime channels per module.",
+    requiredFromClient: "Production project confirmation, environment variables and data migration approval.",
+    dataHandled: "Users, roles, units, finance, tickets, bookings, documents and audit records.",
+    fallback: "Local demo seed is used only when Supabase is not configured.",
+    riskLevel: "low",
+  },
+  {
+    id: "INT-PAY-02",
+    category: "Payments",
+    provider: "iyzico / PayTR / Param placeholder adapter",
+    mode: "placeholder",
+    status: "blocked_pending_client",
+    idealNow: "Keep demo payment and deposit flows; do not charge real cards yet.",
+    scalePath: "Provider adapter with webhook signature check, retry queue and reconciliation mapping.",
+    requiredFromClient: "Chosen provider contract, API keys, legal approval, refund/deposit policy.",
+    dataHandled: "Card token, amount, currency, transaction state and refund reference.",
+    fallback: "Manual bank transfer and accountant approval queue.",
+    riskLevel: "high",
+  },
+  {
+    id: "INT-BANK-03",
+    category: "Banking",
+    provider: "Bank statement/import and reconciliation placeholder",
+    mode: "simulation",
+    status: "demo_ready",
+    idealNow: "Use generated reconciliation examples and manual statement import for the demo.",
+    scalePath: "Bank-specific import/API adapter after account owner approves access.",
+    requiredFromClient: "Bank list, account permissions, file format/API decision and finance sign-off.",
+    dataHandled: "IBAN, statement rows, payer reference, amount and value date.",
+    fallback: "CSV upload and accountant matching.",
+    riskLevel: "medium",
+  },
+  {
+    id: "INT-SMS-04",
+    category: "SMS",
+    provider: "NetGSM / Twilio compatible placeholder",
+    mode: "provider_ready",
+    status: "demo_ready",
+    idealNow: "Prepare templates, consent checks and retry queues; send no live SMS until approved.",
+    scalePath: "Add provider credentials, sender ID approval, delivery receipts and rate limits.",
+    requiredFromClient: "Sender name, consent language, SMS provider account and pricing approval.",
+    dataHandled: "Phone, template, delivery status, consent and retry count.",
+    fallback: "Portal inbox and manual call task.",
+    riskLevel: "medium",
+  },
+  {
+    id: "INT-EMAIL-05",
+    category: "Email",
+    provider: "Resend / SMTP placeholder",
+    mode: "provider_ready",
+    status: "demo_ready",
+    idealNow: "Use provider-ready email templates for documents, reports and onboarding.",
+    scalePath: "Domain verification, SPF/DKIM/DMARC and suppression list management.",
+    requiredFromClient: "Sending domain, sender address, template approvals and retention policy.",
+    dataHandled: "Email, template variables, delivery events and unsubscribe/suppression state.",
+    fallback: "Portal notification and downloadable document packet.",
+    riskLevel: "medium",
+  },
+  {
+    id: "INT-ACCESS-06",
+    category: "Access",
+    provider: "Salto KS / Dormakaba / Hikvision placeholder",
+    mode: "placeholder",
+    status: "blocked_pending_client",
+    idealNow: "Keep access cards/barriers in simulation and human approval mode.",
+    scalePath: "Adapter per provider with credential lifecycle, audit event import and manual override.",
+    requiredFromClient: "Hardware/provider decision, API availability, access zones and legal sign-off.",
+    dataHandled: "Credential id, zone, validity, resident relation and audit event.",
+    fallback: "Manual security desk task and printed guest list.",
+    riskLevel: "high",
+  },
+  {
+    id: "INT-CAM-07",
+    category: "Camera",
+    provider: "Hikvision / camera event placeholder",
+    mode: "placeholder",
+    status: "blocked_pending_client",
+    idealNow: "Do not connect live cameras for demo; model event references only.",
+    scalePath: "Event-only integration first, then image/video review with privacy controls.",
+    requiredFromClient: "Camera provider, site privacy policy, retention period and authorized users.",
+    dataHandled: "Event timestamp, camera zone, incident link and retention class.",
+    fallback: "Manual incident log and uploaded photo evidence.",
+    riskLevel: "high",
+  },
+  {
+    id: "INT-ID-08",
+    category: "Identity",
+    provider: "Google OAuth / Yandex ID provider-ready",
+    mode: "provider_ready",
+    status: "demo_ready",
+    idealNow: "Keep login buttons provider-ready; live OAuth only after client app IDs are approved.",
+    scalePath: "Supabase OAuth providers, redirect URL allowlist, domain policy and account linking.",
+    requiredFromClient: "Google/Yandex app credentials, redirect domains and login policy.",
+    dataHandled: "User id, email, role, language and consent state.",
+    fallback: "Email/password, magic link or local access profile in controlled QA.",
+    riskLevel: "medium",
+  },
+  {
+    id: "INT-TKT-09",
+    category: "Ticketing",
+    provider: "Internal 1Cati ticketing with Twenty CRM relation",
+    mode: "live",
+    status: "connected",
+    idealNow: "Use the internal ticketing board as the operational ticket system for now.",
+    scalePath: "Keep Twenty CRM for relationship data, and sync only approved contact/deal references.",
+    requiredFromClient: "Confirm whether external helpdesk is required later.",
+    dataHandled: "Ticket, SLA, assignee, media proof, resident relation and action log.",
+    fallback: "CSV export or manual CRM note.",
+    riskLevel: "low",
+  },
+]
+
+export const aiPremiumRecommendations: AiRecommendationRecord[] = [
+  {
+    id: "AI-BRIEF-01",
+    mode: "daily_briefing",
+    title: "Daily operations briefing",
+    audience: "manager",
+    status: "ready",
+    confidence: 88,
+    languageSupport: ["tr", "en", "de", "ru"],
+    sourceRecords: ["serviceTickets", "bookings", "debtAccounts", "guestLifecycleEvents"],
+    recommendation: "Summarize open tickets, SLA breaches, checkouts, debt restrictions and guest messages in one short briefing.",
+    humanApproval: "No direct action; manager decides assignments and escalations.",
+    modelFit: "Reliable for Qwen-class text models because it summarizes structured records.",
+  },
+  {
+    id: "AI-SVC-02",
+    mode: "service_triage",
+    title: "Service ticket triage",
+    audience: "manager",
+    status: "ready",
+    confidence: 84,
+    languageSupport: ["tr", "en", "de", "ru"],
+    sourceRecords: ["serviceTickets", "workforceTasks", "serviceOrders"],
+    recommendation: "Rank tickets by SLA, urgency, debt block and media requirement, then propose the next safe task.",
+    humanApproval: "AI cannot close tickets or bypass debt approval.",
+    modelFit: "Safe because prioritization uses explicit fields and no hidden judgment.",
+  },
+  {
+    id: "AI-DEBT-03",
+    mode: "debt_risk",
+    title: "Debt and restriction explanation",
+    audience: "accountant",
+    status: "human_review",
+    confidence: 81,
+    languageSupport: ["tr", "en", "de"],
+    sourceRecords: ["financeLedger", "debtAccounts", "accessControlRecords"],
+    recommendation: "Explain why an account is high risk and draft a payment-follow-up note.",
+    humanApproval: "Finance/legal approval required before restriction, refund, deposit or payment action.",
+    modelFit: "Good for explanation; not allowed for autonomous financial execution.",
+  },
+  {
+    id: "AI-BOOK-04",
+    mode: "booking_review",
+    title: "Booking and checkout risk review",
+    audience: "manager",
+    status: "ready",
+    confidence: 86,
+    languageSupport: ["tr", "en", "de", "ru"],
+    sourceRecords: ["bookings", "depositSettlements", "accessHandoffs", "documentPackets"],
+    recommendation: "Detect missing ID/deposit/access/cleaning steps and propose a guest-safe message.",
+    humanApproval: "No access code or deposit refund is released by AI.",
+    modelFit: "Structured checklist reasoning is reliable and easy to audit.",
+  },
+  {
+    id: "AI-RPT-05",
+    mode: "report_draft",
+    title: "Owner and manager report draft",
+    audience: "admin",
+    status: "ready",
+    confidence: 82,
+    languageSupport: ["tr", "en", "de", "ru"],
+    sourceRecords: ["reportCards", "cashFlow", "debtAging", "phaseDeliveryRecords"],
+    recommendation: "Draft concise monthly or weekly report text from approved metrics.",
+    humanApproval: "Report must be reviewed before being sent externally.",
+    modelFit: "Works well because numbers come from the app and AI only writes narrative.",
+  },
+  {
+    id: "AI-INT-06",
+    mode: "integration_advice",
+    title: "Integration readiness advisor",
+    audience: "admin",
+    status: "provider_ready",
+    confidence: 79,
+    languageSupport: ["tr", "en", "de"],
+    sourceRecords: ["integrationProviders", "platformControls"],
+    recommendation: "Explain which providers can remain demo-only and what is needed before production connection.",
+    humanApproval: "Client/provider decision stays outside AI.",
+    modelFit: "Good fit for checklist and dependency explanation.",
+  },
+  {
+    id: "AI-NL-07",
+    mode: "natural_language_search",
+    title: "Natural language operational search",
+    audience: "resident",
+    status: "ready",
+    confidence: 83,
+    languageSupport: ["tr", "en", "de", "ru"],
+    sourceRecords: ["searchIndex", "rolePermissions", "roleScopedViews"],
+    recommendation: "Answer only from the user's allowed modules and same language as the question.",
+    humanApproval: "RBAC guard blocks out-of-scope finance, user and global portfolio requests.",
+    modelFit: "High value because the model interprets language while the app enforces permissions.",
+  },
+]
+
+export const aiImageWorkflows: AiImageWorkflowRecord[] = [
+  {
+    id: "AIMG-SRV-01",
+    title: "Service photo proof summary",
+    source: "service_photo",
+    status: "mock_ready",
+    aiUse: "Summarize uploaded before/after photos into a clean field note for manager review.",
+    guardrail: "Human checks the photo and the job cannot close without uploaded evidence.",
+    output: "Suggested completion note, missing-proof warning and resident-friendly explanation.",
+  },
+  {
+    id: "AIMG-CHK-02",
+    title: "Checkout damage evidence review",
+    source: "checkout_photo",
+    status: "provider_ready",
+    aiUse: "Compare checkout photo notes against deposit settlement checklist and flag unclear damage claims.",
+    guardrail: "AI cannot decide deductions or refunds; finance/manager approval remains mandatory.",
+    output: "Damage checklist, confidence flag and required extra photos.",
+  },
+  {
+    id: "AIMG-DOC-03",
+    title: "Document scan quality assistant",
+    source: "document_scan",
+    status: "mock_ready",
+    aiUse: "Detect whether ID, TAPU or contract scans are readable enough before backoffice review.",
+    guardrail: "No identity verification is finalized by AI; originals and legal review still apply.",
+    output: "Readability status, missing corner/blur warning and upload guidance.",
+  },
+  {
+    id: "AIMG-CAM-04",
+    title: "Camera event triage placeholder",
+    source: "camera_event",
+    status: "human_review",
+    aiUse: "Use event metadata only for now; live images/videos stay disabled until privacy approval.",
+    guardrail: "No face recognition, no live camera stream, and no automated access restriction.",
+    output: "Incident log draft linked to manual security review.",
+  },
+]
+
+export const messageTemplates: MessageTemplateRecord[] = [
+  {
+    id: "TPL-BOOKING-01",
+    title: "Booking thank-you and next steps",
+    useCase: "booking_confirmation",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "WhatsApp",
+    owner: "Guest support",
+    approvalStatus: "approved",
+    variables: ["guest_name", "booking_id", "portal_link"],
+    preview: "Thank you {{guest_name}}. Your booking {{booking_id}} is confirmed; useful next steps are in your secure portal.",
+  },
+  {
+    id: "TPL-PREARRIVAL-01",
+    title: "Pre-arrival checklist without spam",
+    useCase: "pre_arrival",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Portal",
+    owner: "Guest support",
+    approvalStatus: "approved",
+    variables: ["guest_name", "arrival_time", "checklist_link"],
+    preview: "Your arrival checklist is ready. Please complete only the missing items before access is released.",
+  },
+  {
+    id: "TPL-MOVEIN-01",
+    title: "Move-in welcome and access handoff",
+    useCase: "move_in",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "WhatsApp",
+    owner: "Guest support",
+    approvalStatus: "approved",
+    variables: ["guest_name", "flat_number", "check_in_time", "access_method"],
+    preview: "Welcome {{guest_name}}, your access details for {{flat_number}} are ready in the portal.",
+  },
+  {
+    id: "TPL-COMFORT-01",
+    title: "First-night comfort check",
+    useCase: "in_stay",
+    languages: ["tr", "en", "ru"],
+    channel: "Portal",
+    owner: "Resident support",
+    approvalStatus: "approved",
+    variables: ["guest_name", "support_link"],
+    preview: "We hope everything is comfortable. If you need support, one request from the portal is enough.",
+  },
+  {
+    id: "TPL-CHECKOUT-01",
+    title: "Checkout inspection and deposit status",
+    useCase: "checkout",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Portal",
+    owner: "Operations",
+    approvalStatus: "approved",
+    variables: ["guest_name", "flat_number", "refund_amount", "statement_link"],
+    preview: "Your checkout statement is ready. Please review the deposit result in the secure portal.",
+  },
+  {
+    id: "TPL-FEEDBACK-01",
+    title: "Post-stay thank-you and private feedback",
+    useCase: "post_stay",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Portal",
+    owner: "Guest support",
+    approvalStatus: "needs_review",
+    variables: ["guest_name", "feedback_link", "review_link"],
+    preview: "Thank you for staying with us. Please share private feedback first; we will ask for a public review only when open issues are closed.",
+  },
+  {
+    id: "TPL-DEBT-01",
+    title: "Debt reminder with human approval",
+    useCase: "debt",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Email",
+    owner: "Finance",
+    approvalStatus: "needs_review",
+    variables: ["resident_name", "balance", "due_date", "payment_link"],
+    preview: "Please review the open balance and choose a payment option before the due date.",
+  },
+  {
+    id: "TPL-SERVICE-01",
+    title: "Service appointment and proof request",
+    useCase: "service",
+    languages: ["tr", "en", "ru"],
+    channel: "Push",
+    owner: "Resident support",
+    approvalStatus: "approved",
+    variables: ["ticket_id", "appointment_time", "technician_name"],
+    preview: "Your service appointment is scheduled. Proof and notes will remain in this ticket.",
+  },
+  {
+    id: "TPL-DOC-01",
+    title: "Missing document request",
+    useCase: "document",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Email",
+    owner: "Backoffice",
+    approvalStatus: "approved",
+    variables: ["document_type", "deadline", "secure_upload_link"],
+    preview: "Please upload the missing document through the secure link before the deadline.",
+  },
+  {
+    id: "TPL-ANN-01",
+    title: "Site announcement with target preview",
+    useCase: "announcement",
+    languages: ["tr", "en", "de", "ru"],
+    channel: "Portal",
+    owner: "Management",
+    approvalStatus: "draft",
+    variables: ["audience", "topic", "effective_date"],
+    preview: "A new site announcement is available for your account.",
+  },
+]
+
+export const documentPackets: DocumentPacketRecord[] = [
+  {
+    id: "PACK-MOVEIN-01",
+    title: "Move-in guest packet",
+    audience: "guest",
+    relatedEntity: "BKG-503",
+    status: "missing_items",
+    requiredDocuments: 6,
+    completedDocuments: 4,
+    signatureStatus: "sent",
+    retentionClass: "guest",
+    nextAction: "Collect ID scan and house-rules signature before access release",
+  },
+  {
+    id: "PACK-CHECKOUT-01",
+    title: "Checkout evidence and settlement packet",
+    audience: "management",
+    relatedEntity: "SET-508",
+    status: "review",
+    requiredDocuments: 8,
+    completedDocuments: 6,
+    signatureStatus: "not_required",
+    retentionClass: "finance",
+    nextAction: "Attach final damage photos and manager decision",
+  },
+  {
+    id: "PACK-OWNER-01",
+    title: "Monthly owner statement packet",
+    audience: "owner",
+    relatedEntity: "RPT-02",
+    status: "complete",
+    requiredDocuments: 5,
+    completedDocuments: 5,
+    signatureStatus: "not_required",
+    retentionClass: "finance",
+    nextAction: "Share secure portal link with owner",
+  },
+  {
+    id: "PACK-BUYER-01",
+    title: "Sales KYC and TAPU packet",
+    audience: "buyer",
+    relatedEntity: "DOCBUY-806",
+    status: "signature_pending",
+    requiredDocuments: 7,
+    completedDocuments: 5,
+    signatureStatus: "blocked",
+    retentionClass: "legal",
+    nextAction: "Correct buyer name and resend signature request",
+  },
+  {
+    id: "PACK-STAFF-01",
+    title: "Field service proof packet",
+    audience: "staff",
+    relatedEntity: "TASK-204",
+    status: "missing_items",
+    requiredDocuments: 4,
+    completedDocuments: 2,
+    signatureStatus: "not_required",
+    retentionClass: "service",
+    nextAction: "Upload before/after photos and resident sign-off",
+  },
+]
+
 export const reportCards: ReportCardRecord[] = [
   {
     id: "RPT-01",
@@ -1300,6 +2730,24 @@ export const reportCards: ReportCardRecord[] = [
     status: "ready",
     metric: "33 kısıtlı erişim",
     insight: "Mobil kod, kart ve plaka erişimi aynı karar motorundan yönetilmeli.",
+  },
+  {
+    id: "RPT-06",
+    title: "AI Gunluk Operasyon Brifingi",
+    cadence: "Günlük",
+    owner: "Mudur + AI",
+    status: "ready",
+    metric: "7 AI akisi / 4 dil",
+    insight: "AI, SLA, borc, rezervasyon ve iletisim onceliklerini kaynakli ozetler; aksiyon insan onayinda kalir.",
+  },
+  {
+    id: "RPT-07",
+    title: "AI Fotograf Kanit ve Belge Kalite Kontrolu",
+    cadence: "Anlık",
+    owner: "Operasyon + Backoffice",
+    status: "needs_review",
+    metric: "4 gorsel is akisi",
+    insight: "Fotograf/belge AI yardimi kanit kalitesini aciklar; hasar, iade veya kimlik kararini tek basina vermez.",
   },
 ]
 
@@ -1388,47 +2836,59 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
     phase: 10,
     title: "Rezervasyon, kiralama, move-in ve checkout",
-    status: "planned",
+    status: "ready_for_uat",
     owner: "Reservations + Operations",
     businessOutcome: "Müsaitlik, rezervasyon, depozito, giriş hazırlığı, checkout, kesinti ve erişim kapatma tek süreç olur.",
     userGuide: "Rezervasyon ekranında takvim, giriş/çıkış işleri, depozito ve final kontrol adımlarını takip edin.",
-    evidence: ["Booking calendar", "Move-in checklist", "Checkout settlement", "Access action queue"],
+    evidence: [
+      "Booking operations API",
+      "Move-in readiness board",
+      "Checkout settlement queue",
+      "Access handoff queue",
+      "Phase 10/11 QA harness",
+    ],
   },
   {
     phase: 11,
     title: "İletişim, bildirim ve doküman merkezi",
-    status: "planned",
+    status: "ready_for_uat",
     owner: "Support + Backoffice",
     businessOutcome: "Sakin, malik, yönetici ve personel iletişimi daire, borç, görev, rezervasyon ve belgeyle ilişkilendirilir.",
     userGuide: "İletişim ve Belgeler ekranlarında konuşma, duyuru, bildirim ve dosya izinlerini yönetin.",
-    evidence: ["Communication inbox", "Document vault", "Notification templates", "Permission-safe attachments"],
+    evidence: [
+      "Omnichannel inbox",
+      "Multilingual template library",
+      "Notification retry queue",
+      "Document packet board",
+      "Provider-ready simulation mode",
+    ],
   },
   {
     phase: 12,
-    title: "Mobil PWA ve kurulabilir kullanıcı deneyimi",
-    status: "planned",
+    title: "Mobil uyumlu web/PWA ve offline-guvenli deneyim",
+    status: "ready_for_uat",
     owner: "Frontend + QA",
-    businessOutcome: "Sakin, personel ve yönetici ana işleri telefondan hızlı, erişilebilir ve kurulabilir PWA olarak yapılır.",
-    userGuide: "Mobil görünümde bakiye, servis, görev, belge, sohbet ve bildirim akışlarını test edin.",
-    evidence: ["Mobile E2E", "Installable PWA target", "Touch-safe navigation", "Performance budget"],
+    businessOutcome: "Native mobile app yerine tek web uygulamasi telefonda hizli, kurulabilir, erisilebilir ve offline-safe calisir.",
+    userGuide: "Offline Senkron ekraninda mobil web hazirligini, offline kuyrugu, stale veri uyarilarini ve rol kapsamlarini test edin.",
+    evidence: ["Responsive web surface", "Manifest/service worker shell", "Offline retry queue", "Touch-safe QA"],
   },
   {
     phase: 13,
-    title: "Dış sistem entegrasyonları",
-    status: "planned",
+    title: "Dis sistem entegrasyonlari",
+    status: "ready_for_uat",
     owner: "Integrations + Security",
-    businessOutcome: "Banka/ödeme, SMS/e-posta, erişim kartı/bariyer, sayaç ve kimlik sistemleri test modu ve retry kuyruğuyla bağlanır.",
-    userGuide: "Ayarlar ekranında entegrasyon durumu, son hata, manuel retry ve bağlantı loglarını takip edin.",
-    evidence: ["Adapter pattern", "Webhook/retry target", "Integration health", "Manual fallback"],
+    businessOutcome: "Supabase canli backend olarak kullanilir; odeme, banka, SMS, e-posta, erisim, kamera ve OAuth baglantilari demo/provider-ready placeholder olarak durur.",
+    userGuide: "Ayarlar ekraninda entegrasyon durumunu, musteri tarafindan gereken karar/API key listesini ve manuel fallback planini takip edin.",
+    evidence: ["Supabase connected", "Provider-ready placeholders", "Integration health matrix", "Manual fallback"],
   },
   {
     phase: 14,
-    title: "AI premium katmanı ve gelişmiş analitik",
-    status: "planned",
+    title: "AI premium katmani ve gelismis analitik",
+    status: "ready_for_uat",
     owner: "AI Governance + Analytics",
-    businessOutcome: "AI günlük brifing, borç riski, servis triage, anomali, doğal dil arama ve rapor taslağı üretir; hassas işlem yapmaz.",
-    userGuide: "AI Rapor Merkezi'nde önerileri kaynak, güven ve insan onayıyla inceleyin.",
-    evidence: ["AI command center", "Guardrailed recommendations", "Source-linked answers", "Evaluation set"],
+    businessOutcome: "AI gunluk brifing, servis triage, borc riski, rezervasyon kontrolu, rapor taslagi, entegrasyon tavsiyesi ve gorsel kanit yardimi uretir; hassas islem yapmaz.",
+    userGuide: "AI Rapor Merkezi ve sohbet asistaninda onerileri kaynak, guven, dil ve insan onayi notuyla inceleyin.",
+    evidence: ["AI command center", "Same-language assistant", "Guardrailed recommendations", "Image-proof workflow"],
   },
   {
     phase: 15,
@@ -1893,6 +3353,24 @@ export function getAccessSummary() {
   }
 }
 
+export function getBookingOperationsSummary() {
+  return {
+    totalBookings: bookings.filter((booking) => booking.status !== "cancelled").length,
+    moveInsToday: bookings.filter((booking) => booking.status === "move_in_today").length,
+    checkoutsToday: bookings.filter((booking) => booking.status === "checkout_today").length,
+    readinessBlocked: bookingReadinessRecords.filter((record) => record.riskLevel === "critical" || record.riskLevel === "high").length,
+    averageReadiness: Math.round(
+      bookingReadinessRecords.reduce((sum, record) => sum + record.readinessScore, 0) /
+        Math.max(bookingReadinessRecords.length, 1)
+    ),
+    turnoverTasks: turnoverTasks.length,
+    blockedTurnoverTasks: turnoverTasks.filter((task) => task.status === "blocked").length,
+    accessPending: accessHandoffs.filter((handoff) => handoff.status === "pending" || handoff.status === "restricted").length,
+    settlementsOpen: depositSettlements.filter((settlement) => settlement.status !== "closed").length,
+    settlementExposureTry: depositSettlements.reduce((sum, settlement) => sum + settlement.depositTry, 0),
+  }
+}
+
 export function getDocumentSummary() {
   return {
     total: documentVault.length,
@@ -1903,12 +3381,84 @@ export function getDocumentSummary() {
   }
 }
 
+export function getCommunicationSummary() {
+  return {
+    openThreads: communicationThreads.length,
+    urgentThreads: communicationThreads.filter((thread) => thread.priority === "high" || thread.priority === "urgent").length,
+    blockedThreads: communicationThreads.filter((thread) => thread.status === "blocked").length,
+    consentIssues: communicationThreads.filter((thread) => thread.consentStatus !== "ok").length,
+    activeRules: notificationRules.filter((rule) => rule.status === "active").length,
+    deliveryFailures: notificationDeliveries.filter(
+      (delivery) => delivery.status === "failed" || delivery.status === "manual_review"
+    ).length,
+    multilingualTemplates: messageTemplates.filter((template) => template.languages.length >= 4).length,
+    pendingApprovals: messageTemplates.filter((template) => template.approvalStatus !== "approved").length,
+    lifecycleSteps: guestLifecycleEvents.length,
+    lifecycleReady: guestLifecycleEvents.filter((event) => event.status === "ready" || event.status === "queued").length,
+    lifecycleSuppressed: guestLifecycleEvents.filter((event) => event.status === "suppressed").length,
+    lifecycleReview: guestLifecycleEvents.filter((event) => event.status === "needs_review").length,
+  }
+}
+
+export function getDocumentPacketSummary() {
+  return {
+    totalPackets: documentPackets.length,
+    completePackets: documentPackets.filter((packet) => packet.status === "complete").length,
+    missingOrReview: documentPackets.filter(
+      (packet) => packet.status === "missing_items" || packet.status === "review"
+    ).length,
+    signatureBlocked: documentPackets.filter((packet) => packet.signatureStatus === "blocked").length,
+    completionRate: Math.round(
+      (documentPackets.reduce((sum, packet) => sum + packet.completedDocuments, 0) /
+        Math.max(documentPackets.reduce((sum, packet) => sum + packet.requiredDocuments, 0), 1)) *
+        100
+    ),
+  }
+}
+
 export function getReportSummary() {
   return {
     total: reportCards.length,
     ready: reportCards.filter((report) => report.status === "ready").length,
     review: reportCards.filter((report) => report.status === "needs_review").length,
     scheduled: reportCards.filter((report) => report.status === "scheduled").length,
+  }
+}
+
+export function getMobileWebSummary(records = offlineSyncQueue) {
+  return {
+    capabilities: mobileWebCapabilities.length,
+    ready: mobileWebCapabilities.filter((item) => item.status === "ready").length,
+    providerReady: mobileWebCapabilities.filter((item) => item.status === "provider_ready").length,
+    needsDeviceTest: mobileWebCapabilities.filter((item) => item.status === "needs_device_test").length,
+    simulation: mobileWebCapabilities.filter((item) => item.status === "simulation").length,
+    queuedWrites: records.filter((item) => item.status === "queued").length,
+    conflicts: records.filter((item) => item.status === "conflict").length,
+    readOnlyCached: records.filter((item) => item.status === "read_only_cached").length,
+  }
+}
+
+export function getIntegrationSummary() {
+  return {
+    total: integrationProviders.length,
+    connected: integrationProviders.filter((item) => item.status === "connected").length,
+    demoReady: integrationProviders.filter((item) => item.status === "demo_ready").length,
+    blockedPendingClient: integrationProviders.filter((item) => item.status === "blocked_pending_client").length,
+    manualFallback: integrationProviders.filter((item) => item.status === "manual_fallback").length,
+    highRisk: integrationProviders.filter((item) => item.riskLevel === "high").length,
+    liveProviders: integrationProviders.filter((item) => item.mode === "live").length,
+  }
+}
+
+export function getAiPremiumSummary() {
+  return {
+    recommendations: aiPremiumRecommendations.length,
+    ready: aiPremiumRecommendations.filter((item) => item.status === "ready").length,
+    humanReview: aiPremiumRecommendations.filter((item) => item.status === "human_review").length,
+    providerReady: aiPremiumRecommendations.filter((item) => item.status === "provider_ready").length,
+    imageWorkflows: aiImageWorkflows.length,
+    imageProviderReady: aiImageWorkflows.filter((item) => item.status === "provider_ready").length,
+    multilingual: aiPremiumRecommendations.filter((item) => item.languageSupport.length >= 4).length,
   }
 }
 

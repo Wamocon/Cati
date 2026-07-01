@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import { useLocale } from "next-intl"
 import {
   AlertTriangle,
   BadgeCheck,
@@ -12,10 +13,15 @@ import {
   WalletCards,
 } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { hasPermission } from "@/lib/rbac"
+import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+  toIntlLocale,
+} from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type {
@@ -43,25 +49,25 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatCents(cents: number, currency = "TRY") {
-  return new Intl.NumberFormat("tr-TR", {
+function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(cents / 100)
 }
 
-function formatEur(value: number) {
-  return new Intl.NumberFormat("tr-TR", {
+function formatEur(value: number, locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(value)
 }
 
-function shortDate(value: string | null) {
+function shortDate(value: string | null, locale = "tr-TR") {
   if (!value) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
   }).format(new Date(value))
@@ -162,7 +168,15 @@ function WorkItem({
   )
 }
 
-function PaymentPlanRow({ plan }: { plan: Phase7PaymentPlan }) {
+function PaymentPlanRow({
+  intlLocale,
+  plan,
+  t,
+}: {
+  intlLocale: string
+  plan: Phase7PaymentPlan
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={CreditCard}>
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -171,56 +185,75 @@ function PaymentPlanRow({ plan }: { plan: Phase7PaymentPlan }) {
             {plan.dealName} / {plan.buyerName}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatEur(plan.nextDueEur)} vade / {shortDate(plan.nextDueAt)} / {plan.completionPercent}% tamamlandı
+            {formatEur(plan.nextDueEur, intlLocale)} {t("vade")} / {shortDate(plan.nextDueAt, intlLocale)} / {plan.completionPercent}% {t("tamamlandı")}
           </p>
         </div>
-        <StatusBadge variant={planVariant(plan.status)}>{planLabel(plan.status)}</StatusBadge>
+        <StatusBadge variant={planVariant(plan.status)}>{t(planLabel(plan.status))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{blockerLabel(plan.approvalBlocker)}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(blockerLabel(plan.approvalBlocker))}</p>
     </WorkItem>
   )
 }
 
-function DepositRow({ item }: { item: Phase7DepositDecision }) {
+function DepositRow({
+  intlLocale,
+  item,
+  t,
+}: {
+  intlLocale: string
+  item: Phase7DepositDecision
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={WalletCards}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-foreground">
-            {item.unitNo ?? item.reservationId} / {item.guestName ?? "Misafir"}
+            {item.unitNo ?? item.reservationId} / {item.guestName ?? t("Misafir")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Checkout {shortDate(item.checkOutAt)} / {formatCents(item.depositCents, item.currency)}
+            {t("Çıkış")} {shortDate(item.checkOutAt, intlLocale)} / {formatCents(item.depositCents, item.currency, intlLocale)}
           </p>
         </div>
-        <StatusBadge variant={depositVariant(item.depositStatus)}>{depositLabel(item.depositStatus)}</StatusBadge>
+        <StatusBadge variant={depositVariant(item.depositStatus)}>{t(depositLabel(item.depositStatus))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{item.nextAction}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(item.nextAction)}</p>
     </WorkItem>
   )
 }
 
-function RestrictionRow({ item }: { item: Phase7RestrictionDecision }) {
+function RestrictionRow({
+  intlLocale,
+  item,
+  t,
+}: {
+  intlLocale: string
+  item: Phase7RestrictionDecision
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={LockKeyhole}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-foreground">
-            {item.unitNo ?? item.unitId} / {item.residentName ?? "Kayıt"}
+            {item.unitNo ?? item.unitId} / {item.residentName ?? t("Kayıt")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatCents(item.balanceCents, item.currency)} / {item.agingBucket} gün
+            {formatCents(item.balanceCents, item.currency, intlLocale)} / {item.agingBucket} {t("gün")}
           </p>
         </div>
-        <StatusBadge variant={restrictionVariant(item)}>{riskLabel(item.riskLevel)}</StatusBadge>
+        <StatusBadge variant={restrictionVariant(item)}>{t(riskLabel(item.riskLevel))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{item.suggestedAction}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(item.suggestedAction)}</p>
     </WorkItem>
   )
 }
 
 export function PaymentRestrictionControl() {
   const user = useUser()
+  const locale = resolveDashboardLocale(useLocale())
+  const intlLocale = toIntlLocale(locale)
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const [data, setData] = useState<PaymentRestrictionData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const canApproveFinance =
@@ -280,15 +313,14 @@ export function PaymentRestrictionControl() {
     }
   }, [data?.source, fetchControls])
 
-  const lastUpdated = useMemo(() => {
-    if (!data?.generatedAt) return null
-    return new Intl.DateTimeFormat("tr-TR", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(data.generatedAt))
-  }, [data])
+  const lastUpdated = data?.generatedAt
+    ? new Intl.DateTimeFormat(intlLocale, {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(data.generatedAt))
+    : null
 
   const attentionChecks = useMemo(
     () => data?.quality.checks.filter((check) => check.status !== "passed") ?? [],
@@ -334,17 +366,16 @@ export function PaymentRestrictionControl() {
           <div className="flex flex-wrap items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <h2 className="text-base font-black text-card-foreground">
-              Ödeme, depozito ve kısıt kontrol merkezi
+              {t("Ödeme, depozito ve kısıt kontrol merkezi")}
             </h2>
             <StatusBadge variant="accent">Phase 7</StatusBadge>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Satış ödeme planı, depozito iadesi, banka mutabakatı ve borca bağlı erişim kısıtı aynı onay kuyruğunda izlenir.
-            Sistem karar önerir; finans ve erişim aksiyonları insan onayıyla kapanır.
+            {t("Satış ödeme planı, depozito iadesi, banka mutabakatı ve borca bağlı erişim kısıtı aynı onay kuyruğunda izlenir. Sistem karar önerir; finans ve erişim aksiyonları insan onayıyla kapanır.")}
           </p>
           {lastUpdated && (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              Son güncelleme: {lastUpdated}
+              {t("Son güncelleme")}: {lastUpdated}
             </p>
           )}
         </div>
@@ -357,38 +388,44 @@ export function PaymentRestrictionControl() {
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
           >
             <RefreshCw className={cn("h-4 w-4", requestState === "loading" && "animate-spin")} />
-            Kontrolleri yenile
+            {t("Kontrolleri yenile")}
           </button>
           {canApproveFinance && (
-            <DashboardActionButton
-              actionType="finance.reconciliation.create"
-              ariaLabel="Mutabakat inceleme isteği oluştur"
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
-              entityTable="payment_transactions"
-              metadata={{
-                phase: 7,
-                approvalQueue: data?.summary.approvalQueue ?? 0,
-                source: data?.source ?? "unknown",
-              }}
-              successLabel="İnceleme isteği alındı"
-              title="Phase 7 mutabakat inceleme isteği"
-            >
-              <BadgeCheck className="h-4 w-4" />
-              İnceleme aç
-            </DashboardActionButton>
+            <DashboardActionMenu
+              label="Aksiyonlar"
+              ariaLabel="Odeme kontrol aksiyonlari"
+              buttonClassName="border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              items={[
+                {
+                  key: "review",
+                  label: "Inceleme ac",
+                  description: `${data?.summary.approvalQueue ?? 0} onay kaydi takipte.`,
+                  icon: <BadgeCheck />,
+                  actionType: "finance.reconciliation.create",
+                  ariaLabel: "Mutabakat inceleme istegi olustur",
+                  entityTable: "payment_transactions",
+                  title: "Phase 7 mutabakat inceleme istegi",
+                  metadata: {
+                    phase: 7,
+                    approvalQueue: data?.summary.approvalQueue ?? 0,
+                    source: data?.source ?? "unknown",
+                  },
+                },
+              ]}
+            />
           )}
         </div>
       </div>
 
       {requestState === "error" && (
         <div role="alert" className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-          Ödeme kontrol verisi şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.
+          {t("Ödeme kontrol verisi şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.")}
         </div>
       )}
 
       {attentionChecks.length > 0 && (
         <div role="alert" className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          Kalite kontrolü dikkat istiyor: {attentionChecks.map((check) => check.label).join(", ")}
+          {t("Kalite kontrolü dikkat istiyor")}: {attentionChecks.map((check) => check.label).join(", ")}
         </div>
       )}
 
@@ -396,7 +433,7 @@ export function PaymentRestrictionControl() {
         {summaryCards.map(({ label, value, Icon }) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+              <p className="text-xs font-bold uppercase text-muted-foreground">{t(label)}</p>
               <Icon className="h-4 w-4 text-primary" />
             </div>
             <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
@@ -407,46 +444,46 @@ export function PaymentRestrictionControl() {
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-foreground">Ödeme planı ve depozito işi</h3>
+            <h3 className="text-sm font-black text-foreground">{t("Ödeme planı ve depozito işi")}</h3>
             <StatusBadge variant="warning">
-              Açık vade {formatEur(data?.summary.openPlanExposureEur ?? 0)}
+              {t("Açık vade")} {formatEur(data?.summary.openPlanExposureEur ?? 0, intlLocale)}
             </StatusBadge>
           </div>
-          {topPlan.map((plan) => <PaymentPlanRow key={plan.id} plan={plan} />)}
-          {topDeposits.map((item) => <DepositRow key={item.id} item={item} />)}
+          {topPlan.map((plan) => <PaymentPlanRow key={plan.id} intlLocale={intlLocale} plan={plan} t={t} />)}
+          {topDeposits.map((item) => <DepositRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
           {topPlan.length + topDeposits.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Açık ödeme veya depozito işi bulunamadı.
+              {t("Açık ödeme veya depozito işi bulunamadı.")}
             </div>
           )}
         </div>
 
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-foreground">Kısıt ve mutabakat kuyruğu</h3>
+            <h3 className="text-sm font-black text-foreground">{t("Kısıt ve mutabakat kuyruğu")}</h3>
             <StatusBadge variant="danger">
-              {formatCents(data?.summary.depositExposureCents ?? 0, currency)} depozito
+              {formatCents(data?.summary.depositExposureCents ?? 0, currency, intlLocale)} {t("Depozito")}
             </StatusBadge>
           </div>
-          {topRestrictions.map((item) => <RestrictionRow key={item.id} item={item} />)}
+          {topRestrictions.map((item) => <RestrictionRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
           {topReconciliation.map((item) => (
             <WorkItem key={item.id} icon={CreditCard}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-black text-foreground">
-                    {providerLabel(item.provider)} / {item.providerReference ?? item.id}
+                    {t(providerLabel(item.provider))} / {item.providerReference ?? item.id}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatCents(item.amountCents, item.currency)} / {shortDate(item.paidAt)}
+                    {formatCents(item.amountCents, item.currency, intlLocale)} / {shortDate(item.paidAt, intlLocale)}
                   </p>
                 </div>
-                <StatusBadge variant={reconVariant(item)}>{reconLabel(item.status)}</StatusBadge>
+                <StatusBadge variant={reconVariant(item)}>{t(reconLabel(item.status))}</StatusBadge>
               </div>
             </WorkItem>
           ))}
           {topRestrictions.length + topReconciliation.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Kısıt veya mutabakat kuyruğu boş.
+              {t("Kısıt veya mutabakat kuyruğu boş.")}
             </div>
           )}
         </div>

@@ -19,31 +19,28 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
       opacity: 1,
-      transition: { staggerChildren: 0.08, delayChildren: 0.04 * i },
+      transition: { staggerChildren: 0.035, delayChildren: 0.025 * i },
     }),
   }
 
   const child: Variants = {
     hidden: {
       opacity: 0,
-      y: 24,
-      rotateX: -45,
+      y: 10,
     },
     visible: {
       opacity: 1,
       y: 0,
-      rotateX: 0,
       transition: {
-        type: "spring",
-        damping: 18,
-        stiffness: 120,
+        duration: 0.28,
+        ease: "easeOut",
       },
     },
   }
 
   if (reduced) {
     return (
-      <h1 className={cn("perspective-1000 overflow-hidden", className)}>
+      <h1 className={cn("perspective-1000 overflow-visible", className)}>
         {words.map((word, index) => {
           const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
           return (
@@ -60,7 +57,12 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
   }
 
   return (
-    <motion.h1 className={cn("perspective-1000 overflow-hidden", className)} variants={container} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+    <motion.h1
+      className={cn("perspective-1000 overflow-visible", className)}
+      variants={container}
+      initial="hidden"
+      animate="visible"
+    >
       {words.map((word, index) => {
         const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
         return (

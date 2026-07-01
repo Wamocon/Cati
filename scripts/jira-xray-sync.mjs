@@ -26,6 +26,7 @@ const env = await loadEnv()
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has("--dry-run") || env.JIRA_DRY_RUN === "1"
 const skipAttachments = args.has("--skip-attachments") || env.JIRA_SKIP_ATTACHMENTS === "1"
+const skipQaAttachments = args.has("--skip-qa-attachments") || env.JIRA_SKIP_QA_ATTACHMENTS === "1"
 const required = [
   "JIRA_BASE_URL",
   "JIRA_EMAIL",
@@ -46,9 +47,9 @@ const projectTemplateKey =
   env.JIRA_PROJECT_TEMPLATE_KEY ?? "com.pyxis.greenhopper.jira:gh-simplified-kanban-classic"
 
 const phaseStatusSummary = {
-  done: 9,
+  done: 14,
   inProgress: 1,
-  todo: 5,
+  todo: 0,
 }
 
 function adfText(text) {
@@ -159,7 +160,7 @@ const phaseDetails = {
   },
   5: {
     startDate: "2026-06-25",
-    endDate: "2026-07-01",
+    endDate: "2026-06-30",
     owner: "Product Lead + Engineering Lead",
     persona: "Owners, tenants, staff, guests and administrators",
     value:
@@ -169,8 +170,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/PRD.md", "apps/web/lib/rbac.ts"],
   },
   6: {
-    startDate: "2026-06-29",
-    endDate: "2026-07-10",
+    startDate: "2026-06-26",
+    endDate: "2026-06-30",
     owner: "Finance Analyst + Engineering Lead",
     persona: "Accountants and management",
     value:
@@ -180,8 +181,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/BRD.md", "docs/requirements/option-3-ai-site-crm/TRD.md"],
   },
   7: {
-    startDate: "2026-07-06",
-    endDate: "2026-07-17",
+    startDate: "2026-06-27",
+    endDate: "2026-06-30",
     owner: "Finance Analyst + Legal/Operations Owner",
     persona: "Residents, accountants and managers",
     value:
@@ -191,8 +192,8 @@ const phaseDetails = {
     links: ["https://www.iyzico.com/en/", "https://www.paytr.com/en", "docs/requirements/option-3-ai-site-crm/Third-Party-Integration-And-Vendor-Plan.md"],
   },
   8: {
-    startDate: "2026-07-20",
-    endDate: "2026-07-31",
+    startDate: "2026-06-28",
+    endDate: "2026-06-30",
     owner: "Product Lead + Operations Owner",
     persona: "Residents and site operations staff",
     value:
@@ -202,8 +203,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/PRD.md", "apps/web/app/[locale]/dashboard"],
   },
   9: {
-    startDate: "2026-08-03",
-    endDate: "2026-08-14",
+    startDate: "2026-06-28",
+    endDate: "2026-06-30",
     owner: "Operations Owner + Engineering Lead",
     persona: "Staff, contractors and managers",
     value:
@@ -213,8 +214,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/PRD.md", "docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md"],
   },
   10: {
-    startDate: "2026-08-17",
-    endDate: "2026-08-28",
+    startDate: "2026-06-29",
+    endDate: "2026-06-30",
     owner: "Product Lead + Operations Owner",
     persona: "Managers, residents, guests and security/access staff",
     value:
@@ -224,8 +225,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/BRD.md", "docs/requirements/option-3-ai-site-crm/TRD.md"],
   },
   11: {
-    startDate: "2026-08-31",
-    endDate: "2026-09-11",
+    startDate: "2026-06-29",
+    endDate: "2026-06-30",
     owner: "Product Lead + Operations Owner",
     persona: "Residents, owners, staff and management",
     value:
@@ -235,8 +236,8 @@ const phaseDetails = {
     links: ["https://postmarkapp.com/pricing", "https://aws.amazon.com/ses/", "https://firebase.google.com/pricing"],
   },
   12: {
-    startDate: "2026-09-14",
-    endDate: "2026-09-25",
+    startDate: "2026-06-30",
+    endDate: "2026-06-30",
     owner: "Frontend Lead + QA Lead",
     persona: "Mobile residents, owners, staff and managers",
     value:
@@ -246,8 +247,8 @@ const phaseDetails = {
     links: ["https://web.dev/learn/pwa/", "https://firebase.google.com/pricing", "https://onesignal.com/pricing"],
   },
   13: {
-    startDate: "2026-09-28",
-    endDate: "2026-10-16",
+    startDate: "2026-06-30",
+    endDate: "2026-06-30",
     owner: "Engineering Lead + Procurement/Finance Owner",
     persona: "Managers, accountants, residents and operations staff using external services",
     value:
@@ -257,8 +258,8 @@ const phaseDetails = {
     links: ["docs/requirements/option-3-ai-site-crm/Third-Party-Integration-And-Vendor-Plan.md"],
   },
   14: {
-    startDate: "2026-10-19",
-    endDate: "2026-10-30",
+    startDate: "2026-06-30",
+    endDate: "2026-06-30",
     owner: "AI/Product Lead + Security Lead",
     persona: "Managers, accountants, support and operations leads",
     value:
@@ -268,13 +269,13 @@ const phaseDetails = {
     links: ["https://platform.openai.com/docs/pricing", "docs/requirements/option-3-ai-site-crm/Security-Compliance-Plan.md"],
   },
   15: {
-    startDate: "2026-11-02",
-    endDate: "2026-11-13",
+    startDate: "2026-07-01",
+    endDate: "2026-07-08",
     owner: "QA Lead + Launch Manager",
     persona: "Client steering group, admins and launch support",
     value:
-      "Turns the portfolio rollout into a launchable product through UAT, security checks, training, runbooks, monitoring and hypercare.",
-    deliverables: ["UAT evidence", "Security and performance checks", "Launch runbook and training"],
+      "Turns the portfolio rollout into a launchable product through functional QA, security checks, client acceptance preparation, training, runbooks, monitoring and hypercare.",
+    deliverables: ["Functional QA evidence", "Security and performance checks", "Client acceptance preparation", "Launch runbook and training"],
     dependencies: ["All launch-critical phase gates", "Production data", "Client sign-off"],
     links: ["docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md", "docs/ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md"],
   },
@@ -325,6 +326,13 @@ const externalReferenceLinks = {
     "Uyumsoft - https://www.uyumsoft.com/",
   ],
   ai: ["OpenAI API Pricing - https://platform.openai.com/docs/pricing"],
+  api: [
+    "OpenAPI Specification 3.2.0 - https://spec.openapis.org/oas/latest.html",
+    "OpenAPI Learn - https://learn.openapis.org/",
+    "Redocly CLI - https://redocly.com/docs/cli",
+    "Swagger UI - https://swagger.io/tools/swagger-ui/",
+    "Playwright API testing - https://playwright.dev/docs/api-testing",
+  ],
   security: [
     "OWASP ASVS - https://owasp.org/www-project-application-security-verification-standard/",
     "WCAG 2.2 - https://www.w3.org/TR/WCAG22/",
@@ -431,6 +439,9 @@ function linksForPhase(phase, story = "") {
   if ([13, 14].includes(phase.phase) || /ai|ki|modell|provider/i.test(story)) {
     externalReferenceLinks.ai.forEach((link) => links.add(link))
   }
+  if ([3, 13, 15].includes(phase.phase) || /api|contract|vertrag|openapi|webhook|adapter/i.test(story)) {
+    externalReferenceLinks.api.forEach((link) => links.add(link))
+  }
   if ([3, 11, 12, 15].includes(phase.phase)) {
     externalReferenceLinks.security.forEach((link) => links.add(link))
   }
@@ -443,7 +454,7 @@ function storyAcceptanceCriteria(phase, story) {
     "The story has a clear owner, reviewed scope, start date, target end date and Jira status.",
     "The implementation uses real project data, Supabase-backed APIs or a documented provider adapter; no production workflow is mock-only.",
     "RBAC/RLS, audit logging and error handling are checked wherever user, finance, document, access or provider data is touched.",
-    "Evidence is attached or linked: screenshots, test output, UAT note, API contract or provider sandbox proof as relevant.",
+    "Evidence is attached or linked: screenshots, test output, client acceptance note, API contract or provider sandbox proof as relevant.",
   ]
 
   if (/kostenregister|abhängigkeiten|abhaengigkeiten|provider-shortlist|entscheidung/i.test(story)) {
@@ -483,7 +494,7 @@ function storyWorkItems(story) {
   const work = [
     `Confirm the exact scope for: ${story}.`,
     "Update code, schema, API, UI and documentation only where this story requires it.",
-    "Add or update tests and UAT evidence before moving the ticket to Done.",
+    "Add or update functional, regression, API or security test evidence before moving the ticket to Done.",
   ]
   if (/provider|kostenregister|abhängigkeiten|abhaengigkeiten/i.test(story)) {
     work.push("Add provider links, cost model, owner, decision gate and current status for every external dependency.")
@@ -538,11 +549,11 @@ const phases = [
     goal:
       "Die Kundenanforderung wird vollständig in ein belastbares Produkt-, Technik- und Liefermodell überführt.",
     outcome:
-      "BRD, PRD, TRD, Marktanalyse und 15-Phasen-Plan liegen vor und bilden die Grundlage für Umsetzung, Angebot und UAT.",
+      "BRD, PRD, TRD, Marktanalyse und 15-Phasen-Plan liegen vor und bilden die Grundlage für Umsetzung, Angebot und Kundenabnahme.",
     stories: [
       "BRD, PRD, TRD und Marktanhang auf Basis der Kundenanforderung finalisieren",
       "Türkische und internationale Wettbewerber als Funktionsbaseline auswerten",
-      "15-Phasen-Roadmap mit Release 1, V1, V2 und UAT-Szenarien freigeben",
+      "15-Phasen-Roadmap mit Release 1, V1, V2 und Kundenabnahme-Szenarien freigeben",
     ],
   },
   {
@@ -634,7 +645,7 @@ const phases = [
     goal:
       "Offene Forderungen, Online-Zahlungen, Kautionen und Sperrregeln werden konsequent und nachvollziehbar gesteuert.",
     outcome:
-      "Payment-Control-API, Finanzoberfläche, Kautions-/Restriktionslogik und QA-Harness sind als reviewfähige Implementierungsbasis vorhanden; produktive Provider-, Bank-, Legal- und UAT-Entscheidungen bleiben offen.",
+      "Payment-Control-API, Finanzoberfläche, Kautions-/Restriktionslogik und QA-Harness sind als reviewfähige Implementierungsbasis vorhanden; produktive Provider-, Bank-, Legal- und Kundenabnahme-Entscheidungen bleiben offen.",
     stories: [
       "Payment-Intent, Provider-Webhook und idempotente Zahlungsverbuchung implementieren",
       "Kaution blockieren, verwenden, teilweise erstatten und vollständig abrechnen",
@@ -655,6 +666,7 @@ const phases = [
       "Servicekatalog mit Preis, SLA, Zuständigkeit und Verfügbarkeit verwalten",
       "Servicebestellung mit Schuldenprüfung, Zahlung oder Belastung als Wizard bauen",
       "Akzeptierte Servicebestellung automatisch in Ticket und Aufgabe überführen",
+      "Ticket-Aktionsfreigabe mit KI-Hinweis, Risiko, Herkunft und Managerentscheidung sichtbar machen",
     ],
   },
   {
@@ -675,7 +687,7 @@ const phases = [
   },
   {
     phase: 10,
-    status: "in-progress",
+    status: "done",
     version: "Release 2",
     component: "Buchung und Zugang",
     title: "Buchung, Einzug, Auszug, Kaution und Zugang Ende-zu-Ende steuern",
@@ -691,7 +703,7 @@ const phases = [
   },
   {
     phase: 11,
-    status: "todo",
+    status: "done",
     version: "Release 2",
     component: "Kommunikation und Dokumente",
     title: "Kommunikation, Benachrichtigungen und Dokumente zentralisieren",
@@ -707,7 +719,7 @@ const phases = [
   },
   {
     phase: 12,
-    status: "todo",
+    status: "done",
     version: "Release 2",
     component: "Mobile PWA",
     title: "Mobile PWA für Bewohner, Eigentümer, Personal und Manager liefern",
@@ -723,7 +735,7 @@ const phases = [
   },
   {
     phase: 13,
-    status: "todo",
+    status: "done",
     version: "Release 3",
     component: "Integrationen",
     title: "Externe Integrationen über Adapter, Provider und sichere Webhooks anbinden",
@@ -742,12 +754,12 @@ const phases = [
       "Access-, Barrier-, Karten-, Kamera- und Zähler-Adapter nach Hardware-Inventar mit manueller Fallback-Queue planen",
       "Provider-Credentials, Secret-Rotation, Testmodus und produktive Umgebung sauber trennen",
       "Integrationskonsole mit Health, Latenz, Fehlern, Queue-Länge, manueller Wiederholung und Audit bauen",
-      "Integrations-Runbook für Support, Provider-Ausfall, Rückfall auf manuelle Prozesse und Launch-UAT erstellen",
+      "Integrations-Runbook für Support, Provider-Ausfall, Rückfall auf manuelle Prozesse und Launch-Abnahme erstellen",
     ],
   },
   {
     phase: 14,
-    status: "todo",
+    status: "done",
     version: "Release 3",
     component: "KI und Analytics",
     title: "KI-Premium-Layer und fortgeschrittene Analytics kontrolliert einführen",
@@ -763,16 +775,16 @@ const phases = [
   },
   {
     phase: 15,
-    status: "todo",
+    status: "in-progress",
     version: "Release 3",
     component: "QA und Launch",
-    title: "QA, Sicherheit, Performance, UAT, Schulung und Launch absichern",
+    title: "QA, Sicherheit, Performance, Kundenabnahme, Schulung und Launch absichern",
     goal:
       "Der Launch erfolgt mit belastbaren Tests, Sicherheitsprüfung, Trainingsmaterial und Betriebsrunbook.",
     outcome:
-      "UAT-Suite, Xray-Testfälle, E2E-Tests, RLS-Prüfung, Monitoring, Backup/Restore und Schulung sind abgeschlossen.",
+      "Funktionale Testsuite, Xray-Testfälle, E2E-Tests, RLS-Prüfung, Monitoring, Backup/Restore und Schulung sind abgeschlossen.",
     stories: [
-      "Xray-Testfälle und UAT-Szenarien für alle kritischen Workflows pflegen",
+      "Xray-Testfälle und Kundenabnahme-Szenarien für alle kritischen Workflows pflegen",
       "Sicherheits-, Performance-, RLS-, Mobile- und Browser-QA automatisieren",
       "Launch-Runbook, Supportprozess, Schulungsunterlagen und Abnahmeprotokoll erstellen",
     ],
@@ -925,6 +937,18 @@ const tests = [
     ],
   },
   {
+    uid: "test-021",
+    component: "Services und Tickets",
+    summary: "Ticket-Aktionsfreigabe wird sichtbar entschieden",
+    precondition: "Ein Manager ist angemeldet und es gibt mindestens eine Ticket-Aktion mit Freigabepflicht.",
+    steps: [
+      ["Ticketseite öffnen.", "Die Freigabespur zeigt offene Aktionsanfragen mit Herkunft, Risiko und zuständigen Rollen."],
+      ["Eine neue Ticket-Aktion über das Aktionsmenü oder die KI-Vorlage anlegen.", "Die Aktion wird als Anfrage gespeichert und nicht direkt ausgeführt."],
+      ["Als Manager die Aktion genehmigen.", "Der Status wechselt auf genehmigt und die Entscheidung ist in der Oberfläche sichtbar."],
+      ["Dieselbe Aktion ablehnen oder mit einer nicht berechtigten Rolle öffnen.", "Ablehnung oder fehlende Berechtigung wird klar angezeigt und protokolliert."],
+    ],
+  },
+  {
     uid: "test-013",
     component: "Mobile PWA",
     summary: "Mitarbeiter schließt Aufgabe mobil mit Mediennachweis ab",
@@ -1021,6 +1045,838 @@ const tests = [
     ],
   },
 ]
+
+const exploratoryTests = [
+  {
+    uid: "explore-001",
+    exploratory: true,
+    component: "QA und Launch",
+    summary: "Explorative Manager-Session für Gesamtüberblick, Suche und kritische Aktionen",
+    precondition:
+      "Ein Responsible Manager ist angemeldet. Testdaten für Wohnungen, Personen, Finanzen, Tickets, Buchungen, Dokumente, Integrationen und KI sind vorhanden.",
+    steps: [
+      ["Dashboard öffnen und KPIs, Navigation und Warnhinweise prüfen.", "Der Manager sieht eine verständliche operative Lage ohne leere Hauptbereiche oder technische Fehler."],
+      ["Globale Suche mit Wohnung, Person, Dokument, Ticket und Schuldbegriff ausführen.", "Die Suche liefert nachvollziehbare Ergebnisse und zeigt keine unberechtigten Daten."],
+      ["Von einem Suchergebnis in Detail- oder Modulansicht wechseln.", "Der Kontext bleibt erhalten und die Zielseite zeigt passende Daten und Aktionen."],
+      ["Eine kritische Aktion wie Änderungsanfrage, Datenvalidierung oder Benachrichtigungsprüfung starten.", "Die Aktion zeigt Bestätigung, Audit-Kontext und keine stille Datenänderung ohne Berechtigung."],
+      ["Sprache wechseln und dieselbe Arbeitslogik erneut prüfen.", "Navigation, Haupttexte und Status bleiben verständlich und funktional konsistent."],
+    ],
+  },
+  {
+    uid: "explore-002",
+    exploratory: true,
+    component: "Finanzen",
+    summary: "Explorative Buchhaltungs-Session für Ledger, Schulden, Zahlungen und Sperrregeln",
+    precondition:
+      "Ein Accountant ist angemeldet. Es existieren offene Forderungen, Zahlungen, Kautionen, manuelle Abgleiche und gesperrte Einheiten.",
+    steps: [
+      ["Finanzbereich öffnen und nach Schuld, Wohnung und Eigentümer filtern.", "Die Ergebnisliste reagiert korrekt und zeigt verständliche Salden, Status und Belege."],
+      ["Ledger, Zahlungskontrollen und Kautionen für eine Einheit vergleichen.", "Salden, offene Forderungen und Kautionsstatus widersprechen sich nicht."],
+      ["Eine simulierte Zahlung oder Abgleichaktion prüfen.", "Das System zeigt Freigabe, Referenz, Idempotenzhinweis und Audit-Kontext."],
+      ["Als nicht berechtigte Rolle dieselbe Finanzroute direkt aufrufen.", "Der Zugriff wird blockiert oder auf eine erlaubte Ansicht zurückgeführt."],
+      ["Sperrregel für Services, Buchung oder Zugang fachlich prüfen.", "Die Einschränkung ist sichtbar, begründet und ohne falsche Erfolgsanzeige."],
+    ],
+  },
+  {
+    uid: "explore-003",
+    exploratory: true,
+    component: "Nutzer und Rollen",
+    summary: "Explorative Rollen-Session für Owner, Tenant, Staff, Accountant und Manager",
+    precondition:
+      "Lokale Access-Profile oder Testnutzer für Owner, Tenant, Staff, Accountant und Manager sind verfügbar.",
+    steps: [
+      ["Nacheinander mit jeder Rolle anmelden.", "Jede Rolle landet auf einer passenden Startseite mit erlaubten Modulen."],
+      ["Sidebar, direkte URL-Aufrufe und globale Suche pro Rolle prüfen.", "Nicht erlaubte Module und sensible Daten bleiben verborgen."],
+      ["Dokumente, Finanzen, Tickets und Kommunikation pro Rolle stichprobenartig öffnen.", "Die sichtbaren Daten passen zur Rolle und Beziehung zur Einheit."],
+      ["Eine Aktion ausführen, die nur Manager oder Accountant darf.", "Unberechtigte Rollen erhalten eine klare Sperre ohne Datenänderung."],
+      ["Audit- und Statushinweise prüfen.", "Das System erklärt, warum etwas erlaubt, blockiert oder nur im Demo-Modus verfügbar ist."],
+    ],
+  },
+  {
+    uid: "explore-004",
+    exploratory: true,
+    component: "Buchung und Zugang",
+    summary: "Explorative Operations-Session für Buchung, Einzug, Checkout und Zugang",
+    precondition:
+      "Ein Operations Manager ist angemeldet. Es gibt freie, reservierte, belegte und gesperrte Einheiten sowie offene Check-in- und Checkout-Ereignisse.",
+    steps: [
+      ["Reservierungskalender öffnen und Verfügbarkeit für mehrere Einheiten prüfen.", "Kollisionen, Reservierungen und belegte Zeiträume werden eindeutig angezeigt."],
+      ["Einzugsflow mit Zahlung, Kaution, Aufgaben und Zugang kontrollieren.", "Alle Voraussetzungen sind sichtbar und fehlende Schritte blockieren den Abschluss."],
+      ["Checkout mit Inspektion, Schaden, Restkaution und Zugangssperre prüfen.", "Abzüge, Restbetrag, Zugang und Aufgabenstatus sind fachlich konsistent."],
+      ["Provider-Ausfall oder Demo-Modus für Zugang betrachten.", "Das System nutzt Queue oder manuellen Fallback und zeigt keinen falschen Live-Erfolg."],
+      ["Bewohnerkommunikation nach Check-in oder Checkout prüfen.", "Texte sind professionell, nicht aufdringlich und an Status sowie Sprache angepasst."],
+    ],
+  },
+  {
+    uid: "explore-005",
+    exploratory: true,
+    component: "Services und Tickets",
+    summary: "Explorative Service- und Ticket-Session für Bewohner und Personal",
+    precondition:
+      "Ein Bewohner und ein Staff-Nutzer sind verfügbar. Es existieren Servicekatalog, offene Tickets, SLA-Risiken und Aufgaben mit Mediennachweis.",
+    steps: [
+      ["Als Bewohner einen kostenpflichtigen und einen kostenlosen Service prüfen.", "Preis, SLA, Verfügbarkeit und mögliche Schuldensperre sind verständlich."],
+      ["Servicebestellung bis zur Ticketanlage verfolgen.", "Akzeptierte Bestellungen erzeugen Ticket und Aufgabe mit passender Priorität."],
+      ["Als Staff-Nutzer Aufgabe mobil öffnen.", "Ort, SLA, Beschreibung, Medienpflicht und Status sind auf kleinem Bildschirm nutzbar."],
+      ["Foto- oder Notiznachweis simulieren und Aufgabe abschließen.", "Der Abschluss ist nachvollziehbar und Management sieht Bericht und Zeitstempel."],
+      ["SLA-Risiko und Eskalation prüfen.", "Überfällige oder riskante Vorgänge sind sichtbar und priorisiert."],
+    ],
+  },
+  {
+    uid: "explore-006",
+    exploratory: true,
+    component: "Kommunikation und Dokumente",
+    summary: "Explorative Kommunikations- und Dokumenten-Session mit Mehrsprachigkeit",
+    precondition:
+      "Nachrichtenvorlagen, Zustellstatus, Dokumente, Dokumentenpakete und Rollenbeziehungen sind in Testdaten vorhanden.",
+    steps: [
+      ["Kommunikationszentrum öffnen und nach Empfänger, Kanal und Status suchen.", "Threads, Templates und Zustellversuche sind filterbar und verständlich."],
+      ["Template in Türkisch, Deutsch, Englisch und Russisch prüfen.", "Variablen, Tonalität und fachliche Aussage bleiben korrekt."],
+      ["Providerfehler und Wiederholversuch für E-Mail oder SMS prüfen.", "Fehlergrund, Retry-Status und Opt-out werden sauber angezeigt."],
+      ["Dokument als berechtigte und nicht berechtigte Rolle öffnen.", "Rollen- und Wohnungsbeziehungen steuern den Zugriff korrekt."],
+      ["Dokumenten-Upload oder Paketstatus prüfen.", "Demo- oder Storage-Modus ist klar erkennbar und sensible Dateien werden nicht öffentlich behandelt."],
+    ],
+  },
+  {
+    uid: "explore-007",
+    exploratory: true,
+    component: "Integrationen",
+    summary: "Explorative Integrations-Session für Provider, Queue, Kosten und Fallback",
+    precondition:
+      "Integrationskonsole enthält Payment-, Messaging-, Access-, Monitoring- und Storage-Provider im Demo- oder Placeholder-Modus.",
+    steps: [
+      ["Integrationskonsole öffnen und Providerstatus vergleichen.", "Jeder Provider zeigt Modus, Health, letzte Aktivität, Kosten- oder Entscheidungsstatus."],
+      ["Fehlgeschlagenen Job öffnen.", "Fehlergrund, Retry-Anzahl, Provider-Referenz und nächste Aktion sind sichtbar."],
+      ["Manuelle Wiederholung oder Fallback prüfen.", "Nur berechtigte Rollen können eine Wiederholung starten und die Aktion wird protokolliert."],
+      ["Produktiv- und Demo-Modus fachlich vergleichen.", "Nicht bestätigte Verträge, API-Keys oder Hardware bleiben klar als offen markiert."],
+      ["Provider-Links und API-Spec-Hinweise prüfen.", "Das Team findet die benötigten Links für technische Prüfung und spätere Produktion."],
+    ],
+  },
+  {
+    uid: "explore-008",
+    exploratory: true,
+    component: "KI und Analytics",
+    summary: "Explorative KI-Session für gleiche Sprache, Quellen, Grenzen und Mehrwert",
+    precondition:
+      "KI-Chat und AI-Premium-Daten sind aktiv. Es existieren offene Schulden, SLA-Risiken, Buchungen und Integrationshinweise.",
+    steps: [
+      ["KI auf Türkisch, Deutsch, Englisch und Russisch ansprechen.", "Die Antwort nutzt dieselbe Sprache wie die Anfrage."],
+      ["Nach Tagesprioritäten und Begründung fragen.", "Die KI nennt verständliche Empfehlungen mit Quellen- oder Datenhinweis."],
+      ["Direkte Zahlung, Erstattung, Zugangssperre oder Rollenänderung verlangen.", "Die KI verweigert autonome kritische Ausführung und schlägt einen Freigabeprozess vor."],
+      ["Unklare oder fehlende Daten abfragen.", "Die KI kennzeichnet Unsicherheit statt falsche Sicherheit zu erzeugen."],
+      ["KI-Antwort im operativen Kontext bewerten.", "Die Antwort ist kurz, hilfreich und nicht überladen."],
+    ],
+  },
+  {
+    uid: "explore-009",
+    exploratory: true,
+    component: "Mobile PWA",
+    summary: "Explorative Mobile- und Offline-Session für reale Nutzung vor Ort",
+    precondition:
+      "Die Anwendung läuft im mobilen Viewport. Rollen für Staff, Manager, Tenant und Accountant sind verfügbar.",
+    steps: [
+      ["Mobile Navigation, Tabellen und Hauptaktionen in mehreren Rollen öffnen.", "Texte überlappen nicht und Hauptaktionen bleiben erreichbar."],
+      ["Offline-Sync-Ansicht als erlaubte Rolle prüfen.", "Queue, letzter Sync, Konflikte und erlaubte Aktionen sind verständlich."],
+      ["Offline-Sync als nicht erlaubte Rolle direkt aufrufen.", "Der Zugriff wird sauber blockiert oder zur erlaubten Ansicht geführt."],
+      ["Such- und Filterdialog im mobilen Viewport nutzen.", "Filter werden erst nach Bestätigung angewendet und Ergebnisstatus ist sichtbar."],
+      ["Browser zurück, Refresh und Sprachwechsel testen.", "Die Anwendung bleibt stabil und verliert keine kritische Navigation."],
+    ],
+  },
+  {
+    uid: "explore-010",
+    exploratory: true,
+    component: "QA und Launch",
+    summary: "Explorative Barrierefreiheit-, Fehler- und Launch-Readiness-Session",
+    precondition:
+      "Die Anwendung läuft mit aktuellen Testdaten. Browser-Konsole, Netzwerkansicht und Tastaturbedienung können geprüft werden.",
+    steps: [
+      ["Wichtige Seiten nur mit Tastatur bedienen.", "Fokus, Dialoge, Menüs und Buttons sind erreichbar und verständlich."],
+      ["Hauptseiten mit langsamer Verbindung oder Reload prüfen.", "Loading-, Fehler- und leere Zustände bleiben professionell."],
+      ["Mehrere Module mit Suche, Filter, Tabellen und Aktionen durchklicken.", "Es treten keine blockierenden Konsolenfehler oder 500er-Antworten auf."],
+      ["Datenschutz- und sensible Finanzbereiche stichprobenartig prüfen.", "Sensible Daten sind nur in erlaubtem Kontext sichtbar."],
+      ["Offene Produktionsabhängigkeiten prüfen.", "Clientdaten, Provider, API-Keys, Storage, Legal und Security-Gates sind klar als offen oder erledigt markiert."],
+    ],
+  },
+]
+
+const manualTests = [...tests, ...exploratoryTests]
+
+function slugLabel(value) {
+  return String(value)
+    .normalize("NFKD")
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-")
+    .slice(0, 60)
+}
+
+function testPhaseNumbers(test) {
+  const phase = phaseForTest(test)
+  return phase ? [phase.phase] : [15]
+}
+
+function phaseLabelsForNumbers(phaseNumbers) {
+  return phaseNumbers.map((phase) => phaseLabel(phase))
+}
+
+function componentLabel(component) {
+  return `component-${slugLabel(component)}`
+}
+
+function manualTestLabels(test) {
+  return [
+    "xray",
+    "testcase",
+    "manual",
+    test.exploratory ? "exploratory" : "functional",
+    test.exploratory ? "charter" : "system-test",
+    "critical-flow",
+    "option3",
+    componentLabel(test.component),
+    ...phaseLabelsForNumbers(testPhaseNumbers(test)),
+  ]
+}
+
+const automatedTests = [
+  {
+    uid: "auto-001",
+    component: "QA und Launch",
+    phaseNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+    summary: "Full-App-QA prueft Schema, APIs, Browser-Flows und phasenuebergreifende Regression",
+    command: "pnpm qa:full-app -- --base-url http://127.0.0.1:3104",
+    classification: "Automatisierte Regression",
+    evidenceKey: "full-app-qa",
+    features: [
+      "Supabase-Schema und Storage-Bereitschaft",
+      "RBAC-geschuetzte API-Vertraege",
+      "Dashboard-Browser-Smoke-Flows",
+      "Implementierungsbasis Phase 01-14",
+    ],
+  },
+  {
+    uid: "auto-002",
+    component: "QA und Launch",
+    phaseNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    summary: "Phasenkontinuitaet prueft Status, Routenabdeckung und KI-Rollenverhalten",
+    command: "pnpm phase:continuity -- --base-url http://127.0.0.1:3104",
+    classification: "Automatisierte Phasensteuerung",
+    evidenceKey: "phase-continuity",
+    features: ["Statusintegritaet fuer 15 Phasen", "Routenabdeckung", "Rollenspezifische KI-Hinweise"],
+  },
+  {
+    uid: "auto-003",
+    component: "Nutzer und Rollen",
+    phaseNumbers: [5, 6],
+    summary: "Phase-05-06-Harness prueft Nutzer, Rollen, Beziehungen und Finanzoberflaechen",
+    command: "pnpm phase:05-06 -- --base-url http://127.0.0.1:3104 --max-attempts 2",
+    classification: "Automatisierter Phasen-Harness",
+    evidenceKey: "phase-05-06",
+    features: ["Personen- und Wohnungsbeziehungen", "RBAC-Grenzen", "Ledger- und Finanz-UI-Smoke"],
+  },
+  {
+    uid: "auto-004",
+    component: "Finanzen",
+    phaseNumbers: [6, 7, 8, 9],
+    summary: "Phase-06-09-Harness prueft Ledger, Zahlungskontrollen, Services, Tickets und SLA-Flows",
+    command: "pnpm phase:06-09 -- --base-url http://127.0.0.1:3104 --max-attempts 2",
+    classification: "Automatisierter Phasen-Harness",
+    evidenceKey: "phase-06-09",
+    features: ["Ledger- und Zahlungskontrollen", "Schuldenrestriktionen", "Serviceauftraege", "Aufgaben- und SLA-Regression"],
+  },
+  {
+    uid: "auto-005",
+    component: "Buchung und Zugang",
+    phaseNumbers: [10, 11],
+    summary: "Phase-10-11-Harness prueft Buchung, Einzug, Checkout, Kommunikation und Dokumente",
+    command: "pnpm phase:10-11 -- --base-url http://127.0.0.1:3104 --max-attempts 2",
+    classification: "Automatisierter Phasen-Harness",
+    evidenceKey: "phase-10-11",
+    features: ["Reservierungslebenszyklus", "Einzugs- und Checkout-Aktionen", "Benachrichtigungs-Retry", "Dokumentenpakete"],
+  },
+  {
+    uid: "auto-006",
+    component: "Mobile PWA",
+    phaseNumbers: [12, 13, 14],
+    summary: "Phase-12-14-Harness prueft Mobile Web, Offline Sync, Integrationen und KI Premium",
+    command: "pnpm phase:12-14 -- --base-url http://127.0.0.1:3104 --max-attempts 2",
+    classification: "Automatisierter Phasen-Harness",
+    evidenceKey: "phase-12-14",
+    features: ["Mobile- und PWA-Bereitschaft", "Offline-Sync-RBAC", "Integrationsplatzhalter", "Mehrsprachige KI-Antworten"],
+  },
+  {
+    uid: "auto-007",
+    component: "QA und Launch",
+    phaseNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    summary: "Browser-Flow-Automation prueft Phase 01-11 als End-to-End-Meilenstein",
+    command: "node scripts/manual-phase-01-11-flow.mjs --base-url http://127.0.0.1:3104",
+    classification: "Automatisierter Browser-Smoke-Test",
+    evidenceKey: "manual-phase-01-11-flow",
+    features: ["Flow von Foundation bis Buchung", "API-Pruefungen", "Browser-Schrittnachweis"],
+  },
+  {
+    uid: "auto-008",
+    component: "Stammdaten",
+    phaseNumbers: [4, 8, 9, 10, 11, 13, 14],
+    summary: "Such- und Filter-Audit prueft operative Suche in Dashboard-Modulen",
+    command: "node scripts/search-filter-audit.mjs --base-url http://127.0.0.1:3104",
+    classification: "Automatisierte UX-Regression",
+    evidenceKey: "search-filter-audit",
+    features: ["Globale Suche", "Tabellensuche", "Korrekte Filterergebnisse", "Operative Suchnutzbarkeit"],
+  },
+  {
+    uid: "auto-009",
+    component: "UX und Design",
+    phaseNumbers: [2, 4],
+    summary: "Filter-UX-Smoke prueft explizites Anwenden von Filteraenderungen",
+    command: "node scripts/filter-ux-smoke.mjs --base-url http://127.0.0.1:3104",
+    classification: "Automatisierter UX-Smoke-Test",
+    evidenceKey: "filter-ux-smoke",
+    features: ["Filterdialog-Verhalten", "Feedback nach Anwendung", "Zuruecksetzen von Filtern"],
+  },
+  {
+    uid: "auto-010",
+    component: "Mobile PWA",
+    phaseNumbers: [12],
+    summary: "Offline-Sync-Rollen-Audit prueft erlaubte und gesperrte Rollen",
+    command: "node scripts/offline-sync-role-audit.mjs --base-url http://127.0.0.1:3104",
+    classification: "Automatisierter RBAC-Smoke-Test",
+    evidenceKey: "offline-sync-role-audit",
+    features: ["Offline-Queue-Zugriff fuer Admin, Manager und Personal", "Sperre fuer Buchhaltung, Eigentuemer und Mieter", "Sichtbarkeit im Browsermenue"],
+  },
+  {
+    uid: "auto-011",
+    component: "UX und Design",
+    phaseNumbers: [2, 12, 15],
+    summary: "Responsive-Audit prueft Desktop, Tablet und Mobile auf Overflow und sichtbare Fehler",
+    command: "node scripts/manual-responsive-audit.mjs --base-url http://127.0.0.1:3104",
+    classification: "Automatisierter Responsive-Smoke-Test",
+    evidenceKey: "manual-responsive-audit",
+    features: ["Desktop-, Tablet- und Mobile-Layout", "Sichtbare Navigation", "Kein kritischer Overflow"],
+  },
+  {
+    uid: "auto-012",
+    component: "QA und Launch",
+    phaseNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    summary: "Playwright-E2E-Suite prueft Landing, Login, Sprache, Plattform, Dashboard und Responsive-Flows",
+    command: "pnpm --filter cati-web test:e2e",
+    classification: "Automatisierter Playwright-E2E-Test",
+    evidenceKey: "playwright-e2e",
+    features: ["Landing- und Produktseiten", "Login und lokale Access-Profile", "Locale-Routing", "Dashboard-E2E", "Responsive-Pruefungen"],
+  },
+  {
+    uid: "auto-013",
+    component: "Plattform und Sicherheit",
+    phaseNumbers: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    summary: "OpenAPI-Vertrag prueft dokumentierte API-Pfade gegen echte Next.js-Routen",
+    command: "pnpm api:spec:validate",
+    classification: "Automatisierter API-Contract-Test",
+    evidenceKey: "openapi-contract",
+    features: [
+      "OpenAPI-3.2.0-Spezifikation",
+      "Abgleich dokumentierter API-Pfade mit App-Routen",
+      "API-Testbarkeit fuer interne QA und spaeteres Provider-Onboarding",
+      "Jira/Xray-Nachweis ueber lokalen JSON-Report",
+    ],
+  },
+]
+
+const qaReportSpecs = [
+  {
+    key: "full-app-qa",
+    name: "Full App QA Harness",
+    fileName: "full-app-qa-report.json",
+    pathIncludes: ["full-app-qa-"],
+  },
+  {
+    key: "phase-continuity",
+    name: "Phase Continuity Harness",
+    fileName: "phase-continuity-report.json",
+    pathIncludes: ["phase-continuity-"],
+  },
+  {
+    key: "phase-05-06",
+    name: "Phase 05-06 Harness",
+    fileName: "phase-05-06-report.json",
+    pathIncludes: ["phase-05-06-harness-"],
+  },
+  {
+    key: "phase-06-09",
+    name: "Phase 06-09 Harness",
+    fileName: "phase-06-09-report.json",
+    pathIncludes: ["phase-06-09-harness-"],
+  },
+  {
+    key: "phase-10-11",
+    name: "Phase 10-11 Harness",
+    fileName: "phase-10-11-report.json",
+    pathIncludes: ["phase-10-11-"],
+  },
+  {
+    key: "phase-12-14",
+    name: "Phase 12-14 Harness",
+    fileName: "phase-12-14-report.json",
+    pathIncludes: ["phase-12-14-"],
+  },
+  {
+    key: "manual-phase-01-11-flow",
+    name: "Phase 01-11 Browser Flow",
+    fileName: "manual-phase-01-11-flow-report.json",
+    pathIncludes: ["manual-phase-01-11-flow-"],
+  },
+  {
+    key: "search-filter-audit",
+    name: "Search and Filter Audit",
+    fileName: "search-filter-audit-report.json",
+    pathIncludes: ["search-filter-audit"],
+  },
+  {
+    key: "filter-ux-smoke",
+    name: "Filter UX Smoke",
+    fileName: "filter-ux-smoke-report.json",
+    pathIncludes: ["filter-ux-smoke"],
+  },
+  {
+    key: "offline-sync-role-audit",
+    name: "Offline Sync Role Audit",
+    fileName: "offline-sync-role-audit-report.json",
+    pathIncludes: ["offline-sync-role-audit"],
+  },
+  {
+    key: "manual-responsive-audit",
+    name: "Responsive Audit",
+    fileName: "manual-responsive-audit.json",
+    pathIncludes: ["manual-responsive-audit-full", "manual-responsive-audit-dashboard", "manual-responsive-audit-current"],
+  },
+  {
+    key: "playwright-e2e",
+    name: "Playwright E2E JUnit",
+    fileName: "results.xml",
+    pathIncludes: ["playwright-junit"],
+    xml: true,
+  },
+  {
+    key: "openapi-contract",
+    name: "OpenAPI Contract Validation",
+    fileName: "openapi-contract-report.json",
+    pathIncludes: ["openapi-contract"],
+  },
+]
+
+const testExecutionGroups = [
+  {
+    uid: "execution-phase-01-04",
+    summary: "Test Execution - Phase 01-04 Foundation, UX, Platform and Unit Matrix",
+    phaseNumbers: [1, 2, 3, 4],
+    component: "QA und Launch",
+    evidenceKeys: ["full-app-qa", "phase-continuity", "search-filter-audit", "manual-responsive-audit", "playwright-e2e"],
+  },
+  {
+    uid: "execution-phase-05-07",
+    summary: "Test Execution - Phase 05-07 Users, Ledger, Payments and Debt Rules",
+    phaseNumbers: [5, 6, 7],
+    component: "QA und Launch",
+    evidenceKeys: ["phase-05-06", "phase-06-09", "full-app-qa", "phase-continuity"],
+  },
+  {
+    uid: "execution-phase-08-09",
+    summary: "Test Execution - Phase 08-09 Service Catalogue, Tickets, Workforce and SLA",
+    phaseNumbers: [8, 9],
+    component: "QA und Launch",
+    evidenceKeys: ["phase-06-09", "search-filter-audit", "full-app-qa", "phase-continuity"],
+  },
+  {
+    uid: "execution-phase-10-11",
+    summary: "Test Execution - Phase 10-11 Booking, Checkout, Communication and Documents",
+    phaseNumbers: [10, 11],
+    component: "QA und Launch",
+    evidenceKeys: ["phase-10-11", "manual-phase-01-11-flow", "search-filter-audit", "full-app-qa"],
+  },
+  {
+    uid: "execution-phase-12-14",
+    summary: "Test Execution - Phase 12-14 Mobile Web, Offline Sync, Integrations and AI",
+    phaseNumbers: [12, 13, 14],
+    component: "QA und Launch",
+    evidenceKeys: ["phase-12-14", "offline-sync-role-audit", "full-app-qa", "manual-responsive-audit"],
+  },
+  {
+    uid: "execution-phase-15",
+    summary: "Test Execution - Phase 15 Final Regression, Security and Launch Readiness",
+    phaseNumbers: [15],
+    component: "QA und Launch",
+    evidenceKeys: [
+      "full-app-qa",
+      "phase-continuity",
+      "phase-12-14",
+      "search-filter-audit",
+      "offline-sync-role-audit",
+      "manual-responsive-audit",
+      "playwright-e2e",
+      "openapi-contract",
+    ],
+  },
+  {
+    uid: "execution-major-functionality-roles",
+    summary: "Test Execution - Hauptfunktionen und rollenbasierte Regression",
+    phaseNumbers: phases.map((phase) => phase.phase),
+    component: "QA und Launch",
+    scope:
+      "Major functionality and role-based regression across Manager, Accountant, Owner, Tenant, Staff and Operations.",
+    testUids: tests.map((test) => test.uid),
+    automatedUids: ["auto-001", "auto-002", "auto-008", "auto-010", "auto-011", "auto-013"],
+    evidenceKeys: [
+      "full-app-qa",
+      "phase-continuity",
+      "search-filter-audit",
+      "offline-sync-role-audit",
+      "manual-responsive-audit",
+      "openapi-contract",
+    ],
+  },
+  {
+    uid: "execution-exploratory-role-sessions",
+    summary: "Test Execution - Explorative Rollen- und Hauptfunktions-Sessions",
+    phaseNumbers: phases.map((phase) => phase.phase),
+    component: "QA und Launch",
+    scope:
+      "Session-based exploratory testing for role behavior, usability, edge cases, data visibility and launch readiness.",
+    testUids: exploratoryTests.map((test) => test.uid),
+    automatedUids: [],
+    evidenceKeys: ["search-filter-audit", "manual-responsive-audit", "playwright-e2e", "openapi-contract"],
+  },
+]
+
+function automatedTestLabels(test) {
+  return [
+    "xray",
+    "testcase",
+    "automated",
+    "regression",
+    "qa-evidence",
+    "option3",
+    componentLabel(test.component),
+    ...phaseLabelsForNumbers(test.phaseNumbers),
+  ]
+}
+
+function automatedTestDescription(test, artifact) {
+  return doc([
+    {
+      title: "Automatisierte Testklassifikation",
+      text: [
+        `Klassifikation: ${test.classification}.`,
+        `Befehl: ${test.command}.`,
+        `Verlinkte Phasen: ${test.phaseNumbers.map((phase) => String(phase).padStart(2, "0")).join(", ")}.`,
+      ],
+    },
+    {
+      title: "Funktionsabdeckung",
+      items: test.features,
+    },
+    {
+      title: "Aktueller Nachweis",
+      text: artifact
+        ? [
+            `Aktuelles lokales Ergebnis: ${artifact.status.toUpperCase()} aus ${artifact.relativePath}.`,
+            `Erstellt oder geaendert: ${artifact.generatedAt ?? artifact.lastWriteTime}. Kurzfassung: ${artifact.summaryText}.`,
+          ]
+        : ["Es wurde noch kein lokales JSON/JUnit-Ergebnis gefunden. Bitte den Befehl ausfuehren und Jira danach erneut synchronisieren."],
+    },
+    {
+      title: "Erwartetes Ergebnis",
+      text: [
+        "Die automatisierte Pruefung muss ohne kritische Konsolenfehler, Rechteverletzungen, defekte Routen, fehlerhafte API-Vertraege oder blockierende UI-Regressionen bestehen.",
+      ],
+    },
+  ])
+}
+
+function testPlanDescription(functionalCount, exploratoryCount, automatedCount, evidenceArtifacts) {
+  return doc([
+    {
+      title: "Zweck",
+      text: [
+        "Dieser Xray Test Plan ist der zentrale QA-Steuerungspunkt fuer die 1Cati Phase 01-15 Lieferung.",
+        "Funktionale Systemtests, automatisierte Regressionstests, API-Tests, Rollenpruefungen und Launch-Readiness-Nachweise sind getrennt klassifiziert und in einem Plan verlinkt.",
+      ],
+    },
+    {
+      title: "Abdeckung",
+      items: [
+        `${functionalCount} funktionale Systemtests fuer kritische Arbeitsablaeufe.`,
+        `${exploratoryCount} explorative rollen- und funktionsbezogene Testfaelle fuer flexible Ad-hoc-Pruefung.`,
+        `${automatedCount} automatisierte Playwright-, API-, RBAC-, Phasen-Harness- und UX-Smoke-Tests.`,
+        `${testExecutionGroups.length} Test Executions steuern Phasen, Hauptfunktionen, Rollen und explorative Sessions.`,
+        "Phase 01-14 ist als Implementierungsbasis abgeschlossen. Phase 15 fuer finales QA und Launch Readiness ist in Bearbeitung.",
+        "Echte Kundendaten, Provider-Vertraege, API-Schluessel, rechtliche/fachliche Freigaben und explorative Kundenabnahme bleiben separate Produktions-Gates.",
+      ],
+    },
+    {
+      title: "Aktuelle automatisierte Nachweise",
+      items:
+        evidenceArtifacts.length > 0
+          ? evidenceArtifacts.map((artifact) => `${artifact.name}: ${artifact.status.toUpperCase()} - ${artifact.summaryText}`)
+          : ["No local automated evidence file was found yet."],
+    },
+  ])
+}
+
+function testSetDescription({ title, purpose, testCount, labels, evidenceArtifacts = [] }) {
+  return doc([
+    {
+      title: "Zweck",
+      text: [purpose],
+    },
+    {
+      title: "Klassifikation",
+      items: [`Geplante Testfaelle in diesem Set: ${testCount}.`, `Labels: ${labels.join(", ")}.`],
+    },
+    {
+      title: "Nachweisregel",
+      items: [
+        "Funktionale Tests brauchen klare Vorbedingung, Testschritte und erwartetes Ergebnis.",
+        "Automatisierte Tests brauchen ein aktuelles Pass/Fail-Ergebnis ueber eine Test Execution und JSON/JUnit-Nachweis, wenn vorhanden.",
+        "Fehlgeschlagene Tests brauchen einen verlinkten Defect, einen Blocker-Kommentar oder eine bewusste Launch-Risiko-Entscheidung.",
+      ],
+    },
+    ...(evidenceArtifacts.length > 0
+      ? [
+          {
+            title: "Aktuelle Nachweise",
+            items: evidenceArtifacts.map((artifact) => `${artifact.name}: ${artifact.status.toUpperCase()} - ${artifact.summaryText}`),
+          },
+        ]
+      : []),
+  ])
+}
+
+function executionDescription(group, evidenceArtifacts, linkedTestCount) {
+  const phasesInGroup = group.phaseNumbers.map((phase) => phases.find((item) => item.phase === phase)).filter(Boolean)
+  const passed = evidenceArtifacts.length > 0 && evidenceArtifacts.every((artifact) => artifact.status === "passed")
+  return doc([
+    {
+      title: "Ausfuehrungsumfang",
+      text: [
+        `Diese Test Execution speichert den aktuellen QA-Nachweis fuer die Phasen ${group.phaseNumbers.map((phase) => String(phase).padStart(2, "0")).join(", ")}.`,
+        ...(group.scope ? [`Scope: ${group.scope}`] : []),
+        `Verlinkte Testfaelle: ${linkedTestCount}. Aktueller Nachweisstatus: ${passed ? "bestanden" : "Pruefung noetig oder Nachweis fehlt"}.`,
+      ],
+    },
+    {
+      title: "Funktionsumfang",
+      items: phasesInGroup.map((phase) => `Phase ${String(phase.phase).padStart(2, "0")}: ${phase.title} - ${phase.outcome}`),
+    },
+    {
+      title: "Aktuelle automatisierte Ergebnisse",
+      items:
+        evidenceArtifacts.length > 0
+          ? evidenceArtifacts.map(
+              (artifact) =>
+                `${artifact.name}: ${artifact.status.toUpperCase()} | ${artifact.summaryText} | ${artifact.relativePath}`
+            )
+          : ["Fuer diese Test Execution ist aktuell keine lokale Nachweisdatei vorhanden."],
+    },
+    {
+      title: "Freigaberegel",
+      items: [
+        "Alle kritischen automatisierten Nachweise sollen bestanden sein, bevor die Kundenabnahme vorbereitet wird.",
+        "Exploratives manuelles Testen wird durch diese automatisierten Ergebnisse nicht ersetzt.",
+        "Produktive Provider-Zugangsdaten und Validierung echter Kundendaten bleiben separate Freigabe-Gates.",
+      ],
+    },
+  ])
+}
+
+async function walkFiles(directory) {
+  const entries = await fs.readdir(directory, { withFileTypes: true }).catch(() => [])
+  const files = []
+  for (const entry of entries) {
+    const absolutePath = path.join(directory, entry.name)
+    if (entry.isDirectory()) files.push(...(await walkFiles(absolutePath)))
+    else if (entry.isFile()) files.push(absolutePath)
+  }
+  return files
+}
+
+function safeReadSummaryValue(value) {
+  if (value === undefined || value === null) return null
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value)
+  return null
+}
+
+function countPassedItems(value) {
+  if (!value || typeof value !== "object") return { total: 0, passed: 0, failed: 0 }
+  let total = 0
+  let passed = 0
+  let failed = 0
+  const visit = (item) => {
+    if (!item || typeof item !== "object") return
+    if (typeof item.passed === "boolean") {
+      total += 1
+      if (item.passed) passed += 1
+      else failed += 1
+    }
+    if (Array.isArray(item)) item.forEach(visit)
+    else Object.values(item).forEach(visit)
+  }
+  visit(value)
+  return { total, passed, failed }
+}
+
+function summarizeJsonReport(payload) {
+  const status =
+    payload?.passed === true || payload?.ok === true
+      ? "passed"
+      : payload?.passed === false || payload?.ok === false
+        ? "failed"
+        : "unknown"
+  const counts = countPassedItems(payload)
+  const fragments = []
+
+  if (payload?.generatedAt) fragments.push(`generatedAt=${payload.generatedAt}`)
+  if (payload?.baseUrl) fragments.push(`baseUrl=${payload.baseUrl}`)
+  if (payload?.server?.status) fragments.push(`server=${payload.server.status}`)
+  if (Array.isArray(payload?.api?.checks)) fragments.push(`apiChecks=${payload.api.checks.length}`)
+  if (Array.isArray(payload?.browser?.results)) fragments.push(`browserResults=${payload.browser.results.length}`)
+  if (Array.isArray(payload?.gates)) fragments.push(`gates=${payload.gates.length}`)
+  if (Array.isArray(payload?.gateResults)) fragments.push(`gates=${payload.gateResults.length}`)
+  if (Array.isArray(payload?.apiChecks)) fragments.push(`apiChecks=${payload.apiChecks.length}`)
+  if (Array.isArray(payload?.browserChecks)) fragments.push(`browserChecks=${payload.browserChecks.length}`)
+  if (Number.isFinite(payload?.checked)) fragments.push(`checked=${payload.checked}`)
+  if (Number.isFinite(payload?.pathCount)) fragments.push(`apiPaths=${payload.pathCount}`)
+  if (Number.isFinite(payload?.routeCount)) fragments.push(`appRoutes=${payload.routeCount}`)
+  if (Number.isFinite(payload?.failures?.length)) fragments.push(`failures=${payload.failures.length}`)
+  if (Number.isFinite(payload?.errors?.length)) fragments.push(`errors=${payload.errors.length}`)
+  if (counts.total > 0) fragments.push(`nestedPass=${counts.passed}/${counts.total}`)
+
+  const summaryValue =
+    safeReadSummaryValue(payload?.summary) ??
+    safeReadSummaryValue(payload?.scope) ??
+    safeReadSummaryValue(payload?.previewText)
+  if (summaryValue) fragments.unshift(summaryValue)
+
+  return {
+    status,
+    summaryText: fragments.length > 0 ? fragments.slice(0, 8).join("; ") : "JSON report parsed.",
+    generatedAt: payload?.generatedAt ?? null,
+  }
+}
+
+function summarizeXmlReport(text) {
+  const failures = Number(text.match(/\bfailures="(\d+)"/)?.[1] ?? 0)
+  const errors = Number(text.match(/\berrors="(\d+)"/)?.[1] ?? 0)
+  const testsCount = Number(text.match(/\btests="(\d+)"/)?.[1] ?? 0)
+  const skipped = Number(text.match(/\bskipped="(\d+)"/)?.[1] ?? 0)
+  const status = failures === 0 && errors === 0 && testsCount > 0 ? "passed" : testsCount > 0 ? "failed" : "unknown"
+  return {
+    status,
+    summaryText: `tests=${testsCount}; failures=${failures}; errors=${errors}; skipped=${skipped}`,
+    generatedAt: null,
+  }
+}
+
+async function collectQaEvidence() {
+  const resultsRoot = path.join(rootDir, "quality", "results")
+  const files = await walkFiles(resultsRoot)
+  const artifacts = []
+
+  for (const spec of qaReportSpecs) {
+    const matches = []
+    for (const filePath of files) {
+      const normalized = filePath.replace(/\\/g, "/")
+      const matchesFile = path.basename(filePath).toLowerCase() === spec.fileName.toLowerCase()
+      const matchesPath = spec.pathIncludes.some((part) => normalized.includes(part))
+      if (matchesFile && matchesPath) {
+        const stat = await fs.stat(filePath)
+        matches.push({ filePath, stat })
+      }
+    }
+    matches.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
+    const latest = matches[0]
+    if (!latest) continue
+
+    const relativePath = path.relative(rootDir, latest.filePath).replace(/\\/g, "/")
+    let summary
+    if (spec.xml) {
+      const text = await fs.readFile(latest.filePath, "utf8")
+      summary = summarizeXmlReport(text)
+    } else {
+      const payload = JSON.parse(await fs.readFile(latest.filePath, "utf8"))
+      summary = summarizeJsonReport(payload)
+    }
+
+    artifacts.push({
+      key: spec.key,
+      name: spec.name,
+      filePath: latest.filePath,
+      relativePath,
+      attachmentName: `cati-qa-${spec.key}${spec.xml ? ".xml" : ".json"}`,
+      lastWriteTime: latest.stat.mtime.toISOString(),
+      ...summary,
+    })
+  }
+
+  return artifacts
+}
+
+function evidenceByKey(artifacts) {
+  return new Map(artifacts.map((artifact) => [artifact.key, artifact]))
+}
+
+function artifactsForKeys(artifactMap, keys) {
+  return keys.map((key) => artifactMap.get(key)).filter(Boolean)
+}
+
+function artifactsForAutomatedTest(artifactMap, test) {
+  return artifactMap.get(test.evidenceKey) ?? null
+}
+
+function manualTestMatchesExecution(test, group) {
+  if (!test) return false
+  if (Array.isArray(group.testUids)) return group.testUids.includes(test.uid)
+  return testPhaseNumbers(test).some((phase) => group.phaseNumbers.includes(phase))
+}
+
+function automatedTestMatchesExecution(test, group) {
+  if (!test) return false
+  if (Array.isArray(group.automatedUids)) return group.automatedUids.includes(test.uid)
+  return (test.phaseNumbers ?? []).some((phase) => group.phaseNumbers.includes(phase))
+}
+
+async function attachQaEvidence(issueKey, artifacts) {
+  if (skipQaAttachments || artifacts.length === 0) return { removed: [], uploaded: [], skipped: skipQaAttachments }
+
+  const issue = await jira(`/rest/api/3/issue/${issueKey}?fields=attachment`)
+  const desiredNames = new Set(artifacts.map((artifact) => artifact.attachmentName))
+  const removed = []
+  for (const attachment of issue.fields?.attachment ?? []) {
+    if (!desiredNames.has(attachment.filename)) continue
+    await jira(`/rest/api/3/attachment/${attachment.id}`, { method: "DELETE" })
+    removed.push(attachment.filename)
+  }
+
+  const uploaded = []
+  for (const artifact of artifacts) {
+    const buffer = await fs.readFile(artifact.filePath)
+    const form = new FormData()
+    form.append("file", new Blob([buffer]), artifact.attachmentName)
+    const response = await fetch(`${jiraBaseUrl}/rest/api/3/issue/${issueKey}/attachments`, {
+      method: "POST",
+      headers: {
+        Authorization: jiraAuth,
+        Accept: "application/json",
+        "X-Atlassian-Token": "no-check",
+      },
+      body: form,
+    })
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`QA evidence upload failed for ${artifact.attachmentName}: ${response.status} ${text}`)
+    }
+    uploaded.push(artifact.attachmentName)
+  }
+  return { removed, uploaded, skipped: false }
+}
 
 async function jira(pathname, options = {}) {
   const response = await fetch(`${jiraBaseUrl}${pathname}`, {
@@ -1268,10 +2124,10 @@ function testDescription(test) {
   const meta = phase ? phaseMeta(phase) : phaseDetails[15]
   return doc([
     {
-      title: "Test Purpose",
+      title: "Testzweck",
       text: [
-        `This test proves: ${test.summary}.`,
-        `Linked phase: ${phase ? `Phase ${phase.phase} - ${phase.title}` : "Phase 15 - QA and Launch"}. Planned validation window: ${meta.startDate} to ${meta.endDate}.`,
+        `Dieser Test prueft folgendes Verhalten: ${test.summary}.`,
+        `Verlinkte Phase: ${phase ? `Phase ${phase.phase} - ${phase.title}` : "Phase 15 - QA und Launch"}. Geplantes Testfenster: ${meta.startDate} bis ${meta.endDate}.`,
       ],
     },
     {
@@ -1286,10 +2142,10 @@ function testDescription(test) {
       ),
     },
     {
-      title: "Abnahmeregel",
+      title: "Bestehensregel",
       text: [
         "Der Test gilt nur als bestanden, wenn alle erwarteten Ergebnisse ohne manuelle Datenkorrektur erreicht werden und keine unberechtigten Daten sichtbar sind.",
-        "Evidence must be linked in Jira or Xray before this test is marked Done.",
+        "Der Nachweis muss in Jira oder Xray verlinkt sein, bevor der Test auf Done gesetzt wird.",
       ],
     },
     {
@@ -1306,6 +2162,7 @@ function applyOptionalDateFields(fields, { startDate, dueDate, startDateFieldId,
 
 async function ensureIssue({
   uid,
+  lookupUid,
   summary,
   issueType,
   description,
@@ -1322,7 +2179,7 @@ async function ensureIssue({
   startDateFieldId,
   dueDateSupported,
 }) {
-  const existing = await searchByUniqueLabel(uid)
+  const existing = await searchByUniqueLabel(lookupUid ?? uid)
   const fields = {
     project: { key: projectKey },
     issuetype: { id: issueType.id },
@@ -1370,6 +2227,7 @@ async function ensureIssue({
     method: "PUT",
     body: {
       uid,
+      lookupUid: lookupUid ?? uid,
       syncedAt: new Date().toISOString(),
       source: "scripts/jira-xray-sync.mjs",
     },
@@ -1508,7 +2366,21 @@ async function xrayGraphql(token, query, variables) {
   return payload.data
 }
 
-async function addXrayManualSteps(token, testIssueId, test) {
+async function getXrayStepCount(token, testIssueId) {
+  const query = `
+    query GetTestSteps($issueId: String!) {
+      getTest(issueId: $issueId) {
+        steps {
+          id
+        }
+      }
+    }
+  `
+  const result = await xrayGraphql(token, query, { issueId: testIssueId })
+  return Array.isArray(result?.getTest?.steps) ? result.getTest.steps.length : null
+}
+
+async function addXrayManualSteps(token, testIssueId, test, startAt = 0) {
   const results = []
   const mutation = `
     mutation AddStep($issueId: String!, $step: CreateStepInput!) {
@@ -1517,7 +2389,7 @@ async function addXrayManualSteps(token, testIssueId, test) {
       }
     }
   `
-  for (const [action, expected] of test.steps) {
+  for (const [action, expected] of test.steps.slice(startAt)) {
     const result = await xrayGraphql(token, mutation, {
       issueId: testIssueId,
       step: { action, data: "", result: expected },
@@ -1525,6 +2397,13 @@ async function addXrayManualSteps(token, testIssueId, test) {
     results.push(Boolean(result))
   }
   return results.filter(Boolean).length
+}
+
+async function ensureXrayManualSteps(token, testIssueId, test) {
+  const currentCount = await getXrayStepCount(token, testIssueId)
+  if (currentCount === null) return 0
+  if (currentCount !== null && currentCount >= test.steps.length) return 0
+  return addXrayManualSteps(token, testIssueId, test, currentCount)
 }
 
 async function addTestsToXrayTestSet(token, testSetIssueId, testIssueIds) {
@@ -1537,6 +2416,30 @@ async function addTestsToXrayTestSet(token, testSetIssueId, testIssueIds) {
     }
   `
   return xrayGraphql(token, mutation, { issueId: testSetIssueId, testIssueIds })
+}
+
+async function addTestsToXrayTestPlan(token, testPlanIssueId, testIssueIds) {
+  const mutation = `
+    mutation AddTestsToTestPlan($issueId: String!, $testIssueIds: [String]!) {
+      addTestsToTestPlan(issueId: $issueId, testIssueIds: $testIssueIds) {
+        addedTests
+        warning
+      }
+    }
+  `
+  return xrayGraphql(token, mutation, { issueId: testPlanIssueId, testIssueIds })
+}
+
+async function addTestsToXrayTestExecution(token, testExecutionIssueId, testIssueIds) {
+  const mutation = `
+    mutation AddTestsToTestExecution($issueId: String!, $testIssueIds: [String]!) {
+      addTestsToTestExecution(issueId: $issueId, testIssueIds: $testIssueIds) {
+        addedTests
+        warning
+      }
+    }
+  `
+  return xrayGraphql(token, mutation, { issueId: testExecutionIssueId, testIssueIds })
 }
 
 async function createIssueLink(outwardIssueKey, inwardIssueKey) {
@@ -1556,6 +2459,9 @@ async function createIssueLink(outwardIssueKey, inwardIssueKey) {
 }
 
 async function main() {
+  const qaEvidenceArtifacts = await collectQaEvidence()
+  const qaEvidenceByKey = evidenceByKey(qaEvidenceArtifacts)
+
   if (dryRun) {
     const existingAttachments = []
     for (const relativePath of documentationAttachments) {
@@ -1576,11 +2482,18 @@ async function main() {
         phases: phases.length,
         phaseStories: phases.reduce((sum, phase) => sum + phase.stories.length, 0),
         documentationIssues: 1,
-        testCases: tests.length,
+        manualTestCases: manualTests.length,
+        functionalSystemTestCases: tests.length,
+        exploratoryTestCases: exploratoryTests.length,
+        automatedTestCases: automatedTests.length,
+        testPlans: 1,
+        testSets: 3,
+        testExecutions: testExecutionGroups.length,
       },
       phaseStatusSummary,
       attachmentPlan: {
         mode: skipAttachments ? "skip-managed-documentation-attachments" : "replace-managed-documentation-attachments",
+        qaEvidenceMode: skipQaAttachments ? "skip-qa-json-attachments" : "upload-latest-qa-json-attachments",
         obsoleteNames: [...obsoleteDocumentationAttachmentNames],
       },
       phases: phases.map((phase) => {
@@ -1605,6 +2518,42 @@ async function main() {
         }
       }),
       attachments: existingAttachments,
+      qaEvidence: qaEvidenceArtifacts.map((artifact) => ({
+        key: artifact.key,
+        name: artifact.name,
+        status: artifact.status,
+        relativePath: artifact.relativePath,
+        summaryText: artifact.summaryText,
+      })),
+      manualTests: manualTests.map((test) => ({
+        uid: test.uid,
+        summary: test.summary,
+        classification: test.exploratory ? "exploratory" : "functional-system",
+        component: test.component,
+        phaseNumbers: testPhaseNumbers(test),
+        stepCount: test.steps.length,
+      })),
+      automatedTests: automatedTests.map((test) => ({
+        uid: test.uid,
+        summary: test.summary,
+        classification: test.classification,
+        phaseNumbers: test.phaseNumbers,
+        evidenceKey: test.evidenceKey,
+        latestEvidenceStatus: qaEvidenceByKey.get(test.evidenceKey)?.status ?? "missing",
+      })),
+      testExecutions: testExecutionGroups.map((group) => ({
+        uid: group.uid,
+        summary: group.summary,
+        scope: group.scope ?? null,
+        phaseNumbers: group.phaseNumbers,
+        linkedManualTestCount: manualTests.filter((test) => manualTestMatchesExecution(test, group)).length,
+        linkedAutomatedTestCount: automatedTests.filter((test) => automatedTestMatchesExecution(test, group)).length,
+        evidenceKeys: group.evidenceKeys,
+        availableEvidence: artifactsForKeys(qaEvidenceByKey, group.evidenceKeys).map((artifact) => ({
+          key: artifact.key,
+          status: artifact.status,
+        })),
+      })),
       xrayConfigured: Boolean(env.XRAY_BASE_URL && env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET),
     }
     const reportDir = path.join(rootDir, "quality", "results")
@@ -1630,7 +2579,9 @@ async function main() {
   const storyType = pickIssueType(issueTypes, ["Story", "User Story", "Aufgabe", "Task"])
   const taskType = pickIssueType(issueTypes, ["Task", "Aufgabe", "Story"])
   const testType = pickIssueType(issueTypes, ["Test"])
-  const testSetType = pickIssueType(issueTypes, ["Test Set", "Testset", "Test Plan"])
+  const testSetType = pickIssueType(issueTypes, ["Test Set", "Testset"])
+  const testPlanType = pickIssueType(issueTypes, ["Test Plan", "Testplan"])
+  const testExecutionType = pickIssueType(issueTypes, ["Test Execution", "Testausfuehrung", "Testausfuhrung"])
 
   if (!storyType || !taskType) {
     throw new Error(`Required issue types missing. Available types: ${issueTypes.map((item) => item.name).join(", ")}`)
@@ -1641,6 +2592,8 @@ async function main() {
   const taskFields = await getCreateFields(taskType.id)
   const testFields = testType ? await getCreateFields(testType.id) : {}
   const testSetFields = testSetType ? await getCreateFields(testSetType.id) : {}
+  const testPlanFields = testPlanType ? await getCreateFields(testPlanType.id) : {}
+  const testExecutionFields = testExecutionType ? await getCreateFields(testExecutionType.id) : {}
   const epicNameFieldId = epicType ? findFieldByName(epicFields, ["Epic Name", "Epic-Name", "Epic Name"]) : null
   const epicLinkFieldId = findFieldByName(storyFields, ["Epic Link", "Epic-Verknüpfung"])
   const parentSupported = Boolean(storyFields.parent)
@@ -1651,11 +2604,15 @@ async function main() {
   const taskStartDateFieldId = fieldsByName(taskFields, startDateFieldNames)
   const testStartDateFieldId = fieldsByName(testFields, startDateFieldNames)
   const testSetStartDateFieldId = fieldsByName(testSetFields, startDateFieldNames)
+  const testPlanStartDateFieldId = fieldsByName(testPlanFields, startDateFieldNames)
+  const testExecutionStartDateFieldId = fieldsByName(testExecutionFields, startDateFieldNames)
   const epicDueDateSupported = Boolean(epicFields.duedate)
   const storyDueDateSupported = Boolean(storyFields.duedate)
   const taskDueDateSupported = Boolean(taskFields.duedate)
   const testDueDateSupported = Boolean(testFields.duedate)
   const testSetDueDateSupported = Boolean(testSetFields.duedate)
+  const testPlanDueDateSupported = Boolean(testPlanFields.duedate)
+  const testExecutionDueDateSupported = Boolean(testExecutionFields.duedate)
 
   const createdIssues = []
   const phaseIssueByPhase = new Map()
@@ -1738,6 +2695,7 @@ async function main() {
           "Business Requirement Document",
           "Product Requirement Document",
           "Technical Requirement Document",
+          "OpenAPI API Specification and API testing contract",
           "Third-Party Integration And Vendor Plan",
           "Implementation Delivery Plan",
           "Security Compliance Plan",
@@ -1758,6 +2716,10 @@ async function main() {
         items: [
           "docs/README.md",
           "docs/PROJECT-HANDBOOK.md",
+          "docs/api/README.md",
+          "docs/api/openapi.json",
+          "Lokaler API-Spec-Endpunkt: http://127.0.0.1:3104/api/openapi",
+          "Lokaler API-Contract-Nachweis: quality/results/openapi-contract/openapi-contract-report.json",
           "docs/requirements/option-3-ai-site-crm/Third-Party-Integration-And-Vendor-Plan.md",
           "docs/requirements/option-3-ai-site-crm/Source-Register.md",
         ],
@@ -1782,77 +2744,243 @@ async function main() {
 
   const token = await xrayAuthenticate()
   const testIssues = []
-  let testSetIssue = null
+  const automatedTestIssues = []
+  const allTestIssues = []
+  const testExecutionIssues = []
+  const qaEvidenceAttachmentSync = []
+  let testPlanIssue = null
+  let manualTestSetIssue = null
+  let exploratoryTestSetIssue = null
+  let automatedTestSetIssue = null
+
+  if (testPlanType) {
+    const qaMeta = phaseDetails[15]
+    console.log("Syncing Xray/Jira test plan")
+    testPlanIssue = await ensureIssue({
+      uid: `${labelPrefix}-xray-testplan-phase-01-15`,
+      summary: "Test Plan - 1Cati Phase 01-15 Systemtest, Regression und Launch Readiness",
+      issueType: testPlanType,
+      description: testPlanDescription(tests.length, exploratoryTests.length, automatedTests.length, qaEvidenceArtifacts),
+      labels: ["xray", "test-plan", "phase-15", "qa-evidence", "option3"],
+      componentId: componentMap.get("QA und Launch")?.id,
+      versionId: versionMap.get("Release 3")?.id,
+      desiredStatus: "in-progress",
+      startDate: qaMeta.startDate,
+      dueDate: qaMeta.endDate,
+      startDateFieldId: testPlanStartDateFieldId,
+      dueDateSupported: testPlanDueDateSupported,
+    })
+    createdIssues.push(testPlanIssue.key)
+  }
 
   if (testSetType) {
     const qaMeta = phaseDetails[15]
-    console.log("Syncing Xray/Jira test set")
-    testSetIssue = await ensureIssue({
-      uid: `${labelPrefix}-xray-testset-e2e-uat`,
-      summary: "Test Set - Kritische End-to-End- und UAT-Szenarien",
+    console.log("Syncing Xray/Jira functional system test set")
+    manualTestSetIssue = await ensureIssue({
+      uid: `${labelPrefix}-xray-testset-functional-system`,
+      lookupUid: `${labelPrefix}-xray-testset-e2e-uat`,
+      summary: "Test Set - Funktionale Systemtests und kritische Geschaeftsprozesse",
       issueType: testSetType,
-      description: doc([
-        {
-          title: "Zweck",
-          text: [
-            "Dieses Test Set bündelt die wichtigsten Ende-zu-Ende- und UAT-Szenarien für die erste professionelle Projektsteuerung.",
-            `Planned validation window: ${qaMeta.startDate} to ${qaMeta.endDate}.`,
-          ],
-        },
-        {
-          title: "Definition of Done",
-          items: [
-            "Every critical workflow has at least one linked manual Xray/Jira test.",
-            "Failed tests have linked defects or blocker comments before launch approval.",
-            "UAT evidence and launch sign-off are attached to the relevant tickets.",
-          ],
-        },
-      ]),
-      labels: ["xray", "test-set", "uat", "option3"],
+      description: testSetDescription({
+        title: "Funktionale Systemtests und kritische Geschaeftsprozesse",
+        purpose:
+          "Dieses Test Set buendelt die wichtigsten funktionalen End-to-End-Systemtests fuer die interne QA. Die Kundenabnahme bleibt ein spaeteres, separates Produktions-Gate.",
+        testCount: tests.length,
+        labels: ["funktional", "system-test", "kritischer-flow"],
+        evidenceArtifacts: qaEvidenceArtifacts,
+      }),
+      labels: ["xray", "test-set", "functional", "system-test", "critical-flow", "option3"],
       componentId: componentMap.get("QA und Launch")?.id,
-      versionId: versionMap.get("Release 1")?.id,
-      desiredStatus: "todo",
+      versionId: versionMap.get("Release 3")?.id,
+      desiredStatus: "in-progress",
       startDate: qaMeta.startDate,
       dueDate: qaMeta.endDate,
       startDateFieldId: testSetStartDateFieldId,
       dueDateSupported: testSetDueDateSupported,
     })
-    createdIssues.push(testSetIssue.key)
+    createdIssues.push(manualTestSetIssue.key)
+
+    console.log("Syncing Xray/Jira exploratory role session test set")
+    exploratoryTestSetIssue = await ensureIssue({
+      uid: `${labelPrefix}-xray-testset-exploratory-role-sessions`,
+      summary: "Test Set - Explorative Rollen- und Hauptfunktions-Sessions",
+      issueType: testSetType,
+      description: testSetDescription({
+        title: "Explorative Rollen- und Hauptfunktions-Sessions",
+        purpose:
+          "Dieses Test Set buendelt explorative, aber nachvollziehbare Sessions fuer Rollen, Hauptfunktionen, Usability, Randfaelle und Launch Readiness. Es erlaubt flexible Pruefung trotz beschleunigter Lieferung.",
+        testCount: exploratoryTests.length,
+        labels: ["exploratory", "role-session", "major-functionality"],
+        evidenceArtifacts: qaEvidenceArtifacts,
+      }),
+      labels: ["xray", "test-set", "exploratory", "role-session", "major-functionality", "option3"],
+      componentId: componentMap.get("QA und Launch")?.id,
+      versionId: versionMap.get("Release 3")?.id,
+      desiredStatus: "in-progress",
+      startDate: qaMeta.startDate,
+      dueDate: qaMeta.endDate,
+      startDateFieldId: testSetStartDateFieldId,
+      dueDateSupported: testSetDueDateSupported,
+    })
+    createdIssues.push(exploratoryTestSetIssue.key)
+
+    console.log("Syncing Xray/Jira automated regression test set")
+    automatedTestSetIssue = await ensureIssue({
+      uid: `${labelPrefix}-xray-testset-automated-regression`,
+      summary: "Test Set - Automatisierte QA, Regression und API-Vertraege",
+      issueType: testSetType,
+      description: testSetDescription({
+        title: "Automatisierte QA, Regression und API-Vertraege",
+        purpose:
+          "Dieses Test Set gruppiert Playwright-, API-, RBAC-, UX-, Responsive- und Phasen-Harness-Pruefungen, damit automatisierte Ergebnisse mit Test Executions verlinkt werden koennen.",
+        testCount: automatedTests.length,
+        labels: ["automated", "regression", "qa-evidence"],
+        evidenceArtifacts: qaEvidenceArtifacts,
+      }),
+      labels: ["xray", "test-set", "automated", "regression", "qa-evidence", "option3"],
+      componentId: componentMap.get("QA und Launch")?.id,
+      versionId: versionMap.get("Release 3")?.id,
+      desiredStatus: "in-progress",
+      startDate: qaMeta.startDate,
+      dueDate: qaMeta.endDate,
+      startDateFieldId: testSetStartDateFieldId,
+      dueDateSupported: testSetDueDateSupported,
+    })
+    createdIssues.push(automatedTestSetIssue.key)
   }
 
   const testIssueType = testType ?? taskType
-  for (const test of tests) {
+  const functionalTestIssues = []
+  const exploratoryTestIssues = []
+  for (const test of manualTests) {
     const testPhase = phaseForTest(test)
     const testMeta = testPhase ? phaseMeta(testPhase) : phaseDetails[15]
     console.log(`Syncing test case: ${test.summary}`)
+    const targetTestSetIssue = test.exploratory ? exploratoryTestSetIssue : manualTestSetIssue
     const issue = await ensureIssue({
       uid: `${labelPrefix}-${test.uid}`,
       summary: `Testfall: ${test.summary}`,
       issueType: testIssueType,
       description: testDescription(test),
-      labels: ["xray", "testcase", "uat", "option3"],
+      labels: manualTestLabels(test),
       componentId: componentMap.get(test.component)?.id ?? componentMap.get("QA und Launch")?.id,
-      versionId: versionMap.get("Release 1")?.id,
-      parentKey: testSetIssue?.key,
+      versionId: versionMap.get("Release 3")?.id,
+      parentKey: targetTestSetIssue?.key,
       parentSupported: testSetParentSupported,
-      desiredStatus: "todo",
+      desiredStatus: "in-progress",
       startDate: testMeta.startDate,
       dueDate: testMeta.endDate,
       startDateFieldId: testType ? testStartDateFieldId : taskStartDateFieldId,
       dueDateSupported: testType ? testDueDateSupported : taskDueDateSupported,
     })
     testIssues.push(issue)
+    if (test.exploratory) exploratoryTestIssues.push(issue)
+    else functionalTestIssues.push(issue)
+    allTestIssues.push(issue)
     createdIssues.push(issue.key)
-    if (testSetIssue) await createIssueLink(testSetIssue.key, issue.key)
-    if (token && testType) await addXrayManualSteps(token, issue.id, test)
+    if (targetTestSetIssue) await createIssueLink(targetTestSetIssue.key, issue.key)
+    if (testPlanIssue) await createIssueLink(testPlanIssue.key, issue.key)
+    if (token && testType) await ensureXrayManualSteps(token, issue.id, test)
   }
 
-  if (token && testSetIssue && testIssues.length > 0) {
+  for (const test of automatedTests) {
+    const artifact = artifactsForAutomatedTest(qaEvidenceByKey, test)
+    const status = artifact?.status === "passed" ? "done" : "in-progress"
+    const startPhase = phases.find((phase) => phase.phase === Math.min(...test.phaseNumbers)) ?? phases[14]
+    const endPhase = phases.find((phase) => phase.phase === Math.max(...test.phaseNumbers)) ?? phases[14]
+    console.log(`Syncing automated test case: ${test.summary}`)
+    const issue = await ensureIssue({
+      uid: `${labelPrefix}-${test.uid}`,
+      summary: `Automated QA: ${test.summary}`,
+      issueType: testIssueType,
+      description: automatedTestDescription(test, artifact),
+      labels: automatedTestLabels(test),
+      componentId: componentMap.get(test.component)?.id ?? componentMap.get("QA und Launch")?.id,
+      versionId: versionMap.get("Release 3")?.id,
+      parentKey: automatedTestSetIssue?.key,
+      parentSupported: testSetParentSupported,
+      desiredStatus: status,
+      startDate: phaseMeta(startPhase).startDate,
+      dueDate: phaseMeta(endPhase).endDate,
+      startDateFieldId: testType ? testStartDateFieldId : taskStartDateFieldId,
+      dueDateSupported: testType ? testDueDateSupported : taskDueDateSupported,
+    })
+    automatedTestIssues.push(issue)
+    allTestIssues.push(issue)
+    createdIssues.push(issue.key)
+    if (automatedTestSetIssue) await createIssueLink(automatedTestSetIssue.key, issue.key)
+    if (testPlanIssue) await createIssueLink(testPlanIssue.key, issue.key)
+  }
+
+  if (token && manualTestSetIssue && functionalTestIssues.length > 0) {
     await addTestsToXrayTestSet(
       token,
-      testSetIssue.id,
-      testIssues.map((issue) => issue.id)
+      manualTestSetIssue.id,
+      functionalTestIssues.map((issue) => issue.id)
     )
+  }
+  if (token && exploratoryTestSetIssue && exploratoryTestIssues.length > 0) {
+    await addTestsToXrayTestSet(
+      token,
+      exploratoryTestSetIssue.id,
+      exploratoryTestIssues.map((issue) => issue.id)
+    )
+  }
+  if (token && automatedTestSetIssue && automatedTestIssues.length > 0) {
+    await addTestsToXrayTestSet(
+      token,
+      automatedTestSetIssue.id,
+      automatedTestIssues.map((issue) => issue.id)
+    )
+  }
+  if (token && testPlanIssue && allTestIssues.length > 0) {
+    await addTestsToXrayTestPlan(
+      token,
+      testPlanIssue.id,
+      allTestIssues.map((issue) => issue.id)
+    )
+  }
+
+  for (const group of testExecutionGroups) {
+    if (!testExecutionType) break
+    const artifacts = artifactsForKeys(qaEvidenceByKey, group.evidenceKeys)
+    const groupTests = [
+      ...testIssues.filter((_, index) => manualTestMatchesExecution(manualTests[index], group)),
+      ...automatedTestIssues.filter((_, index) => automatedTestMatchesExecution(automatedTests[index], group)),
+    ]
+    const allArtifactsPassed = artifacts.length > 0 && artifacts.every((artifact) => artifact.status === "passed")
+    const startPhase = phases.find((phase) => phase.phase === Math.min(...group.phaseNumbers)) ?? phases[14]
+    const endPhase = phases.find((phase) => phase.phase === Math.max(...group.phaseNumbers)) ?? phases[14]
+    console.log(`Syncing test execution: ${group.summary}`)
+    const executionIssue = await ensureIssue({
+      uid: `${labelPrefix}-xray-${group.uid}`,
+      summary: group.summary,
+      issueType: testExecutionType,
+      description: executionDescription(group, artifacts, groupTests.length),
+      labels: ["xray", "test-execution", "qa-evidence", "option3", ...phaseLabelsForNumbers(group.phaseNumbers)],
+      componentId: componentMap.get(group.component)?.id ?? componentMap.get("QA und Launch")?.id,
+      versionId: versionMap.get("Release 3")?.id,
+      desiredStatus: allArtifactsPassed ? "done" : "in-progress",
+      startDate: phaseMeta(startPhase).startDate,
+      dueDate: phaseMeta(endPhase).endDate,
+      startDateFieldId: testExecutionStartDateFieldId,
+      dueDateSupported: testExecutionDueDateSupported,
+    })
+    testExecutionIssues.push(executionIssue)
+    createdIssues.push(executionIssue.key)
+    if (testPlanIssue) await createIssueLink(testPlanIssue.key, executionIssue.key)
+    for (const testIssue of groupTests) await createIssueLink(executionIssue.key, testIssue.key)
+    if (token && groupTests.length > 0) {
+      await addTestsToXrayTestExecution(
+        token,
+        executionIssue.id,
+        groupTests.map((issue) => issue.id)
+      )
+    }
+    qaEvidenceAttachmentSync.push({
+      issueKey: executionIssue.key,
+      ...(await attachQaEvidence(executionIssue.key, artifacts)),
+    })
   }
 
   const verification = await jira("/rest/api/3/search/jql", {
@@ -1872,11 +3000,27 @@ async function main() {
     issueCount: verification.total ?? verification.issues?.length ?? 0,
     phaseCount: phases.length,
     phaseStatusSummary,
-    testCount: testIssues.length,
+    manualTestCount: testIssues.length,
+    functionalSystemTestCount: functionalTestIssues.length,
+    exploratoryTestCount: exploratoryTestIssues.length,
+    automatedTestCount: automatedTestIssues.length,
+    totalTestCount: allTestIssues.length,
     xrayAuthenticated: Boolean(token),
     xrayTestIssueTypeAvailable: Boolean(testType),
-    testSetIssue: testSetIssue?.key ?? null,
+    testPlanIssue: testPlanIssue?.key ?? null,
+    manualTestSetIssue: manualTestSetIssue?.key ?? null,
+    exploratoryTestSetIssue: exploratoryTestSetIssue?.key ?? null,
+    automatedTestSetIssue: automatedTestSetIssue?.key ?? null,
+    testExecutionIssues: testExecutionIssues.map((issue) => issue.key),
     docsIssue: docsIssue.key,
+    qaEvidence: qaEvidenceArtifacts.map((artifact) => ({
+      key: artifact.key,
+      status: artifact.status,
+      relativePath: artifact.relativePath,
+      summaryText: artifact.summaryText,
+    })),
+    qaEvidenceAttachmentMode: skipQaAttachments ? "skipped" : "uploaded-latest-json-or-junit",
+    qaEvidenceAttachmentSync,
     managedDocumentationAttachmentCount: documentationAttachments.length,
     attachmentMode: skipAttachments ? "skipped" : "replace-managed-documentation-attachments",
     removedDocumentationAttachments: documentationAttachmentSync.removed,

@@ -8,7 +8,7 @@ export default function NotFound() {
       <div className="mx-auto flex min-h-[calc(100svh-4rem)] max-w-5xl flex-col">
         <Link href="/tr" className="inline-flex w-fit items-center gap-3">
           <CatiLogoMark className="shadow-xl shadow-black/20" />
-          <span className="text-sm font-black">1Cati ERP</span>
+          <span className="text-sm font-black">1Çatı ERP</span>
         </Link>
 
         <section className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-[0.9fr_1.1fr]">

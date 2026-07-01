@@ -356,56 +356,64 @@
     }
   },
   "dataTable": {
-    "search": "Search...",
-    "count": "{count} records",
-    "empty": "No results found",
+    "search": "Поиск...",
+    "count": "{count} записей",
+    "empty": "Ничего не найдено",
     "previous": "Назад",
-    "next": "Вперед"
+    "next": "Вперед",
+    "options": "Опции",
+    "tableTools": "Инструменты таблицы",
+    "rowsPerPage": "Строк на странице",
+    "columns": "Столбцы",
+    "reset": "Сбросить",
+    "exportCsv": "Экспорт CSV",
+    "stickyHintLabel": "Информация о закрепленном столбце действий",
+    "stickyHint": "Столбец действий закреплен справа, поэтому действия остаются видимыми при горизонтальной прокрутке широких таблиц."
   },
   "dashboardHome": {
-    "loading": "Preparing dashboard...",
-    "title": "Dashboard",
-    "subtitle": "Live operations summary for {role}",
-    "refresh": "Refresh",
+    "loading": "Панель подготавливается...",
+    "title": "Панель",
+    "subtitle": "Операционная сводка в реальном времени для роли {role}",
+    "refresh": "Обновить",
     "kpi": {
-      "activeListings": "Active Listings",
-      "openLeads": "Open Leads",
-      "openTickets": "Maintenance Tickets",
-      "activeDeals": "Active Deals"
+      "activeListings": "Активные объекты",
+      "openLeads": "Открытые лиды",
+      "openTickets": "Заявки на обслуживание",
+      "activeDeals": "Активные сделки"
     },
     "alerts": {
-      "eidsPending": "{count} EİDS authorizations pending",
-      "eidsExpiring": "{count} EİDS authorizations expiring soon",
-      "urgentTickets": "{count} urgent maintenance tickets"
+      "eidsPending": "{count} авторизаций EİDS ожидают обработки",
+      "eidsExpiring": "{count} авторизаций EİDS скоро истекают",
+      "urgentTickets": "{count} срочных заявок на обслуживание"
     },
     "charts": {
-      "revenue": "Monthly revenue trend",
-      "revenueSubtitle": "Last 12 months, EUR",
-      "leadSources": "Lead sources",
-      "leadSourcesSubtitle": "WhatsApp, social and web mix"
+      "revenue": "Месячная динамика выручки",
+      "revenueSubtitle": "Последние 12 месяцев, EUR",
+      "leadSources": "Источники лидов",
+      "leadSourcesSubtitle": "WhatsApp, соцсети и сайт"
     },
     "activity": {
-      "title": "Recent Activity",
-      "live": "Live"
+      "title": "Последняя активность",
+      "live": "Онлайн"
     },
     "ai": {
-      "title": "1Çatı AI assistant",
-      "description": "Suggests priority leads, EİDS risks and maintenance actions by role."
+      "title": "AI-ассистент 1Çatı",
+      "description": "Предлагает приоритетные лиды, риски EİDS и действия по обслуживанию с учетом роли."
     },
     "quickActions": {
-      "title": "Quick Actions",
-      "viewing": "Schedule viewing",
-      "eids": "Start EİDS check",
-      "campaign": "Create lead campaign"
+      "title": "Быстрые действия",
+      "viewing": "Запланировать показ",
+      "eids": "Начать проверку EİDS",
+      "campaign": "Создать кампанию лидов"
     }
   },
   "aiAssistant": {
-    "open": "Open AI assistant",
-    "close": "Close AI assistant",
+    "open": "Открыть AI-ассистент",
+    "close": "Закрыть AI-ассистент",
     "subtitle": "Ответы на основе операционных данных",
-    "welcome": "Hello {role}. Which operation should we speed up today?",
-    "placeholder": "Ask about leads, EİDS, maintenance or revenue...",
-    "send": "Send"
+    "welcome": "Здравствуйте, {role}. Какую операцию ускорим сегодня?",
+    "placeholder": "Спросите о лидах, EİDS, обслуживании или выручке...",
+    "send": "Отправить"
   },
   "dashboardModules": {
     "listings": {

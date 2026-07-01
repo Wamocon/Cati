@@ -414,7 +414,7 @@ BEGIN
   v_company_id := public.current_user_company_id();
 
   IF v_company_id IS NULL THEN
-    SELECT id INTO v_company_id FROM public.companies ORDER BY created_at LIMIT 1;
+    RAISE EXCEPTION 'No company context for operational search.';
   END IF;
 
   RETURN QUERY
@@ -563,10 +563,6 @@ BEGIN
   END IF;
 
   IF v_company_id IS NULL THEN
-    SELECT id INTO v_company_id FROM public.companies ORDER BY created_at LIMIT 1;
-  END IF;
-
-  IF v_company_id IS NULL THEN
     RAISE EXCEPTION 'No company context for dashboard snapshot.';
   END IF;
 
@@ -658,7 +654,7 @@ BEGIN
   v_company_id := public.current_user_company_id();
 
   IF v_company_id IS NULL THEN
-    SELECT id INTO v_company_id FROM public.companies ORDER BY created_at LIMIT 1;
+    RAISE EXCEPTION 'No company context for phase 4 site data.';
   END IF;
 
   IF v_company_id IS NULL THEN
@@ -882,9 +878,6 @@ GRANT EXECUTE ON FUNCTION public.search_operational_records(TEXT, INTEGER) TO au
 GRANT EXECUTE ON FUNCTION public.log_client_action(TEXT, TEXT, UUID, TEXT, TEXT, JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_site_dashboard_snapshot() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.search_operational_records(TEXT, INTEGER) TO anon;
-GRANT EXECUTE ON FUNCTION public.get_site_dashboard_snapshot() TO anon;
-GRANT EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) TO anon;
 
 DO $$
 BEGIN

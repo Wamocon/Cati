@@ -1,12 +1,12 @@
 # Documentation Hub
 
 Status: active documentation map
-Last reviewed: 29 June 2026
+Last reviewed: 30 June 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 
-Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 29 June 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
+Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 30 June 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
 
-Current implementation checkpoint: phases 1-9 are complete as a demo/internal-QA foundation; phases 10-15 remain in the accelerated delivery window. Full exploratory manual QA/UAT is tracked separately from this development target.
+Current implementation checkpoint: phases 1-14 are complete as a demo/internal-QA foundation, including private document upload/storage contract in demo/provider-ready mode; phase 15 remains launch hardening, security, final QA, client acceptance preparation, training and go-live readiness. Full exploratory manual QA and client UAT are tracked separately from this development target.
 
 ## Active Source-Of-Truth Documents
 
@@ -58,11 +58,15 @@ Current repeatable QA commands:
 
 ```powershell
 pnpm phase:harness -- --profile smoke --max-attempts 2
+pnpm phase:10-11 -- --base-url http://127.0.0.1:3104 --max-attempts 2
+pnpm qa:full-app -- --base-url http://127.0.0.1:3104 --skip-browser
 pnpm phase:06-09
 pnpm jira:sync -- --dry-run
 ```
 
-`pnpm jira:sync` without `--dry-run` performs remote Jira/Xray writes and may attach confidential documents. Use it only after explicit approval.
+`pnpm jira:sync` without `--dry-run` performs remote Jira/Xray writes. The current model syncs phase epics/stories, a documentation issue, one Xray Test Plan, three Test Sets, eight Test Executions, 20 functional system tests, 10 exploratory role/functionality tests, 13 automated QA/API tests and latest local QA JSON/JUnit evidence. Use `--skip-attachments` to avoid uploading confidential documentation files. Use live sync only after explicit approval because project metadata and QA evidence are sent to the Jira/Xray tenant.
+
+Updated Jira/Xray naming rule: the internal QA suite uses "functional system tests", "exploratory role/functionality tests" and "automated regression/API tests". UAT remains a later client acceptance activity, not the name of the internal functional test set.
 
 ## Cleanup Rules
 

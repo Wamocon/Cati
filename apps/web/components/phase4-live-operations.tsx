@@ -12,11 +12,12 @@ import {
 } from "lucide-react"
 import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
+import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
+import { matchesSearchText } from "@/lib/search"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import {
-  interpolate,
   localizeOperationalValue,
   resolveDashboardLocale,
   unitMatrixCopy,
@@ -84,7 +85,6 @@ function badgeVariant(status: string) {
 }
 
 function matchesQuery(unit: Phase4Unit, query: string) {
-  if (!query.trim()) return true
   const haystack = [
     unit.unitNo,
     unit.blockName,
@@ -99,9 +99,7 @@ function matchesQuery(unit: Phase4Unit, query: string) {
   ]
     .filter(Boolean)
     .join(" ")
-    .toLowerCase()
-
-  return haystack.includes(query.trim().toLowerCase())
+  return matchesSearchText(haystack, query)
 }
 
 function readSupabasePublicEnv() {
@@ -345,65 +343,73 @@ export function Phase4LiveOperations() {
       </div>
 
       <div className="grid gap-4 pt-4 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="overflow-hidden rounded-lg border border-border/70">
-          <div className="max-h-[420px] overflow-auto">
-            <table className="min-w-[980px] w-full text-left text-sm">
-              <thead className="sticky top-0 z-10 bg-muted/90 backdrop-blur">
-                <tr>
-                  {copy.live.tableHeaders.map((header) => (
-                    <th key={header} className="px-3 py-2 text-xs font-black uppercase text-muted-foreground">
-                      {header}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {visibleUnits.slice(0, 80).map((unit) => (
-                  <tr key={unit.id} className="bg-background/60 transition hover:bg-primary/[0.045]">
-                    <td className="px-3 py-2 font-black text-foreground">{unit.unitNo}</td>
-                    <td className="px-3 py-2 text-muted-foreground">
-                      {unit.blockName ?? "-"} / {unit.floorLabel ?? "-"}
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusBadge variant={badgeVariant(unit.saleStatus)}>
-                        {copy.labels.sale[unit.saleStatus as keyof typeof copy.labels.sale] ?? unit.saleStatus}
-                      </StatusBadge>
-                    </td>
-                    <td className="px-3 py-2 text-foreground">
-                      <div className="space-y-1">
-                        <p className="font-bold">{formatEurFromCents(unit.listPriceEurCents, locale)}</p>
-                        {unit.priceSource ? (
-                          <p className="max-w-[170px] truncate text-xs text-muted-foreground" title={unit.priceSource}>
-                            {unit.priceSource}
-                          </p>
-                        ) : null}
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-foreground">{localizeOperationalValue(unit.ownerName, locale)}</td>
-                    <td className="px-3 py-2 text-foreground">{localizeOperationalValue(unit.residentName, locale)}</td>
-                    <td className="px-3 py-2">
-                      <StatusBadge variant={badgeVariant(unit.occupancyStatus)}>
-                        {copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? unit.occupancyStatus}
-                      </StatusBadge>
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="space-y-1">
-                        <p className="font-bold text-foreground">{formatTryFromCents(unit.balanceCents, locale)}</p>
-                        <StatusBadge variant={badgeVariant(unit.paymentStatus)}>
-                          {copy.labels.payment[unit.paymentStatus as keyof typeof copy.labels.payment] ?? unit.paymentStatus}
-                        </StatusBadge>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-foreground">{unit.openTicketCount} {copy.table.open}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="border-t border-border/70 bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground">
-            {interpolate(copy.live.filterMatched, { count: visibleUnits.length })} {copy.live.filterMatchedSuffix}
-          </div>
-        </div>
+        <DataTable
+          data={visibleUnits}
+          pageSize={20}
+          searchValue={(unit) =>
+            `${unit.unitNo} ${unit.blockName ?? ""} ${unit.floorLabel ?? ""} ${unit.ownerName ?? ""} ${unit.residentName ?? ""} ${unit.saleStatus} ${unit.occupancyStatus} ${unit.paymentStatus}`
+          }
+          columns={[
+            { key: "unit", header: copy.live.tableHeaders[0], sortable: true, render: (unit) => unit.unitNo },
+            {
+              key: "block",
+              header: copy.live.tableHeaders[1],
+              sortable: true,
+              render: (unit) => `${unit.blockName ?? "-"} / ${unit.floorLabel ?? "-"}`,
+            },
+            {
+              key: "sale",
+              header: copy.live.tableHeaders[2],
+              render: (unit) => (
+                <StatusBadge variant={badgeVariant(unit.saleStatus)}>
+                  {copy.labels.sale[unit.saleStatus as keyof typeof copy.labels.sale] ?? unit.saleStatus}
+                </StatusBadge>
+              ),
+            },
+            {
+              key: "price",
+              header: copy.live.tableHeaders[3],
+              sortable: true,
+              sortValue: (unit) => unit.listPriceEurCents,
+              render: (unit) => (
+                <div className="space-y-1">
+                  <p className="font-bold">{formatEurFromCents(unit.listPriceEurCents, locale)}</p>
+                  {unit.priceSource ? (
+                    <p className="max-w-[170px] truncate text-xs text-muted-foreground" title={unit.priceSource}>
+                      {unit.priceSource}
+                    </p>
+                  ) : null}
+                </div>
+              ),
+            },
+            { key: "owner", header: copy.live.tableHeaders[4], render: (unit) => localizeOperationalValue(unit.ownerName, locale) },
+            { key: "resident", header: copy.live.tableHeaders[5], render: (unit) => localizeOperationalValue(unit.residentName, locale) },
+            {
+              key: "occupancy",
+              header: copy.live.tableHeaders[6],
+              render: (unit) => (
+                <StatusBadge variant={badgeVariant(unit.occupancyStatus)}>
+                  {copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? unit.occupancyStatus}
+                </StatusBadge>
+              ),
+            },
+            {
+              key: "balance",
+              header: copy.live.tableHeaders[7],
+              sortable: true,
+              sortValue: (unit) => unit.balanceCents,
+              render: (unit) => (
+                <div className="space-y-1">
+                  <p className="font-bold text-foreground">{formatTryFromCents(unit.balanceCents, locale)}</p>
+                  <StatusBadge variant={badgeVariant(unit.paymentStatus)}>
+                    {copy.labels.payment[unit.paymentStatus as keyof typeof copy.labels.payment] ?? unit.paymentStatus}
+                  </StatusBadge>
+                </div>
+              ),
+            },
+            { key: "tickets", header: copy.live.tableHeaders[8], sortable: true, sortValue: (unit) => unit.openTicketCount, render: (unit) => `${unit.openTicketCount} ${copy.table.open}` },
+          ]}
+        />
 
         <div className="space-y-3">
           <div className="rounded-lg border border-border/70 bg-muted/30 p-3">

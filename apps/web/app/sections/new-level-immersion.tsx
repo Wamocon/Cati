@@ -65,7 +65,7 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "Read the project from aerial plan to apartment to operating record",
     intro:
-      "1Cati treats a large residence like New Level Premium as a commercial operation: units, services, dues, reservations, documents and access decisions connected to one operating record.",
+      "1Çatı treats a large residence like New Level Premium as a commercial operation: units, services, dues, reservations, documents and access decisions connected to one operating record.",
     ctaPrimary: "Open unit matrix",
     ctaSecondary: "Review platform flow",
     liveLabel: "New Level Premium control view",
@@ -106,7 +106,7 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "Vom Lageplan über das Gebäude bis zum ERP-Ablauf",
     intro:
-      "1Cati behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
+      "1Çatı behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
     ctaPrimary: "Wohnungsmatrix öffnen",
     ctaSecondary: "Plattformablauf prüfen",
     liveLabel: "New Level Premium Kontrollansicht",
@@ -147,7 +147,7 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "От генплана и здания до квартиры и ERP-процесса",
     intro:
-      "1Cati рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
+      "1Çatı рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
     ctaPrimary: "Открыть матрицу квартир",
     ctaSecondary: "Посмотреть платформу",
     liveLabel: "New Level Premium control view",
@@ -240,7 +240,7 @@ export function NewLevelImmersion() {
     if (!root) return
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const desktop = window.matchMedia("(min-width: 900px)").matches
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
     if (reduced || !desktop) return
 
     let cleanup: (() => void) | undefined
@@ -314,7 +314,7 @@ export function NewLevelImmersion() {
   }, [stages])
 
   return (
-    <section ref={rootRef} id="new-level" className="relative bg-[#f7faf8]">
+    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8]">
       <div className="container pt-8 pb-12 md:pt-10 md:pb-16">
         <ScrollReveal className="max-w-4xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-primary uppercase shadow-sm">
@@ -330,8 +330,8 @@ export function NewLevelImmersion() {
         </ScrollReveal>
       </div>
 
-      <div className="relative md:min-h-[230svh]">
-        <div className="min-h-svh overflow-hidden border-y border-border/60 bg-[#061a17] text-white md:sticky md:top-0">
+      <div className="relative xl:min-h-[230svh]">
+        <div className="min-h-svh overflow-hidden border-y border-border/60 bg-[#061a17] text-white xl:sticky xl:top-0">
           <div className="absolute inset-0">
             {stages.map((stage, index) => (
               <div
@@ -355,24 +355,25 @@ export function NewLevelImmersion() {
 
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:76px_76px] opacity-70" />
 
-          <div className="relative z-10 container grid min-h-svh items-center gap-8 py-20 md:grid-cols-[0.92fr_1.08fr]">
+          <div className="relative z-10 container grid min-h-svh items-start gap-8 py-14 sm:py-16 xl:grid-cols-[0.92fr_1.08fr] xl:items-center xl:py-10 2xl:py-20">
             <div className="max-w-xl">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white/90 backdrop-blur">
                 <ShieldCheck className="h-4 w-4 text-emerald-200" />
                 {t.liveLabel}
               </div>
 
-              <div className="relative min-h-[300px] md:min-h-[360px]">
+              <div className="relative space-y-4 xl:min-h-[460px] xl:space-y-0 2xl:min-h-[520px]">
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   return (
                     <div
                       key={stage.label}
+                      data-testid={`new-level-stage-card-${index}`}
                       ref={(node) => {
                         cardRefs.current[index] = node
                       }}
                       className={cn(
-                        "relative inset-x-0 top-0 mb-4 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:md:absolute motion-safe:md:mb-0 md:p-8",
+                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:xl:absolute motion-safe:xl:mb-0 xl:p-8",
                         index === 0 && "opacity-100"
                       )}
                     >
@@ -382,10 +383,10 @@ export function NewLevelImmersion() {
                         </span>
                         0{index + 1} / {stage.label}
                       </div>
-                      <h3 className="mt-7 text-3xl leading-tight font-black md:text-5xl">
+                      <h3 className="mt-6 text-3xl leading-tight font-black xl:text-4xl 2xl:text-5xl">
                         {stage.title}
                       </h3>
-                      <p className="mt-5 max-w-lg text-base leading-8 text-white/78">
+                      <p className="mt-4 max-w-lg text-base leading-7 text-white/78 2xl:leading-8">
                         {stage.text}
                       </p>
                     </div>
@@ -393,7 +394,7 @@ export function NewLevelImmersion() {
                 })}
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div data-testid="new-level-metrics" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {t.metrics.map(([value, label]) => (
                   <div
                     key={`${value}-${label}`}
@@ -423,7 +424,7 @@ export function NewLevelImmersion() {
               </div>
             </div>
 
-            <div className="hidden justify-end md:flex">
+            <div className="hidden justify-end xl:flex">
               <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
                 <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {

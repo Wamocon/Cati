@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, type FormEvent } from "react"
+import { useLocale } from "next-intl"
 import {
   Download,
   Eye,
@@ -14,24 +16,48 @@ import {
 } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { clientProfile } from "@/lib/client-context"
 import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+} from "@/lib/operational-copy"
+import { hasPermission, type Role } from "@/lib/rbac"
+import {
   isClientRole,
   isFieldRole,
+  visibleDocumentPacketsForRole,
   visibleDocumentsForRole,
 } from "@/lib/role-scoped-views"
 import {
+  documentPackets,
   documentVault,
+  getDocumentPacketSummary,
   getDocumentSummary,
   getPurchaseChecklistSummary,
   purchaseChecklist,
+  type DocumentPacketRecord,
   type DocumentVaultRecord,
   type PurchaseDocumentStatus,
 } from "@/lib/site-management-data"
+
+type UploadState = "idle" | "uploading" | "success" | "error"
+
+const uploadCategories = Array.from(
+  new Set(documentVault.map((document) => document.category))
+) as DocumentVaultRecord["category"][]
+
+const retentionOptions = [
+  { value: "identity", label: "Identity" },
+  { value: "legal", label: "Legal" },
+  { value: "finance", label: "Finance" },
+  { value: "service", label: "Service" },
+  { value: "guest", label: "Guest" },
+  { value: "general", label: "General" },
+]
 
 function documentVariant(status: DocumentVaultRecord["status"]) {
   if (status === "verified") return "success"
@@ -61,6 +87,18 @@ function checklistLabel(status: PurchaseDocumentStatus) {
   return "Reddedildi"
 }
 
+function packetVariant(status: DocumentPacketRecord["status"]) {
+  if (status === "complete") return "success"
+  if (status === "signature_pending" || status === "review") return "warning"
+  return "danger"
+}
+
+function signatureVariant(status: DocumentPacketRecord["signatureStatus"]) {
+  if (status === "signed" || status === "not_required") return "success"
+  if (status === "sent") return "warning"
+  return "danger"
+}
+
 function summarizeDocuments(documents: DocumentVaultRecord[]) {
   return {
     total: documents.length,
@@ -71,47 +109,219 @@ function summarizeDocuments(documents: DocumentVaultRecord[]) {
   }
 }
 
+function DocumentUploadPanel({
+  role,
+  onUploaded,
+  t,
+}: {
+  role: Role
+  onUploaded: () => void
+  t: (value: string) => string
+}) {
+  const [state, setState] = useState<UploadState>("idle")
+  const [message, setMessage] = useState("")
+  const [fileName, setFileName] = useState("")
+
+  async function submitUpload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    setState("uploading")
+    setMessage("")
+
+    try {
+      const formData = new FormData(form)
+      const response = await fetch("/api/site-management/document-uploads", {
+        method: "POST",
+        body: formData,
+      })
+      const payload = await response.json()
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Upload failed.")
+      }
+
+      setState("success")
+      setMessage(
+        `${payload.upload?.originalFilename ?? "Document"} saved for review (${payload.storageMode}).`
+      )
+      form.reset()
+      setFileName("")
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
+      onUploaded()
+    } catch (error) {
+      setState("error")
+      setMessage(error instanceof Error ? error.message : t("Yükleme başarısız."))
+    }
+  }
+
+  return (
+    <Card3D glow={false}>
+      <form className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]" onSubmit={submitUpload}>
+        <div>
+          <div className="flex items-center gap-2">
+            <UploadCloud className="h-5 w-5 text-primary" />
+            <h2 className="text-sm font-bold text-card-foreground">{t("Güvenli belge yükleme")}</h2>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("Dosyalar gizli kalır, metadata veritabanında tutulur ve her yükleme insan incelemesini bekler.")}
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-semibold text-muted-foreground">
+              {t("Başlık")}
+              <input
+                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                name="title"
+                placeholder={t("Pasaport, TAPU, ödeme kanıtı...")}
+                maxLength={140}
+              />
+            </label>
+            <label className="text-xs font-semibold text-muted-foreground">
+              {t("Kategori")}
+              <select
+                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                name="category"
+                defaultValue={uploadCategories[0] ?? "General"}
+              >
+                {uploadCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs font-semibold text-muted-foreground">
+              {t("Daire / referans")}
+              <input
+                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                name="flatNumber"
+                placeholder="A-001, BKG-501, SRV-2401"
+                maxLength={80}
+              />
+            </label>
+            <label className="text-xs font-semibold text-muted-foreground">
+              {t("Saklama sınıfı")}
+              <select
+                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                name="retentionClass"
+                defaultValue={role === "staff" ? "service" : "general"}
+              >
+                {retentionOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4">
+          <label className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg bg-background px-4 py-5 text-center text-sm text-muted-foreground transition-colors hover:bg-muted">
+            <UploadCloud className="mb-2 h-8 w-8 text-primary" />
+            <span className="font-semibold text-foreground">
+              {fileName || t("PDF, görsel, Word veya Excel dosyası seçin")}
+            </span>
+            <span className="mt-1 text-xs">{t("Maks. 25 MB. Gizli depolama, inceleme zorunlu.")}</span>
+            <input
+              className="sr-only"
+              name="file"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,application/pdf,image/jpeg,image/png,image/webp,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              required
+              onChange={(event) => setFileName(event.currentTarget.files?.[0]?.name ?? "")}
+            />
+          </label>
+          <textarea
+            className="mt-3 min-h-20 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus-visible:border-primary"
+            name="note"
+            placeholder={t("İnceleme ekibi için isteğe bağlı not")}
+            maxLength={500}
+          />
+          <button
+            type="submit"
+            disabled={state === "uploading"}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-70"
+          >
+            <UploadCloud className="h-4 w-4" />
+            {state === "uploading" ? t("Yükleniyor...") : t("İncelemeye yükle")}
+          </button>
+          {message ? (
+            <p
+              className={`mt-2 text-xs font-semibold ${
+                state === "error" ? "text-rose-600" : "text-teal-600"
+              }`}
+              aria-live="polite"
+            >
+              {message}
+            </p>
+          ) : null}
+        </div>
+      </form>
+    </Card3D>
+  )
+}
+
 export default function DocumentsPage() {
   const user = useUser()
+  const locale = resolveDashboardLocale(useLocale())
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
   const restrictedView = clientView || fieldView
+  const canUpload = hasPermission(user.role, "documents", "create")
   const visibleDocuments = visibleDocumentsForRole(user.role, documentVault)
+  const visiblePackets = visibleDocumentPacketsForRole(user.role, documentPackets)
   const summary = restrictedView ? summarizeDocuments(visibleDocuments) : getDocumentSummary()
+  const packetSummary = getDocumentPacketSummary()
   const purchaseSummary = getPurchaseChecklistSummary()
 
   const pageIntro = clientView
-    ? "Yetkili dairenize bağlı sözleşme, kimlik, depozito, servis ve uyum belgelerini güvenli portal görünümünde takip edin."
+    ? t("Yetkili dairenize bağlı sözleşme, kimlik, depozito, servis ve uyum belgelerini güvenli portal görünümünde takip edin.")
     : fieldView
-      ? "Saha operasyonu için yalnızca görev dosyaları, servis kanıtları ve gerekli onay kayıtları gösterilir."
-      : `${clientProfile.clientName} satış ve after-sales süreci için TAPU, kimlik, sözleşme, ödeme, depozito, servis, uyum ve proje belgelerini güvenli, denetlenebilir ve işlem bağlantılı yönetin.`
+      ? t("Saha operasyonu için yalnızca görev dosyaları, servis kanıtları ve gerekli onay kayıtları gösterilir.")
+      : {
+          tr: `${clientProfile.clientName} satış ve after-sales süreci için TAPU, kimlik, sözleşme, ödeme, depozito, servis, uyum ve proje belgelerini güvenli, denetlenebilir ve işlem bağlantılı yönetin.`,
+          en: `Manage TAPU, identity, contract, payment, deposit, service, compliance and project documents for ${clientProfile.clientName} sales and after-sales in a secure audited workflow.`,
+          de: `Verwalten Sie TAPU-, Identitäts-, Vertrags-, Zahlungs-, Kautions-, Service-, Compliance- und Projektdokumente für Vertrieb und After-Sales von ${clientProfile.clientName} in einem sicheren, auditierbaren Ablauf.`,
+          ru: `Управляйте TAPU, документами личности, договорами, оплатами, депозитами, сервисом, соответствием и проектными файлами для продаж и after-sales ${clientProfile.clientName} в защищенном аудируемом процессе.`,
+        }[locale]
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">TAPU & Belge Kasası</h1>
+          <h1 className="text-2xl font-black text-foreground">{t("TAPU & Belge Kasası")}</h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{pageIntro}</p>
         </div>
-        <DashboardActionButton
-          actionType="document.upload.requested"
-          ariaLabel="Belge yükle"
-          className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm hover:bg-muted"
-          entityTable="documents"
-          title="Document upload requested"
-          metadata={{ source: "documents-page", role: user.role }}
-        >
-          <UploadCloud className="h-4 w-4 text-primary" />
-          Belge yükle
-        </DashboardActionButton>
+        <DashboardActionMenu
+          label="Aksiyonlar"
+          ariaLabel="Belge sayfasi aksiyonlari"
+          items={[
+            {
+              key: "upload",
+              label: "Belge yukle",
+              description: "Yukleme talebi denetim kaydina eklenir.",
+              icon: <UploadCloud />,
+              actionType: "document.upload.requested",
+              ariaLabel: "Belge yukle",
+              entityTable: "documents",
+              title: "Document upload requested",
+              metadata: { source: "documents-page", role: user.role },
+            },
+          ]}
+        />
       </div>
+
+      {canUpload ? (
+        <DocumentUploadPanel role={user.role} t={t} onUploaded={() => undefined} />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card3D glow={false}>
           <div className="flex items-center gap-3">
             <FileArchive className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Toplam belge</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Toplam belge")}</p>
               <AnimatedCounter value={summary.total} className="text-2xl font-black" />
             </div>
           </div>
@@ -120,7 +330,7 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-3">
             <FileCheck2 className="h-8 w-8 text-teal-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Doğrulandı</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Doğrulandı")}</p>
               <AnimatedCounter value={summary.verified} className="text-2xl font-black" />
             </div>
           </div>
@@ -129,7 +339,7 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-3">
             <FileClock className="h-8 w-8 text-amber-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Bekleyen</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Bekleyen")}</p>
               <AnimatedCounter value={summary.pending} className="text-2xl font-black" />
             </div>
           </div>
@@ -138,12 +348,92 @@ export default function DocumentsPage() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Eksik/Süre doldu</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{t("Eksik/Süre doldu")}</p>
               <AnimatedCounter value={summary.missing + summary.expired} className="text-2xl font-black" />
             </div>
           </div>
         </Card3D>
       </div>
+
+      <Card3D glow={false}>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <FileCheck2 className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-bold text-card-foreground">Document packet board</h2>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Move-in, checkout, owner statement, KYC/TAPU and service-proof packets track required files, signatures, retention and next action.
+            </p>
+          </div>
+          <StatusBadge variant={packetSummary.missingOrReview > 0 ? "warning" : "success"}>
+            {packetSummary.completionRate}% packet completion
+          </StatusBadge>
+        </div>
+        <DataTable
+          data={visiblePackets}
+          pageSize={8}
+          searchValue={(packet) => `${packet.id} ${packet.title} ${packet.audience} ${packet.relatedEntity} ${packet.retentionClass} ${packet.nextAction}`}
+          columns={[
+            { key: "id", header: "Packet", sortable: true, render: (packet) => packet.id },
+            { key: "title", header: "Title", render: (packet) => packet.title },
+            { key: "audience", header: "Audience", sortable: true, render: (packet) => packet.audience },
+            { key: "related", header: "Related", render: (packet) => packet.relatedEntity },
+            {
+              key: "progress",
+              header: "Progress",
+              sortable: true,
+              sortValue: (packet) => packet.completedDocuments / Math.max(packet.requiredDocuments, 1),
+              render: (packet) => `${packet.completedDocuments}/${packet.requiredDocuments}`,
+            },
+            {
+              key: "status",
+              header: "Status",
+              render: (packet) => <StatusBadge variant={packetVariant(packet.status)}>{packet.status}</StatusBadge>,
+            },
+            {
+              key: "signature",
+              header: "Signature",
+              render: (packet) => (
+                <StatusBadge variant={signatureVariant(packet.signatureStatus)}>{packet.signatureStatus}</StatusBadge>
+              ),
+            },
+            { key: "next", header: "Next action", render: (packet) => packet.nextAction },
+            {
+              key: "actions",
+              header: "Action",
+              sticky: "right",
+              headerClassName: "text-center",
+              cellClassName: "text-center",
+              render: (packet) => (
+                <DashboardActionMenu
+                  compact
+                  label="Paket aksiyonlari"
+                  ariaLabel={`${packet.id} belge paketi aksiyonlari`}
+                  items={[
+                    {
+                      key: "prepare",
+                      label: "Paketi hazirla",
+                      description: `${packet.completedDocuments}/${packet.requiredDocuments} belge tamam.`,
+                      icon: <FileText />,
+                      actionType: "document.packet.prepare",
+                      ariaLabel: "Belge paketini hazirla",
+                      entityTable: "document_packets",
+                      entityExternalId: packet.id,
+                      title: packet.title,
+                      metadata: {
+                        relatedEntity: packet.relatedEntity,
+                        status: packet.status,
+                        role: user.role,
+                      },
+                    },
+                  ]}
+                />
+              ),
+            },
+          ]}
+        />
+      </Card3D>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {visibleDocuments.slice(0, 3).map((document) => (
@@ -273,38 +563,43 @@ export default function DocumentsPage() {
             headerClassName: "text-center",
             cellClassName: "text-center",
             render: (document) => (
-              <div className="flex items-center justify-center gap-1">
-                <DashboardActionButton
-                  actionType="document.view.requested"
-                  ariaLabel="Belgeyi görüntüle"
-                  className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-                  entityTable="documents"
-                  entityExternalId={document.id}
-                  title={document.name}
-                  metadata={{
-                    flatNumber: document.flatNumber,
-                    category: document.category,
-                    role: user.role,
-                  }}
-                >
-                  <Eye className="h-4 w-4" />
-                </DashboardActionButton>
-                <DashboardActionButton
-                  actionType="document.download.requested"
-                  ariaLabel="Belgeyi indir"
-                  className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-                  entityTable="documents"
-                  entityExternalId={document.id}
-                  title={document.name}
-                  metadata={{
-                    flatNumber: document.flatNumber,
-                    category: document.category,
-                    role: user.role,
-                  }}
-                >
-                  <Download className="h-4 w-4" />
-                </DashboardActionButton>
-              </div>
+              <DashboardActionMenu
+                compact
+                label="Belge aksiyonlari"
+                ariaLabel={`${document.id} belge aksiyonlari`}
+                items={[
+                  {
+                    key: "view",
+                    label: "Belgeyi goruntule",
+                    icon: <Eye />,
+                    actionType: "document.view.requested",
+                    ariaLabel: "Belgeyi goruntule",
+                    entityTable: "documents",
+                    entityExternalId: document.id,
+                    title: document.name,
+                    metadata: {
+                      flatNumber: document.flatNumber,
+                      category: document.category,
+                      role: user.role,
+                    },
+                  },
+                  {
+                    key: "download",
+                    label: "Belgeyi indir",
+                    icon: <Download />,
+                    actionType: "document.download.requested",
+                    ariaLabel: "Belgeyi indir",
+                    entityTable: "documents",
+                    entityExternalId: document.id,
+                    title: document.name,
+                    metadata: {
+                      flatNumber: document.flatNumber,
+                      category: document.category,
+                      role: user.role,
+                    },
+                  },
+                ]}
+              />
             ),
           },
         ]}

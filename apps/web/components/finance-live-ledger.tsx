@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useLocale } from "next-intl"
 import {
   ArrowDownUp,
   Download,
@@ -9,10 +10,15 @@ import {
   WalletCards,
 } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { hasPermission } from "@/lib/rbac"
+import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+  toIntlLocale,
+} from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type {
@@ -35,17 +41,17 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatCents(cents: number, currency = "TRY") {
-  return new Intl.NumberFormat("tr-TR", {
+function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(cents / 100)
 }
 
-function shortDate(value: string | null) {
+function shortDate(value: string | null, locale = "tr-TR") {
   if (!value) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
   }).format(new Date(value))
@@ -79,6 +85,9 @@ function entryLabel(entry: FinanceLedgerEntry) {
 
 export function FinanceLiveLedger() {
   const user = useUser()
+  const locale = resolveDashboardLocale(useLocale())
+  const intlLocale = toIntlLocale(locale)
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const [data, setData] = useState<FinanceLedgerData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const canExportLedger = hasPermission(user.role, "finance", "export")
@@ -140,7 +149,7 @@ export function FinanceLiveLedger() {
   const latestEntries = useMemo(() => data?.entries.slice(0, 5) ?? [], [data])
   const lastUpdated = useMemo(() => {
     if (!data?.generatedAt) return null
-    return new Intl.DateTimeFormat("tr-TR", {
+    return new Intl.DateTimeFormat(intlLocale, {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
@@ -159,16 +168,15 @@ export function FinanceLiveLedger() {
           <div className="flex flex-wrap items-center gap-2">
             <WalletCards className="h-5 w-5 text-primary" />
             <h2 className="text-base font-black text-card-foreground">
-              Finans defteri
+              {t("Finans defteri")}
             </h2>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Aidat, ödeme, depozito, ceza ve düzeltme kayıtları değiştirilemez defter mantığıyla takip edilir.
-            Hassas finans aksiyonları onay ve denetim akışına alınır.
+            {t("Aidat, ödeme, depozito, ceza ve düzeltme kayıtları değiştirilemez defter mantığıyla takip edilir. Hassas finans aksiyonları onay ve denetim akışına alınır.")}
           </p>
           {lastUpdated && (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              Son güncelleme: {lastUpdated}
+              {t("Son güncelleme")}: {lastUpdated}
             </p>
           )}
         </div>
@@ -181,46 +189,52 @@ export function FinanceLiveLedger() {
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
           >
             <RefreshCw className={cn("h-4 w-4", requestState === "loading" && "animate-spin")} />
-            Defteri yenile
+            {t("Defteri yenile")}
           </button>
           {canExportLedger && (
-          <DashboardActionButton
-            actionType="finance.ledger.export"
-            ariaLabel="Finans defteri dışa aktarım isteği oluştur"
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
-            entityTable="finance_ledger_entries"
-            metadata={{ source: data?.source ?? "unknown", phase: 6 }}
-            successLabel="Dışa aktarım isteği alındı"
-            title="Finans defteri dışa aktarım isteği"
-          >
-            <Download className="h-4 w-4" />
-            Dışa aktar
-          </DashboardActionButton>
+            <DashboardActionMenu
+              label="Aksiyonlar"
+              ariaLabel="Finans defteri aksiyonlari"
+              buttonClassName="border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              items={[
+                {
+                  key: "export",
+                  label: "Disa aktar",
+                  description: "Finans defteri dis aktarim istegi olusturur.",
+                  icon: <Download />,
+                  actionType: "finance.ledger.export",
+                  ariaLabel: "Finans defteri disa aktarim istegi olustur",
+                  entityTable: "finance_ledger_entries",
+                  title: "Finans defteri disa aktarim istegi",
+                  metadata: { source: data?.source ?? "unknown", phase: 6 },
+                },
+              ]}
+            />
           )}
         </div>
       </div>
 
       {requestState === "error" && (
         <div role="alert" className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-          Finans defteri şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.
+          {t("Finans defteri şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.")}
         </div>
       )}
 
       {failedQualityChecks.length > 0 && (
         <div role="alert" className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          Finans defteri kalite kontrolü dikkat istiyor: {failedQualityChecks.map((check) => check.label).join(", ")}
+          {t("Finans defteri kalite kontrolü dikkat istiyor")}: {failedQualityChecks.map((check) => check.label).join(", ")}
         </div>
       )}
 
       <div className="grid gap-3 py-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Açık bakiye", formatCents(data?.summary.openLedgerCents ?? 0, currency)],
-          ["Gecikmiş", formatCents(data?.summary.overdueLedgerCents ?? 0, currency)],
-          ["Bu ay tahsilat", formatCents(data?.summary.paidThisMonthCents ?? 0, currency)],
+          ["Açık bakiye", formatCents(data?.summary.openLedgerCents ?? 0, currency, intlLocale)],
+          ["Gecikmiş", formatCents(data?.summary.overdueLedgerCents ?? 0, currency, intlLocale)],
+          ["Bu ay tahsilat", formatCents(data?.summary.paidThisMonthCents ?? 0, currency, intlLocale)],
           ["Açık kayıt", data?.summary.openEntries ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
-            <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground">{t(String(label))}</p>
             <p className="mt-1 text-xl font-black text-foreground">{value}</p>
           </div>
         ))}
@@ -230,7 +244,7 @@ export function FinanceLiveLedger() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
             <ArrowDownUp className="h-4 w-4" />
-            Son finans kayıtları
+            {t("Son finans kayıtları")}
           </div>
           {latestEntries.map((entry) => (
             <div
@@ -240,11 +254,11 @@ export function FinanceLiveLedger() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-foreground">{entryLabel(entry)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {entry.entryType} / {entry.period ?? "-"} / vade {shortDate(entry.dueDate)}
+                  {entry.entryType} / {entry.period ?? "-"} / {t("vade")} {shortDate(entry.dueDate, intlLocale)}
                 </p>
               </div>
               <p className="text-sm font-black text-foreground">
-                {formatCents(entry.amountCents, entry.currency)}
+                {formatCents(entry.amountCents, entry.currency, intlLocale)}
               </p>
               <StatusBadge variant={statusVariant(entry.status)}>
                 {statusLabel(entry.status)}
@@ -253,7 +267,7 @@ export function FinanceLiveLedger() {
           ))}
           {latestEntries.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Finans kaydı bulunamadı.
+              {t("Finans kaydı bulunamadı.")}
             </div>
           )}
         </div>
@@ -262,10 +276,9 @@ export function FinanceLiveLedger() {
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
             <div>
-              <h3 className="text-sm font-black text-foreground">Finans kontrol modeli</h3>
+              <h3 className="text-sm font-black text-foreground">{t("Finans kontrol modeli")}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Onaylanmış finans kaydı doğrudan değiştirilmez; düzeltme için karşı kayıt açılır.
-                Dışa aktarım, mutabakat ve ödeme aksiyonları role göre denetim akışına alınır.
+                {t("Onaylanmış finans kaydı doğrudan değiştirilmez; düzeltme için karşı kayıt açılır. Dışa aktarım, mutabakat ve ödeme aksiyonları role göre denetim akışına alınır.")}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-background/80 p-3">

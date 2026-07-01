@@ -1,17 +1,19 @@
 "use client"
 
-import { Bell, CheckCircle2, Eye, FileClock, Globe, Palette, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
+import { Bell, CheckCircle2, Eye, FileClock, Globe, PlugZap, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import {
   auditEvents,
+  getIntegrationSummary,
   getPlatformControlSummary,
+  integrationProviders,
   platformControls,
   roleCoverage,
   type AuditEvent,
+  type IntegrationProviderRecord,
   type PlatformControl,
 } from "@/lib/site-management-data"
 
@@ -39,12 +41,33 @@ function riskLabel(risk: AuditEvent["risk"]) {
   return "Düşük"
 }
 
+function integrationVariant(status: IntegrationProviderRecord["status"]) {
+  if (status === "connected") return "success"
+  if (status === "demo_ready") return "info"
+  if (status === "blocked_pending_client") return "warning"
+  return "neutral"
+}
+
+function integrationLabel(status: IntegrationProviderRecord["status"]) {
+  if (status === "connected") return "Bağlı"
+  if (status === "demo_ready") return "Demo hazır"
+  if (status === "blocked_pending_client") return "Müşteri bekleniyor"
+  return "Manuel yedek"
+}
+
+function integrationRiskVariant(risk: IntegrationProviderRecord["riskLevel"]) {
+  if (risk === "high") return "danger"
+  if (risk === "medium") return "warning"
+  return "success"
+}
+
 function booleanBadge(value: boolean) {
   return <StatusBadge variant={value ? "success" : "neutral"}>{value ? "Var" : "Yok"}</StatusBadge>
 }
 
 export default function SettingsPage() {
   const summary = getPlatformControlSummary()
+  const integrationSummary = getIntegrationSummary()
 
   const configurationItems = [
     {
@@ -161,20 +184,42 @@ export default function SettingsPage() {
               </div>
             </Card3D>
           ))}
-          <Card3D glow={false}>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Palette className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-bold text-card-foreground">Görünüm</p>
-                  <p className="text-xs text-muted-foreground">Açık/koyu tema desteği.</p>
-                </div>
-              </div>
-              <ThemeToggle />
-            </div>
-          </Card3D>
         </div>
       </div>
+
+      <Card3D glow={false}>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-card-foreground">Faz 13 entegrasyon hazırlığı</h2>
+            <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
+              Supabase bağlı backend olarak çalışır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge variant="success">Canlı {integrationSummary.liveProviders}</StatusBadge>
+            <StatusBadge variant="info">Demo {integrationSummary.demoReady}</StatusBadge>
+            <StatusBadge variant="warning">Müşteri bekliyor {integrationSummary.blockedPendingClient}</StatusBadge>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {integrationProviders.slice(0, 6).map((provider) => (
+            <div key={provider.id} className="rounded-xl border border-border bg-muted/30 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">{provider.category}</p>
+                  <h3 className="mt-1 text-sm font-black text-foreground">{provider.provider}</h3>
+                </div>
+                <PlugZap className="h-4 w-4 shrink-0 text-primary" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status)}</StatusBadge>
+                <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{provider.riskLevel}</StatusBadge>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">{provider.idealNow}</p>
+            </div>
+          ))}
+        </div>
+      </Card3D>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <DataTable
@@ -204,6 +249,23 @@ export default function SettingsPage() {
           ]}
         />
       </div>
+
+      <DataTable
+        data={integrationProviders}
+        searchValue={(provider) =>
+          `${provider.id} ${provider.category} ${provider.provider} ${provider.status} ${provider.requiredFromClient} ${provider.fallback}`
+        }
+        pageSize={10}
+        columns={[
+          { key: "id", header: "ID", sortable: true, render: (provider) => provider.id },
+          { key: "category", header: "Servis", sortable: true, render: (provider) => provider.category },
+          { key: "provider", header: "Provider", render: (provider) => provider.provider },
+          { key: "status", header: "Status", render: (provider) => <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status)}</StatusBadge> },
+          { key: "risk", header: "Risk", render: (provider) => <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{provider.riskLevel}</StatusBadge> },
+          { key: "required", header: "Needed from client", render: (provider) => provider.requiredFromClient },
+          { key: "fallback", header: "Fallback", render: (provider) => provider.fallback },
+        ]}
+      />
 
       <Card3D innerClassName="p-5" glow={false}>
         <div className="flex items-center gap-3">

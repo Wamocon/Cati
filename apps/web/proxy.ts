@@ -27,7 +27,24 @@ function getLocaleAndPath(pathname: string): {
 function signInUrl(locale: string, request: NextRequest): URL {
   const url = request.nextUrl.clone()
   url.pathname = `/${locale}/login`
+  const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`
+  url.search = ""
+  url.searchParams.set("next", nextPath.replace(`/${locale}`, "") || "/dashboard")
   return url
+}
+
+function accessProfilesEnabledForRequest() {
+  const productionDeployment =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.CATI_ENV === "production"
+  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
+  const legacyDevFlag =
+    process.env.NODE_ENV !== "production" &&
+    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
+  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
+  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
+
+  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
 }
 
 export default async function proxy(request: NextRequest) {
@@ -41,11 +58,19 @@ export default async function proxy(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const accessProfilesEnabled =
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
+  const accessProfilesEnabled = accessProfilesEnabledForRequest()
+  const { locale, pathWithoutLocale } = getLocaleAndPath(
+    request.nextUrl.pathname
+  )
+  const isProtected = pathWithoutLocale.startsWith("/dashboard")
+  const isPublic = publicRoutePrefixes.some((prefix) =>
+    pathWithoutLocale.startsWith(prefix)
+  )
 
   if (!supabaseUrl || !supabaseKey) {
-    // External auth is not configured yet; keep the local workspace usable.
+    if (isProtected && !accessProfilesEnabled) {
+      return NextResponse.redirect(signInUrl(locale, request))
+    }
     return intlResponse
   }
 
@@ -67,14 +92,6 @@ export default async function proxy(request: NextRequest) {
   const { data: claimsData, error: claimsError } =
     await supabase.auth.getClaims()
   const isAuthenticated = Boolean(claimsData?.claims?.sub && !claimsError)
-
-  const { locale, pathWithoutLocale } = getLocaleAndPath(
-    request.nextUrl.pathname
-  )
-  const isProtected = pathWithoutLocale.startsWith("/dashboard")
-  const isPublic = publicRoutePrefixes.some((prefix) =>
-    pathWithoutLocale.startsWith(prefix)
-  )
 
   if (isProtected && !isAuthenticated && !accessProfilesEnabled) {
     return NextResponse.redirect(signInUrl(locale, request))

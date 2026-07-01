@@ -1,0 +1,543 @@
+{
+  "openapi": "3.2.0",
+  "info": {
+    "title": "1Cati Site Management API",
+    "version": "2026.07.01",
+    "summary": "API contract for the 1Cati property-management web application.",
+    "description": "This OpenAPI contract describes the local and production-ready API surface for the 1Cati CRM/ERP dashboard. It is used for API testing, Jira/Xray traceability and future client/provider handover."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:3104",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://cati-blond.vercel.app",
+      "description": "Hosted web application"
+    }
+  ],
+  "tags": [
+    { "name": "Authentication", "description": "Local access profile and authentication helper endpoints." },
+    { "name": "Dashboard", "description": "Dashboard, search and phase status endpoints." },
+    { "name": "Operations", "description": "Site-management modules for units, finance, tickets, bookings, communications, documents and integrations." },
+    { "name": "AI", "description": "Role-aware AI assistant and premium AI endpoints." },
+    { "name": "API Contract", "description": "Machine-readable API specification endpoint." }
+  ],
+  "components": {
+    "securitySchemes": {
+      "AccessProfileCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "access_profile_role",
+        "description": "Local QA access-profile cookie. Production uses Supabase Auth instead."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": { "type": "string" }
+        }
+      },
+      "SourceResponse": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string", "enum": ["supabase", "local-seed"] }
+        },
+        "additionalProperties": true
+      },
+      "AccessProfilePostRequest": {
+        "type": "object",
+        "required": ["role"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["admin", "manager", "accountant", "staff", "owner", "tenant"]
+          }
+        }
+      },
+      "ActionLogRequest": {
+        "type": "object",
+        "required": ["actionType"],
+        "properties": {
+          "actionType": { "type": "string", "maxLength": 120 },
+          "entityTable": { "type": "string" },
+          "entityId": { "type": "string" },
+          "entityExternalId": { "type": "string" },
+          "title": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "ActionDecisionRequest": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["approved", "rejected", "completed", "failed"] },
+          "actionType": { "type": "string", "maxLength": 120, "default": "ticket.update.request" },
+          "entityTable": { "type": "string", "default": "service_tickets" }
+        },
+        "additionalProperties": false
+      },
+      "TicketCreateRequest": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": { "type": "string", "minLength": 3, "maxLength": 160 },
+          "description": { "type": "string", "maxLength": 1200 },
+          "category": { "type": "string", "default": "general" },
+          "unitNo": { "type": "string" },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"], "default": "normal" },
+          "origin": { "type": "string", "enum": ["api", "ai"], "default": "api" }
+        },
+        "additionalProperties": true
+      },
+      "AiChatRequest": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        }
+      },
+      "ImportPreviewRequest": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      },
+      "ImportCommitRequest": {
+        "type": "object",
+        "properties": {
+          "batchId": { "type": "string" },
+          "rows": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "additionalProperties": true
+      },
+      "DocumentUploadResponse": {
+        "type": "object",
+        "properties": {
+          "storageMode": { "type": "string" },
+          "upload": { "type": "object", "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "TicketCreateResponse": {
+        "type": "object",
+        "properties": {
+          "workflow": { "type": "object", "additionalProperties": true },
+          "ticketRequest": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "string", "enum": ["submitted"] },
+              "proposedPayload": { "type": "object", "additionalProperties": true },
+              "requiresHumanApproval": { "type": "boolean" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "OpenApiDocument": {
+        "type": "object",
+        "required": ["openapi", "info", "paths"],
+        "properties": {
+          "openapi": { "type": "string" },
+          "info": { "type": "object" },
+          "paths": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "The user is not authenticated.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "The role is not allowed to perform this action.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "ServerError": {
+        "description": "The requested data or action is currently unavailable.",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      }
+    }
+  },
+  "security": [{ "AccessProfileCookie": [] }],
+  "paths": {
+    "/api/openapi": {
+      "get": {
+        "tags": ["API Contract"],
+        "operationId": "getOpenApiSpecification",
+        "summary": "Return the current OpenAPI specification.",
+        "description": "Returns the machine-readable API contract used by QA, developers and Jira/Xray traceability.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OpenAPI document returned.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OpenApiDocument" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/access-profile": {
+      "get": {
+        "tags": ["Authentication"],
+        "operationId": "getAccessProfileAvailability",
+        "summary": "Check whether local access profiles are enabled.",
+        "description": "Used by QA and demo flows to check if role-based local access is enabled. Production authentication remains Supabase Auth.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Access-profile mode status returned.",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "enabled": { "type": "boolean" } } } } }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Authentication"],
+        "operationId": "createAccessProfileSession",
+        "summary": "Create a local role-based access-profile session.",
+        "description": "Sets the local QA access-profile cookie for one of the supported roles.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AccessProfilePostRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Access profile set." },
+          "400": { "description": "Invalid role or body.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      },
+      "delete": {
+        "tags": ["Authentication"],
+        "operationId": "clearAccessProfileSession",
+        "summary": "Clear the local access-profile session.",
+        "description": "Removes the QA access-profile cookie.",
+        "responses": {
+          "200": { "description": "Access profile cleared." }
+        }
+      }
+    },
+    "/api/site-management/dashboard": {
+      "get": {
+        "tags": ["Dashboard"],
+        "operationId": "getDashboardSnapshot",
+        "summary": "Return global dashboard snapshot data.",
+        "description": "Returns portfolio summary, risk and operational dashboard data. Allowed for admin and manager roles only.",
+        "x-cati-roles": ["admin", "manager"],
+        "responses": {
+          "200": { "description": "Dashboard snapshot returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/site-management/search": {
+      "get": {
+        "tags": ["Dashboard"],
+        "operationId": "searchOperationalRecords",
+        "summary": "Search operational records.",
+        "description": "Searches units, services, bookings, integrations, documents and AI records with a limit.",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Search results returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/site-management/phase-status": {
+      "get": {
+        "tags": ["Dashboard"],
+        "operationId": "getPhaseStatus",
+        "summary": "Return phase status overview.",
+        "description": "Returns the current 15-phase delivery status used by the dashboard and QA harnesses.",
+        "responses": { "200": { "description": "Phase status returned." } }
+      }
+    },
+    "/api/site-management/phase4": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getPhase4UnitData",
+        "summary": "Return site, block, floor and unit matrix data.",
+        "description": "Returns unit matrix data for the 769-unit operating model.",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 769 } }],
+        "responses": {
+          "200": { "description": "Unit data returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/site-management/finance": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getFinanceLedgerData",
+        "summary": "Return finance ledger data.",
+        "description": "Returns finance ledger summary, open balances and recent records for permitted finance roles.",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }],
+        "responses": {
+          "200": { "description": "Finance data returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/site-management/users": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getUsersAndRoles",
+        "summary": "Return people, staff and role coverage data.",
+        "description": "Returns user, staff, owner and resident relationship data for permitted roles.",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }],
+        "responses": {
+          "200": { "description": "User data returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/site-management/tickets": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getTicketsAndTasks",
+        "summary": "Return tickets, service orders and workforce tasks.",
+        "description": "Returns service ticket, task and SLA data for operations workflows.",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }],
+        "responses": { "200": { "description": "Ticket data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Operations"],
+        "operationId": "createServiceTicketRequest",
+        "summary": "Submit a service ticket request for human-approved workflow processing.",
+        "description": "Creates an audited service ticket request from API or AI origin. The backend validates role permission, title length, description length and approval workflow metadata before returning a submitted request.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TicketCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Ticket request submitted for workflow processing.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TicketCreateResponse" }
+              }
+            }
+          },
+          "400": { "description": "Invalid ticket body or field length.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/site-management/payment-controls": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getPaymentControls",
+        "summary": "Return payment, deposit and debt restriction controls.",
+        "description": "Returns payment-control data and debt restriction status for finance-capable roles.",
+        "parameters": [{ "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100 } }],
+        "responses": { "200": { "description": "Payment controls returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/booking-operations": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getBookingOperations",
+        "summary": "Return booking, move-in, checkout and access handoff data.",
+        "description": "Returns Phase 10 booking operation data for calendar and operational workflows.",
+        "responses": { "200": { "description": "Booking operation data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/communications": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getCommunications",
+        "summary": "Return communication threads and notification delivery data.",
+        "description": "Returns chat, announcement, template and delivery status data for permitted roles.",
+        "responses": { "200": { "description": "Communication data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/document-packets": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getDocumentPackets",
+        "summary": "Return document packet data.",
+        "description": "Returns document packet, expiry and audit status for permitted document roles.",
+        "responses": { "200": { "description": "Document packet data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/document-uploads": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getDocumentUploadPolicy",
+        "summary": "Return document upload policy.",
+        "description": "Returns upload constraints, provider mode and role-specific upload policy.",
+        "responses": { "200": { "description": "Document upload policy returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      },
+      "post": {
+        "tags": ["Operations"],
+        "operationId": "uploadDocument",
+        "summary": "Upload a document in simulation or live storage mode.",
+        "description": "Accepts multipart form data, stores document metadata and returns upload status. Live storage requires configured provider credentials.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" },
+                  "title": { "type": "string" },
+                  "category": { "type": "string" },
+                  "flatNumber": { "type": "string" },
+                  "packetId": { "type": "string" },
+                  "note": { "type": "string" },
+                  "retentionClass": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Document uploaded.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DocumentUploadResponse" } } } },
+          "400": { "description": "Invalid file or form data.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" }
+        }
+      }
+    },
+    "/api/site-management/integrations": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getIntegrations",
+        "summary": "Return integration readiness and provider status.",
+        "description": "Returns provider placeholders, health, queue and manual fallback information for permitted roles.",
+        "responses": { "200": { "description": "Integration status returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/offline-sync": {
+      "get": {
+        "tags": ["Operations"],
+        "operationId": "getOfflineSyncQueue",
+        "summary": "Return offline sync queue for permitted roles.",
+        "description": "Returns offline-safe queue items for admin, manager and staff roles. Other roles are denied.",
+        "responses": { "200": { "description": "Offline sync data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/import/preview": {
+      "post": {
+        "tags": ["Operations"],
+        "operationId": "previewUnitImport",
+        "summary": "Preview unit import data.",
+        "description": "Validates import rows before commit and returns findings such as duplicates or required field errors.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportPreviewRequest" } } } },
+        "responses": { "200": { "description": "Import preview returned." }, "400": { "description": "Invalid import body." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/import/commit": {
+      "post": {
+        "tags": ["Operations"],
+        "operationId": "commitUnitImport",
+        "summary": "Commit validated unit import data.",
+        "description": "Commits a validated import batch or rows according to data quality rules.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ImportCommitRequest" } } } },
+        "responses": { "200": { "description": "Import committed." }, "400": { "description": "Import cannot be committed." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    },
+    "/api/site-management/actions": {
+      "post": {
+        "tags": ["Operations"],
+        "operationId": "logClientAction",
+        "summary": "Log an audited client action.",
+        "description": "Stores an audited action after validating role permissions against the target entity and action type.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionLogRequest" } } } },
+        "responses": {
+          "201": { "description": "Action logged.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "400": { "description": "Invalid action body." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      },
+      "patch": {
+        "tags": ["Operations"],
+        "operationId": "decideClientActionRequest",
+        "summary": "Approve or reject an audited client action request.",
+        "description": "Updates a pending action request after validating that the current role has approval permission for the resolved workflow action.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ActionDecisionRequest" } } } },
+        "responses": {
+          "200": { "description": "Action request decision stored.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SourceResponse" } } } },
+          "400": { "description": "Invalid action decision body." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/api/ai/chat": {
+      "post": {
+        "tags": ["AI"],
+        "operationId": "postAiChat",
+        "summary": "Return a role-aware AI assistant response.",
+        "description": "Accepts a user message, detects language, applies RBAC guardrails and returns an AI or deterministic fallback response.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AiChatRequest" } } } },
+        "responses": {
+          "200": { "description": "AI response returned." },
+          "400": { "description": "Invalid message body." },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "413": { "description": "Message is too long." }
+        }
+      }
+    },
+    "/api/ai/premium": {
+      "get": {
+        "tags": ["AI"],
+        "operationId": "getPremiumAi",
+        "summary": "Return premium AI briefing, recommendations and image workflow data.",
+        "description": "Returns Phase 14 AI premium layer data for roles allowed to view AI reports and recommendations.",
+        "responses": { "200": { "description": "Premium AI data returned." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } }
+      }
+    }
+  }
+}

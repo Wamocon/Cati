@@ -10,7 +10,8 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:structured": "playwright test public/landing-functional.spec.ts auth/access-profile-functional.spec.ts roles/role-access-functional.spec.ts dashboard/dashboard-navigation-functional.spec.ts operations/operations-functional.spec.ts operations/workflow-action-menu-functional.spec.ts api/openapi-contract-functional.spec.ts api/site-management-post-functional.spec.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

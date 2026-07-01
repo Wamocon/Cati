@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -37,11 +37,17 @@ import { PieChart } from "@/components/charts/pie-chart"
 import { GlassCard } from "@/components/glass-card"
 import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
-import { IsometricErpWorld } from "@/components/isometric-erp-world"
+import { LiveErpSimulation } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
 import { useLiveDashboardSnapshot } from "@/hooks/use-live-dashboard-snapshot"
+import {
+  dashboardHomeCopy,
+  resolveDashboardHomeLocale,
+  type DashboardHomeCopy,
+  type WorkloadKind,
+} from "@/lib/dashboard-home-copy"
 import type {
   DashboardSnapshot,
   Phase4SiteData,
@@ -74,6 +80,29 @@ interface Kpi {
   href: string
 }
 
+function copyText(
+  template: string,
+  values: Record<string, string | number> = {}
+) {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    values[key] === undefined ? `{${key}}` : String(values[key])
+  )
+}
+
+const workloadKindClassNames: Record<WorkloadKind, string> = {
+  access: "bg-rose-500/75 shadow-rose-500/20",
+  booking: "bg-sky-500/75 shadow-sky-500/20",
+  finance: "bg-amber-500/80 shadow-amber-500/20",
+  service: "bg-teal-500/75 shadow-teal-500/20",
+}
+
+const workloadLegendClassNames: Record<WorkloadKind, string> = {
+  access: "bg-rose-500",
+  booking: "bg-sky-500",
+  finance: "bg-amber-500",
+  service: "bg-teal-500",
+}
+
 function CommandLink({
   ariaLabel,
   children,
@@ -87,12 +116,13 @@ function CommandLink({
   href: string
   role: Role
 }) {
+  const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
   const resource = resourceForDashboardPath(href)
   const allowed = hasPermission(role, resource, "view")
   const content = typeof children === "function" ? children({ allowed }) : children
   const baseClassName = cn(
-    "group/command relative block rounded-xl outline-none transition after:absolute after:inset-0 after:z-20 after:rounded-xl after:content-[''] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    allowed ? "cursor-pointer" : "cursor-not-allowed opacity-65 grayscale-[0.2]",
+    "group/command relative block rounded-xl outline-none transition-transform duration-200 ease-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    allowed ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-0" : "cursor-not-allowed opacity-65 grayscale-[0.2]",
     className
   )
 
@@ -100,11 +130,11 @@ function CommandLink({
     return (
       <div
         aria-disabled="true"
-        aria-label={`${ariaLabel} - rol izni yok`}
+        aria-label={`${ariaLabel} - ${copy.command.lockedAriaSuffix}`}
         className={baseClassName}
         data-access="locked"
         role="group"
-        title="Bu modül mevcut rol için kapalı"
+        title={copy.command.lockedTitle}
       >
         {content}
       </div>
@@ -124,18 +154,20 @@ function CommandLink({
 }
 
 function DrilldownCue({ allowed }: { allowed: boolean }) {
+  const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
+
   if (!allowed) {
     return (
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-background/70 px-2 py-1 text-[11px] font-black text-muted-foreground">
-        Rol kapalı
+        {copy.command.locked}
         <LockKeyhole className="h-3 w-3" />
       </span>
     )
   }
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/15 bg-background/50 px-2 py-1 text-[11px] font-black">
-      İncele
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/15 bg-background/60 px-2 py-1 text-[11px] font-black shadow-sm transition-colors group-hover/command:bg-primary group-hover/command:text-primary-foreground">
+      {copy.command.inspect}
       <ChevronRight className="h-3 w-3" />
     </span>
   )
@@ -600,29 +632,35 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
 }
 
 function GlobalOperationsScene({
+  copy,
   roleLabel,
   summary,
 }: {
+  copy: DashboardHomeCopy
   roleLabel: string
   summary: SiteSummary
 }) {
   const panels = [
     {
-      label: "Canlı daire",
+      label: copy.globalScene.panels.liveUnits,
       value: summary.totalFlats,
-      helper: `${summary.occupancyRate}% doluluk`,
+      helper: copyText(copy.globalScene.panels.occupancy, {
+        value: summary.occupancyRate,
+      }),
       icon: Building2,
     },
     {
-      label: "Açık servis",
+      label: copy.globalScene.panels.openService,
       value: summary.openTickets,
-      helper: `${summary.overdueTickets} SLA dışı`,
+      helper: copyText(copy.globalScene.panels.overdue, {
+        value: summary.overdueTickets,
+      }),
       icon: TicketCheck,
     },
     {
-      label: "Erişim riski",
+      label: copy.globalScene.panels.accessRisk,
       value: summary.restrictedAccess,
-      helper: "finans kontrolü",
+      helper: copy.globalScene.panels.financeCheck,
       icon: LockKeyhole,
     },
   ]
@@ -657,20 +695,23 @@ function GlobalOperationsScene({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                Operasyon merkezi
+                {copy.globalScene.eyebrow}
               </p>
               <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl 2xl:text-5xl">
-                Daire, servis, finans ve rezervasyon aynı kontrol düzleminde
+                {copy.globalScene.title}
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">
-                Aktif rol: {roleLabel}. Bu görünüm yönetim ve sorumlu rolü için
-                portföy ölçeğinde risk, iş yükü ve tahsilat sinyallerini birleştirir.
+                {copyText(copy.globalScene.description, { role: roleLabel })}
               </p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
-              <p className="text-xs font-black uppercase text-white/60">AI risk</p>
+              <p className="text-xs font-black uppercase text-white/60">
+                {copy.globalScene.aiRisk}
+              </p>
               <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
-              <p className="mt-1 text-xs text-white/65">öncelikli aksiyon</p>
+              <p className="mt-1 text-xs text-white/65">
+                {copy.globalScene.aiRiskHelper}
+              </p>
             </div>
           </div>
 
@@ -709,26 +750,71 @@ function GlobalOperationsScene({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                İş yoğunluğu
+                {copy.globalScene.workload.eyebrow}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                Saatlik sinyal
+                {copy.globalScene.workload.title}
               </h2>
             </div>
             <TrendingUp className="h-5 w-5 text-primary" />
           </div>
-          <div className="mt-6 grid grid-cols-8 items-end gap-2">
-            {[42, 64, 52, 88, 70, 96, 61, 78].map((height, index) => (
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {copy.globalScene.workload.description}
+          </p>
+          <div className="mt-4 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <span>{copy.globalScene.workload.scaleLow}</span>
+            <span>{copy.globalScene.workload.scaleHigh}</span>
+          </div>
+          <div className="mt-2 flex h-36 items-end gap-2 border-b border-border/80 pb-2">
+            {copy.globalScene.workload.bars.map((bar, index) => (
               <motion.div
-                key={index}
-                className="rounded-t-lg bg-primary/20 transition-colors hover:bg-primary"
-                style={{ height }}
-                initial={{ scaleY: 0.1, transformOrigin: "bottom" }}
-                animate={{ scaleY: 1 }}
-                transition={{ delay: 0.2 + index * 0.04 }}
-                title={`Saat ${index + 9}: ${height}%`}
-              />
+                key={`${bar.time}-${bar.kind}`}
+                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.04 }}
+                title={`${bar.time} ${bar.label}: ${bar.value}% ${copy.globalScene.workload.loadUnit}`}
+              >
+                <span className="opacity-0 text-[10px] font-black text-foreground transition-opacity group-hover:opacity-100">
+                  {bar.value}%
+                </span>
+                <span
+                  className={cn(
+                    "w-full rounded-t-lg shadow-lg transition-opacity hover:opacity-100",
+                    workloadKindClassNames[bar.kind]
+                  )}
+                  style={{ height: `${Math.max(bar.value, 18)}%` }}
+                />
+              </motion.div>
             ))}
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-1 text-[10px] font-bold text-muted-foreground">
+            {copy.globalScene.workload.bars
+              .filter((_, index) => index % 2 === 0)
+              .map((bar) => (
+                <span key={bar.time}>{bar.time}</span>
+              ))}
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {Object.entries(copy.globalScene.workload.legend).map(([kind, label]) => (
+              <div key={kind} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <span
+                  className={cn(
+                    "h-2.5 w-2.5 rounded-full",
+                    workloadLegendClassNames[kind as WorkloadKind]
+                  )}
+                />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-xl border border-border bg-muted/35 p-3">
+            <p className="text-xs font-black uppercase text-card-foreground">
+              {copy.globalScene.workload.peakLabel}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {copy.globalScene.workload.peakText}
+            </p>
           </div>
         </div>
 
@@ -739,10 +825,10 @@ function GlobalOperationsScene({
             </div>
             <div>
               <p className="text-sm font-black text-card-foreground">
-                Rol bağlantıları aktif
+                {copy.globalScene.rbacTitle}
               </p>
               <p className="text-xs leading-5 text-muted-foreground">
-                Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.
+                {copy.globalScene.rbacDescription}
               </p>
             </div>
           </div>
@@ -753,9 +839,11 @@ function GlobalOperationsScene({
 }
 
 function RoleFocusedDashboard({
+  copy,
   role,
   roleLabel,
 }: {
+  copy: DashboardHomeCopy
   role: Role
   roleLabel: string
 }) {
@@ -765,6 +853,8 @@ function RoleFocusedDashboard({
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
+  const summary = getSummary()
+  const blocks = getBlockOverview()
 
   return (
     <div className="space-y-6">
@@ -773,19 +863,22 @@ function RoleFocusedDashboard({
           {config.title}
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {config.description} Aktif rol:{" "}
+          {config.description} {copy.erpWorld.activeRole}:{" "}
           <span className="font-semibold text-foreground">{roleLabel}</span>.
         </p>
       </div>
 
-      <IsometricErpWorld
-        mode="dashboard"
+      <LiveErpSimulation
+        blocks={blocks}
+        criticalTickets={[]}
+        realtimeState="disabled"
+        requestState="success"
         roleLabel={roleLabel}
-        dashboardMetrics={[
-          [String(cards.length), "açık modül"],
-          [role === "staff" ? "14" : "4", "yetkili iş"],
-          [roleLabel, "aktif rol"],
-        ]}
+        source="local-seed"
+        summary={{
+          ...summary,
+          openTickets: role === "staff" ? summary.openTickets : cards.length,
+        }}
       />
 
       <RoleWorkspaceScene role={role} />
@@ -795,7 +888,7 @@ function RoleFocusedDashboard({
           <CommandLink
             key={card.href}
             href={card.href}
-            ariaLabel={`${card.title} ekranını aç`}
+            ariaLabel={card.title}
             role={role}
           >
             <Card3D glow={false}>
@@ -1073,21 +1166,25 @@ function mapLiveActivities(snapshot: DashboardSnapshot | null) {
 
 export default function DashboardHomePage() {
   const user = useUser()
+  const locale = resolveDashboardHomeLocale(useLocale())
+  const copy = dashboardHomeCopy[locale]
   const roleT = useTranslations("roles")
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabel = roleDef ? roleT(roleDef.labelKey.replace("roles.", "")) : user.role
 
   if (roleWorkspaceConfig[user.role]) {
-    return <RoleFocusedDashboard role={user.role} roleLabel={roleLabel} />
+    return <RoleFocusedDashboard copy={copy} role={user.role} roleLabel={roleLabel} />
   }
 
-  return <OperationsDashboard user={user} roleLabel={roleLabel} />
+  return <OperationsDashboard copy={copy} user={user} roleLabel={roleLabel} />
 }
 
 function OperationsDashboard({
+  copy,
   user,
   roleLabel,
 }: {
+  copy: DashboardHomeCopy
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
@@ -1095,6 +1192,7 @@ function OperationsDashboard({
     snapshot,
     phase4,
     refresh,
+    realtimeState,
     requestState,
   } = useLiveDashboardSnapshot({ includePhase4: true })
   const fallbackSummary = useMemo(() => getSummary(), [])
@@ -1144,37 +1242,40 @@ function OperationsDashboard({
   const kpis: Kpi[] = [
     {
       icon: Building2,
-      label: "Toplam Daire",
+      label: copy.kpis.totalUnits,
       value: summary.totalFlats,
-      suffix: `${summary.occupancyRate}% doluluk`,
-      helper: `${summary.vacantFlats} boş, ${summary.maintenanceFlats} bakımda`,
+      suffix: copyText(copy.kpis.occupancy, { value: summary.occupancyRate }),
+      helper: copyText(copy.kpis.unitHelper, {
+        maintenance: summary.maintenanceFlats,
+        vacant: summary.vacantFlats,
+      }),
       color: "text-teal-600",
       href: "/dashboard/listings",
     },
     {
       icon: CreditCard,
-      label: "Toplam Borç",
+      label: copy.kpis.totalDebt,
       value: Math.round(summary.totalDebtTry / 1000),
       suffix: "K ₺",
-      helper: `${summary.restrictedAccess} erişim kısıtı`,
+      helper: copyText(copy.kpis.restricted, { value: summary.restrictedAccess }),
       color: "text-rose-600",
       href: "/dashboard/finance",
     },
     {
       icon: TicketCheck,
-      label: "Açık Servis",
+      label: copy.kpis.openService,
       value: summary.openTickets,
-      suffix: `${summary.overdueTickets} SLA dışı`,
-      helper: "Teknik, finans ve depozito işleri",
+      suffix: copyText(copy.kpis.overdue, { value: summary.overdueTickets }),
+      helper: copy.kpis.serviceHelper,
       color: "text-amber-600",
       href: "/dashboard/tickets",
     },
     {
       icon: CalendarCheck,
-      label: "Bugünkü İşler",
+      label: copy.kpis.todayWork,
       value: summary.activeBookings,
-      suffix: `${summary.checkoutsToday} çıkış`,
-      helper: "Giriş, çıkış, temizlik, depozito",
+      suffix: copyText(copy.kpis.checkouts, { value: summary.checkoutsToday }),
+      helper: copy.kpis.bookingHelper,
       color: "text-sky-600",
       href: "/dashboard/calendar",
     },
@@ -1183,19 +1284,19 @@ function OperationsDashboard({
   const alerts = [
     {
       icon: AlertTriangle,
-      text: `${summary.aiRiskCount} operasyon riski AI kuyruğunda: borç, SLA ve check-out birlikte takip ediliyor.`,
+      text: copyText(copy.alerts.aiRisk, { count: summary.aiRiskCount }),
       variant: "danger" as const,
       href: "/dashboard/reports",
     },
     {
       icon: LockKeyhole,
-      text: `${summary.restrictedAccess} dairede erişim kısıtı var. Finans onayı olmadan servis yönlendirilmemeli.`,
+      text: copyText(copy.alerts.access, { count: summary.restrictedAccess }),
       variant: "warning" as const,
       href: "/dashboard/compliance",
     },
     {
       icon: Clock3,
-      text: `${summary.overdueTickets} servis talebi SLA dışına çıktı. Teknik ekip için öncelik listesi hazır.`,
+      text: copyText(copy.alerts.sla, { count: summary.overdueTickets }),
       variant: "warning" as const,
       href: "/dashboard/tickets",
     },
@@ -1206,17 +1307,17 @@ function OperationsDashboard({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-black text-foreground md:text-3xl">
-            {clientProfile.clientName} ERP Operasyon Merkezi
+            {copyText(copy.hero.title, { client: clientProfile.clientName })}
           </h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Satış, proje takibi, WhatsApp/Telegram lead akışı, evrak, servis, finans ve AI önceliklendirme tek
-            çalışma alanında toplanır. Operasyon görünümü 769 birim ölçeğinde yönetim, kontrol ve takip için çalışır.
-            Aktif rol:{" "}
-            <span className="font-semibold text-foreground">{roleLabel}</span>.
+            {copyText(copy.hero.subtitle, {
+              role: roleLabel,
+              units: summary.totalFlats,
+            })}
           </p>
           {requestState === "error" && (
             <p className="mt-3 text-xs font-semibold text-rose-600">
-              Veri yenilenemedi. Lütfen tekrar deneyin.
+              {copy.hero.refreshError}
             </p>
           )}
         </div>
@@ -1228,30 +1329,32 @@ function OperationsDashboard({
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
-            Portföy kaynağı
+            {copy.hero.portfolioSource}
           </a>
           <DashboardRefreshButton onRefresh={refresh} />
         </div>
       </div>
 
-      <IsometricErpWorld
-        mode="dashboard"
+      <LiveErpSimulation
+        activityItems={activityItems}
+        blocks={blocks}
+        criticalTickets={criticalTickets}
+        generatedAt={snapshot?.generatedAt}
+        realtimeState={realtimeState}
+        requestState={requestState}
         roleLabel={roleLabel}
-        dashboardMetrics={[
-          [String(summary.totalFlats), "daire"],
-          [String(summary.openTickets), "açık servis"],
-          [roleLabel, "aktif rol"],
-        ]}
+        source={snapshot?.source}
+        summary={summary}
       />
 
-      <GlobalOperationsScene roleLabel={roleLabel} summary={summary} />
+      <GlobalOperationsScene copy={copy} roleLabel={roleLabel} summary={summary} />
 
       <div className="grid gap-3 lg:grid-cols-3">
         {alerts.map((alert, index) => (
           <CommandLink
             key={alert.text}
             href={alert.href}
-            ariaLabel={`${alert.text} modülüne git`}
+            ariaLabel={alert.text}
             role={user.role}
           >
             {({ allowed }) => (
@@ -1281,16 +1384,19 @@ function OperationsDashboard({
           <div>
             <div className="flex items-center gap-2">
               <Route className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">ERP modül durumu</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{copy.modules.title}</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              CRM, daire matrisi, kullanıcı rolleri, finans, servis, saha, rezervasyon, iletişim, mobil PWA,
-              entegrasyon, AI ve güvenlik kontrolleri aynı işletim planında izlenir.
+              {copy.modules.description}
             </p>
           </div>
           <span className="flex shrink-0 items-center gap-2">
           <StatusBadge variant="success">
-            {phaseSummary.complete} aktif · {phaseSummary.readyForUat} kontrol hazır · {phaseSummary.inProgress} yapımda
+            {copyText(copy.modules.badge, {
+              complete: phaseSummary.complete,
+              progress: phaseSummary.inProgress,
+              ready: phaseSummary.readyForUat,
+            })}
             </StatusBadge>
             <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
           </span>
@@ -1304,22 +1410,29 @@ function OperationsDashboard({
               <CommandLink
                 key={phase.phase}
                 href={phaseRoutes[phase.phase] ?? "/dashboard"}
-                ariaLabel={`Modül ${phase.phase} ${phase.title} ekranını aç`}
+                ariaLabel={copyText(copy.modules.openAria, {
+                  phase: phase.phase,
+                  title: phase.title,
+                })}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">Modül {phase.phase}</p>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {copy.modules.module} {phase.phase}
+                    </p>
                     <h3 className="mt-1 text-sm font-black text-foreground">{phase.title}</h3>
                   </div>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black", status.className)}>
                     <StatusIcon className="h-3 w-3" />
-                    {status.label}
+                    {copy.phaseStatus[phase.status]}
                   </span>
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">{phase.businessOutcome}</p>
-                <p className="mt-3 text-xs font-semibold text-foreground">Nasıl kullanılır: {phase.userGuide}</p>
+                <p className="mt-3 text-xs font-semibold text-foreground">
+                  {copy.modules.howTo}: {phase.userGuide}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {phase.evidence.slice(0, 2).map((item) => (
                     <span key={item} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
@@ -1336,7 +1449,7 @@ function OperationsDashboard({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
-          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={`${kpi.label} modülünü aç`} role={user.role}>
+          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={kpi.label} role={user.role}>
             <Card3D glow={false}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -1363,55 +1476,96 @@ function OperationsDashboard({
       />
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <CommandLink href="/dashboard/finance" ariaLabel="Doluluk ve tahsilat sağlığı detayını aç" className="xl:col-span-2" role={user.role}>
-        <Card3D glow={false}>
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-card-foreground">Doluluk ve tahsilat sağlığı</h2>
-              <p className="text-xs text-muted-foreground">Doluluk oranı, gecikmiş borç ve servis baskısı birlikte okunur.</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-              <TrendingUp className="h-4 w-4" />
-              Haziran hedefi korunuyor
-            </div>
-          </div>
-          <LineChart data={occupancyTrend} formatValue={(value) => `%${value}`} height={172} />
-        </Card3D>
+        <CommandLink href="/dashboard/finance" ariaLabel={copy.charts.occupancyTitle} className="xl:col-span-2" role={user.role}>
+          {({ allowed }) => (
+            <Card3D glow={false} innerClassName="min-h-full">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-card-foreground">{copy.charts.occupancyTitle}</h2>
+                  <p className="text-xs text-muted-foreground">{copy.charts.occupancyDescription}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-emerald-600">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1">
+                    <TrendingUp className="h-4 w-4" />
+                    {copy.charts.trendLabel}
+                  </span>
+                  <DrilldownCue allowed={allowed} />
+                </div>
+              </div>
+              <div className="mb-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.occupancyMetric}</p>
+                  <p className="text-base font-black text-foreground">%{summary.occupancyRate}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.accessMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.restrictedAccess}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.slaMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.overdueTickets}</p>
+                </div>
+              </div>
+              <LineChart
+                data={occupancyTrend}
+                ariaLabel={copy.charts.occupancyTitle}
+                formatValue={(value) => `%${value}`}
+                height={172}
+              />
+            </Card3D>
+          )}
         </CommandLink>
 
-        <CommandLink href="/dashboard/listings" ariaLabel="Daire durum dağılımı detayını aç" role={user.role}>
-        <Card3D glow={false}>
-          <h2 className="mb-1 text-sm font-bold text-card-foreground">Daire durum dağılımı</h2>
-          <p className="mb-4 text-xs text-muted-foreground">Operasyon ekibi için canlı portföy kırılımı.</p>
-          <PieChart data={statusDistribution} size={164} />
-        </Card3D>
+        <CommandLink href="/dashboard/listings" ariaLabel={copy.charts.statusTitle} role={user.role}>
+          {({ allowed }) => (
+            <Card3D glow={false} innerClassName="min-h-full">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-card-foreground">{copy.charts.statusTitle}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">{copy.charts.statusDescription}</p>
+                </div>
+                <DrilldownCue allowed={allowed} />
+              </div>
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.totalMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.totalFlats}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.vacantMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.vacantFlats}</p>
+                </div>
+              </div>
+              <PieChart data={statusDistribution} size={164} ariaLabel={copy.charts.statusTitle} totalLabel={copy.charts.totalMetric} />
+            </Card3D>
+          )}
         </CommandLink>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-card-foreground">Blok bazlı operasyon</h2>
-            <StatusBadge variant="accent">{blocks.length} blok</StatusBadge>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.charts.blockTitle}</h2>
+            <StatusBadge variant="accent">{copyText(copy.charts.blocks, { count: blocks.length })}</StatusBadge>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {blocks.map((block) => (
               <CommandLink
                 key={block.block}
                 href="/dashboard/listings"
-                ariaLabel={`Blok ${block.block} daire matrisi detayını aç`}
+                ariaLabel={`${copy.charts.block} ${block.block}`}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-foreground">Blok {block.block}</p>
-                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{block.total} daire</StatusBadge>
+                  <p className="text-sm font-bold text-foreground">{copy.charts.block} {block.block}</p>
+                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{block.total} {copy.charts.units}</StatusBadge>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <span>Dolu: {block.occupied}</span>
-                  <span>Boş: {block.vacant}</span>
-                  <span>Bakım: {block.maintenance}</span>
-                  <span>Borç: {formatTryShort(block.debtTry)}</span>
+                  <span>{copy.charts.occupied}: {block.occupied}</span>
+                  <span>{copy.charts.vacant}: {block.vacant}</span>
+                  <span>{copy.charts.maintenance}: {block.maintenance}</span>
+                  <span>{copy.charts.debt}: {formatTryShort(block.debtTry)}</span>
                 </div>
               </div>
               </CommandLink>
@@ -1420,16 +1574,16 @@ function OperationsDashboard({
         </Card3D>
 
         <div className="space-y-4">
-          <CommandLink href="/dashboard/reports" ariaLabel="AI operasyon asistanı raporlarını aç" role={user.role}>
+          <CommandLink href="/dashboard/reports" ariaLabel={copy.charts.aiTitle} role={user.role}>
           <GlassCard glow className="p-5">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Brain className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">AI operasyon asistanı</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.charts.aiTitle}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Borç, SLA, depozito ve rezervasyon verilerini birleştirerek günlük yapılacakları sıralar.
+                  {copy.charts.aiDescription}
                 </p>
               </div>
             </div>
@@ -1439,7 +1593,7 @@ function OperationsDashboard({
             <CommandLink
               key={insight.title}
               href={routeForInsight(insight.title)}
-              ariaLabel={`${insight.title} detayını aç`}
+              ariaLabel={insight.title}
               role={user.role}
             >
               {({ allowed }) => (
@@ -1462,7 +1616,7 @@ function OperationsDashboard({
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4">
-            <h2 className="text-sm font-bold text-card-foreground">Son operasyon akışı</h2>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.charts.recentFlow}</h2>
           </div>
           <ul className="space-y-3">
             {activityItems.map((activity, index) => (
@@ -1474,7 +1628,7 @@ function OperationsDashboard({
               >
                 <CommandLink
                   href={activity.href}
-                  ariaLabel={`${activity.message} detayını aç`}
+                  ariaLabel={activity.message}
                   role={user.role}
                 >
                   {({ allowed }) => (
@@ -1501,19 +1655,19 @@ function OperationsDashboard({
         </Card3D>
 
         <Card3D glow={false}>
-          <h2 className="mb-4 text-sm font-bold text-card-foreground">Bugünkü kritik işler</h2>
+          <h2 className="mb-4 text-sm font-bold text-card-foreground">{copy.charts.criticalToday}</h2>
           <div className="space-y-3">
             {criticalTickets.map((ticket) => (
               <CommandLink
                 key={`ticket-${ticket.label}`}
                 href="/dashboard/tickets"
-                ariaLabel={`${ticket.label} servis talebini aç`}
+                ariaLabel={ticket.label}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
-                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining} saat</StatusBadge>
+                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{ticket.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
@@ -1524,7 +1678,7 @@ function OperationsDashboard({
               <CommandLink
                 key={booking.id}
                 href="/dashboard/calendar"
-                ariaLabel={`${booking.flatNumber} rezervasyon detayını aç`}
+                ariaLabel={booking.flatNumber}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
@@ -1533,7 +1687,7 @@ function OperationsDashboard({
                   <StatusBadge variant="info">{booking.channel}</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{booking.guestName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Depozito: {formatTryShort(booking.depositTry)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{copy.charts.depositRisk}: {formatTryShort(booking.depositTry)}</p>
               </div>
               </CommandLink>
             ))}
@@ -1541,19 +1695,19 @@ function OperationsDashboard({
         </Card3D>
       </div>
 
-      <CommandLink href="/dashboard/finance" ariaLabel="Finans özetini aç" role={user.role}>
+      <CommandLink href="/dashboard/finance" ariaLabel={copy.charts.financeSummaryAria} role={user.role}>
       <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Aylık beklenen aidat</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.monthlyExpected}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.monthlyExpectedTry)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Haziran tahsilat</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.juneCollection}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(cashFlow.at(-1)?.collectedTry ?? 0)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Depozito riski</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.depositRisk}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.depositExposureTry)}</p>
           </div>
         </div>

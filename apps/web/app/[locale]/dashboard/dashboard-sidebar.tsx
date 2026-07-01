@@ -81,6 +81,7 @@ export function DashboardSidebar() {
   }
 
   const filteredMenu = menu.filter((item) => hasPermission(user.role, item.resource, "view"))
+  const mobileMenuId = "dashboard-mobile-sidebar"
 
   return (
     <>
@@ -89,14 +90,19 @@ export function DashboardSidebar() {
       )}
 
       <button
+        type="button"
+        data-testid="dashboard-menu-toggle"
         onClick={() => setMobileOpen(true)}
-        className="absolute top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
+        aria-expanded={mobileOpen}
+        aria-controls={mobileMenuId}
       >
         <Menu className="h-5 w-5" />
       </button>
 
       <aside
+        id={mobileMenuId}
         className={cn(
           "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:relative md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
           mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
@@ -114,6 +120,7 @@ export function DashboardSidebar() {
               </span>
             </Link>
             <button
+              type="button"
               className="text-muted-foreground md:hidden"
               onClick={() => setMobileOpen(false)}
               aria-label={t("closeMenu")}

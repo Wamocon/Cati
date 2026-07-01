@@ -6,20 +6,19 @@ Build exactly the client-requested full end-to-end residential complex managemen
 
 The client requirement is the base scope. Our existing 1Cati strengths are added on top as premium differentiators: AI assistant, modern dashboard, multilingual UI, document workflows, calendar, analytics, polished UX, and mobile-responsive experience. The result is not just a basic site-management tool, but a premium AI-powered residential operations platform.
 
-## Current Checkpoint - 29 June 2026
+## Current Checkpoint - 30 June 2026
 
 This plan defines the target product and implementation sequence. It is not a claim that every phase is already production complete.
 
 | Phase range | Status | Practical meaning |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Scope, UX/RBAC, Supabase schema, site/block/floor/unit model, import validation and live dashboard foundation exist. |
-| Phase 5-9 | Complete as implementation foundation / ready-for-UAT slice | User/profile/role relationships, core finance ledger, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA board and media-proof workflow are present with APIs, UI and harness coverage. They still need real-data validation, accounting/legal review, provider choices and UAT before production activation. |
-| Phase 10 | Next active build | Booking, move-in and checkout should connect reservations, deposits, cleaning tasks, access activation/deactivation and damage settlement using the Phase 5-9 foundation. |
-| Phase 11-15 | Accelerated delivery window | Communications, PWA, integrations, AI premium layer and launch hardening are targeted for rapid Codex-assisted development by Wednesday 8 July 2026, with automated QA evidence collected per phase. |
+| Phase 5-14 | Complete as implementation foundation / ready-for-UAT slice | User/profile/role relationships, finance ledger, payment/deposit/restriction controls, service catalogue, workforce SLA board, booking/checkout, communication/documents, private document upload/storage contract, mobile-friendly web/PWA shell, offline-safe queue, provider-ready integration placeholders, same-language AI chat, AI recommendations and image/proof AI workflows are present with APIs, UI and harness coverage. They still need real-data validation, accounting/legal/storage review, provider choices and UAT before production activation. |
+| Phase 15 | Accelerated delivery window | Launch hardening, final QA, security, performance, UAT, training and production readiness are targeted for rapid Codex-assisted completion by Wednesday 8 July 2026, with automated QA evidence collected before sign-off. |
 
-Parallel-session reconciliation on 26 June 2026 confirmed the 15-phase ERP dashboard model, RBAC-aware dashboard drilldowns, listings interaction fixes, local Supabase fixes, fuzzy search, Jira/Xray dry-run workflow and realtime dashboard refresh. The 27-29 June 2026 work completed the Phase 5-9 implementation foundation: people/roles, finance ledger surfaces, guarded payment-control API, finance-page control panel, service catalogue, service orders, workforce SLA task board, media-proof workflow, landing/product UX cleanup, multilingual route fixes and QA gates for payment/deposit/restriction/service operations flows.
+Parallel-session reconciliation on 26 June 2026 confirmed the 15-phase ERP dashboard model, RBAC-aware dashboard drilldowns, listings interaction fixes, local Supabase fixes, fuzzy search, Jira/Xray dry-run workflow and realtime dashboard refresh. The 27-30 June 2026 work completed the Phase 5-14 implementation foundation: people/roles, finance ledger surfaces, guarded payment-control API, finance-page control panel, service catalogue, service orders, workforce SLA task board, media-proof workflow, booking readiness, checkout settlement, access handoff, communication center, notification retry queue, multilingual templates, document packet workflows, private document upload/storage contract, mobile-friendly web/PWA shell, offline-safe queue, provider-ready integration placeholders, same-language AI chat, AI recommendations, image/proof workflows, landing/product UX cleanup, multilingual route fixes and QA gates.
 
-Accelerated delivery target on 29 June 2026: complete remaining Phase 10-15 development by Wednesday 8 July 2026, excluding a full exploratory manual testing round. This target assumes continuous Codex-assisted execution, fast review loops, unit checks, automated E2E/regression scripts, browser smoke checks and no blocking client/provider credentials. A separate exploratory manual QA/UAT round should be planned after this target and may take additional days depending on scope and client availability.
+Accelerated delivery target on 30 June 2026: complete remaining Phase 15 development by Wednesday 8 July 2026, excluding a full exploratory manual testing round. This target assumes continuous Codex-assisted execution, fast review loops, unit checks, automated E2E/regression scripts, browser smoke checks and no blocking client/provider credentials. A separate exploratory manual QA/UAT round should be planned after this target and may take additional days depending on scope and client availability.
 
 ## Market Benchmark
 
@@ -744,13 +743,13 @@ Goal: Centralize communication across residents, managers and staff.
 Standard functionality:
 - Client-management chat, internal team chat, announcements, email/SMS/push.
 - Conversations linked to flat, account, task, booking or service order.
-- Document storage and generated statements/reports.
+- Document storage, upload review queue, private object-storage contract and generated statements/reports.
 
 Backend/API/database:
-- Threads, messages, notification templates, delivery logs, documents and attachment permissions.
+- Threads, messages, notification templates, delivery logs, documents, upload metadata, private object-storage policy and attachment permissions.
 
 Frontend/mobile:
-- Chat inbox, notification center, announcement composer and document vault.
+- Chat inbox, notification center, announcement composer, secure upload panel and document vault.
 
 AI/analytics:
 - AI reply drafts, announcement drafts and conversation summaries.
@@ -758,25 +757,25 @@ AI/analytics:
 Acceptance:
 - Messages and notifications are traceable, role-safe and linked to the right operational record.
 
-### Phase 12 - Mobile PWA And Native App Packaging
+### Phase 12 - Mobile-Friendly Web/PWA And Offline-Safe Experience
 
 Goal: Make the platform usable from phones for residents, staff and managers.
 
 Standard functionality:
-- PWA first for speed: login, balance, payment, service request, chat, documents, notifications and tasks.
-- Native iOS/Android packaging after PWA flows are stable if the client requires store apps.
+- Web/PWA first for speed: login, balance, service request, chat, documents, notifications and tasks.
+- Native iOS/Android packaging is not part of the current phase and should be considered later only if the client requires store apps.
 
 Backend/API/database:
-- Mobile-safe API responses, push tokens, session handling and offline capture queue where needed.
+- Mobile-safe API responses, installable web manifest, service-worker shell, session handling and offline-safe queue where needed.
 
 Frontend/mobile:
-- Resident app, owner app, tenant app, staff app and manager mobile home.
+- Responsive owner, tenant, staff and manager web screens inside the same Next.js app.
 
 AI/analytics:
-- Mobile AI assistant with Turkish natural language queries.
+- Mobile AI assistant with same-language responses and role-aware guardrails.
 
 Acceptance:
-- Core resident/staff/manager workflows work smoothly on mobile viewport and can be installed as PWA.
+- Core resident/staff/manager workflows work smoothly on mobile viewport and can be installed as a web app where the browser/host supports it.
 
 ### Phase 13 - External Integrations
 
@@ -789,10 +788,10 @@ Standard functionality:
 - External dependency cost register, Supabase Cloud Pro production setup, payment/card collection, bank import/reconciliation, SMS/email/push, wallet/top-up, identity, access cards/barriers, camera systems, meter/billing, monitoring and AI-provider gateway.
 
 Backend/API/database:
-- Integration registry, adapter layer, provider sandbox/prod mode, signed webhooks, idempotency, retry/dead-letter queue, integration logs, vendor credentials, secret rotation, health metrics and failure handling.
+- Integration registry, placeholder/provider-ready adapter layer, provider sandbox/prod mode, signed webhooks target, idempotency, retry/dead-letter queue, integration logs, future vendor credentials, secret rotation, health metrics and failure handling.
 
 Frontend/mobile:
-- Integration settings, provider shortlist status, connection test, health, latency, queue length, manual retry, dead-letter review and event logs.
+- Integration settings, Supabase connected status, provider shortlist status, connection readiness, health, queue length, manual fallback and client-required decision/API-key list.
 
 AI/analytics:
 - AI integration anomaly alerts such as failed payment imports or unusual meter data.
@@ -806,11 +805,11 @@ Goal: Make our offer stronger than a standard CRM by adding useful, controlled A
 
 Standard functionality:
 - Manager AI assistant, accountant assistant, resident assistant and staff assistant.
-- Daily briefing, debt risk, service triage, anomaly detection, predictive maintenance and report generation.
+- Daily briefing, debt risk, service triage, booking/deposit review, integration advice, image/proof workflow support and report generation.
 - Natural language search over flats, users, accounts, tasks, services and bookings.
 
 Backend/API/database:
-- AI orchestration service, prompt templates, retrieval layer, pgvector knowledge store, AI event logs and approval workflow.
+- AI orchestration service, same-language response guard, prompt templates, retrieval-ready structured records, future pgvector knowledge store, AI event logs and approval workflow.
 
 Frontend/mobile:
 - AI command center, AI cards in dashboard, explainable recommendations and approval/decline controls.
@@ -850,20 +849,20 @@ Accelerated planning assumption:
 | 29 June 2026 | Phase 1-9 implementation foundation and QA evidence complete | Complete |
 | 29 June 2026 | Phase 8 service catalogue and service-order flow | Complete |
 | 29 June 2026 | Phase 9 tasks, workforce, SLA and field reporting | Complete |
-| 2 July 2026 | Phase 10 booking, move-in and checkout | 16-22 hours |
-| 3 July 2026 | Phase 11 communication, notifications and documents | 12-18 hours |
-| 4 July 2026 | Phase 12 mobile PWA and installable mobile surfaces | 12-18 hours |
-| 5 July 2026 | Phase 13 external integration adapter layer and provider readiness screens | 12-18 hours |
-| 6 July 2026 | Phase 14 AI premium layer and advanced analytics v1 | 12-18 hours |
+| 30 June 2026 | Phase 10 booking, move-in and checkout | Complete |
+| 30 June 2026 | Phase 11 communication, notifications, documents and private upload contract | Complete |
+| 30 June 2026 | Phase 12 mobile-friendly web/PWA and offline-safe queue | Complete |
+| 30 June 2026 | Phase 13 external integration placeholders and provider readiness screens | Complete |
+| 30 June 2026 | Phase 14 AI premium layer and advanced analytics v1 | Complete |
 | 8 July 2026 | Phase 15 final automated QA, security checks, UAT pack, training material and launch-readiness preparation | 18-28 hours |
 
-Current control point: phases 1-9 are complete as an implementation foundation and ready-for-UAT delivery slice. Phases 10-15 are now under an accelerated delivery target to finish development by Wednesday 8 July 2026, excluding full exploratory manual testing. This target is aggressive but feasible only with continuous Codex-assisted execution, parallel automated QA and immediate correction of defects found by the harnesses.
+Current control point: phases 1-14 are complete as an implementation foundation and ready-for-UAT delivery slice. Phase 15 is now under an accelerated delivery target to finish development by Wednesday 8 July 2026, excluding full exploratory manual testing. This target is aggressive but feasible only with continuous Codex-assisted execution, parallel automated QA and immediate correction of defects found by the harnesses.
 
 ## Next Engineering Priorities
 
-1. Validate Phase 5-9 implementation foundation with real client data, accounting/legal review and UAT evidence before production activation.
+1. Validate Phase 5-14 implementation foundation with real client data, accounting/legal review and UAT evidence before production activation.
 2. Confirm provider decisions for payments, bank reconciliation, SMS/email/push, access/security and monitoring before live credentials are issued.
-3. Execute Phase 10-15 development in the compressed 30 June to 8 July delivery window.
+3. Execute Phase 15 launch hardening in the compressed 30 June to 8 July delivery window.
 4. Keep dashboard metrics tied to Supabase-backed APIs with realtime or polling refresh, not static-only cards.
 5. Harden RLS, RBAC and audit coverage for every write action before production UAT.
 6. Keep Jira/Xray synchronization aligned with this checkpoint; remote attachment uploads still require explicit approval because the package contains confidential material.

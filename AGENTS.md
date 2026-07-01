@@ -86,7 +86,7 @@ Cati/
 - **Supabase Auth** (Email/Passwort, Magic Link, Google OAuth, später TOTP-2FA)
 - **Supabase PostgreSQL** mit RLS
 - **Supabase Realtime** für Echtzeit-Updates
-- **Supabase Storage** für Dateien
+- **Supabase Storage / privates Objekt-Storage** für Dateien; aktueller Upload-Pfad ist API- und DB-ready, Live-Bucket/S3-Modus wird erst mit Produktionsfreigabe aktiviert.
 - **Supabase SSR** Helpers (`@supabase/ssr`)
 - **RBAC** Rollen- und Rechtesystem (`apps/web/lib/rbac.ts`, `apps/web/lib/auth.ts`)
 
@@ -97,7 +97,7 @@ Cati/
 ### Testing & QA
 - **Playwright** für E2E-Tests und visuelle QA (siehe `apps/web/e2e/`)
 - **TypeScript / ESLint / Next build** als aktuelle technische Quality Gates
-- **Phase-Harnesses** (`scripts/phase-harness.mjs`, `scripts/phase-06-09-harness.mjs`) für wiederholbare Build-, Browser- und QA-Schleifen
+- **Phase-Harnesses** (`scripts/phase-harness.mjs`, `scripts/phase-06-09-harness.mjs`, `scripts/phase-10-11-harness.mjs`, `scripts/phase-12-14-harness.mjs`) für wiederholbare Build-, Browser- und QA-Schleifen
 - **Lighthouse** ist als Performance-/A11y-/SEO-Gate sinnvoll, aber derzeit kein fest verdrahtetes Package-Script
 
 ### Deployment
@@ -146,11 +146,12 @@ pnpm --filter cati-web typecheck
 ## Nächste Schritte (laufend)
 
 1. Supabase-Auth mit Vercel-Umgebungsvariablen aktivieren (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) und lokale Access-Profile in Produktion deaktiviert lassen.
-2. Lokales Supabase-CRM-Datenmodell mit echten Kundendaten verifizieren und fehlende Produktionsfelder ergänzen.
-3. Dashboard-Module vollständig mit Produktionsdaten, Server Actions/API-Routen und rollenbasierten Prüfungen verbinden.
-4. EİDS-, Compliance-, Mehrwährungs-, Zahlungs-, Zugangs- und Integrationsworkflows produktionsreif mit echten Anbieterentscheidungen und QA-Gates abschließen.
-5. UAT, Security-/RLS-Prüfung, Datenmigration, Backup/Restore und Launch-Runbook mit dem Kunden abnehmen.
-6. Playwright-E2E-Tests (`apps/web/e2e/`) für jedes Release ausführen; lokale Rohartefakte nicht behalten, aktuelle Nachweise gehören nur als gepflegte Markdown- oder DOCX-Lesefassung in die aktive `docs/`-Struktur.
+2. Phase 5-14 Foundation mit echten Kundendaten verifizieren und fehlende Produktionsfelder ergänzen.
+3. Phase 12 als mobile-friendly Web/PWA weiterführen; keine native App bauen, solange der Kunde keine Store-App bestätigt.
+4. Phase 13 externe Anbieter zunächst als Provider-ready/Demo-Placeholder lassen; echte Zahlung, Bank, SMS/E-Mail, Dokument-Storage/S3, Zugang/Kamera und OAuth-Anbindung erst nach Verträgen, API-Keys, Bucket-/Retention-Entscheid und Freigabe aktivieren.
+5. Phase 14 AI nur guardrailed betreiben: same-language Antworten, Empfehlungen, Berichte und Bild-/Kanit-Workflows; keine autonomen Finanz-, Refund-, Zugangs- oder Rollenaktionen.
+6. Phase 15 mit Security-/RLS-Prüfung, Performance, UAT, Training, Backup/Restore und Launch-Runbook abschließen.
+7. Playwright-E2E-Tests (`apps/web/e2e/`) und Phase-Harnesses für jedes Release ausführen; lokale Rohartefakte nicht behalten, aktuelle Nachweise gehören nur als gepflegte Markdown- oder DOCX-Lesefassung in die aktive `docs/`-Struktur.
 
 ## Hinweis für Agenten
 

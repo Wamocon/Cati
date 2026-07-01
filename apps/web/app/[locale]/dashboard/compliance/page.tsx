@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { BadgeCheck, BarChart3, Car, DoorOpen, FileSearch, KeyRound, LockKeyhole, Network, Scale, ShieldAlert, ShieldCheck } from "lucide-react"
+import { ArrowUpRight, BadgeCheck, BarChart3, Car, DoorOpen, FileSearch, KeyRound, LockKeyhole, Network, Scale, ShieldAlert, ShieldCheck } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
 import { Card3D } from "@/components/3d-card"
@@ -251,13 +251,24 @@ export default function CompliancePage() {
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-sm font-bold text-card-foreground">Erişim bölgesi yoğunluğu</h2>
-            <StatusBadge variant="accent">5 bölge</StatusBadge>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge variant="accent">5 bölge</StatusBadge>
+              <a
+                href="#access-register"
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-black text-foreground transition hover:bg-muted"
+              >
+                Kayıtları aç
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
           </div>
           <BarChart
             data={summary.zones.map((zone) => ({ label: zone.label, value: zone.value, color: "var(--primary)" }))}
+            ariaLabel="Erişim bölgesi durum grafiği"
             height={230}
+            totalLabel="Toplam"
           />
         </Card3D>
 
@@ -367,29 +378,31 @@ export default function CompliancePage() {
         />
       </Card3D>
 
-      <DataTable
-        data={accessControlRecords}
-        searchValue={(record) => `${record.flatNumber} ${record.residentName} ${record.zone} ${record.credential} ${record.reason}`}
-        columns={[
-          { key: "flat", header: "Daire", sortable: true, render: (record) => record.flatNumber },
-          { key: "resident", header: "Sakin", render: (record) => record.residentName },
-          { key: "zone", header: "Bölge", sortable: true, render: (record) => record.zone },
-          { key: "credential", header: "Kimlik", sortable: true, render: (record) => record.credential },
-          {
-            key: "status",
-            header: "Erişim",
-            render: (record) => <StatusBadge variant={statusVariant(record.status)}>{accessLabels[record.status]}</StatusBadge>,
-          },
-          {
-            key: "risk",
-            header: "Risk",
-            sortable: true,
-            sortValue: (record) => record.riskLevel,
-            render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{riskLabel(record.riskLevel)}</StatusBadge>,
-          },
-          { key: "reason", header: "Sebep", render: (record) => record.reason },
-        ]}
-      />
+      <div id="access-register" className="scroll-mt-24">
+        <DataTable
+          data={accessControlRecords}
+          searchValue={(record) => `${record.flatNumber} ${record.residentName} ${record.zone} ${record.credential} ${record.reason}`}
+          columns={[
+            { key: "flat", header: "Daire", sortable: true, render: (record) => record.flatNumber },
+            { key: "resident", header: "Sakin", render: (record) => record.residentName },
+            { key: "zone", header: "Bölge", sortable: true, render: (record) => record.zone },
+            { key: "credential", header: "Kimlik", sortable: true, render: (record) => record.credential },
+            {
+              key: "status",
+              header: "Erişim",
+              render: (record) => <StatusBadge variant={statusVariant(record.status)}>{accessLabels[record.status]}</StatusBadge>,
+            },
+            {
+              key: "risk",
+              header: "Risk",
+              sortable: true,
+              sortValue: (record) => record.riskLevel,
+              render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{riskLabel(record.riskLevel)}</StatusBadge>,
+            },
+            { key: "reason", header: "Sebep", render: (record) => record.reason },
+          ]}
+        />
+      </div>
     </div>
   )
 }

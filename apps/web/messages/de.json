@@ -356,56 +356,64 @@
     }
   },
   "dataTable": {
-    "search": "Search...",
-    "count": "{count} records",
-    "empty": "No results found",
+    "search": "Suchen...",
+    "count": "{count} Einträge",
+    "empty": "Keine Ergebnisse gefunden",
     "previous": "Zurück",
-    "next": "Weiter"
+    "next": "Weiter",
+    "options": "Optionen",
+    "tableTools": "Tabellenwerkzeuge",
+    "rowsPerPage": "Zeilen pro Seite",
+    "columns": "Spalten",
+    "reset": "Zurücksetzen",
+    "exportCsv": "CSV exportieren",
+    "stickyHintLabel": "Info zur fixierten Aktionsspalte",
+    "stickyHint": "Die Aktionsspalte bleibt rechts fixiert, damit Aktionen beim horizontalen Scrollen breiter Tabellen sichtbar bleiben."
   },
   "dashboardHome": {
-    "loading": "Preparing dashboard...",
+    "loading": "Dashboard wird vorbereitet...",
     "title": "Dashboard",
-    "subtitle": "Live operations summary for {role}",
-    "refresh": "Refresh",
+    "subtitle": "Live-Betriebsübersicht für {role}",
+    "refresh": "Aktualisieren",
     "kpi": {
-      "activeListings": "Active Listings",
-      "openLeads": "Open Leads",
-      "openTickets": "Maintenance Tickets",
-      "activeDeals": "Active Deals"
+      "activeListings": "Aktive Inserate",
+      "openLeads": "Offene Leads",
+      "openTickets": "Wartungstickets",
+      "activeDeals": "Aktive Vorgänge"
     },
     "alerts": {
-      "eidsPending": "{count} EİDS authorizations pending",
-      "eidsExpiring": "{count} EİDS authorizations expiring soon",
-      "urgentTickets": "{count} urgent maintenance tickets"
+      "eidsPending": "{count} EİDS-Autorisierungen ausstehend",
+      "eidsExpiring": "{count} EİDS-Autorisierungen laufen bald ab",
+      "urgentTickets": "{count} dringende Wartungstickets"
     },
     "charts": {
-      "revenue": "Monthly revenue trend",
-      "revenueSubtitle": "Last 12 months, EUR",
-      "leadSources": "Lead sources",
-      "leadSourcesSubtitle": "WhatsApp, social and web mix"
+      "revenue": "Monatlicher Umsatztrend",
+      "revenueSubtitle": "Letzte 12 Monate, EUR",
+      "leadSources": "Lead-Quellen",
+      "leadSourcesSubtitle": "WhatsApp, Social und Web"
     },
     "activity": {
-      "title": "Recent Activity",
+      "title": "Letzte Aktivität",
       "live": "Live"
     },
     "ai": {
-      "title": "1Çatı AI assistant",
-      "description": "Suggests priority leads, EİDS risks and maintenance actions by role."
+      "title": "1Çatı KI-Assistent",
+      "description": "Schlägt je nach Rolle priorisierte Leads, EİDS-Risiken und Wartungsmaßnahmen vor."
     },
     "quickActions": {
-      "title": "Quick Actions",
-      "viewing": "Schedule viewing",
-      "eids": "Start EİDS check",
-      "campaign": "Create lead campaign"
+      "title": "Schnellaktionen",
+      "viewing": "Besichtigung planen",
+      "eids": "EİDS-Prüfung starten",
+      "campaign": "Lead-Kampagne erstellen"
     }
   },
   "aiAssistant": {
-    "open": "Open AI assistant",
-    "close": "Close AI assistant",
+    "open": "KI-Assistent öffnen",
+    "close": "KI-Assistent schließen",
     "subtitle": "Antworten aus Betriebsdaten",
-    "welcome": "Hello {role}. Which operation should we speed up today?",
-    "placeholder": "Ask about leads, EİDS, maintenance or revenue...",
-    "send": "Send"
+    "welcome": "Hallo {role}. Welchen Vorgang sollen wir heute beschleunigen?",
+    "placeholder": "Fragen Sie zu Leads, EİDS, Wartung oder Umsatz...",
+    "send": "Senden"
   },
   "dashboardModules": {
     "listings": {
