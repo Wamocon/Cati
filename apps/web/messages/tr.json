@@ -20,7 +20,8 @@
     "portal": "Müşteri Paneli",
     "platformSubtitle": "1Çatı Platform",
     "toggleMenu": "Menüyü aç/kapat",
-    "platform": "Platform"
+    "platform": "Platform",
+    "demo": "Demo"
   },
   "hero": {
     "badge": "Türkiye emlak operasyon platformu",

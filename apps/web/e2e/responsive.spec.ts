@@ -120,7 +120,7 @@ test.describe("Responsive mobile checks", () => {
     test.setTimeout(120_000)
     await page.setViewportSize({ width: 390, height: 844 })
 
-    for (const route of ["/tr", "/tr/login", "/tr/signup"]) {
+    for (const route of ["/tr", "/tr/pitch", "/tr/login", "/tr/signup"]) {
       await assertMobileRoute(page, route)
     }
 

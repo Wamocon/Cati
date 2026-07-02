@@ -20,7 +20,8 @@
     "portal": "Client Portal",
     "platformSubtitle": "1Çatı Platform",
     "toggleMenu": "Toggle menu",
-    "platform": "Platform"
+    "platform": "Platform",
+    "demo": "Demo"
   },
   "hero": {
     "badge": "real estate operations platform",
