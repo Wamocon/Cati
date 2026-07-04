@@ -10,6 +10,7 @@ import {
   phaseDeliveryRecords,
   serviceTickets,
 } from "./site-management-data"
+import { localizeBusinessCopy, interpolate } from "./business-copy"
 
 export type AiSuggestion = {
   id: string
@@ -174,7 +175,7 @@ function detectRequestedResource(prompt: string): Resource | undefined {
   )?.resource
 }
 
-function denialForRole(resource: Resource, role: Role) {
+function denialForRole(resource: Resource, role: Role, locale: string) {
   const labels: Record<Resource, string> = {
     calendar: "rezervasyon ve takvim",
     communications: "iletişim",
@@ -192,7 +193,13 @@ function denialForRole(resource: Resource, role: Role) {
     users: "kullanıcı ve rol yönetimi",
   }
 
-  return `Bu istek ${labels[resource]} yetkisi gerektirir. Aktif rolünüz (${role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.`
+  return interpolate(
+    localizeBusinessCopy(
+      "Bu istek {resourceLabel} yetkisi gerektirir. Aktif rolünüz ({role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.",
+      locale
+    ),
+    { resourceLabel: localizeBusinessCopy(labels[resource], locale), role }
+  )
 }
 
 export function getAiRoleProfile(role: Role): AiRoleProfile {
@@ -210,14 +217,14 @@ export function getAiRoleSystemInstruction(role: Role) {
   ].join(" ")
 }
 
-export function getAiAccessDecision(prompt: string, role: Role): AiAccessDecision {
+export function getAiAccessDecision(prompt: string, role: Role, locale = "tr"): AiAccessDecision {
   const resource = detectRequestedResource(prompt)
   if (!resource) return { allowed: true }
 
   if (!hasPermission(role, resource, "view")) {
     return {
       allowed: false,
-      deniedMessage: denialForRole(resource, role),
+      deniedMessage: denialForRole(resource, role, locale),
       resource,
     }
   }
@@ -225,53 +232,100 @@ export function getAiAccessDecision(prompt: string, role: Role): AiAccessDecisio
   return { allowed: true, resource }
 }
 
-function generateResidentPortalResponse(role: Role, resource?: Resource) {
-  const roleName = role === "owner" ? "Malik" : "Kiracı"
-  const ownershipText =
+function generateResidentPortalResponse(role: Role, resource: Resource | undefined, locale: string) {
+  const roleName = localizeBusinessCopy(role === "owner" ? "Malik" : "Kiracı", locale)
+  const ownershipText = localizeBusinessCopy(
     role === "owner"
       ? "kendi dairenize ve yetkili sakin kayıtlarınıza"
-      : "yetkili olduğunuz daireye"
+      : "yetkili olduğunuz daireye",
+    locale
+  )
 
   if (resource === "tickets") {
-    return `${roleName} rolünde ${ownershipText} bağlı servis taleplerini açabilir, durumunu takip edebilir ve yönetim ekibiyle mesajlaşabilirsiniz. Şirket geneli servis kuyruğu, borç listesi ve başka daire kayıtları gösterilmez.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleName} rolünde {ownershipText} bağlı servis taleplerini açabilir, durumunu takip edebilir ve yönetim ekibiyle mesajlaşabilirsiniz. Şirket geneli servis kuyruğu, borç listesi ve başka daire kayıtları gösterilmez.",
+        locale
+      ),
+      { roleName, ownershipText }
+    )
   }
 
   if (resource === "calendar") {
-    return `${roleName} rolünde yalnızca ${ownershipText} bağlı rezervasyon, giriş-çıkış ve uygunluk akışlarını görebilirsiniz. Başka dairelerin takvimi ve operasyon planı kapalıdır.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleName} rolünde yalnızca {ownershipText} bağlı rezervasyon, giriş-çıkış ve uygunluk akışlarını görebilirsiniz. Başka dairelerin takvimi ve operasyon planı kapalıdır.",
+        locale
+      ),
+      { roleName, ownershipText }
+    )
   }
 
   if (resource === "documents") {
-    return `${roleName} rolünde sadece ${ownershipText} ait yetkili sözleşme, TAPU veya operasyon belgelerini görebilirsiniz. Diğer malik/kiracı belgeleri ve iç finans evrakı kapalıdır.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleName} rolünde sadece {ownershipText} ait yetkili sözleşme, TAPU veya operasyon belgelerini görebilirsiniz. Diğer malik/kiracı belgeleri ve iç finans evrakı kapalıdır.",
+        locale
+      ),
+      { roleName, ownershipText }
+    )
   }
 
   if (resource === "communications") {
-    return `${roleName} rolünde yönetim ekibiyle güvenli iletişim, bildirim ve talep takibini kullanabilirsiniz. İç ekip mesajları, finans onayları ve kullanıcı yönetimi kapalıdır.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleName} rolünde yönetim ekibiyle güvenli iletişim, bildirim ve talep takibini kullanabilirsiniz. İç ekip mesajları, finans onayları ve kullanıcı yönetimi kapalıdır.",
+        locale
+      ),
+      { roleName }
+    )
   }
 
-  return `${roleName} çalışma alanında servis, rezervasyon, belge ve iletişim işlemleri kendi yetki kapsamınızla sınırlıdır. Daire matrisi, finans defteri, raporlar, kullanıcılar ve ayarlar bu rolde kapalıdır.`
+  return interpolate(
+    localizeBusinessCopy(
+      "{roleName} çalışma alanında servis, rezervasyon, belge ve iletişim işlemleri kendi yetki kapsamınızla sınırlıdır. Daire matrisi, finans defteri, raporlar, kullanıcılar ve ayarlar bu rolde kapalıdır.",
+      locale
+    ),
+    { roleName }
+  )
 }
 
-function generateStaffPortalResponse(resource?: Resource) {
+function generateStaffPortalResponse(resource: Resource | undefined, locale: string) {
   if (resource === "tickets") {
-    return "Personel rolünde atanan servis talepleri, SLA durumu, saha notları ve fotoğraf/video kanıtı önceliklidir. Borç listesi, finans onayı ve tüm portföy görünümü bu rolde kapalıdır."
+    return localizeBusinessCopy(
+      "Personel rolünde atanan servis talepleri, SLA durumu, saha notları ve fotoğraf/video kanıtı önceliklidir. Borç listesi, finans onayı ve tüm portföy görünümü bu rolde kapalıdır.",
+      locale
+    )
   }
 
   if (resource === "calendar") {
-    return "Personel rolünde günlük saha takvimi; giriş, çıkış, temizlik, gezinti ve görev saatlerini gösterir. Şirket geneli rezervasyon geliri veya finans mutabakatı kapalıdır."
+    return localizeBusinessCopy(
+      "Personel rolünde günlük saha takvimi; giriş, çıkış, temizlik, gezinti ve görev saatlerini gösterir. Şirket geneli rezervasyon geliri veya finans mutabakatı kapalıdır.",
+      locale
+    )
   }
 
   if (resource === "documents") {
-    return "Personel rolünde belge alanı iş kanıtı, fotoğraf, servis formu ve operasyon dokümanları içindir. Finans, TAPU ve kullanıcı yönetimi evrakı bu rolde kapalıdır."
+    return localizeBusinessCopy(
+      "Personel rolünde belge alanı iş kanıtı, fotoğraf, servis formu ve operasyon dokümanları içindir. Finans, TAPU ve kullanıcı yönetimi evrakı bu rolde kapalıdır.",
+      locale
+    )
   }
 
   if (resource === "communications") {
-    return "Personel rolünde iletişim alanı atanan işler, saha notları ve yönetici bildirimleri içindir. İç finans veya yönetici onay trafiği gösterilmez."
+    return localizeBusinessCopy(
+      "Personel rolünde iletişim alanı atanan işler, saha notları ve yönetici bildirimleri içindir. İç finans veya yönetici onay trafiği gösterilmez.",
+      locale
+    )
   }
 
-  return "Personel çalışma alanında atanan servis, rezervasyon, belge kanıtı ve ekip iletişimi görünür. Finans defteri, daire matrisi, raporlar, kullanıcılar ve ayarlar kapalıdır."
+  return localizeBusinessCopy(
+    "Personel çalışma alanında atanan servis, rezervasyon, belge kanıtı ve ekip iletişimi görünür. Finans defteri, daire matrisi, raporlar, kullanıcılar ve ayarlar kapalıdır.",
+    locale
+  )
 }
 
-export function getAiSuggestions(role: Role): AiSuggestion[] {
+export function getAiSuggestions(role: Role, locale = "tr"): AiSuggestion[] {
   const common: AiSuggestion[] =
     role === "admin" || role === "manager"
       ? [
@@ -314,23 +368,26 @@ export function getAiSuggestions(role: Role): AiSuggestion[] {
     ],
   }
 
-  return [...common, ...roleSpecific[role]]
+  return [...common, ...roleSpecific[role]].map((suggestion) => ({
+    ...suggestion,
+    label: localizeBusinessCopy(suggestion.label, locale),
+  }))
 }
 
-export function generateAiResponse(prompt: string, role: Role): string {
+export function generateAiResponse(prompt: string, role: Role, locale = "tr"): string {
   const lower = prompt.toLocaleLowerCase("tr-TR")
   const profile = getAiRoleProfile(role)
-  const accessDecision = getAiAccessDecision(prompt, role)
+  const accessDecision = getAiAccessDecision(prompt, role, locale)
   if (!accessDecision.allowed) {
-    return accessDecision.deniedMessage ?? denialForRole("dashboard", role)
+    return accessDecision.deniedMessage ?? denialForRole("dashboard", role, locale)
   }
 
   if (role === "owner" || role === "tenant") {
-    return generateResidentPortalResponse(role, accessDecision.resource)
+    return generateResidentPortalResponse(role, accessDecision.resource, locale)
   }
 
   if (role === "staff") {
-    return generateStaffPortalResponse(accessDecision.resource)
+    return generateStaffPortalResponse(accessDecision.resource, locale)
   }
 
   const summary = getSummary()
@@ -344,11 +401,31 @@ export function generateAiResponse(prompt: string, role: Role): string {
   const plannedPhases = phaseDeliveryRecords.filter((phase) => phase.status === "planned")
 
   if (role === "admin" && (lower.includes("phase") || lower.includes("faz") || lower.includes("roadmap") || lower.includes("next"))) {
-    return `${profile.label} kapsamı: ${readyForUatPhases.map((phase) => `Faz ${phase.phase}`).join(", ")} UAT için hazır, ${activePhases.map((phase) => `Faz ${phase.phase}`).join(", ")} aktif geliştirmede, ${plannedPhases.length} faz planlı durumda. Sıradaki doğru adım Faz 7 ödeme/depozito/mutabakat kararlarını sağlayıcı ve hukuk onayıyla kapatmak; ardından servis siparişi, görev/SLA, rezervasyon ve iletişim fazları aynı RBAC ve audit modeliyle bağlanmalı.`
+    const readyList = readyForUatPhases.map((phase) => `Faz ${phase.phase}`).join(", ")
+    const activeList = activePhases.map((phase) => `Faz ${phase.phase}`).join(", ")
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleLabel} kapsamı: {readyList} UAT için hazır, {activeList} aktif geliştirmede, {plannedCount} faz planlı durumda. Sıradaki doğru adım Faz 7 ödeme/depozito/mutabakat kararlarını sağlayıcı ve hukuk onayıyla kapatmak; ardından servis siparişi, görev/SLA, rezervasyon ve iletişim fazları aynı RBAC ve audit modeliyle bağlanmalı.",
+        locale
+      ),
+      { roleLabel: localizeBusinessCopy(profile.label, locale), readyList, activeList, plannedCount: plannedPhases.length }
+    )
   }
 
   if (role === "manager" && (lower.includes("summary") || lower.includes("özet") || lower.includes("operations") || lower.includes("plan"))) {
-    return `${profile.label} çalışma alanı için bugün öncelik: ${summary.openTickets} açık servis talebi, ${summary.overdueTickets} SLA dışı iş, ${summary.restrictedAccess} erişim kısıtı ve ${summary.checkoutsToday} check-out. Ekip yönlendirmesi önce SLA riski ve borç nedeniyle bekleyen servislerden başlamalı; finans kaydı oluşturulmadan muhasebe onayı istenmeli.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleLabel} çalışma alanı için bugün öncelik: {openTickets} açık servis talebi, {overdueTickets} SLA dışı iş, {restrictedAccess} erişim kısıtı ve {checkoutsToday} check-out. Ekip yönlendirmesi önce SLA riski ve borç nedeniyle bekleyen servislerden başlamalı; finans kaydı oluşturulmadan muhasebe onayı istenmeli.",
+        locale
+      ),
+      {
+        roleLabel: localizeBusinessCopy(profile.label, locale),
+        openTickets: summary.openTickets,
+        overdueTickets: summary.overdueTickets,
+        restrictedAccess: summary.restrictedAccess,
+        checkoutsToday: summary.checkoutsToday,
+      }
+    )
   }
 
   if (role === "accountant" && (lower.includes("summary") || lower.includes("özet") || lower.includes("finance") || lower.includes("finans") || lower.includes("collection") || lower.includes("tahsilat"))) {
@@ -356,11 +433,35 @@ export function generateAiResponse(prompt: string, role: Role): string {
       .slice(0, 3)
       .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
       .join("; ")
-    return `${profile.label} kapsamı için tahsilat önceliği: ${topAccounts}. Toplam açık borç ${formatTry(summary.totalDebtTry)}, 90+ gün/yasal riskte ${legalAccounts.length} hesap var. Ödeme, iade, depozito veya erişim kısıtı aksiyonu doğrudan uygulanmaz; mutabakat ve insan onayı gerekir.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{roleLabel} kapsamı için tahsilat önceliği: {topAccounts}. Toplam açık borç {totalDebt}, 90+ gün/yasal riskte {legalCount} hesap var. Ödeme, iade, depozito veya erişim kısıtı aksiyonu doğrudan uygulanmaz; mutabakat ve insan onayı gerekir.",
+        locale
+      ),
+      {
+        roleLabel: localizeBusinessCopy(profile.label, locale),
+        topAccounts,
+        totalDebt: formatTry(summary.totalDebtTry),
+        legalCount: legalAccounts.length,
+      }
+    )
   }
 
   if (lower.includes("summary") || lower.includes("özet") || lower.includes("operations")) {
-    return `Bugün ${summary.totalFlats} daire yönetimde, doluluk %${summary.occupancyRate}. Açık borç ${formatTry(summary.totalDebtTry)}, ${summary.openTickets} açık servis talebi, ${summary.overdueTickets} SLA dışı talep ve ${summary.checkoutsToday} check-out var. İlk öncelik borç kısıtı, SLA dışı servis ve depozito kontrolü.`
+    return interpolate(
+      localizeBusinessCopy(
+        "Bugün {totalFlats} daire yönetimde, doluluk %{occupancyRate}. Açık borç {totalDebt}, {openTickets} açık servis talebi, {overdueTickets} SLA dışı talep ve {checkoutsToday} check-out var. İlk öncelik borç kısıtı, SLA dışı servis ve depozito kontrolü.",
+        locale
+      ),
+      {
+        totalFlats: summary.totalFlats,
+        occupancyRate: summary.occupancyRate,
+        totalDebt: formatTry(summary.totalDebtTry),
+        openTickets: summary.openTickets,
+        overdueTickets: summary.overdueTickets,
+        checkoutsToday: summary.checkoutsToday,
+      }
+    )
   }
 
   if (lower.includes("debt") || lower.includes("borç") || lower.includes("cash") || lower.includes("collection")) {
@@ -368,21 +469,42 @@ export function generateAiResponse(prompt: string, role: Role): string {
       .slice(0, 3)
       .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
       .join("; ")
-    return `Tahsilat önceliği: ${topAccounts}. Toplam açık borç ${formatTry(summary.totalDebtTry)}. 90+ gün borçta ${legalAccounts.length} hesap var; bu hesaplarda erişim kısıtı ve yasal takip hazırlığı önerilir.`
+    return interpolate(
+      localizeBusinessCopy(
+        "Tahsilat önceliği: {topAccounts}. Toplam açık borç {totalDebt}. 90+ gün borçta {legalCount} hesap var; bu hesaplarda erişim kısıtı ve yasal takip hazırlığı önerilir.",
+        locale
+      ),
+      { topAccounts, totalDebt: formatTry(summary.totalDebtTry), legalCount: legalAccounts.length }
+    )
   }
 
   if (lower.includes("service") || lower.includes("ticket") || lower.includes("sla") || lower.includes("servis")) {
     const urgent = overdueTickets
       .slice(0, 3)
-      .map((ticket) => `${ticket.flatNumber} ${ticket.title} (${ticket.slaHoursRemaining} saat)`)
+      .map((ticket) => `${ticket.flatNumber} ${localizeBusinessCopy(ticket.title, locale)} (${ticket.slaHoursRemaining} ${localizeBusinessCopy("saat", locale)})`)
       .join("; ")
     return urgent
-      ? `Servis önceliği: ${urgent}. Borç blokeli ${blockedTickets.length} talep finans onayı bekliyor; personel yönlendirmeden önce ödeme durumu kontrol edilmeli.`
-      : "Şu anda SLA dışı servis talebi yok. Günlük saha rotası açık taleplerin maliyet ve lokasyonuna göre planlanabilir."
+      ? interpolate(
+          localizeBusinessCopy(
+            "Servis önceliği: {urgent}. Borç blokeli {blockedCount} talep finans onayı bekliyor; personel yönlendirmeden önce ödeme durumu kontrol edilmeli.",
+            locale
+          ),
+          { urgent, blockedCount: blockedTickets.length }
+        )
+      : localizeBusinessCopy(
+          "Şu anda SLA dışı servis talebi yok. Günlük saha rotası açık taleplerin maliyet ve lokasyonuna göre planlanabilir.",
+          locale
+        )
   }
 
   if (lower.includes("access") || lower.includes("erişim") || lower.includes("restricted")) {
-    return `${summary.restrictedAccess} dairede erişim kısıtı görünüyor. AI önerisi: önce yasal takipteki borçlu daireler, sonra check-in öncesi bekleyen erişim kodları kontrol edilmeli.`
+    return interpolate(
+      localizeBusinessCopy(
+        "{restrictedAccess} dairede erişim kısıtı görünüyor. AI önerisi: önce yasal takipteki borçlu daireler, sonra check-in öncesi bekleyen erişim kodları kontrol edilmeli.",
+        locale
+      ),
+      { restrictedAccess: summary.restrictedAccess }
+    )
   }
 
   if (lower.includes("booking") || lower.includes("check") || lower.includes("rezervasyon") || lower.includes("depozito")) {
@@ -390,25 +512,56 @@ export function generateAiResponse(prompt: string, role: Role): string {
       .map((booking) => `${booking.flatNumber} ${booking.guestName} (${formatTry(booking.depositTry)})`)
       .join("; ")
     return queue
-      ? `Bugünkü rezervasyon/depozito kuyruğu: ${queue}. Check-out fotoğrafı, temizlik onayı ve hasar kesintisi kapanmadan depozito iadesi yapılmamalı.`
-      : "Bugün depozito incelemesi bekleyen kritik çıkış yok. Yaklaşan girişler için kimlik, ödeme ve erişim kodu ön kontrolü yapılabilir."
+      ? interpolate(
+          localizeBusinessCopy(
+            "Bugünkü rezervasyon/depozito kuyruğu: {queue}. Check-out fotoğrafı, temizlik onayı ve hasar kesintisi kapanmadan depozito iadesi yapılmamalı.",
+            locale
+          ),
+          { queue }
+        )
+      : localizeBusinessCopy(
+          "Bugün depozito incelemesi bekleyen kritik çıkış yok. Yaklaşan girişler için kimlik, ödeme ve erişim kodu ön kontrolü yapılabilir.",
+          locale
+        )
   }
 
   if (lower.includes("route") || lower.includes("technical") || lower.includes("teknik")) {
     const route = serviceTickets
       .filter((ticket) => ticket.status !== "closed" && ticket.status !== "resolved" && !ticket.debtBlocked)
       .slice(0, 4)
-      .map((ticket) => `${ticket.flatNumber} - ${ticket.category}`)
+      .map((ticket) => `${ticket.flatNumber} - ${localizeBusinessCopy(ticket.category, locale)}`)
       .join("; ")
-    return `Bugünkü saha rota önerisi: ${route}. Borç blokeli işler ayrıldı; önce SLA riski olan ve ödeme onayı tamamlanan talepler kapatılmalı.`
+    return interpolate(
+      localizeBusinessCopy(
+        "Bugünkü saha rota önerisi: {route}. Borç blokeli işler ayrıldı; önce SLA riski olan ve ödeme onayı tamamlanan talepler kapatılmalı.",
+        locale
+      ),
+      { route }
+    )
   }
 
   if (lower.includes("automation") || lower.includes("otomasyon")) {
-    return "En yüksek otomasyon getirisi üç akışta: aidat gecikme hatırlatmaları, borç durumuna göre erişim kodu kontrolü, check-out sonrası depozito ve hasar kapama. Bu üç akış operasyon süresini ciddi azaltır."
+    return localizeBusinessCopy(
+      "En yüksek otomasyon getirisi üç akışta: aidat gecikme hatırlatmaları, borç durumuna göre erişim kodu kontrolü, check-out sonrası depozito ve hasar kapama. Bu üç akış operasyon süresini ciddi azaltır.",
+      locale
+    )
   }
 
-  const roleContext =
-    "Rolünüze göre daire, finans, servis, rezervasyon, iletişim ve rapor modülleri önceliklendirilir."
+  const roleContext = localizeBusinessCopy(
+    "Rolünüze göre daire, finans, servis, rezervasyon, iletişim ve rapor modülleri önceliklendirilir.",
+    locale
+  )
 
-  return `Bu konuda yardımcı olabilirim. Mevcut veride ${summary.totalFlats} daire, ${summary.openTickets} açık servis talebi ve ${formatTry(summary.totalDebtTry)} açık borç var. ${roleContext}`
+  return interpolate(
+    localizeBusinessCopy(
+      "Bu konuda yardımcı olabilirim. Mevcut veride {totalFlats} daire, {openTickets} açık servis talebi ve {totalDebt} açık borç var. {roleContext}",
+      locale
+    ),
+    {
+      totalFlats: summary.totalFlats,
+      openTickets: summary.openTickets,
+      totalDebt: formatTry(summary.totalDebtTry),
+      roleContext,
+    }
+  )
 }

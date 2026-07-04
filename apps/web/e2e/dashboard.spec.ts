@@ -108,7 +108,7 @@ test.describe("Dashboard portal", () => {
 
     const modules = [
       { menu: "Daire Matrisi", heading: "Proje & Daire Matrisi", url: /\/dashboard\/listings/ },
-      { menu: "Sakinler", heading: "Müşteri & Malik CRM", url: /\/dashboard\/leads/ },
+      { menu: "Müşteri Adayları", heading: "Müşteri & Malik CRM", url: /\/dashboard\/leads/ },
       { menu: "Servis Talepleri", heading: "Servis Talepleri", url: /\/dashboard\/tickets/ },
       { menu: "Rezervasyon", heading: "Rezervasyon & Giriş-Çıkış", url: /\/dashboard\/calendar/ },
       { menu: "Erişim & Uyum", heading: "Erişim & Uyum", url: /\/dashboard\/compliance/ },
@@ -230,7 +230,7 @@ test.describe("Dashboard portal", () => {
         visible: [
           "Genel Bakış",
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -250,7 +250,7 @@ test.describe("Dashboard portal", () => {
         visible: [
           "Genel Bakış",
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -270,7 +270,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Finans & Aidat", "Belgeler", "Raporlar", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
@@ -285,7 +285,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",
@@ -300,7 +300,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",
@@ -315,7 +315,7 @@ test.describe("Dashboard portal", () => {
         visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
         hidden: [
           "Daire Matrisi",
-          "Sakinler",
+          "Müşteri Adayları",
           "Erişim & Uyum",
           "Finans & Aidat",
           "Raporlar",

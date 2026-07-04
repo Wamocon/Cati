@@ -12,19 +12,19 @@ import { roles, type Role } from "@/lib/rbac"
 
 const copy = {
   tr: {
-    title: "1Cati erisim talebi",
-    intro: "ERP hesabi olusturma kontrollu ilerler. Talep alinir, rol ve portfoy kapsami onaylandiktan sonra kullanici aktif edilir.",
+    title: "1Çatı erişim talebi",
+    intro: "ERP hesabı oluşturma kontrollü ilerler. Talep alınır, rol ve portföy kapsamı onaylandıktan sonra kullanıcı aktif edilir.",
     name: "Ad soyad",
     email: "E-posta",
     role: "Talep edilen rol",
-    password: "Sifre",
-    company: "Sirket / portfoy",
-    submit: "Erisim talebini gonder",
-    login: "Giris sayfasina don",
-    success: "Talep alindi. E-posta dogrulamasi ve yonetici onayi tamamlandiginda erisim acilir.",
-    authMissing: "Auth anahtarlari bu ortamda kapali. Talep icin info@ataberkestate.com adresine yazin.",
-    error: "Talep gonderilemedi. Bilgileri kontrol edip tekrar deneyin.",
-    note: "Acik self-service kayit yerine onayli erisim kullanilir; bu ERP icin daha guvenli yaklasimdir.",
+    password: "Şifre",
+    company: "Şirket / portföy",
+    submit: "Erişim talebini gönder",
+    login: "Giriş sayfasına dön",
+    success: "Talep alındı. E-posta doğrulaması ve yönetici onayı tamamlandığında erişim açılır.",
+    authMissing: "Auth anahtarları bu ortamda kapalı. Talep için info@ataberkestate.com adresine yazın.",
+    error: "Talep gönderilemedi. Bilgileri kontrol edip tekrar deneyin.",
+    note: "Açık self-service kayıt yerine onaylı erişim kullanılır; bu ERP için daha güvenli yaklaşımdır.",
   },
   en: {
     title: "Request 1Cati access",
@@ -33,7 +33,7 @@ const copy = {
     email: "Email",
     role: "Requested role",
     password: "Password",
-    company: "Company / portfolio",
+    company: "Company / Portfolio Scope",
     submit: "Send access request",
     login: "Back to login",
     success: "Request received. Access opens after email verification and administrator approval.",
@@ -42,49 +42,78 @@ const copy = {
     note: "Controlled access is safer than open self-service signup for a business ERP.",
   },
   de: {
-    title: "1Cati-Zugang anfragen",
-    intro: "ERP-Konten werden kontrolliert erstellt. Rolle und Portfolio werden geprueft, bevor der Zugang freigegeben wird.",
+    title: "1Çatı-Zugang anfragen",
+    intro: "ERP-Konten werden kontrolliert erstellt. Rolle und Portfolio werden geprüft, bevor der Zugang freigegeben wird.",
     name: "Name",
     email: "E-Mail",
-    role: "Gewuenschte Rolle",
+    role: "Gewünschte Rolle",
     password: "Passwort",
     company: "Firma / Portfolio",
     submit: "Zugangsanfrage senden",
     login: "Zur Anmeldung",
-    success: "Anfrage erhalten. Zugang folgt nach E-Mail-Bestaetigung und Administratorfreigabe.",
-    authMissing: "Auth-Schluessel sind in dieser Umgebung deaktiviert. Bitte info@ataberkestate.com kontaktieren.",
-    error: "Anfrage konnte nicht gesendet werden. Angaben pruefen und erneut versuchen.",
-    note: "Kontrollierter Zugang ist fuer ein ERP sicherer als offene Selbstregistrierung.",
+    success: "Anfrage erhalten. Zugang folgt nach E-Mail-Bestätigung und Administratorfreigabe.",
+    authMissing: "Auth-Schlüssel sind in dieser Umgebung deaktiviert. Bitte info@ataberkestate.com kontaktieren.",
+    error: "Anfrage konnte nicht gesendet werden. Angaben prüfen und erneut versuchen.",
+    note: "Kontrollierter Zugang ist für ein ERP sicherer als offene Selbstregistrierung.",
   },
   ru: {
-    title: "Zapros dostupa k 1Cati",
-    intro: "Sozdanie ERP akkaunta kontroliruetsya. Rol i portfel proverayutsya do otkrytiya dostupa.",
-    name: "Imya",
-    email: "Email",
-    role: "Zaprashivaemaya rol",
-    password: "Parol",
-    company: "Kompaniya / portfel",
-    submit: "Otpravit zapros",
-    login: "Nazad ko vhodu",
-    success: "Zapros poluchen. Dostup otkroetsya posle proverki email i odobreniya administratorom.",
-    authMissing: "Auth klyuchi otklyucheny v etoy srede. Napishite na info@ataberkestate.com.",
-    error: "Zapros ne otpravlen. Proverte dannye i poprobuyte snova.",
-    note: "Kontroliruemyy dostup bezopasnee otkrytoy registratsii dlya biznes ERP.",
+    title: "Запрос доступа к 1Çatı",
+    intro: "Создание учётной записи ERP проходит контролируемо. Заявка регистрируется, роль и объём портфеля подтверждаются, после чего доступ активируется.",
+    name: "Имя и фамилия",
+    email: "Эл. почта",
+    role: "Запрашиваемая роль",
+    password: "Пароль",
+    company: "Компания / портфель",
+    submit: "Отправить запрос на доступ",
+    login: "Вернуться к входу",
+    success: "Заявка получена. Доступ откроется после подтверждения почты и одобрения администратором.",
+    authMissing: "Ключи авторизации отключены в этой среде. По вопросам доступа обращайтесь на info@ataberkestate.com.",
+    error: "Заявку не удалось отправить. Проверьте данные и попробуйте снова.",
+    note: "Контролируемый доступ безопаснее открытой самостоятельной регистрации для бизнес-ERP.",
   },
 } as const
 
-const roleLabels: Record<Role, string> = {
-  admin: "Administration",
-  manager: "Responsible manager",
-  accountant: "Accounting",
-  staff: "Staff",
-  owner: "Owner",
-  tenant: "Tenant",
+const roleLabels: Record<Role, Record<keyof typeof copy, string>> = {
+  admin: { tr: "Yönetim", en: "Administration", de: "Verwaltung", ru: "Администрация" },
+  manager: { tr: "Sorumlu", en: "Manager", de: "Verantwortlicher Manager", ru: "Ответственный менеджер" },
+  accountant: { tr: "Muhasebe", en: "Accounting", de: "Buchhaltung", ru: "Бухгалтерия" },
+  staff: { tr: "Personel", en: "Staff", de: "Mitarbeiter", ru: "Персонал" },
+  owner: { tr: "Malik", en: "Owner", de: "Eigentümer", ru: "Собственник" },
+  tenant: { tr: "Kiracı", en: "Tenant", de: "Mieter", ru: "Арендатор" },
+}
+
+const onboardingLabel: Record<keyof typeof copy, string> = {
+  tr: "Kontrollü onboarding",
+  en: "Controlled onboarding",
+  de: "Kontrolliertes Onboarding",
+  ru: "Контролируемый онбординг",
+}
+
+const governanceLabel: Record<keyof typeof copy, string> = {
+  tr: "Erişim yönetişimi",
+  en: "Access governance",
+  de: "Zugangskontrolle",
+  ru: "Управление доступом",
+}
+
+const governanceHeading: Record<keyof typeof copy, string> = {
+  tr: "Üretim erişiminden önce rol, portföy ve denetim.",
+  en: "Role, portfolio and audit before production access.",
+  de: "Rolle, Portfolio und Prüfung vor dem Produktionszugang.",
+  ru: "Роль, портфель и проверка перед доступом к продакшену.",
+}
+
+const governanceBody: Record<keyof typeof copy, string> = {
+  tr: "Malikler, kiracılar, personel ve finans kullanıcıları aynı ERP ekranını görmemelidir. Erişim, rol ve ilgili gayrimenkul/portföy kapsamının tanımlanmasıyla başlar.",
+  en: "Owners, tenants, staff and finance users should not all see the same ERP. Access starts with the role and the specific property scope.",
+  de: "Eigentümer, Mieter, Mitarbeiter und Finanznutzer sollten nicht dasselbe ERP sehen. Der Zugang beginnt mit der Rolle und dem jeweiligen Objektumfang.",
+  ru: "Собственники, арендаторы, персонал и финансовые пользователи не должны видеть одну и ту же ERP-систему. Доступ начинается с определения роли и конкретного объёма портфеля.",
 }
 
 export default function SignupPage() {
   const locale = useLocale()
-  const t = copy[(locale as keyof typeof copy) in copy ? (locale as keyof typeof copy) : "en"]
+  const localeKey = (locale as keyof typeof copy) in copy ? (locale as keyof typeof copy) : "en"
+  const t = copy[localeKey]
   const supabaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -142,7 +171,7 @@ export default function SignupPage() {
                 <ArrowLeft className="h-4 w-4" />
                 {t.login}
               </Link>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">Controlled onboarding</p>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">{onboardingLabel[localeKey]}</p>
               <h1 className="mt-3 text-4xl font-black leading-tight text-foreground">{t.title}</h1>
               <p className="mt-4 text-base leading-8 text-muted-foreground">{t.intro}</p>
 
@@ -187,7 +216,7 @@ export default function SignupPage() {
                     >
                       {roles.map((item) => (
                         <option key={item} value={item}>
-                          {roleLabels[item]}
+                          {roleLabels[item][localeKey]}
                         </option>
                       ))}
                     </select>
@@ -240,10 +269,10 @@ export default function SignupPage() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,16,14,0.2),rgba(3,16,14,0.92))]" />
           <div className="absolute bottom-8 left-8 right-8 rounded-3xl border border-white/14 bg-white/10 p-6 backdrop-blur-xl">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-100">Access governance</p>
-            <h2 className="mt-3 text-3xl font-black leading-tight">Role, portfolio and audit before production access.</h2>
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-100">{governanceLabel[localeKey]}</p>
+            <h2 className="mt-3 text-3xl font-black leading-tight">{governanceHeading[localeKey]}</h2>
             <p className="mt-4 text-sm leading-7 text-white/72">
-              Owners, tenants, staff and finance users should not all see the same ERP. Access starts with the role and the specific property scope.
+              {governanceBody[localeKey]}
             </p>
           </div>
         </section>

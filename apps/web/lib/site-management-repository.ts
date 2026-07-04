@@ -11,7 +11,6 @@ import {
   getResidentSummary,
   getStaffSummary,
   getImportSummary,
-  getPaymentPlanSummary,
   getSummary,
   importBatches,
   importFindings,
@@ -462,7 +461,9 @@ function localSeedSnapshot(warning?: string): DashboardSnapshot {
     },
     summary: {
       totalUnits: summary.totalFlats,
-      occupiedUnits: summary.occupiedFlats,
+      // strict occupied only (reserved is tracked separately); avoids inflating
+      // dashboard occupancy the way summary.occupiedFlats (occupied+reserved) would
+      occupiedUnits: flats.filter((flat) => flat.status === "occupied").length,
       vacantUnits: summary.vacantFlats,
       blockedUnits: summary.blockedFlats,
       openTickets: summary.openTickets,
@@ -1119,14 +1120,14 @@ function buildPaymentPlanQueue(plans: PaymentPlanRecord[], limit: number): Phase
 }
 
 function depositActionFor(booking: Pick<BookingRecord, "depositStatus" | "accessCodeStatus" | "cleaningStatus">) {
-  if (booking.depositStatus === "deduction_pending") return "Hasar ve temizlik kanitini muhasebe onayina bagla"
+  if (booking.depositStatus === "deduction_pending") return "Hasar ve temizlik kanıtını muhasebe onayına bağla"
   if (booking.depositStatus === "refund_ready") return "Iade emrini finans onay kuyruguna al"
   if (booking.accessCodeStatus === "restricted" || booking.accessCodeStatus === "disabled") {
     return "Erisim kodunu depozito ve borc kontrolu kapanana kadar acma"
   }
   if (booking.cleaningStatus === "blocked") return "Temizlik blokajini operasyonla eslestir"
-  if (booking.depositStatus === "held") return "Depozito tutarini checkout takibinde izle"
-  return "Rezervasyon on kontrolunu tamamla"
+  if (booking.depositStatus === "held") return "Depozito tutarını checkout takibinde izle"
+  return "Rezervasyon ön kontrolünü tamamla"
 }
 
 function buildDepositQueue(records: BookingRecord[], limit: number): Phase7DepositDecision[] {
@@ -1213,9 +1214,11 @@ function buildPaymentRestrictionSummary(
 ): PaymentRestrictionData["summary"] {
   return {
     currency: "TRY",
-    openPaymentPlans: paymentPlans.length,
-    paymentPlansAtRisk: paymentPlans.filter((plan) => plan.status !== "on_track").length,
-    openPlanExposureEur: getPaymentPlanSummary().openExposureEur,
+    // derive from the passed queue (same population as the other queue counts
+    // below) instead of the module-level seed globals, so KPI and visible list agree
+    openPaymentPlans: plans.length,
+    paymentPlansAtRisk: plans.filter((plan) => plan.status !== "on_track").length,
+    openPlanExposureEur: plans.reduce((sum, plan) => sum + plan.remainingEur, 0),
     depositQueue: deposits.length,
     depositExposureCents: deposits.reduce((sum, item) => sum + item.depositCents, 0),
     restrictionQueue: restrictions.length,
@@ -2093,7 +2096,9 @@ function localSeedPhase4SiteData(
     },
     summary: {
       totalUnits: summary.totalFlats,
-      occupiedUnits: summary.occupiedFlats,
+      // strict occupied only (matches the Supabase get_phase4_site_data view);
+      // reservedUnits is reported separately, so occupied must NOT include reserved
+      occupiedUnits: flats.filter((flat) => flat.status === "occupied").length,
       reservedUnits: flats.filter((flat) => flat.status === "reserved").length,
       vacantUnits: summary.vacantFlats,
       blockedUnits: summary.blockedFlats,
@@ -2834,4 +2839,181 @@ export async function logClientAction(
     }
     throw error
   }
+}
+
+// -- Public, account-free intake (New Level Premium landing page) ------------
+// Registration requests (owner/tenant/staff) and public/guest issue reports
+// both arrive without an authenticated session. They are recorded as queued
+// client_action_requests for human triage via the submit_public_intake RPC,
+// with a transparent local-seed fallback for the login-free demo. Same
+// Supabase-first + never-throw-in-demo contract as logClientAction above.
+
+export interface PublicIntakeResult {
+  reference: string
+  source: DataSource
+  status: "received"
+}
+
+export interface RegistrationRequestInput {
+  role: "owner" | "tenant" | "staff"
+  fullName: string
+  email: string
+  phone?: string | null
+  language?: string | null
+  unitClaim?: string | null
+  proofType?: string | null
+  proofReference?: string | null
+  inviteCode?: string | null
+  position?: string | null
+  // Identity fields (owner/tenant) for KVKK-lawful verification and Turkey KBS
+  // reporting. The submit_public_intake RPC stamps a retention deadline and
+  // queues a KBS report from these; see migration 0009.
+  idType?: string | null
+  idNumber?: string | null
+  issuingCountry?: string | null
+  idVerificationRef?: string | null
+  idVerificationStatus?: string | null
+  consent: boolean
+  metadata?: Record<string, unknown>
+}
+
+export interface PublicReportInput {
+  category: string
+  zone: string
+  description: string
+  contact?: string | null
+  language?: string | null
+  consent: boolean
+  metadata?: Record<string, unknown>
+}
+
+function publicIntakeReference(prefix: string): string {
+  const stamp = Date.now().toString(36).toUpperCase().slice(-6)
+  return `${prefix}-${stamp}`
+}
+
+async function submitPublicIntake(
+  actionType: string,
+  title: string,
+  metadata: Record<string, unknown>,
+  referencePrefix: string
+): Promise<PublicIntakeResult> {
+  if (!isSupabaseConfigured()) {
+    return {
+      reference: publicIntakeReference(referencePrefix),
+      source: "local-seed",
+      status: "received",
+    }
+  }
+
+  try {
+    const supabase = await createDataClient()
+    const { data, error } = await supabase.rpc("submit_public_intake", {
+      p_action_type: actionType,
+      p_title: title,
+      p_metadata: metadata,
+    })
+    if (error) throw error
+    return {
+      reference: typeof data === "string" ? data : publicIntakeReference(referencePrefix),
+      source: "supabase",
+      status: "received",
+    }
+  } catch (error) {
+    if (canUseLocalSeedFallback()) {
+      return {
+        reference: publicIntakeReference(referencePrefix),
+        source: "local-seed",
+        status: "received",
+      }
+    }
+    throw error
+  }
+}
+
+export async function submitRegistrationRequest(
+  input: RegistrationRequestInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    role: input.role,
+    fullName: input.fullName,
+    email: input.email,
+    phone: input.phone ?? null,
+    language: input.language ?? null,
+    unitClaim: input.unitClaim ?? null,
+    proofType: input.proofType ?? null,
+    proofReference: input.proofReference ?? null,
+    inviteCode: input.inviteCode ?? null,
+    position: input.position ?? null,
+    idType: input.idType ?? null,
+    idNumber: input.idNumber ?? null,
+    issuingCountry: input.issuingCountry ?? null,
+    idVerificationRef: input.idVerificationRef ?? null,
+    idVerificationStatus: input.idVerificationStatus ?? null,
+    consent: input.consent,
+    channel: "new-level-premium-landing",
+    ...(input.metadata ?? {}),
+  }
+  return submitPublicIntake(
+    `registration.request.${input.role}`,
+    `${input.role} access request — ${input.fullName}`,
+    metadata,
+    "NLP-REG"
+  )
+}
+
+export interface PublicAiInterestInput {
+  topic: string
+  language?: string | null
+  question: string
+  answeredBy: "public-knowledge" | "local-ai"
+  page?: string | null
+}
+
+// Landing-page AI concierge questions flow into the same public intake channel
+// (action type 'public.ai_question', migration 0011) so the internal 1Cati
+// assistant and the team can learn which topics visitors care about. This is
+// analytics-only: it stores the topic and a clamped question text, never any
+// identity fields, and it must never fail the visitor's chat request.
+export async function logPublicAiInterest(
+  input: PublicAiInterestInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    kind: "ai_interest",
+    topic: input.topic,
+    language: input.language ?? null,
+    question: input.question.slice(0, 600),
+    answeredBy: input.answeredBy,
+    page: input.page ?? null,
+    channel: "landing-concierge",
+  }
+  return submitPublicIntake(
+    "public.ai_question",
+    `AI interest — ${input.topic}`,
+    metadata,
+    "NLP-AIQ"
+  )
+}
+
+export async function submitPublicReport(
+  input: PublicReportInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    verified: false,
+    reportSource: "public",
+    category: input.category,
+    zone: input.zone,
+    description: input.description,
+    contact: input.contact ?? null,
+    language: input.language ?? null,
+    consent: input.consent,
+    channel: "new-level-premium-landing",
+    ...(input.metadata ?? {}),
+  }
+  return submitPublicIntake(
+    "public.report",
+    `Public report — ${input.category} @ ${input.zone}`,
+    metadata,
+    "NLP-RPT"
+  )
 }

@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { GlassCard } from "@/components/glass-card"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import { cn } from "@/lib/utils"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
 
@@ -27,13 +28,13 @@ const icons = {
 
 const mapCopy = {
   tr: {
-    label: "Turkiye kontrol akisi",
-    title: "Uyumluluk bir etiket degil, karar kapisidir.",
+    label: "Türkiye kontrol akışı",
+    title: "Uyumluluk bir etiket değil, karar kapısıdır.",
     text:
-      "EIDS, tapu inceleme, oturum uygunlugu, vergi riski ve kiralama bildirimi; ilan, servis veya teslim ilerlemeden once ayni onay kuyruguna baglanir.",
+      "EİDS, tapu inceleme, oturum uygunluğu, vergi riski ve kiralama bildirimi; ilan, servis veya teslim ilerlemeden önce aynı onay kuyruğuna bağlanır.",
     lanes: [
-      ["EIDS", "Malik yetkisi"],
-      ["TAPU", "Belge kontrolu"],
+      ["EİDS", "Malik yetkisi"],
+      ["TAPU", "Belge kontrolü"],
       ["KBS/e-GUEST", "Kiralama bildirimi"],
     ],
   },
@@ -49,25 +50,25 @@ const mapCopy = {
     ],
   },
   de: {
-    label: "Tuerkei Kontrollfluss",
+    label: "Türkei-Kontrollfluss",
     title: "Compliance ist ein Entscheidungsweg, keine Statusplakette.",
     text:
-      "EIDS, Grundbuchpruefung, Aufenthaltspruefung, Steuer- und Mietmeldungen laufen in dieselbe Freigabe.",
+      "EIDS, Grundbuchprüfung, Aufenthaltsprüfung, Steuer- und Mietmeldungen laufen in dieselbe Freigabe.",
     lanes: [
-      ["EIDS", "Eigentuemerfreigabe"],
-      ["TAPU", "Dokumentenpruefung"],
+      ["EIDS", "Eigentümerfreigabe"],
+      ["TAPU", "Dokumentenprüfung"],
       ["KBS/e-GUEST", "Mietmeldung"],
     ],
   },
   ru: {
-    label: "Turkey operating checks",
-    title: "Compliance is a decision path, not a badge list.",
+    label: "Контроль по турецким требованиям",
+    title: "Комплаенс — это путь принятия решения, а не список значков.",
     text:
-      "EIDS, title deed review, residence eligibility, tax exposure and rental reporting feed one approval queue.",
+      "EIDS, проверка ТАПУ, право на резидентство, налоговые риски и отчетность по аренде проходят через единую очередь согласования, прежде чем объявление, сервис или передача продвинутся дальше.",
     lanes: [
-      ["EIDS", "Owner authorization"],
-      ["TAPU", "Document review"],
-      ["KBS/e-GUEST", "Rental reporting"],
+      ["EIDS", "Авторизация владельца"],
+      ["TAPU", "Проверка документов"],
+      ["KBS/e-GUEST", "Отчетность по аренде"],
     ],
   },
 } satisfies Record<
@@ -87,6 +88,7 @@ export function ComplianceFeatures() {
     "shortTerm",
     "verification",
   ] as const
+  const plannedKeys = new Set(["shortTerm", "verification"])
 
   return (
     <section
@@ -149,13 +151,31 @@ export function ComplianceFeatures() {
                 className="min-w-0"
               >
                 <GlassCard className="group h-full min-w-0 p-4 sm:p-6" hover>
-                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shadow-sm transition-transform group-hover:scale-110">
-                    <Icon className="h-5 w-5" />
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 text-primary shadow-sm transition-transform group-hover:scale-110">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wide",
+                        plannedKeys.has(key)
+                          ? "bg-amber-100 text-amber-700"
+                          : "bg-emerald-100 text-emerald-700"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          plannedKeys.has(key) ? "bg-amber-500" : "bg-emerald-500"
+                        )}
+                      />
+                      {t(`items.${key}.tag`)}
+                    </span>
                   </div>
-                  <h3 className="text-lg font-bold text-card-foreground [overflow-wrap:anywhere]">
+                  <h3 className="text-lg font-bold break-words hyphens-auto text-card-foreground">
                     {t(`items.${key}.title`)}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground [overflow-wrap:anywhere]">
+                  <p className="mt-2 text-sm leading-relaxed break-words hyphens-auto text-muted-foreground">
                     {t(`items.${key}.desc`)}
                   </p>
                 </GlassCard>

@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { useUser } from "@/components/user-provider"
 import { useRouter } from "@/app/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { clientProfile } from "@/lib/client-context"
 import { roleDefinitions } from "@/lib/rbac"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
@@ -22,6 +23,12 @@ export function DashboardTopbar() {
 
   async function logout() {
     try {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        await createClient().auth.signOut()
+      }
       await fetch("/api/access-profile", { method: "DELETE" })
     } catch {
       // Session cleanup is best-effort; the redirect below is the user-visible state change.

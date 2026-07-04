@@ -30,33 +30,37 @@ test.describe("Landing page journey", () => {
     await screenshot(page, testInfo, "02-stats")
 
     await scrollToSection(page, "[data-testid='problem-bento']")
-    await expect(page.locator("[data-testid='problem-bento'] > div > div.grid > div")).toHaveCount(9)
+    await expect(page.locator("[data-testid='problem-bento'] .auto-rows-fr > div")).toHaveCount(9)
     await expect(page.getByText("EİDS yetkilendirmesi takibi zor")).toBeVisible()
     await screenshot(page, testInfo, "03-problems")
 
     await scrollToSection(page, "[data-testid='solution-grid']")
-    await expect(page.locator("[data-testid='solution-grid'] > div > div.grid > div")).toHaveCount(12)
-    await expect(page.getByText("CRM, ilanlar, işlemler, kiralama")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: /aynı ERP kaydında buluşur/ })
+    ).toBeVisible()
+    await expect(page.getByText("Kaydırarak ürün akışlarını aç")).toBeVisible()
     await screenshot(page, testInfo, "04-solution")
 
     await scrollToSection(page, "[data-testid='compliance-features']")
     await expect(page.locator("[data-testid='compliance-features'] > div > div.grid > div")).toHaveCount(6)
-    await expect(page.getByText("Aktif", { exact: true }).first()).toBeVisible()
-    await expect(page.getByText("Entegrasyon hazır", { exact: true }).first()).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Türkiye'nin 2026 kuralları için tasarlandı" })
+    ).toBeVisible()
+    await expect(page.getByText("EİDS yetkilendirme takibi", { exact: true })).toBeVisible()
     await screenshot(page, testInfo, "05-compliance")
 
-    await scrollToSection(page, "section#services")
-    await expect(page.getByRole("heading", { name: "ERP modülleri" })).toBeVisible()
-    await expect(page.getByText("CRM ve lead yönetimi")).toBeVisible()
-    await screenshot(page, testInfo, "06-services")
-
     await scrollToSection(page, "section#platform")
-    await expect(page.getByRole("heading", { name: "ERP iş akışı" })).toBeVisible()
-    await expect(page.getByRole("button", { name: "CRM" })).toBeVisible()
+    await expect(page.getByText("ERP iş akışı").first()).toBeVisible()
+    await expect(
+      page.locator("section#platform").getByRole("button", { name: "CRM" }).first()
+    ).toBeVisible()
     await screenshot(page, testInfo, "07-platform-workflow")
 
     await scrollToSection(page, "section#how-it-works")
-    await expect(page.getByText("Lead veya malik kaydı açılır")).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Tek ERP kaydı, birden fazla iş akışı" })
+    ).toBeVisible()
+    await expect(page.getByText("Site ve daire modeli")).toBeVisible()
     await screenshot(page, testInfo, "08-how-it-works")
 
     await scrollToSection(page, "section#contact")
@@ -74,7 +78,7 @@ test.describe("Landing page journey", () => {
     await page.goto("/tr")
     await page.getByRole("link", { name: "Panele Giriş Yap" }).click()
     await expect(page).toHaveURL(/\/tr\/login/)
-    await expect(page.getByRole("heading", { name: "1Çatı Giriş" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Giriş yap" })).toBeVisible()
     await screenshot(page, testInfo, "11-login-from-cta")
   })
 

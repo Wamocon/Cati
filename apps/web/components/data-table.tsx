@@ -57,6 +57,23 @@ function readRowValue<T>(row: T, key: string) {
   return undefined
 }
 
+// Fallback sort key: when a sortable column has no sortValue and its `key` does
+// not match a row property, use the rendered cell if it is a primitive. This
+// keeps sortable headers functional even when the display key differs from the
+// underlying field (e.g. key "flat" rendering row.flatNumber).
+function primitiveFromNode(node: React.ReactNode): string | number | undefined {
+  if (typeof node === "string" || typeof node === "number") return node
+  return undefined
+}
+
+function resolveSortValue<T>(row: T, column: Column<T> | undefined, key: string) {
+  if (column?.sortValue) return column.sortValue(row)
+  const direct = readRowValue(row, key)
+  if (direct !== undefined) return direct
+  if (column) return primitiveFromNode(column.render(row))
+  return undefined
+}
+
 export function DataTable<T>({
   columns,
   data,
@@ -87,8 +104,8 @@ export function DataTable<T>({
     ? [...filtered].sort((a, b) => {
         const column = columns.find((col) => col.key === sort.key)
         const result = compareValues(
-          column?.sortValue?.(a) ?? readRowValue(a, sort.key),
-          column?.sortValue?.(b) ?? readRowValue(b, sort.key)
+          resolveSortValue(a, column, sort.key),
+          resolveSortValue(b, column, sort.key)
         )
         return sort.dir === "asc" ? result : -result
       })

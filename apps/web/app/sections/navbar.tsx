@@ -15,7 +15,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
-  { label: "home", href: "#" },
+  { label: "home", href: "/" },
   { label: "catalog", href: "#modules" },
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
@@ -71,30 +71,31 @@ export function Navbar() {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm lg:flex">
+          {/* RU/DE labels overflow a 1024px row; the pill nav only fits from xl up. */}
+          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm xl:flex">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-full px-4 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {t(item.label)}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 lg:flex">
-            <LocaleSwitcher />
+          <div className="hidden items-center gap-2 xl:flex">
+            <LocaleSwitcher compact />
             <ThemeToggle />
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {t("login")}
             </Link>
             <Link
               href="/dashboard"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium whitespace-nowrap text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
             >
               {t("portal")}
             </Link>
@@ -102,7 +103,7 @@ export function Navbar() {
 
           <button
             data-testid="menu-toggle"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground lg:hidden"
+            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground xl:hidden"
             onClick={() => setOpen(!open)}
             aria-label={t("toggleMenu")}
           >
@@ -139,9 +140,9 @@ export function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl lg:hidden"
+            className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background/95 backdrop-blur-xl xl:hidden"
           >
-            <div className="container flex h-full flex-col pt-28 pb-8">
+            <div className="container flex min-h-full flex-col pt-28 pb-8">
               <nav className="flex flex-1 flex-col gap-2">
                 {navItems.map((item, index) => (
                   <motion.div
@@ -162,7 +163,7 @@ export function Navbar() {
               </nav>
               <div className="space-y-4 border-t border-border pt-6">
                 <div className="flex items-center justify-between">
-                  <LocaleSwitcher />
+                  <LocaleSwitcher compact />
                   <ThemeToggle />
                 </div>
                 <div className="grid grid-cols-2 gap-3">

@@ -9,6 +9,7 @@
     "platformLink": "ERP Platform"
   },
   "nav": {
+    "skipToContent": "Skip to content",
     "home": "Home",
     "catalog": "Modules",
     "about": "About Us",
@@ -99,9 +100,16 @@
     },
     "permits": {
       "title": "Residence permit rules have tightened",
-      "desc": "$200,000 minimum value, SPK-approved appraisal, income/insurance documents and a 25% foreign quota limit in Antalya/Alanya. Every file is different."
+      "desc": "$200,000 minimum value, SPK-approved appraisal, income/insurance documents and a 20% foreign residence quota limit in Antalya/Alanya. Every file is different."
     },
-    "sectionBadge": "2026 Reality"
+    "sectionBadge": "2026 Reality",
+    "flipbookBadge": "From lead to report",
+    "flipbook": [
+      ["01", "Lead", "WhatsApp / Web / Office"],
+      ["02", "Unit", "Block / Floor / Price"],
+      ["03", "Decision", "Debt / Document / SLA"],
+      ["04", "Report", "Owner / Team / Audit"]
+    ]
   },
   "solution": {
     "title": "1Çatı — the operating system for real estate",
@@ -137,7 +145,7 @@
       },
       "residence": {
         "title": "Residence / citizenship eligibility guide",
-        "desc": "Pre-check for the $200,000 threshold, income/insurance and district quota limits. SPK appraisal value is stored on the object card.",
+        "desc": "Pre-check for the $200,000 residence and $400,000 citizenship thresholds, income/insurance and district quota limits. SPK appraisal value is stored on the object card.",
         "tag": "Active"
       },
       "tax": {
@@ -335,8 +343,8 @@
     "p2": "The 1Çatı platform combines Ataberk Estate's operational experience with WAMOCON GmbH's digital transformation expertise to run every real-estate process under one roof."
   },
   "reviews": {
-    "title": "Client Reviews",
-    "intro": "Product feedback from operations teams and property owners.",
+    "title": "Usage Scenarios",
+    "intro": "Illustrative experience scenarios for operations teams and property owners using 1Çatı.",
     "items": {
       "0": {
         "quote": "Customer messages and maintenance requests are now in one place. We move much faster as a team.",

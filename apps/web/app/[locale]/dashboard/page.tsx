@@ -3,7 +3,7 @@
 import { useMemo } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -41,6 +41,7 @@ import { IsometricErpWorld } from "@/components/isometric-erp-world"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { localizeBusinessCopy, resolveDashboardLocale, interpolate } from "@/lib/business-copy"
 import { useLiveDashboardSnapshot } from "@/hooks/use-live-dashboard-snapshot"
 import type {
   DashboardSnapshot,
@@ -87,6 +88,7 @@ function CommandLink({
   href: string
   role: Role
 }) {
+  const locale = resolveDashboardLocale(useLocale())
   const resource = resourceForDashboardPath(href)
   const allowed = hasPermission(role, resource, "view")
   const content = typeof children === "function" ? children({ allowed }) : children
@@ -100,11 +102,11 @@ function CommandLink({
     return (
       <div
         aria-disabled="true"
-        aria-label={`${ariaLabel} - rol izni yok`}
+        aria-label={`${ariaLabel} - ${localizeBusinessCopy("rol izni yok", locale)}`}
         className={baseClassName}
         data-access="locked"
         role="group"
-        title="Bu modül mevcut rol için kapalı"
+        title={localizeBusinessCopy("Bu modül mevcut rol için kapalı", locale)}
       >
         {content}
       </div>
@@ -124,10 +126,12 @@ function CommandLink({
 }
 
 function DrilldownCue({ allowed }: { allowed: boolean }) {
+  const locale = resolveDashboardLocale(useLocale())
+
   if (!allowed) {
     return (
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-background/70 px-2 py-1 text-[11px] font-black text-muted-foreground">
-        Rol kapalı
+        {localizeBusinessCopy("Rol kapalı", locale)}
         <LockKeyhole className="h-3 w-3" />
       </span>
     )
@@ -135,7 +139,7 @@ function DrilldownCue({ allowed }: { allowed: boolean }) {
 
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/15 bg-background/50 px-2 py-1 text-[11px] font-black">
-      İncele
+      {localizeBusinessCopy("İncele", locale)}
       <ChevronRight className="h-3 w-3" />
     </span>
   )
@@ -460,6 +464,7 @@ const roleSceneConfig: Partial<
 }
 
 function RoleWorkspaceScene({ role }: { role: Role }) {
+  const locale = resolveDashboardLocale(useLocale())
   const config = roleSceneConfig[role]
   if (!config) return null
 
@@ -498,17 +503,17 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                {config.eyebrow}
+                {localizeBusinessCopy(config.eyebrow, locale)}
               </p>
               <h2 className="mt-4 max-w-xl text-2xl font-black leading-tight sm:text-3xl 2xl:text-4xl">
-                {config.title}
+                {localizeBusinessCopy(config.title, locale)}
               </h2>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
               <Icon className="ml-auto h-5 w-5 text-emerald-200" />
               <p className="mt-3 text-3xl font-black">{config.metric}</p>
               <p className="mt-1 max-w-36 text-xs leading-5 text-white/70">
-                {config.metricLabel}
+                {localizeBusinessCopy(config.metricLabel, locale)}
               </p>
             </div>
           </div>
@@ -525,8 +530,8 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
                 <p className="text-[11px] font-black uppercase text-white/55">
                   0{index + 1}
                 </p>
-                <p className="mt-1 text-sm font-black">{item.label}</p>
-                <p className="mt-1 text-xs leading-5 text-white/65">{item.detail}</p>
+                <p className="mt-1 text-sm font-black">{localizeBusinessCopy(item.label, locale)}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">{localizeBusinessCopy(item.detail, locale)}</p>
               </motion.div>
             ))}
           </div>
@@ -538,10 +543,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                Canlı yetki filtresi
+                {localizeBusinessCopy("Canlı yetki filtresi", locale)}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {config.status}
+                {localizeBusinessCopy(config.status, locale)}
               </h2>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -552,7 +557,7 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             {config.bars.map((bar, index) => (
               <div key={bar.label} className="group">
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-bold text-card-foreground">{bar.label}</span>
+                  <span className="font-bold text-card-foreground">{localizeBusinessCopy(bar.label, locale)}</span>
                   <span className="font-black text-primary">{bar.value}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -573,10 +578,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             <BarChart3 className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-black text-card-foreground">
-                Çalışma alanı ritmi
+                {localizeBusinessCopy("Çalışma alanı ritmi", locale)}
               </p>
               <p className="text-xs text-muted-foreground">
-                Hover ve kart geçişleri gerçek modül akışlarını gösterir.
+                {localizeBusinessCopy("Hover ve kart geçişleri gerçek modül akışlarını gösterir.", locale)}
               </p>
             </div>
           </div>
@@ -589,7 +594,7 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
                 initial={{ scaleY: 0.2, transformOrigin: "bottom" }}
                 animate={{ scaleY: 1 }}
                 transition={{ delay: 0.1 + index * 0.05 }}
-                title={`Gün ${index + 1}: ${height}%`}
+                title={interpolate(localizeBusinessCopy("Gün {day}: {value}%", locale), { day: index + 1, value: height })}
               />
             ))}
           </div>
@@ -606,23 +611,28 @@ function GlobalOperationsScene({
   roleLabel: string
   summary: SiteSummary
 }) {
+  const locale = resolveDashboardLocale(useLocale())
   const panels = [
     {
-      label: "Canlı daire",
+      label: localizeBusinessCopy("Canlı daire", locale),
       value: summary.totalFlats,
-      helper: `${summary.occupancyRate}% doluluk`,
+      helper: interpolate(localizeBusinessCopy("{rate}% doluluk", locale), {
+        rate: summary.occupancyRate,
+      }),
       icon: Building2,
     },
     {
-      label: "Açık servis",
+      label: localizeBusinessCopy("Açık servis", locale),
       value: summary.openTickets,
-      helper: `${summary.overdueTickets} SLA dışı`,
+      helper: interpolate(localizeBusinessCopy("{count} SLA dışı", locale), {
+        count: summary.overdueTickets,
+      }),
       icon: TicketCheck,
     },
     {
-      label: "Erişim riski",
+      label: localizeBusinessCopy("Erişim riski", locale),
       value: summary.restrictedAccess,
-      helper: "finans kontrolü",
+      helper: localizeBusinessCopy("finans kontrolü", locale),
       icon: LockKeyhole,
     },
   ]
@@ -657,20 +667,22 @@ function GlobalOperationsScene({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                Operasyon merkezi
+                {localizeBusinessCopy("Operasyon merkezi", locale)}
               </p>
               <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl 2xl:text-5xl">
-                Daire, servis, finans ve rezervasyon aynı kontrol düzleminde
+                {localizeBusinessCopy("Daire, servis, finans ve rezervasyon aynı kontrol düzleminde", locale)}
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">
-                Aktif rol: {roleLabel}. Bu görünüm yönetim ve sorumlu rolü için
-                portföy ölçeğinde risk, iş yükü ve tahsilat sinyallerini birleştirir.
+                {localizeBusinessCopy("Aktif rol:", locale)} {roleLabel}. {localizeBusinessCopy(
+                  "Bu görünüm yönetim ve sorumlu rolü için portföy ölçeğinde risk, iş yükü ve tahsilat sinyallerini birleştirir.",
+                  locale
+                )}
               </p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
-              <p className="text-xs font-black uppercase text-white/60">AI risk</p>
+              <p className="text-xs font-black uppercase text-white/60">{localizeBusinessCopy("AI risk", locale)}</p>
               <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
-              <p className="mt-1 text-xs text-white/65">öncelikli aksiyon</p>
+              <p className="mt-1 text-xs text-white/65">{localizeBusinessCopy("öncelikli aksiyon", locale)}</p>
             </div>
           </div>
 
@@ -709,10 +721,10 @@ function GlobalOperationsScene({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                İş yoğunluğu
+                {localizeBusinessCopy("İş yoğunluğu", locale)}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                Saatlik sinyal
+                {localizeBusinessCopy("Saatlik sinyal", locale)}
               </h2>
             </div>
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -726,7 +738,7 @@ function GlobalOperationsScene({
                 initial={{ scaleY: 0.1, transformOrigin: "bottom" }}
                 animate={{ scaleY: 1 }}
                 transition={{ delay: 0.2 + index * 0.04 }}
-                title={`Saat ${index + 9}: ${height}%`}
+                title={interpolate(localizeBusinessCopy("Saat {hour}: {value}%", locale), { hour: index + 9, value: height })}
               />
             ))}
           </div>
@@ -739,10 +751,10 @@ function GlobalOperationsScene({
             </div>
             <div>
               <p className="text-sm font-black text-card-foreground">
-                Rol bağlantıları aktif
+                {localizeBusinessCopy("Rol bağlantıları aktif", locale)}
               </p>
               <p className="text-xs leading-5 text-muted-foreground">
-                Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.
+                {localizeBusinessCopy("Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.", locale)}
               </p>
             </div>
           </div>
@@ -759,6 +771,7 @@ function RoleFocusedDashboard({
   role: Role
   roleLabel: string
 }) {
+  const locale = resolveDashboardLocale(useLocale())
   const config = roleWorkspaceConfig[role]
   if (!config) return null
 
@@ -770,10 +783,10 @@ function RoleFocusedDashboard({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black text-foreground md:text-3xl">
-          {config.title}
+          {localizeBusinessCopy(config.title, locale)}
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {config.description} Aktif rol:{" "}
+          {localizeBusinessCopy(config.description, locale)} {localizeBusinessCopy("Aktif rol:", locale)}{" "}
           <span className="font-semibold text-foreground">{roleLabel}</span>.
         </p>
       </div>
@@ -782,9 +795,9 @@ function RoleFocusedDashboard({
         mode="dashboard"
         roleLabel={roleLabel}
         dashboardMetrics={[
-          [String(cards.length), "açık modül"],
-          [role === "staff" ? "14" : "4", "yetkili iş"],
-          [roleLabel, "aktif rol"],
+          [String(cards.length), localizeBusinessCopy("açık modül", locale)],
+          [role === "staff" ? "14" : "4", localizeBusinessCopy("yetkili iş", locale)],
+          [roleLabel, localizeBusinessCopy("aktif rol", locale)],
         ]}
       />
 
@@ -795,7 +808,7 @@ function RoleFocusedDashboard({
           <CommandLink
             key={card.href}
             href={card.href}
-            ariaLabel={`${card.title} ekranını aç`}
+            ariaLabel={`${localizeBusinessCopy(card.title, locale)} ${localizeBusinessCopy("ekranını aç", locale)}`}
             role={role}
           >
             <Card3D glow={false}>
@@ -805,10 +818,10 @@ function RoleFocusedDashboard({
                 </div>
                 <div className="min-w-0">
                   <h2 className="text-sm font-black text-card-foreground">
-                    {card.title}
+                    {localizeBusinessCopy(card.title, locale)}
                   </h2>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                    {card.description}
+                    {localizeBusinessCopy(card.description, locale)}
                   </p>
                 </div>
               </div>
@@ -822,12 +835,13 @@ function RoleFocusedDashboard({
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
             <h2 className="text-sm font-bold text-card-foreground">
-              Yetki sınırları
+              {localizeBusinessCopy("Yetki sınırları", locale)}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Bu ekranda şirket geneli daire matrisi, finans defteri, kullanıcı
-              yönetimi ve platform ayarları gösterilmez. Kapalı bir sayfa URL ile
-              açılırsa sistem sizi tekrar kendi çalışma alanınıza döndürür.
+              {localizeBusinessCopy(
+                "Bu ekranda şirket geneli daire matrisi, finans defteri, kullanıcı yönetimi ve platform ayarları gösterilmez. Kapalı bir sayfa URL ile açılırsa sistem sizi tekrar kendi çalışma alanınıza döndürür.",
+                locale
+              )}
             </p>
             {config.accessNotes.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
@@ -836,7 +850,7 @@ function RoleFocusedDashboard({
                     key={constraint}
                     className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground"
                   >
-                    {constraint}
+                    {localizeBusinessCopy(constraint, locale)}
                   </span>
                 ))}
               </div>
@@ -1091,6 +1105,7 @@ function OperationsDashboard({
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
+  const locale = resolveDashboardLocale(useLocale())
   const {
     snapshot,
     phase4,
@@ -1144,37 +1159,49 @@ function OperationsDashboard({
   const kpis: Kpi[] = [
     {
       icon: Building2,
-      label: "Toplam Daire",
+      label: localizeBusinessCopy("Toplam Daire", locale),
       value: summary.totalFlats,
-      suffix: `${summary.occupancyRate}% doluluk`,
-      helper: `${summary.vacantFlats} boş, ${summary.maintenanceFlats} bakımda`,
+      suffix: interpolate(localizeBusinessCopy("{rate}% doluluk", locale), {
+        rate: summary.occupancyRate,
+      }),
+      helper: interpolate(
+        localizeBusinessCopy("{vacant} boş, {maintenance} bakımda", locale),
+        { vacant: summary.vacantFlats, maintenance: summary.maintenanceFlats }
+      ),
       color: "text-teal-600",
       href: "/dashboard/listings",
     },
     {
       icon: CreditCard,
-      label: "Toplam Borç",
+      label: localizeBusinessCopy("Toplam Borç", locale),
       value: Math.round(summary.totalDebtTry / 1000),
       suffix: "K ₺",
-      helper: `${summary.restrictedAccess} erişim kısıtı`,
+      helper: interpolate(
+        localizeBusinessCopy("{count} erişim kısıtı", locale),
+        { count: summary.restrictedAccess }
+      ),
       color: "text-rose-600",
       href: "/dashboard/finance",
     },
     {
       icon: TicketCheck,
-      label: "Açık Servis",
+      label: localizeBusinessCopy("Açık Servis", locale),
       value: summary.openTickets,
-      suffix: `${summary.overdueTickets} SLA dışı`,
-      helper: "Teknik, finans ve depozito işleri",
+      suffix: interpolate(localizeBusinessCopy("{count} SLA dışı", locale), {
+        count: summary.overdueTickets,
+      }),
+      helper: localizeBusinessCopy("Teknik, finans ve depozito işleri", locale),
       color: "text-amber-600",
       href: "/dashboard/tickets",
     },
     {
       icon: CalendarCheck,
-      label: "Bugünkü İşler",
+      label: localizeBusinessCopy("Bugünkü İşler", locale),
       value: summary.activeBookings,
-      suffix: `${summary.checkoutsToday} çıkış`,
-      helper: "Giriş, çıkış, temizlik, depozito",
+      suffix: interpolate(localizeBusinessCopy("{count} çıkış", locale), {
+        count: summary.checkoutsToday,
+      }),
+      helper: localizeBusinessCopy("Giriş, çıkış, temizlik, depozito", locale),
       color: "text-sky-600",
       href: "/dashboard/calendar",
     },
@@ -1183,19 +1210,37 @@ function OperationsDashboard({
   const alerts = [
     {
       icon: AlertTriangle,
-      text: `${summary.aiRiskCount} operasyon riski AI kuyruğunda: borç, SLA ve check-out birlikte takip ediliyor.`,
+      text: interpolate(
+        localizeBusinessCopy(
+          "{count} operasyon riski AI kuyruğunda: borç, SLA ve check-out birlikte takip ediliyor.",
+          locale
+        ),
+        { count: summary.aiRiskCount }
+      ),
       variant: "danger" as const,
       href: "/dashboard/reports",
     },
     {
       icon: LockKeyhole,
-      text: `${summary.restrictedAccess} dairede erişim kısıtı var. Finans onayı olmadan servis yönlendirilmemeli.`,
+      text: interpolate(
+        localizeBusinessCopy(
+          "{count} dairede erişim kısıtı var. Finans onayı olmadan servis yönlendirilmemeli.",
+          locale
+        ),
+        { count: summary.restrictedAccess }
+      ),
       variant: "warning" as const,
       href: "/dashboard/compliance",
     },
     {
       icon: Clock3,
-      text: `${summary.overdueTickets} servis talebi SLA dışına çıktı. Teknik ekip için öncelik listesi hazır.`,
+      text: interpolate(
+        localizeBusinessCopy(
+          "{count} servis talebi SLA dışına çıktı. Teknik ekip için öncelik listesi hazır.",
+          locale
+        ),
+        { count: summary.overdueTickets }
+      ),
       variant: "warning" as const,
       href: "/dashboard/tickets",
     },
@@ -1206,17 +1251,19 @@ function OperationsDashboard({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-black text-foreground md:text-3xl">
-            {clientProfile.clientName} ERP Operasyon Merkezi
+            {clientProfile.clientName} {localizeBusinessCopy("ERP Operasyon Merkezi", locale)}
           </h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Satış, proje takibi, WhatsApp/Telegram lead akışı, evrak, servis, finans ve AI önceliklendirme tek
-            çalışma alanında toplanır. Operasyon görünümü 769 birim ölçeğinde yönetim, kontrol ve takip için çalışır.
-            Aktif rol:{" "}
+            {localizeBusinessCopy(
+              "Satış, proje takibi, WhatsApp/Telegram lead akışı, evrak, servis, finans ve AI önceliklendirme tek çalışma alanında toplanır. Operasyon görünümü 769 birim ölçeğinde yönetim, kontrol ve takip için çalışır.",
+              locale
+            )}{" "}
+            {localizeBusinessCopy("Aktif rol:", locale)}{" "}
             <span className="font-semibold text-foreground">{roleLabel}</span>.
           </p>
           {requestState === "error" && (
             <p className="mt-3 text-xs font-semibold text-rose-600">
-              Veri yenilenemedi. Lütfen tekrar deneyin.
+              {localizeBusinessCopy("Veri yenilenemedi. Lütfen tekrar deneyin.", locale)}
             </p>
           )}
         </div>
@@ -1228,7 +1275,7 @@ function OperationsDashboard({
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
-            Portföy kaynağı
+            {localizeBusinessCopy("Portföy kaynağı", locale)}
           </a>
           <DashboardRefreshButton onRefresh={refresh} />
         </div>
@@ -1238,9 +1285,9 @@ function OperationsDashboard({
         mode="dashboard"
         roleLabel={roleLabel}
         dashboardMetrics={[
-          [String(summary.totalFlats), "daire"],
-          [String(summary.openTickets), "açık servis"],
-          [roleLabel, "aktif rol"],
+          [String(summary.totalFlats), localizeBusinessCopy("daire", locale)],
+          [String(summary.openTickets), localizeBusinessCopy("açık servis", locale)],
+          [roleLabel, localizeBusinessCopy("aktif rol", locale)],
         ]}
       />
 
@@ -1251,7 +1298,7 @@ function OperationsDashboard({
           <CommandLink
             key={alert.text}
             href={alert.href}
-            ariaLabel={`${alert.text} modülüne git`}
+            ariaLabel={`${alert.text} ${localizeBusinessCopy("modülüne git", locale)}`}
             role={user.role}
           >
             {({ allowed }) => (
@@ -1281,16 +1328,28 @@ function OperationsDashboard({
           <div>
             <div className="flex items-center gap-2">
               <Route className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">ERP modül durumu</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("ERP modül durumu", locale)}</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              CRM, daire matrisi, kullanıcı rolleri, finans, servis, saha, rezervasyon, iletişim, mobil PWA,
-              entegrasyon, AI ve güvenlik kontrolleri aynı işletim planında izlenir.
+              {localizeBusinessCopy(
+                "CRM, daire matrisi, kullanıcı rolleri, finans, servis, saha, rezervasyon, iletişim, mobil PWA, entegrasyon, AI ve güvenlik kontrolleri aynı işletim planında izlenir.",
+                locale
+              )}
             </p>
           </div>
           <span className="flex shrink-0 items-center gap-2">
           <StatusBadge variant="success">
-            {phaseSummary.complete} aktif · {phaseSummary.readyForUat} kontrol hazır · {phaseSummary.inProgress} yapımda
+            {interpolate(
+              localizeBusinessCopy(
+                "{complete} aktif · {readyForUat} kontrol hazır · {inProgress} yapımda",
+                locale
+              ),
+              {
+                complete: phaseSummary.complete,
+                readyForUat: phaseSummary.readyForUat,
+                inProgress: phaseSummary.inProgress,
+              }
+            )}
             </StatusBadge>
             <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
           </span>
@@ -1304,26 +1363,26 @@ function OperationsDashboard({
               <CommandLink
                 key={phase.phase}
                 href={phaseRoutes[phase.phase] ?? "/dashboard"}
-                ariaLabel={`Modül ${phase.phase} ${phase.title} ekranını aç`}
+                ariaLabel={`${localizeBusinessCopy("Modül", locale)} ${phase.phase} ${localizeBusinessCopy(phase.title, locale)} ${localizeBusinessCopy("ekranını aç", locale)}`}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">Modül {phase.phase}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{phase.title}</h3>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Modül", locale)} {phase.phase}</p>
+                    <h3 className="mt-1 text-sm font-black text-foreground">{localizeBusinessCopy(phase.title, locale)}</h3>
                   </div>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black", status.className)}>
                     <StatusIcon className="h-3 w-3" />
-                    {status.label}
+                    {localizeBusinessCopy(status.label, locale)}
                   </span>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{phase.businessOutcome}</p>
-                <p className="mt-3 text-xs font-semibold text-foreground">Nasıl kullanılır: {phase.userGuide}</p>
+                <p className="mt-3 text-xs text-muted-foreground">{localizeBusinessCopy(phase.businessOutcome, locale)}</p>
+                <p className="mt-3 text-xs font-semibold text-foreground">{localizeBusinessCopy("Nasıl kullanılır:", locale)} {localizeBusinessCopy(phase.userGuide, locale)}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {phase.evidence.slice(0, 2).map((item) => (
                     <span key={item} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                      {item}
+                      {localizeBusinessCopy(item, locale)}
                     </span>
                   ))}
                 </div>
@@ -1336,7 +1395,7 @@ function OperationsDashboard({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
-          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={`${kpi.label} modülünü aç`} role={user.role}>
+          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={`${kpi.label} ${localizeBusinessCopy("modülünü aç", locale)}`} role={user.role}>
             <Card3D glow={false}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -1363,27 +1422,27 @@ function OperationsDashboard({
       />
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <CommandLink href="/dashboard/finance" ariaLabel="Doluluk ve tahsilat sağlığı detayını aç" className="xl:col-span-2" role={user.role}>
+        <CommandLink href="/dashboard/finance" ariaLabel={localizeBusinessCopy("Doluluk ve tahsilat sağlığı detayını aç", locale)} className="xl:col-span-2" role={user.role}>
         <Card3D glow={false}>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-sm font-bold text-card-foreground">Doluluk ve tahsilat sağlığı</h2>
-              <p className="text-xs text-muted-foreground">Doluluk oranı, gecikmiş borç ve servis baskısı birlikte okunur.</p>
+              <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Doluluk ve tahsilat sağlığı", locale)}</h2>
+              <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Doluluk oranı, gecikmiş borç ve servis baskısı birlikte okunur.", locale)}</p>
             </div>
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
               <TrendingUp className="h-4 w-4" />
-              Haziran hedefi korunuyor
+              {localizeBusinessCopy("Haziran hedefi korunuyor", locale)}
             </div>
           </div>
-          <LineChart data={occupancyTrend} formatValue={(value) => `%${value}`} height={172} />
+          <LineChart data={occupancyTrend.map((point) => ({ ...point, label: localizeBusinessCopy(point.label, locale) }))} formatValue={(value) => (locale === "tr" ? `%${value}` : `${value}%`)} height={172} />
         </Card3D>
         </CommandLink>
 
-        <CommandLink href="/dashboard/listings" ariaLabel="Daire durum dağılımı detayını aç" role={user.role}>
+        <CommandLink href="/dashboard/listings" ariaLabel={localizeBusinessCopy("Daire durum dağılımı detayını aç", locale)} role={user.role}>
         <Card3D glow={false}>
-          <h2 className="mb-1 text-sm font-bold text-card-foreground">Daire durum dağılımı</h2>
-          <p className="mb-4 text-xs text-muted-foreground">Operasyon ekibi için canlı portföy kırılımı.</p>
-          <PieChart data={statusDistribution} size={164} />
+          <h2 className="mb-1 text-sm font-bold text-card-foreground">{localizeBusinessCopy("Daire durum dağılımı", locale)}</h2>
+          <p className="mb-4 text-xs text-muted-foreground">{localizeBusinessCopy("Operasyon ekibi için canlı portföy kırılımı.", locale)}</p>
+          <PieChart data={statusDistribution.map((item) => ({ ...item, label: localizeBusinessCopy(item.label, locale) }))} size={164} />
         </Card3D>
         </CommandLink>
       </div>
@@ -1391,27 +1450,27 @@ function OperationsDashboard({
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-card-foreground">Blok bazlı operasyon</h2>
-            <StatusBadge variant="accent">{blocks.length} blok</StatusBadge>
+            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Blok bazlı operasyon", locale)}</h2>
+            <StatusBadge variant="accent">{interpolate(localizeBusinessCopy("{count} blok", locale), { count: blocks.length })}</StatusBadge>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {blocks.map((block) => (
               <CommandLink
                 key={block.block}
                 href="/dashboard/listings"
-                ariaLabel={`Blok ${block.block} daire matrisi detayını aç`}
+                ariaLabel={`${localizeBusinessCopy("Blok", locale)} ${block.block} ${localizeBusinessCopy("daire matrisi detayını aç", locale)}`}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-foreground">Blok {block.block}</p>
-                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{block.total} daire</StatusBadge>
+                  <p className="text-sm font-bold text-foreground">{localizeBusinessCopy("Blok", locale)} {block.block}</p>
+                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{interpolate(localizeBusinessCopy("{count} daire", locale), { count: block.total })}</StatusBadge>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <span>Dolu: {block.occupied}</span>
-                  <span>Boş: {block.vacant}</span>
-                  <span>Bakım: {block.maintenance}</span>
-                  <span>Borç: {formatTryShort(block.debtTry)}</span>
+                  <span>{localizeBusinessCopy("Dolu:", locale)} {block.occupied}</span>
+                  <span>{localizeBusinessCopy("Boş:", locale)} {block.vacant}</span>
+                  <span>{localizeBusinessCopy("Bakım:", locale)} {block.maintenance}</span>
+                  <span>{localizeBusinessCopy("Borç:", locale)} {formatTryShort(block.debtTry)}</span>
                 </div>
               </div>
               </CommandLink>
@@ -1420,16 +1479,16 @@ function OperationsDashboard({
         </Card3D>
 
         <div className="space-y-4">
-          <CommandLink href="/dashboard/reports" ariaLabel="AI operasyon asistanı raporlarını aç" role={user.role}>
+          <CommandLink href="/dashboard/reports" ariaLabel={localizeBusinessCopy("AI operasyon asistanı raporlarını aç", locale)} role={user.role}>
           <GlassCard glow className="p-5">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Brain className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">AI operasyon asistanı</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("AI operasyon asistanı", locale)}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Borç, SLA, depozito ve rezervasyon verilerini birleştirerek günlük yapılacakları sıralar.
+                  {localizeBusinessCopy("Borç, SLA, depozito ve rezervasyon verilerini birleştirerek günlük yapılacakları sıralar.", locale)}
                 </p>
               </div>
             </div>
@@ -1439,7 +1498,7 @@ function OperationsDashboard({
             <CommandLink
               key={insight.title}
               href={routeForInsight(insight.title)}
-              ariaLabel={`${insight.title} detayını aç`}
+              ariaLabel={`${localizeBusinessCopy(insight.title, locale)} ${localizeBusinessCopy("detayını aç", locale)}`}
               role={user.role}
             >
               {({ allowed }) => (
@@ -1447,8 +1506,8 @@ function OperationsDashboard({
                   <div className="flex items-start gap-3">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-card-foreground">{insight.title}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{insight.detail}</p>
+                      <h3 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy(insight.title, locale)}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{localizeBusinessCopy(insight.detail, locale)}</p>
                     </div>
                     <DrilldownCue allowed={allowed} />
                   </div>
@@ -1462,7 +1521,7 @@ function OperationsDashboard({
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4">
-            <h2 className="text-sm font-bold text-card-foreground">Son operasyon akışı</h2>
+            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Son operasyon akışı", locale)}</h2>
           </div>
           <ul className="space-y-3">
             {activityItems.map((activity, index) => (
@@ -1474,7 +1533,7 @@ function OperationsDashboard({
               >
                 <CommandLink
                   href={activity.href}
-                  ariaLabel={`${activity.message} detayını aç`}
+                  ariaLabel={`${localizeBusinessCopy(activity.message, locale)} ${localizeBusinessCopy("detayını aç", locale)}`}
                   role={user.role}
                 >
                   {({ allowed }) => (
@@ -1486,9 +1545,9 @@ function OperationsDashboard({
                     >
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">{activity.message}</p>
+                        <p className="text-sm text-foreground">{localizeBusinessCopy(activity.message, locale)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {activity.actor} - {activity.type}
+                          {localizeBusinessCopy(activity.actor, locale)} - {localizeBusinessCopy(activity.type, locale)}
                         </p>
                       </div>
                       <DrilldownCue allowed={allowed} />
@@ -1501,21 +1560,21 @@ function OperationsDashboard({
         </Card3D>
 
         <Card3D glow={false}>
-          <h2 className="mb-4 text-sm font-bold text-card-foreground">Bugünkü kritik işler</h2>
+          <h2 className="mb-4 text-sm font-bold text-card-foreground">{localizeBusinessCopy("Bugünkü kritik işler", locale)}</h2>
           <div className="space-y-3">
             {criticalTickets.map((ticket) => (
               <CommandLink
                 key={`ticket-${ticket.label}`}
                 href="/dashboard/tickets"
-                ariaLabel={`${ticket.label} servis talebini aç`}
+                ariaLabel={`${ticket.label} ${localizeBusinessCopy("servis talebini aç", locale)}`}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
-                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining} saat</StatusBadge>
+                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{interpolate(localizeBusinessCopy("{hours} saat", locale), { hours: ticket.slaHoursRemaining })}</StatusBadge>
                 </div>
-                <p className="mt-2 text-sm text-foreground">{ticket.title}</p>
+                <p className="mt-2 text-sm text-foreground">{localizeBusinessCopy(ticket.title, locale)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
               </div>
               </CommandLink>
@@ -1524,7 +1583,7 @@ function OperationsDashboard({
               <CommandLink
                 key={booking.id}
                 href="/dashboard/calendar"
-                ariaLabel={`${booking.flatNumber} rezervasyon detayını aç`}
+                ariaLabel={`${booking.flatNumber} ${localizeBusinessCopy("rezervasyon detayını aç", locale)}`}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
@@ -1533,7 +1592,7 @@ function OperationsDashboard({
                   <StatusBadge variant="info">{booking.channel}</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{booking.guestName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Depozito: {formatTryShort(booking.depositTry)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{localizeBusinessCopy("Depozito:", locale)} {formatTryShort(booking.depositTry)}</p>
               </div>
               </CommandLink>
             ))}
@@ -1541,19 +1600,19 @@ function OperationsDashboard({
         </Card3D>
       </div>
 
-      <CommandLink href="/dashboard/finance" ariaLabel="Finans özetini aç" role={user.role}>
+      <CommandLink href="/dashboard/finance" ariaLabel={localizeBusinessCopy("Finans özetini aç", locale)} role={user.role}>
       <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Aylık beklenen aidat</p>
+            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Aylık beklenen aidat", locale)}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.monthlyExpectedTry)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Haziran tahsilat</p>
+            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Haziran tahsilat", locale)}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(cashFlow.at(-1)?.collectedTry ?? 0)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">Depozito riski</p>
+            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Depozito riski", locale)}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.depositExposureTry)}</p>
           </div>
         </div>

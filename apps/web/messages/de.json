@@ -9,6 +9,7 @@
     "platformLink": "ERP-Plattform"
   },
   "nav": {
+    "skipToContent": "Zum Inhalt springen",
     "home": "Startseite",
     "catalog": "Module",
     "about": "Über uns",
@@ -44,7 +45,7 @@
     "previewTitle": "ERP-Arbeitsbereich",
     "previewStatus": "Aktiv",
     "previewActivityLabel": "Letzte Aktivität",
-    "previewActivityText": "CRM, Wohnungs Matrix, Finanzen und Service arbeiten auf demselben Datensatz.",
+    "previewActivityText": "CRM, Wohnungsmatrix, Finanzen und Service arbeiten auf demselben Datensatz.",
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212.000+",
     "previewCity": "Alanya",
@@ -99,9 +100,16 @@
     },
     "permits": {
       "title": "Aufenthaltsgenehmigungsregeln wurden verschärft",
-      "desc": "Mindestwert 200.000 $, von der SPK genehmigte Bewertung, Einkommens-/Versicherungsnachweise und eine 25%ige Ausländerkontingentgrenze in Antalya/Alanya. Jede Akte ist anders."
+      "desc": "Mindestwert 200.000 $, von der SPK genehmigte Bewertung, Einkommens- und Versicherungsnachweise und eine 20%ige Ausländer-Aufenthaltskontingentgrenze in Antalya/Alanya. Jede Akte ist anders."
     },
-    "sectionBadge": "Realität 2026"
+    "sectionBadge": "Realität 2026",
+    "flipbookBadge": "Von Lead bis Bericht",
+    "flipbook": [
+      ["01", "Lead", "WhatsApp / Web / Büro"],
+      ["02", "Einheit", "Block / Etage / Preis"],
+      ["03", "Entscheidung", "Schulden / Dokument / SLA"],
+      ["04", "Bericht", "Eigentümer / Team / Audit"]
+    ]
   },
   "solution": {
     "title": "1Çatı — das Betriebssystem für Immobilien",
@@ -123,7 +131,7 @@
   },
   "compliance": {
     "title": "Entwickelt für die türkischen Vorschriften 2026",
-    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, Beschränkungen für ausländische Käufer und Währungsrisiken. Aktive Workflows und Automationen mit ausstehendem offizieller API-Zugang sind klar getrennt.",
+    "subtitle": "EİDS, TÜRSAB, KBS/e-GUEST, Beschränkungen für ausländische Käufer und Währungsrisiken. Aktive Workflows und Automationen mit ausstehendem offiziellem API-Zugang sind klar getrennt.",
     "items": {
       "eids": {
         "title": "EİDS-Autorisierungsnachverfolgung",
@@ -131,13 +139,13 @@
         "tag": "Aktiv"
       },
       "dueDiligence": {
-        "title": "Grundbuch- & Vertragsdue Diligence",
+        "title": "Grundbuch- & Vertrags-Due-Diligence",
         "desc": "Verpflichtende Vorverkaufs-Checkliste: Grundbuch, DASK, Zonierung, Fotos, Autorisierungsdokument. Nur ein Manager kann 'vertragsbereit' markieren.",
         "tag": "Aktiv"
       },
       "residence": {
-        "title": "Leitfaden zur Aufenthalts-/Staatsbürgerschaftseignung",
-        "desc": "Vorprüfung für 200.000 $ Schwelle, Einkommen/Versicherung und Bezirkskontingent. Der SPK-Bewertungswert wird in der Objektkarte gespeichert.",
+        "title": "Leitfaden für Aufenthalt und Staatsbürgerschaft",
+        "desc": "Vorprüfung für 200.000 $ (Aufenthalt) und 400.000 $ (Staatsbürgerschaft) Schwelle, Einkommen/Versicherung und Bezirkskontingent. Der SPK-Bewertungswert wird in der Objektkarte gespeichert.",
         "tag": "Aktiv"
       },
       "tax": {
@@ -186,8 +194,8 @@
     }
   },
   "cta": {
-    "title": "Führen Sie Ihre Immobilienoperationen nach den Regeln 2026",
-    "subtitle": "Verbinden Sie Vertrieb, Site Management, Finanzen, Service und Compliance in einem ERP-Arbeitsbereich.",
+    "title": "Führen Sie Ihren Immobilienbetrieb nach den Regeln 2026",
+    "subtitle": "Verbinden Sie Vertrieb, Standortbetrieb, Finanzen, Service und Compliance in einem ERP-Arbeitsbereich.",
     "primary": "Produktgespräch buchen",
     "secondary": "Portal-Login",
     "mailSubject": "1Çatı Produktgespräch"
@@ -234,8 +242,8 @@
     "menu": {
       "dashboard": "Übersicht",
       "listings": "Wohnungsmatrix",
-      "leads": "Kontakte",
-      "tickets": "Serviceanfragen",
+      "leads": "Interessenten",
+      "tickets": "Servicetickets",
       "calendar": "Reservierung",
       "eids_compliance": "Zugang & Compliance",
       "finance": "Finanzen & Beiträge",
@@ -275,8 +283,8 @@
       "manager": "Verantwortliche Betriebsrolle. Überwacht Services, Aufgaben, Personal, Reservierungen, Kommunikation und Tagesrisiken.",
       "accountant": "Buchhaltungsrolle. Verwaltet Gebühren, Zahlungen, Inkasso, Kautionen, Rückerstattungen und Finanzberichte.",
       "staff": "Mitarbeiterrolle. Nimmt zugewiesene Aufträge an, erledigt Aufgaben und ergänzt Foto-/Videoberichte.",
-      "owner": "Eigentümerrolle. Sieht Services, Reservierungen, berechtigte Dokumente und Verwaltungskommunikation zur eigenen Wohnung.",
-      "tenant": "Mieterrolle. Sieht Services, Reservierungen, Chat, Benachrichtigungen und Dokumente zur berechtigten Wohnung."
+      "owner": "Eigentümerrolle. Sieht Services, Reservierungen, Dokumente und Verwaltungskommunikation zur eigenen Wohnung.",
+      "tenant": "Mieterrolle. Sieht Services, Reservierungen, Chat, Benachrichtigungen und Dokumente zur eigenen Wohnung."
     }
   },
   "login": {
@@ -311,10 +319,10 @@
     "title": "Datenschutzerklärung",
     "updated": "Zuletzt aktualisiert: Juni 2026",
     "intro": "Ataberk Estate und WAMOCON GmbH verpflichten sich zum Schutz Ihrer personenbezogenen Daten. Diese Erklärung beschreibt, welche Daten wir erheben, wie wir sie nutzen und welche Rechte Sie haben.",
-    "dataTitle": "Erhebte Daten",
+    "dataTitle": "Erhobene Daten",
     "dataText": "Wir erheben Kontaktdaten, Immobilienpräferenzen, für Transaktionen erforderliche Dokumente (z. B. Passkopien, TAPU-Scans) und Nutzungsdaten der Plattform.",
     "useTitle": "Verwendung der Daten",
-    "useText": "Die Daten dienen der Erbringung von Immobiliendienstleistungen, der Verwaltung von Objekten, der Einhaltung türkischer Rechtsvorschriften und der Verbesserung der Plattform.",
+    "useText": "Die Daten dienen der Erbringung von Immobiliendienstleistungen, der Verwaltung der Immobilien, der Einhaltung der türkischen Rechtsvorschriften sowie der Verbesserung der Plattform.",
     "rightsTitle": "Ihre Rechte",
     "rightsText": "Sie können unter info@ataberkestate.com Auskunft, Berichtigung oder Löschung Ihrer personenbezogenen Daten verlangen."
   },
@@ -335,8 +343,8 @@
     "p2": "Die 1Çatı-Plattform vereint die operative Erfahrung von Ataberk Estate mit der Digitalisierungsexpertise der WAMOCON GmbH, um alle Immobilienprozesse unter einem Dach zu steuern."
   },
   "reviews": {
-    "title": "Kundenbewertungen",
-    "intro": "Produktfeedback von Betriebsteams und Eigentümern.",
+    "title": "Anwendungsszenarien",
+    "intro": "Beispielhafte Erlebnisszenarien für Betriebsteams und Eigentümer mit 1Çatı.",
     "items": {
       "0": {
         "quote": "Kundennachrichten und Wartungsanfragen sind jetzt an einem Ort. Wir agieren als Team viel schneller.",
@@ -351,14 +359,14 @@
       "2": {
         "quote": "Wir brauchen keine separate Tabelle mehr, um EİDS-Berechtigungen zu verfolgen.",
         "author": "Ayşe K.",
-        "role": "Listing-Agentin"
+        "role": "Immobilienmaklerin"
       }
     }
   },
   "dataTable": {
-    "search": "Search...",
-    "count": "{count} records",
-    "empty": "No results found",
+    "search": "Suchen...",
+    "count": "{count} Datensätze",
+    "empty": "Keine Ergebnisse gefunden",
     "previous": "Zurück",
     "next": "Weiter"
   },
@@ -400,12 +408,12 @@
     }
   },
   "aiAssistant": {
-    "open": "Open AI assistant",
-    "close": "Close AI assistant",
+    "open": "KI-Assistent öffnen",
+    "close": "KI-Assistent schließen",
     "subtitle": "Antworten aus Betriebsdaten",
-    "welcome": "Hello {role}. Which operation should we speed up today?",
-    "placeholder": "Ask about leads, EİDS, maintenance or revenue...",
-    "send": "Send"
+    "welcome": "Hallo {role}. Welchen Vorgang sollen wir heute beschleunigen?",
+    "placeholder": "Fragen Sie zu Leads, EİDS, Wartung oder Umsatz...",
+    "send": "Senden"
   },
   "dashboardModules": {
     "listings": {
@@ -644,7 +652,7 @@
   },
   "platformWorkflow": {
     "title": "ERP-Workflow-Ansicht",
-    "subtitle": "Der Arbeitsbereich zeigt, wie CRM, Wohnungsmaske, Service, Finanzen und Kalenderteams aus einem gemeinsamen Datensatz arbeiten.",
+    "subtitle": "Der Arbeitsbereich zeigt, wie CRM, Wohnungsmatrix, Service, Finanzen und Kalenderteams aus einem gemeinsamen Datensatz arbeiten.",
     "tabs": {
       "crm": "CRM",
       "listings": "Anzeigen",

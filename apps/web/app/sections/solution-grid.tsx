@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 import { cn } from "@/lib/utils"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
@@ -28,107 +29,107 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 const copy = {
   tr: {
     eyebrow: "Operasyon flipbook",
-    title: "Satis, site yonetimi, finans ve servis ayni ERP kaydinda bulusur",
+    title: "Satış, site yönetimi, finans ve servis aynı ERP kaydında buluşur",
     subtitle:
-      "Bu bolum kart listesi degil; Ataberk Estate ekibinin gunluk isi nasil okudugunu gosterir: kisi, daire, servis, finans, belge ve rol kararlari tek kayit uzerinde farkli akislar olarak calisir.",
-    primaryCta: "Canli calisma alanina gir",
+      "Bu bölüm kart listesi değil; Ataberk Estate ekibinin günlük işi nasıl okuduğunu gösterir: kişi, daire, servis, finans, belge ve rol kararları tek kayıt üzerinde farklı akışlar olarak çalışır.",
+    primaryCta: "Canlı çalışma alanına gir",
     secondaryCta: "Site modelini incele",
-    scrollHint: "Kaydirarak urun akislarini ac",
-    liveLabel: "Tek sistem kaydi",
+    scrollHint: "Kaydırarak ürün akışlarını aç",
+    liveLabel: "Tek sistem kaydı",
     chapters: [
       {
         label: "CRM",
-        title: "Lead, malik ve sakin tek kisi profilinde baslar",
+        title: "Lead, malik ve sakin tek kişi profilinde başlar",
         text:
-          "WhatsApp, telefon, e-posta ve ofis gorusmeleri ayni kisi kaydinda toplanir. Dil, butce, kanal, sorumlu ekip ve sonraki aksiyon kaybolmaz.",
+          "WhatsApp, telefon, e-posta ve ofis görüşmeleri aynı kişi kaydında toplanır. Dil, bütçe, kanal, sorumlu ekip ve sonraki aksiyon kaybolmaz.",
         image: "/new-level-premium/resort-exterior.jpg",
         alt: "New Level Premium exterior and shared facilities",
         icon: Users,
         metrics: [
-          ["150", "kisi profili"],
+          ["120", "kişi profili"],
           ["4", "dil"],
-          ["1", "musteri kaydi"],
+          ["1", "müşteri kaydı"],
         ],
         modules: [
-          ["CRM kaydi", "Lead, malik, kiraci ve misafir iliskisi"],
-          ["Iletisim akisi", "WhatsApp, e-posta ve bildirim baglami"],
-          ["Rol filtresi", "Herkes yalnizca isine gereken ekrani gorur"],
+          ["CRM kaydı", "Lead, malik, kiracı ve misafir ilişkisi"],
+          ["İletişim akışı", "WhatsApp, e-posta ve bildirim bağlamı"],
+          ["Rol filtresi", "Herkes yalnızca işine gereken ekranı görür"],
         ],
       },
       {
         label: "Daire matrisi",
-        title: "Blok, kat ve daire durumu canli envantere donusur",
+        title: "Blok, kat ve daire durumu canlı envantere dönüşür",
         text:
-          "769 daire, blok-kat mantigi, doluluk, borc, bakim, rezervasyon ve yayin hazirligi ile birlikte filtrelenir. Excel yerine tek kaynak kullanilir.",
+          "769 daire, blok-kat mantığı, doluluk, borç, bakım, rezervasyon ve yayın hazırlığı ile birlikte filtrelenir. Excel yerine tek kaynak kullanılır.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium masterplan aerial view",
         icon: Building2,
         metrics: [
           ["769", "daire"],
           ["7", "blok"],
-          ["51%", "doluluk"],
+          ["70%", "doluluk"],
         ],
         modules: [
-          ["Daire matrisi", "Blok, kat, durum ve fiyat gorunurlugu"],
-          ["Portfoy hazirligi", "EIDS, belge ve yayin kontrolu"],
-          ["Saha modeli", "Site, sosyal alan ve ortak alan baglantisi"],
+          ["Daire matrisi", "Blok, kat, durum ve fiyat görünürlüğü"],
+          ["Portföy hazırlığı", "EİDS, belge ve yayın kontrolü"],
+          ["Saha modeli", "Site, sosyal alan ve ortak alan bağlantısı"],
         ],
       },
       {
         label: "Servis",
-        title: "Servis talebi sohbetten cikarak kanitli ise donusur",
+        title: "Servis talebi sohbetten çıkarak kanıtlı işe dönüşür",
         text:
-          "Temizlik, transfer, bakim ve ozel talepler SLA, sorumlu kisi, fotograf kaniti, borc kontrolu ve kapatma onayi ile takip edilir.",
+          "Temizlik, transfer, bakım ve özel talepler SLA, sorumlu kişi, fotoğraf kanıtı, borç kontrolü ve kapatma onayı ile takip edilir.",
         image: "/new-level-premium/site-progress-2026.jpg",
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
         metrics: [
-          ["89", "acik is"],
+          ["12", "açık iş"],
           ["4", "SLA riski"],
-          ["2", "kanit adimi"],
+          ["2", "kanıt adımı"],
         ],
         modules: [
-          ["Servis katalogu", "Fiyat, SLA ve ekip atamasi"],
-          ["Mobil saha", "Foto, not ve durum guncellemesi"],
-          ["Takvim", "Giris, cikis, temizlik ve ziyaret plani"],
+          ["Servis kataloğu", "Fiyat, SLA ve ekip ataması"],
+          ["Mobil saha", "Foto, not ve durum güncellemesi"],
+          ["Takvim", "Giriş, çıkış, temizlik ve ziyaret planı"],
         ],
       },
       {
         label: "Finans",
-        title: "Aidat, depozito ve erisim karari tek kontrol motorunda calisir",
+        title: "Aidat, depozito ve erişim kararı tek kontrol motorunda çalışır",
         text:
-          "Tahsilat, borc, depozito, iade, kur farki ve erisim kisiti ayni karar zeminine baglanir. Servis oncesi finans riski gorulur.",
+          "Tahsilat, borç, depozito, iade, kur farkı ve erişim kısıtı aynı karar zeminine bağlanır. Servis öncesi finans riski görülür.",
         image: "/new-level-premium/showroom-bedroom.jpg",
         alt: "New Level Premium furnished showroom bedroom",
         icon: WalletCards,
         metrics: [
           ["1.4M ₺", "tahsilat"],
-          ["6", "erisim kisiti"],
+          ["5", "erişim kısıtı"],
           ["0", "kopuk tablo"],
         ],
         modules: [
           ["Finans defteri", "Aidat, tahsilat ve bakiye"],
-          ["Depozito akisi", "Iade, kesinti ve onay"],
-          ["Erisim motoru", "QR, kart, plaka ve borc sinyali"],
+          ["Depozito akışı", "İade, kesinti ve onay"],
+          ["Erişim motoru", "QR, kart, plaka ve borç sinyali"],
         ],
       },
       {
-        label: "Yonetim AI",
-        title: "AI her rol icin farkli sonraki aksiyonu aciklar",
+        label: "Yönetim AI",
+        title: "AI her rol için farklı sonraki aksiyonu açıklar",
         text:
-          "Yonetim, muhasebe, saha ekibi, malik ve kiraci ayni veriden farkli cevap alir. Raporlar, belgeler ve audit izi karar guvenini korur.",
+          "Yönetim, muhasebe, saha ekibi, malik ve kiracı aynı veriden farklı cevap alır. Raporlar, belgeler ve audit izi karar güvenini korur.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium site plan used for management reporting",
         icon: Gauge,
         metrics: [
           ["8", "AI riski"],
-          ["15", "modul plani"],
-          ["24/7", "rol baglami"],
+          ["15", "modül planı"],
+          ["24/7", "rol bağlamı"],
         ],
         modules: [
-          ["AI rapor merkezi", "Risk, borc, SLA ve aksiyon ozeti"],
-          ["Belge merkezi", "TAPU, DASK, sozlesme ve KYC"],
-          ["Erisim gecmisi", "Kimin hangi karar ve kaydi acabilecegi nettir"],
+          ["AI rapor merkezi", "Risk, borç, SLA ve aksiyon özeti"],
+          ["Belge merkezi", "TAPU, DASK, sözleşme ve KYC"],
+          ["Erişim geçmişi", "Kimin hangi karar ve kaydı açabileceği nettir"],
         ],
       },
     ],
@@ -152,7 +153,7 @@ const copy = {
         alt: "New Level Premium exterior and shared facilities",
         icon: Users,
         metrics: [
-          ["150", "people profiles"],
+          ["120", "people profiles"],
           ["4", "languages"],
           ["1", "customer record"],
         ],
@@ -173,7 +174,7 @@ const copy = {
         metrics: [
           ["769", "units"],
           ["7", "blocks"],
-          ["51%", "occupied"],
+          ["70%", "occupied"],
         ],
         modules: [
           ["Unit matrix", "Block, floor, status and price visibility"],
@@ -190,7 +191,7 @@ const copy = {
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
         metrics: [
-          ["89", "open work"],
+          ["12", "open work"],
           ["4", "SLA risks"],
           ["2", "proof steps"],
         ],
@@ -210,7 +211,7 @@ const copy = {
         icon: WalletCards,
         metrics: [
           ["1.4M ₺", "collected"],
-          ["6", "access holds"],
+          ["5", "access holds"],
           ["0", "stray sheets"],
         ],
         modules: [
@@ -244,61 +245,61 @@ const copy = {
     eyebrow: "Operationales Flipbook",
     title: "Vertrieb, Standortbetrieb, Finanzen und Service treffen sich im ERP-Datensatz",
     subtitle:
-      "Nicht als Kartenliste, sondern als Betriebsmodell: Personen, Einheiten, Service, Finanzen, Dokumente und Rollenentscheidungen laufen als verbundene Ablaufe.",
-    primaryCta: "Arbeitsbereich offnen",
+      "Nicht als Kartenliste, sondern als Betriebsmodell: Personen, Einheiten, Service, Finanzen, Dokumente und Rollenentscheidungen laufen als verbundene Abläufe.",
+    primaryCta: "Arbeitsbereich öffnen",
     secondaryCta: "Standortmodell ansehen",
-    scrollHint: "Scrollen, um den Produktfluss zu offnen",
+    scrollHint: "Scrollen, um den Produktfluss zu öffnen",
     liveLabel: "Ein Systemdatensatz",
     chapters: [
       {
         label: "CRM",
-        title: "Lead, Eigentumer und Bewohner starten als Personenprofil",
+        title: "Lead, Eigentümer und Bewohner starten als Personenprofil",
         text:
-          "WhatsApp, Telefon, E-Mail und Burogesprache landen in einem Profil. Sprache, Budget, Kanal, Team und nachste Aktion bleiben nachvollziehbar.",
+          "WhatsApp, Telefon, E-Mail und Bürogespräche landen in einem Profil. Sprache, Budget, Kanal, Team und nächste Aktion bleiben nachvollziehbar.",
         image: "/new-level-premium/resort-exterior.jpg",
         alt: "New Level Premium exterior and shared facilities",
         icon: Users,
-        metrics: [["150", "Profile"], ["4", "Sprachen"], ["1", "Kundensatz"]],
-        modules: [["CRM", "Lead, Eigentumer, Mieter und Gast"], ["Kommunikation", "WhatsApp, E-Mail und Benachrichtigung"], ["Rollen", "Nur relevante Arbeit ist sichtbar"]],
+        metrics: [["120", "Profile"], ["4", "Sprachen"], ["1", "Kundensatz"]],
+        modules: [["CRM", "Lead, Eigentümer, Mieter und Gast"], ["Kommunikation", "WhatsApp, E-Mail und Benachrichtigung"], ["Rollen", "Nur relevante Arbeit ist sichtbar"]],
       },
       {
         label: "Einheiten",
         title: "Block, Etage und Einheit werden Live-Inventar",
         text:
-          "769 Einheiten werden nach Block, Etage, Belegung, Schuld, Wartung, Reservierung und Veroffentlichung gefiltert.",
+          "769 Einheiten werden nach Block, Etage, Belegung, Schuld, Wartung, Reservierung und Veröffentlichung gefiltert.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium masterplan aerial view",
         icon: Building2,
-        metrics: [["769", "Einheiten"], ["7", "Blocke"], ["51%", "belegt"]],
-        modules: [["Matrix", "Block, Etage, Status und Preis"], ["Portfolio", "EIDS, Dokument und Freigabe"], ["Standort", "Anlage, Flache und Gemeinschaftsbereich"]],
+        metrics: [["769", "Einheiten"], ["7", "Blöcke"], ["70%", "belegt"]],
+        modules: [["Matrix", "Block, Etage, Status und Preis"], ["Portfolio", "EIDS, Dokument und Freigabe"], ["Standort", "Anlage, Fläche und Gemeinschaftsbereich"]],
       },
       {
         label: "Service",
         title: "Service wird belegbare Arbeit statt Chat-Verlauf",
         text:
-          "Reinigung, Transfer, Wartung und Sonderwunsche laufen mit SLA, Zustander, Fotobeweis, Schuldbezug und Abschlussfreigabe.",
+          "Reinigung, Transfer, Wartung und Sonderwünsche laufen mit SLA, Zuständigem, Fotobeweis, Schuldbezug und Abschlussfreigabe.",
         image: "/new-level-premium/site-progress-2026.jpg",
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
-        metrics: [["89", "offene Arbeiten"], ["4", "SLA-Risiken"], ["2", "Beweisschritte"]],
+        metrics: [["12", "offene Arbeiten"], ["4", "SLA-Risiken"], ["2", "Beweisschritte"]],
         modules: [["Katalog", "Preis, SLA und Team"], ["Mobil", "Foto, Notiz und Status"], ["Kalender", "Einzug, Auszug, Reinigung und Besuch"]],
       },
       {
         label: "Finanzen",
-        title: "Beitrage, Kautionen und Zutritt nutzen eine Kontrolllogik",
+        title: "Beiträge, Kautionen und Zutritt nutzen eine Kontrolllogik",
         text:
-          "Einzug, Schuld, Kaution, Ruckgabe, Wechselkurs und Zugriffssperre liegen auf derselben Entscheidungsebene.",
+          "Einzug, Schuld, Kaution, Rückgabe, Wechselkurs und Zugriffssperre liegen auf derselben Entscheidungsebene.",
         image: "/new-level-premium/showroom-bedroom.jpg",
         alt: "New Level Premium furnished showroom bedroom",
         icon: WalletCards,
-        metrics: [["1.4M ₺", "Einzug"], ["6", "Sperren"], ["0", "Insellisten"]],
-        modules: [["Ledger", "Beitrag, Einzug und Saldo"], ["Kaution", "Ruckgabe, Abzug und Freigabe"], ["Zutritt", "QR, Karte, Kennzeichen und Schuld"]],
+        metrics: [["1.4M ₺", "Einzug"], ["5", "Sperren"], ["0", "Insellisten"]],
+        modules: [["Ledger", "Beitrag, Einzug und Saldo"], ["Kaution", "Rückgabe, Abzug und Freigabe"], ["Zutritt", "QR, Karte, Kennzeichen und Schuld"]],
       },
       {
-        label: "Management AI",
-        title: "AI erklart die nachste Aktion je Rolle anders",
+        label: "Management-KI",
+        title: "AI erklärt die nächste Aktion je Rolle anders",
         text:
-          "Management, Buchhaltung, Feldteam, Eigentumer und Mieter erhalten rollenspezifische Antworten aus denselben Daten.",
+          "Management, Buchhaltung, Feldteam, Eigentümer und Mieter erhalten rollenspezifische Antworten aus denselben Daten.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium site plan used for management reporting",
         icon: Gauge,
@@ -308,15 +309,71 @@ const copy = {
     ],
   },
   ru: {
-    eyebrow: "Operational flipbook",
-    title: "Sales, site work, finance and service share one ERP record",
+    eyebrow: "Операционный флипбук",
+    title: "Продажи, управление объектом, финансы и сервис встречаются в одной записи ERP",
     subtitle:
-      "The public product story shows how people, units, service, finance, documents and role decisions run as connected workflows.",
-    primaryCta: "Enter workspace",
-    secondaryCta: "Review site model",
-    scrollHint: "Scroll to open the product flow",
-    liveLabel: "One system record",
-    chapters: [],
+      "Это не список карточек, а операционная модель: люди, юниты, сервис, финансы, документы и ролевые решения работают как связанные процессы в единой записи.",
+    primaryCta: "Войти в рабочее пространство",
+    secondaryCta: "Посмотреть модель объекта",
+    scrollHint: "Прокрутите, чтобы открыть процесс продукта",
+    liveLabel: "Единая системная запись",
+    chapters: [
+      {
+        label: "CRM",
+        title: "Лид, владелец и жилец начинаются с одного профиля",
+        text:
+          "WhatsApp, телефон, эл. почта и офисные обращения собираются в одной карточке контакта. Язык, бюджет, канал, ответственная команда и следующее действие не теряются.",
+        image: "/new-level-premium/resort-exterior.jpg",
+        alt: "New Level Premium exterior and shared facilities",
+        icon: Users,
+        metrics: [["120", "профилей людей"], ["4", "языка"], ["1", "запись клиента"]],
+        modules: [["Запись CRM", "Лид, владелец, арендатор и гость"], ["Поток общения", "WhatsApp, эл. почта и уведомления"], ["Ролевой фильтр", "Каждый видит только нужный ему экран"]],
+      },
+      {
+        label: "Матрица квартир",
+        title: "Блок, этаж и статус квартиры становятся живым реестром",
+        text:
+          "769 квартир фильтруются по блоку, этажу, заселенности, долгу, обслуживанию, бронированию и готовности к публикации. Вместо Excel — единый источник данных.",
+        image: "/new-level-premium/masterplan-aerial.jpg",
+        alt: "New Level Premium masterplan aerial view",
+        icon: Building2,
+        metrics: [["769", "квартир"], ["7", "блоков"], ["70%", "заселено"]],
+        modules: [["Матрица квартир", "Блок, этаж, статус и цена"], ["Готовность портфеля", "EIDS, документы и контроль публикации"], ["Модель объекта", "Территория, общие зоны и инфраструктура"]],
+      },
+      {
+        label: "Сервис",
+        title: "Заявка из чата превращается в подтвержденную работу",
+        text:
+          "Уборка, трансфер, обслуживание и особые запросы отслеживаются по SLA, ответственному лицу, фотоподтверждению, проверке долга и одобрению закрытия.",
+        image: "/new-level-premium/site-progress-2026.jpg",
+        alt: "New Level Premium June 2026 site progress",
+        icon: TicketCheck,
+        metrics: [["12", "открытых заявок"], ["4", "риска SLA"], ["2", "шага подтверждения"]],
+        modules: [["Каталог сервисов", "Цена, SLA и назначение команды"], ["Мобильный сервис", "Фото, заметка и обновление статуса"], ["Календарь", "Заезд, выезд, уборка и визиты"]],
+      },
+      {
+        label: "Финансы",
+        title: "Взносы, депозит и решения по доступу работают в едином контрольном механизме",
+        text:
+          "Сбор платежей, долг, депозит, возврат, курсовая разница и ограничение доступа связаны на одном уровне решений. Финансовый риск виден до направления сервиса.",
+        image: "/new-level-premium/showroom-bedroom.jpg",
+        alt: "New Level Premium furnished showroom bedroom",
+        icon: WalletCards,
+        metrics: [["1.4M ₺", "собрано"], ["5", "ограничений доступа"], ["0", "разрозненных таблиц"]],
+        modules: [["Финансовый журнал", "Взносы, сборы и баланс"], ["Депозитный поток", "Возврат, вычет и одобрение"], ["Механизм доступа", "QR, карта, номер и сигнал долга"]],
+      },
+      {
+        label: "AI для руководства",
+        title: "AI объясняет следующее действие по-разному для каждой роли",
+        text:
+          "Руководство, бухгалтерия, полевая команда, владельцы и арендаторы получают из одних данных разные, релевантные для их роли ответы. Отчеты, документы и журнал аудита сохраняют доверие к решениям.",
+        image: "/new-level-premium/masterplan-aerial.jpg",
+        alt: "New Level Premium site plan used for management reporting",
+        icon: Gauge,
+        metrics: [["8", "рисков AI"], ["15", "план модулей"], ["24/7", "ролевой контекст"]],
+        modules: [["Центр AI-отчетов", "Риск, долг, SLA и сводка действий"], ["Центр документов", "ТАПУ, DASK, договор и KYC"], ["История доступа", "Понятно, кто может открыть какую запись и решение"]],
+      },
+    ],
   },
 } satisfies Record<LocaleKey, {
   eyebrow: string
@@ -344,6 +401,7 @@ const chapterIcons = [MessageSquareText, Building2, Smartphone, CircleDollarSign
 
 export function SolutionGrid() {
   const locale = useLocale()
+  const dashboardLocale = resolveDashboardLocale(locale)
   const localized = copy[(locale as LocaleKey) in copy ? (locale as LocaleKey) : "tr"]
   const chapters = useMemo(
     () => (localized.chapters.length > 0 ? localized.chapters : fallbackChapters),
@@ -473,8 +531,8 @@ export function SolutionGrid() {
         </ScrollReveal>
       </div>
 
-      <div className="relative lg:min-h-[300svh]">
-        <div className="relative overflow-hidden border-y border-border/60 bg-[#061613] text-white lg:sticky lg:top-0 lg:min-h-svh">
+      <div className="relative motion-safe:lg:min-h-[300svh]">
+        <div className="relative overflow-hidden border-y border-border/60 bg-[#061613] text-white motion-safe:lg:sticky motion-safe:lg:top-0 lg:min-h-svh">
           <div className="absolute inset-0 hidden lg:block">
             {chapters.map((chapter, index) => (
               <div
@@ -491,7 +549,8 @@ export function SolutionGrid() {
                   sizes="100vw"
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,10,0.94)_0%,rgba(2,12,10,0.72)_42%,rgba(2,12,10,0.46)_100%)]" />
+                {/* Right edge stays dark enough to swallow the architect watermark baked into masterplan-aerial.jpg. */}
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,10,0.94)_0%,rgba(2,12,10,0.72)_42%,rgba(2,12,10,0.62)_100%)]" />
               </div>
             ))}
           </div>
@@ -499,37 +558,40 @@ export function SolutionGrid() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_22%,rgba(50,214,189,0.24),transparent_28%),linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:auto,72px_72px,72px_72px]" />
           <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#061613] to-transparent" />
 
-          <div className="relative z-10 container grid gap-8 py-10 lg:min-h-svh lg:grid-cols-[minmax(0,0.78fr)_minmax(520px,1fr)_220px] lg:items-center lg:py-12 xl:grid-cols-[260px_minmax(620px,1fr)_240px]">
+          <div className="relative z-10 container grid gap-8 py-10 lg:min-h-svh lg:grid-cols-[minmax(230px,0.8fr)_minmax(460px,1.6fr)_200px] lg:items-center lg:gap-6 lg:py-12 xl:grid-cols-[290px_minmax(560px,1fr)_240px] xl:gap-8">
             <div className="max-w-lg">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/10 px-4 py-2 text-xs font-black text-emerald-100 shadow-sm backdrop-blur">
                 <BadgeCheck className="h-4 w-4" />
                 {localized.liveLabel}
               </div>
-              <h3 className="mt-5 text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
+              <h3 className="mt-5 break-words text-2xl font-black leading-tight text-white sm:text-3xl">
                 {localized.scrollHint}
               </h3>
               <p className="mt-5 text-sm leading-7 text-white/68 sm:text-base">
-                People, units, finance, service, documents and AI summaries stay connected without forcing every team into one linear path.
+                {localizeBusinessCopy(
+                  "Kişi, daire, finans, servis, belge ve AI özetleri, her ekibi tek bir doğrusal akışa zorlamadan birbirine bağlı kalır.",
+                  dashboardLocale
+                )}
               </p>
               <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row lg:flex-col">
                 <Link
                   href="/login"
-                  className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white px-6 text-sm font-black text-[#061613] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-emerald-50"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 py-2 text-center text-sm font-black text-[#061613] shadow-xl shadow-black/20 transition hover:-translate-y-0.5 hover:bg-emerald-50"
                 >
-                  <LayoutDashboard className="h-4 w-4" />
+                  <LayoutDashboard className="h-4 w-4 shrink-0" />
                   {localized.primaryCta}
                 </Link>
                 <a
                   href="#new-level"
-                  className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/18 bg-white/10 px-6 text-sm font-bold text-white shadow-sm backdrop-blur transition hover:bg-white/16"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/18 bg-white/10 px-6 py-2 text-center text-sm font-bold text-white shadow-sm backdrop-blur transition hover:bg-white/16"
                 >
-                  <FileCheck2 className="h-4 w-4" />
+                  <FileCheck2 className="h-4 w-4 shrink-0" />
                   {localized.secondaryCta}
                 </a>
               </div>
             </div>
 
-            <div className="relative min-h-[760px] lg:min-h-[540px]">
+            <div className="relative motion-safe:lg:grid">
               {chapters.map((chapter, index) => {
                 const ChapterIcon = chapter.icon
                 const SignalIcon = chapterIcons[index] ?? ShieldCheck
@@ -541,8 +603,8 @@ export function SolutionGrid() {
                       pageRefs.current[index] = node
                     }}
                     className={cn(
-                      "mb-5 rounded-[1.75rem] border border-white/14 bg-[#071b18]/86 p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl lg:absolute lg:inset-0 lg:mb-0 lg:p-5",
-                      index > 0 && "lg:opacity-0"
+                      "mb-5 rounded-[1.75rem] border border-white/14 bg-[#071b18]/86 p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl motion-safe:lg:col-start-1 motion-safe:lg:row-start-1 motion-safe:lg:mb-0 lg:p-5",
+                      index > 0 && "motion-safe:lg:[visibility:hidden] motion-safe:lg:opacity-0"
                     )}
                   >
                     <div className="relative aspect-[16/9] overflow-hidden rounded-[1.25rem] border border-white/12 lg:hidden">
@@ -567,21 +629,21 @@ export function SolutionGrid() {
                               0{index + 1} / {chapter.label}
                             </p>
                             <p className="mt-1 text-xs font-semibold text-white/50">
-                              Connected workspace
+                              {localizeBusinessCopy("Bağlantılı çalışma alanı", dashboardLocale)}
                             </p>
                           </div>
                         </div>
                         <span className="rounded-full border border-emerald-200/20 bg-emerald-200/12 px-3 py-1 text-xs font-black text-emerald-100">
-                          Operational record
+                          {localizeBusinessCopy("Operasyonel kayıt", dashboardLocale)}
                         </span>
                       </div>
 
-                      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_200px] lg:items-center">
+                      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_200px] xl:items-center">
                         <div>
-                          <h4 className="mt-5 max-w-2xl text-3xl font-black leading-tight text-white sm:text-4xl lg:mt-0 lg:text-[2.3rem] xl:text-[2.45rem]">
+                          <h4 className="mt-5 max-w-2xl text-3xl font-black leading-[1.12] text-white sm:text-4xl lg:mt-0 lg:text-[1.9rem] xl:text-[2.15rem]">
                             {chapter.title}
                           </h4>
-                          <p className="mt-5 max-w-xl text-base leading-8 text-white/72">
+                          <p className="mt-4 max-w-xl text-base leading-7 text-white/72">
                             {chapter.text}
                           </p>
                         </div>
@@ -590,24 +652,24 @@ export function SolutionGrid() {
                           <div className="mb-4 flex items-center justify-between gap-3">
                             <div>
                               <p className="text-xs font-black uppercase tracking-[0.12em] text-white/48">
-                                Current view
+                                {localizeBusinessCopy("Güncel görünüm", dashboardLocale)}
                               </p>
                               <p className="mt-1 text-sm font-black text-white">
-                                Team access
+                                {localizeBusinessCopy("Ekip erişimi", dashboardLocale)}
                               </p>
                             </div>
                             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-emerald-100">
                               <SignalIcon className="h-5 w-5" />
                             </span>
                           </div>
-                          <div className="space-y-3">
+                          <div className="grid gap-3 lg:grid-cols-3 xl:grid-cols-1">
                             {chapter.metrics.map(([value, label]) => (
                               <div
                                 key={`${chapter.label}-${value}-${label}`}
-                                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/18 px-3 py-2"
+                                className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/18 px-3 py-2 lg:flex-col lg:items-start lg:gap-1 xl:flex-row xl:items-center xl:gap-3"
                               >
                                 <span className="text-xl font-black text-white">{value}</span>
-                                <span className="text-right text-xs font-semibold text-white/58">
+                                <span className="text-right text-xs font-semibold text-white/58 lg:text-left xl:text-right">
                                   {label}
                                 </span>
                               </div>
@@ -673,7 +735,7 @@ export function SolutionGrid() {
                           >
                             0{index + 1}
                           </span>
-                          <span className="block truncate text-sm font-black">
+                          <span className="block text-sm leading-tight font-black break-words hyphens-auto">
                             {chapter.label}
                           </span>
                         </span>

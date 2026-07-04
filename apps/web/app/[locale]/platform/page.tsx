@@ -11,6 +11,7 @@ import {
 import { Link } from "@/app/navigation"
 import { DashboardPreview } from "@/components/dashboard-preview"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 import { Footer } from "../../sections/footer"
 import { Navbar } from "../../sections/navbar"
 
@@ -61,7 +62,13 @@ const qualityGates = [
   { icon: LineChart, title: "Ölçeklenebilir", text: "769 birimlik operasyon verisi, çok dilli ekipler ve büyüyen portföy için modüler yapı kullanılır." },
 ]
 
-export default function PlatformPage() {
+export default async function PlatformPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale: rawLocale } = await params
+  const locale = resolveDashboardLocale(rawLocale)
   return (
     <>
       <Navbar />
@@ -76,25 +83,27 @@ export default function PlatformPage() {
                   1Çatı ERP Platform
                 </div>
                 <h1 className="mt-6 max-w-4xl text-4xl font-black leading-[1.05] text-foreground sm:text-5xl lg:text-6xl">
-                  Emlak satışını, site yönetimini ve servis operasyonunu tek çalışma alanında yönetin.
+                  {localizeBusinessCopy("Emlak satışını, site yönetimini ve servis operasyonunu tek çalışma alanında yönetin.", locale)}
                 </h1>
                 <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-                  1Çatı; CRM, portföy, finans, servis, belge, uyumluluk ve malik raporlamasını Türkiye emlak pazarı için
-                  tasarlanmış rol bazlı bir ERP deneyiminde birleştirir.
+                  {localizeBusinessCopy(
+                    "1Çatı; CRM, portföy, finans, servis, belge, uyumluluk ve malik raporlamasını Türkiye emlak pazarı için tasarlanmış rol bazlı bir ERP deneyiminde birleştirir.",
+                    locale
+                  )}
                 </p>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href="/login"
                     className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-primary px-5 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90"
                   >
-                    Çalışma alanına gir
+                    {localizeBusinessCopy("Çalışma alanına gir", locale)}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href="/#platform"
                     className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-card px-5 text-sm font-bold text-foreground transition hover:bg-muted"
                   >
-                    Ürün akışını incele
+                    {localizeBusinessCopy("Ürün akışını incele", locale)}
                   </Link>
                 </div>
               </div>
@@ -114,8 +123,8 @@ export default function PlatformPage() {
             {metrics.map((metric) => (
               <ScrollReveal key={metric.label}>
                 <div className="rounded-lg border border-border bg-card p-5">
-                  <div className="text-3xl font-black text-foreground">{metric.value}</div>
-                  <div className="mt-2 text-sm font-medium text-muted-foreground">{metric.label}</div>
+                  <div className="text-3xl font-black text-foreground">{localizeBusinessCopy(metric.value, locale)}</div>
+                  <div className="mt-2 text-sm font-medium text-muted-foreground">{localizeBusinessCopy(metric.label, locale)}</div>
                 </div>
               </ScrollReveal>
             ))}
@@ -125,12 +134,15 @@ export default function PlatformPage() {
         <section className="py-16 sm:py-20">
           <div className="container">
             <ScrollReveal className="max-w-3xl">
-              <p className="text-sm font-bold uppercase text-primary">Operasyon modeli</p>
+              <p className="text-sm font-bold uppercase text-primary">{localizeBusinessCopy("Operasyon modeli", locale)}</p>
               <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
-                Tek kayıt, net yetki, hızlı aksiyon.
+                {localizeBusinessCopy("Tek kayıt, net yetki, hızlı aksiyon.", locale)}
               </h2>
               <p className="mt-4 text-base leading-8 text-muted-foreground">
-                Ekipler arası kopukluk yerine, her işlem daire, kişi, belge, ödeme ve görev ilişkisiyle görünür hale gelir.
+                {localizeBusinessCopy(
+                  "Ekipler arası kopukluk yerine, her işlem daire, kişi, belge, ödeme ve görev ilişkisiyle görünür hale gelir.",
+                  locale
+                )}
               </p>
             </ScrollReveal>
             <div className="mt-10 grid gap-4 lg:grid-cols-3">
@@ -138,8 +150,8 @@ export default function PlatformPage() {
                 <ScrollReveal key={point.title} delay={index * 0.08}>
                   <article className="h-full rounded-lg border border-border bg-card p-6">
                     <point.icon className="h-7 w-7 text-primary" />
-                    <h3 className="mt-5 text-lg font-black text-foreground">{point.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{point.text}</p>
+                    <h3 className="mt-5 text-lg font-black text-foreground">{localizeBusinessCopy(point.title, locale)}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{localizeBusinessCopy(point.text, locale)}</p>
                   </article>
                 </ScrollReveal>
               ))}
@@ -151,12 +163,12 @@ export default function PlatformPage() {
           <div className="container grid gap-6 lg:grid-cols-2">
             <ScrollReveal>
               <div className="h-full rounded-lg border border-primary/20 bg-primary/5 p-6">
-                <h2 className="text-2xl font-black text-foreground">Temel ERP modülleri</h2>
+                <h2 className="text-2xl font-black text-foreground">{localizeBusinessCopy("Temel ERP modülleri", locale)}</h2>
                 <ul className="mt-6 space-y-4">
                   {platformModules.map((item) => (
                     <li key={item} className="flex gap-3 text-sm leading-7 text-muted-foreground">
                       <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary" />
-                      <span>{item}</span>
+                      <span>{localizeBusinessCopy(item, locale)}</span>
                     </li>
                   ))}
                 </ul>
@@ -164,12 +176,15 @@ export default function PlatformPage() {
             </ScrollReveal>
             <ScrollReveal delay={0.1} direction="left">
               <div className="h-full rounded-lg border border-accent/25 bg-accent/5 p-6">
-                <h2 className="text-2xl font-black text-foreground">Entegrasyon ve otomasyon katmanı</h2>
+                <h2 className="text-2xl font-black text-foreground">{localizeBusinessCopy("Entegrasyon ve otomasyon katmanı", locale)}</h2>
+                <p className="mt-3 inline-flex rounded-full border border-amber-300/50 bg-amber-100/60 px-3 py-1 text-xs font-bold text-amber-700">
+                  {localizeBusinessCopy("Sağlayıcı kararı bekleyen yol haritası; üretimde henüz aktif değildir.", locale)}
+                </p>
                 <ul className="mt-6 space-y-4">
                   {integrationModules.map((item) => (
                     <li key={item} className="flex gap-3 text-sm leading-7 text-muted-foreground">
                       <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-accent" />
-                      <span>{item}</span>
+                      <span>{localizeBusinessCopy(item, locale)}</span>
                     </li>
                   ))}
                 </ul>
@@ -181,9 +196,9 @@ export default function PlatformPage() {
         <section id="quality" className="bg-muted/30 py-16 sm:py-20">
           <div className="container">
             <ScrollReveal className="mx-auto max-w-3xl text-center">
-              <p className="text-sm font-bold uppercase text-primary">Kalite standardı</p>
+              <p className="text-sm font-bold uppercase text-primary">{localizeBusinessCopy("Kalite standardı", locale)}</p>
               <h2 className="mt-3 text-3xl font-black text-foreground sm:text-4xl">
-                Üretim sistemi gibi tasarlanır, kontrol sistemi gibi işletilir.
+                {localizeBusinessCopy("Üretim sistemi gibi tasarlanır, kontrol sistemi gibi işletilir.", locale)}
               </h2>
             </ScrollReveal>
             <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -191,8 +206,8 @@ export default function PlatformPage() {
                 <ScrollReveal key={gate.title} delay={index * 0.08}>
                   <article className="h-full rounded-lg border border-border bg-card p-6">
                     <gate.icon className="h-7 w-7 text-primary" />
-                    <h3 className="mt-5 text-lg font-black text-foreground">{gate.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{gate.text}</p>
+                    <h3 className="mt-5 text-lg font-black text-foreground">{localizeBusinessCopy(gate.title, locale)}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{localizeBusinessCopy(gate.text, locale)}</p>
                   </article>
                 </ScrollReveal>
               ))}

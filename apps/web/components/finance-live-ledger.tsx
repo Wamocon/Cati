@@ -8,10 +8,13 @@ import {
   ShieldCheck,
   WalletCards,
 } from "lucide-react"
+import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { DashboardActionButton } from "@/components/dashboard-action-button"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
+import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { hasPermission } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -43,12 +46,15 @@ function formatCents(cents: number, currency = "TRY") {
   }).format(cents / 100)
 }
 
-function shortDate(value: string | null) {
+function shortDate(value: string | null, locale: string) {
   if (!value) return "-"
   return new Intl.DateTimeFormat("tr-TR", {
     day: "2-digit",
     month: "short",
-  }).format(new Date(value))
+  })
+    .formatToParts(new Date(value))
+    .map((part) => (part.type === "month" ? localizeBusinessCopy(part.value, locale) : part.value))
+    .join("")
 }
 
 function statusVariant(status: string) {
@@ -59,25 +65,26 @@ function statusVariant(status: string) {
   return "neutral" as const
 }
 
-function statusLabel(status: string) {
-  if (status === "paid") return "Ödendi"
-  if (status === "open") return "Açık"
-  if (status === "partially_paid") return "Kısmi"
-  if (status === "overdue") return "Gecikmiş"
-  if (status === "draft") return "Taslak"
-  if (status === "cancelled") return "İptal"
-  return status || "Bilinmiyor"
+function statusLabel(status: string, locale: string) {
+  if (status === "paid") return localizeBusinessCopy("Ödendi", locale)
+  if (status === "open") return localizeBusinessCopy("Açık", locale)
+  if (status === "partially_paid") return localizeBusinessCopy("Kısmi", locale)
+  if (status === "overdue") return localizeBusinessCopy("Gecikmiş", locale)
+  if (status === "draft") return localizeBusinessCopy("Taslak", locale)
+  if (status === "cancelled") return localizeBusinessCopy("İptal", locale)
+  return status || localizeBusinessCopy("Bilinmiyor", locale)
 }
 
-function entryLabel(entry: FinanceLedgerEntry) {
+function entryLabel(entry: FinanceLedgerEntry, locale: string) {
   return [
-    entry.unitNo ?? "Daire yok",
-    entry.residentName ?? "Kişi yok",
-    entry.description ?? entry.entryType,
+    entry.unitNo ?? localizeBusinessCopy("Daire yok", locale),
+    entry.residentName ? localizeOperationalValue(entry.residentName, resolveDashboardLocale(locale)) : localizeBusinessCopy("Kişi yok", locale),
+    entry.description ? localizeBusinessCopy(entry.description, locale) : entry.entryType,
   ].join(" - ")
 }
 
 export function FinanceLiveLedger() {
+  const locale = resolveDashboardLocale(useLocale())
   const user = useUser()
   const [data, setData] = useState<FinanceLedgerData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
@@ -145,8 +152,11 @@ export function FinanceLiveLedger() {
       month: "short",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(new Date(data.generatedAt))
-  }, [data])
+    })
+      .formatToParts(new Date(data.generatedAt))
+      .map((part) => (part.type === "month" ? localizeBusinessCopy(part.value, locale) : part.value))
+      .join("")
+  }, [data, locale])
   const failedQualityChecks = useMemo(
     () => data?.quality.checks.filter((check) => check.status === "failed") ?? [],
     [data]
@@ -159,16 +169,18 @@ export function FinanceLiveLedger() {
           <div className="flex flex-wrap items-center gap-2">
             <WalletCards className="h-5 w-5 text-primary" />
             <h2 className="text-base font-black text-card-foreground">
-              Finans defteri
+              {localizeBusinessCopy("Finans defteri", locale)}
             </h2>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            Aidat, ödeme, depozito, ceza ve düzeltme kayıtları değiştirilemez defter mantığıyla takip edilir.
-            Hassas finans aksiyonları onay ve denetim akışına alınır.
+            {localizeBusinessCopy(
+              "Aidat, ödeme, depozito, ceza ve düzeltme kayıtları değiştirilemez defter mantığıyla takip edilir. Hassas finans aksiyonları onay ve denetim akışına alınır.",
+              locale
+            )}
           </p>
           {lastUpdated && (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              Son güncelleme: {lastUpdated}
+              {localizeBusinessCopy("Son güncelleme:", locale)} {lastUpdated}
             </p>
           )}
         </div>
@@ -181,20 +193,20 @@ export function FinanceLiveLedger() {
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
           >
             <RefreshCw className={cn("h-4 w-4", requestState === "loading" && "animate-spin")} />
-            Defteri yenile
+            {localizeBusinessCopy("Defteri yenile", locale)}
           </button>
           {canExportLedger && (
           <DashboardActionButton
             actionType="finance.ledger.export"
-            ariaLabel="Finans defteri dışa aktarım isteği oluştur"
+            ariaLabel={localizeBusinessCopy("Finans defteri dışa aktarım isteği oluştur", locale)}
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
             entityTable="finance_ledger_entries"
             metadata={{ source: data?.source ?? "unknown", phase: 6 }}
-            successLabel="Dışa aktarım isteği alındı"
-            title="Finans defteri dışa aktarım isteği"
+            successLabel={localizeBusinessCopy("Dışa aktarım isteği alındı", locale)}
+            title={localizeBusinessCopy("Finans defteri dışa aktarım isteği", locale)}
           >
             <Download className="h-4 w-4" />
-            Dışa aktar
+            {localizeBusinessCopy("Dışa aktar", locale)}
           </DashboardActionButton>
           )}
         </div>
@@ -202,13 +214,16 @@ export function FinanceLiveLedger() {
 
       {requestState === "error" && (
         <div role="alert" className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-          Finans defteri şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.
+          {localizeBusinessCopy(
+            "Finans defteri şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.",
+            locale
+          )}
         </div>
       )}
 
       {failedQualityChecks.length > 0 && (
         <div role="alert" className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          Finans defteri kalite kontrolü dikkat istiyor: {failedQualityChecks.map((check) => check.label).join(", ")}
+          {localizeBusinessCopy("Finans defteri kalite kontrolü dikkat istiyor:", locale)} {failedQualityChecks.map((check) => check.label).join(", ")}
         </div>
       )}
 
@@ -220,7 +235,7 @@ export function FinanceLiveLedger() {
           ["Açık kayıt", data?.summary.openEntries ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
-            <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+            <p className="text-xs font-bold uppercase text-muted-foreground">{localizeBusinessCopy(label as string, locale)}</p>
             <p className="mt-1 text-xl font-black text-foreground">{value}</p>
           </div>
         ))}
@@ -230,7 +245,7 @@ export function FinanceLiveLedger() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
             <ArrowDownUp className="h-4 w-4" />
-            Son finans kayıtları
+            {localizeBusinessCopy("Son finans kayıtları", locale)}
           </div>
           {latestEntries.map((entry) => (
             <div
@@ -238,22 +253,22 @@ export function FinanceLiveLedger() {
               className="grid gap-3 rounded-lg border border-border/70 bg-background/70 p-3 sm:grid-cols-[1fr_auto_auto]"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-foreground">{entryLabel(entry)}</p>
+                <p className="truncate text-sm font-bold text-foreground">{entryLabel(entry, locale)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {entry.entryType} / {entry.period ?? "-"} / vade {shortDate(entry.dueDate)}
+                  {entry.entryType} / {entry.period ?? "-"} / {localizeBusinessCopy("vade", locale)} {shortDate(entry.dueDate, locale)}
                 </p>
               </div>
               <p className="text-sm font-black text-foreground">
                 {formatCents(entry.amountCents, entry.currency)}
               </p>
               <StatusBadge variant={statusVariant(entry.status)}>
-                {statusLabel(entry.status)}
+                {statusLabel(entry.status, locale)}
               </StatusBadge>
             </div>
           ))}
           {latestEntries.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Finans kaydı bulunamadı.
+              {localizeBusinessCopy("Finans kaydı bulunamadı.", locale)}
             </div>
           )}
         </div>
@@ -262,26 +277,28 @@ export function FinanceLiveLedger() {
           <div className="flex items-start gap-3">
             <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
             <div>
-              <h3 className="text-sm font-black text-foreground">Finans kontrol modeli</h3>
+              <h3 className="text-sm font-black text-foreground">{localizeBusinessCopy("Finans kontrol modeli", locale)}</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                Onaylanmış finans kaydı doğrudan değiştirilmez; düzeltme için karşı kayıt açılır.
-                Dışa aktarım, mutabakat ve ödeme aksiyonları role göre denetim akışına alınır.
+                {localizeBusinessCopy(
+                  "Onaylanmış finans kaydı doğrudan değiştirilmez; düzeltme için karşı kayıt açılır. Dışa aktarım, mutabakat ve ödeme aksiyonları role göre denetim akışına alınır.",
+                  locale
+                )}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Onaylı kayıt</p>
+                  <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Onaylı kayıt", locale)}</p>
                   <p className="text-lg font-black">{data?.summary.postedEntries ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Yasal risk</p>
+                  <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Yasal risk", locale)}</p>
                   <p className="text-lg font-black">{data?.summary.legalAccounts ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Kısıtlı</p>
+                  <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Kısıtlı", locale)}</p>
                   <p className="text-lg font-black">{data?.summary.restrictedUnits ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Denetim</p>
+                  <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Denetim", locale)}</p>
                   <p className="text-lg font-black">{data?.recentActions.length ?? 0}</p>
                 </div>
               </div>

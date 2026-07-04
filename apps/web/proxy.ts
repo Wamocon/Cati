@@ -84,6 +84,17 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
   }
 
+  // next-intl may answer with a locale redirect (e.g. "/" -> "/tr") or a rewrite.
+  // setAll already wrote the refreshed Supabase cookies onto intlResponse, so we
+  // must return it directly — otherwise the redirect/rewrite is dropped and the
+  // bare root URL 404s in production.
+  if (
+    intlResponse.headers.has("location") ||
+    intlResponse.headers.has("x-middleware-rewrite")
+  ) {
+    return intlResponse
+  }
+
   // Merge any cookies set by intlMiddleware into the final response.
   intlResponse.headers.forEach((value, key) => {
     if (key.toLowerCase() === "set-cookie") {

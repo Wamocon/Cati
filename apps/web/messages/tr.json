@@ -9,6 +9,7 @@
     "platformLink": "ERP Platformu"
   },
   "nav": {
+    "skipToContent": "İçeriğe geç",
     "home": "Ana Sayfa",
     "catalog": "Modüller",
     "about": "Hakkımızda",
@@ -99,9 +100,16 @@
     },
     "permits": {
       "title": "Oturum izni kuralları sıkılaştı",
-      "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %25 yabancı kota sınırı. Her dosya farklı."
+      "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %20 yabancı ikamet kota sınırı. Her dosya farklı."
     },
-    "sectionBadge": "2026 Gerçekliği"
+    "sectionBadge": "2026 Gerçekliği",
+    "flipbookBadge": "Lead'den rapora",
+    "flipbook": [
+      ["01", "Lead", "WhatsApp / Web / Ofis"],
+      ["02", "Daire", "Blok / Kat / Fiyat"],
+      ["03", "Karar", "Borç / Belge / SLA"],
+      ["04", "Rapor", "Malik / Ekip / Denetim"]
+    ]
   },
   "solution": {
     "title": "1Çatı — emlağın tek işletim sistemi",
@@ -137,7 +145,7 @@
       },
       "residence": {
         "title": "Oturum / vatandaşlık uygunluk rehberi",
-        "desc": "200.000 $ eşik, gelir/sigorta ve ilçe kota sınırı için ön kontrol. SPK ekspertiz değeri obje kartında saklanır.",
+        "desc": "Oturum için 200.000 $, vatandaşlık için 400.000 $ eşik; gelir/sigorta ve ilçe kota sınırı ön kontrolü. SPK ekspertiz değeri obje kartında saklanır.",
         "tag": "Aktif"
       },
       "tax": {
@@ -273,10 +281,10 @@
     "descriptions": {
       "admin": "Sistemin tamamından sorumlu yönetim rolü. Kullanıcılar, ayarlar, finans, erişim ve audit kontrollerini yönetir.",
       "manager": "Saha ve operasyon sorumlusu. Servis, görev, personel, rezervasyon, iletişim ve günlük riskleri takip eder.",
-      "accountant": "Buchhaltung/finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
-      "staff": "Mitarbeiter/personel rolü. Atanan işleri kabul eder, işi kapatır, fotoğraf/video raporu ekler.",
-      "owner": "Eigentümer/malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
-      "tenant": "Mieter/kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, chat, bildirim ve belgeleri görür."
+      "accountant": "Finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
+      "staff": "Personel rolü. Atanan işleri kabul eder, işi kapatır, fotoğraf/video raporu ekler.",
+      "owner": "Malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
+      "tenant": "Kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, chat, bildirim ve belgeleri görür."
     }
   },
   "login": {
@@ -312,7 +320,7 @@
     "updated": "Son güncelleme: Haziran 2026",
     "intro": "Ataberk Estate ve WAMOCON GmbH kişisel verilerinizi korumaya kararlıdır. Bu politika hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar.",
     "dataTitle": "Topladığımız veriler",
-    "dataText": "İletişim bilgileri, mülk tercihleri, işlemler için gerekli belgeler (pasaport kopyası, TAPU taraması vb.) ve platform kullanım verileri tolanır.",
+    "dataText": "İletişim bilgileri, mülk tercihleri, işlemler için gerekli belgeler (pasaport kopyası, TAPU taraması vb.) ve platform kullanım verileri toplanır.",
     "useTitle": "Verileri nasıl kullanıyoruz",
     "useText": "Veriler, emlak hizmetleri sunmak, mülk yönetimi yapmak, Türk yasal gerekliliklerine uymak ve platformu geliştirmek için kullanılır.",
     "rightsTitle": "Haklarınız",
@@ -335,8 +343,8 @@
     "p2": "1Çatı platformu, Ataberk Estate'in operasyonel birikimini WAMOCON GmbH'nin dijital dönüşüm uzmanlığıyla birleştirerek tüm emlak süreçlerini tek çatı altında yönetmeyi amaçlar."
   },
   "reviews": {
-    "title": "Müşteri Yorumları",
-    "intro": "Operasyon ekiplerinden ve mülk sahiplerinden alınan ürün geri bildirimleri.",
+    "title": "Kullanım Senaryoları",
+    "intro": "Operasyon ekiplerinin ve mülk sahiplerinin 1Çatı ile yaşayacağı temsili deneyim senaryoları.",
     "items": {
       "0": {
         "quote": "Artık müşteri mesajları ve bakım talepleri tek yerde. Ekip olarak çok daha hızlı hareket ediyoruz.",

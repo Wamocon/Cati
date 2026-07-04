@@ -48,7 +48,7 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
           const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
           return (
             <Fragment key={index}>
-              <span className={cn("inline-block", isHighlight && highlightClassName)}>
+              <span className={cn("inline-block [overflow-wrap:anywhere]", isHighlight && highlightClassName)}>
                 {word}
               </span>
               {index < words.length - 1 ? " " : null}
@@ -67,7 +67,7 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
           <Fragment key={index}>
             <motion.span
               variants={child}
-              className={cn("inline-block origin-bottom", isHighlight && highlightClassName)}
+              className={cn("inline-block origin-bottom [overflow-wrap:anywhere]", isHighlight && highlightClassName)}
             >
               {word}
             </motion.span>

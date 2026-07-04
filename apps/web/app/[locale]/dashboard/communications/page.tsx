@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale } from "next-intl"
 import { BellRing, Mail, MessageSquareText, Send, Smartphone, Users } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
 import { DashboardActionButton } from "@/components/dashboard-action-button"
@@ -7,6 +8,8 @@ import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { isClientRole, isFieldRole } from "@/lib/role-scoped-views"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
+import { priorityLabels, type ServicePriority } from "@/lib/site-management-data"
 import type { Role } from "@/lib/rbac"
 
 const conversations = [
@@ -32,17 +35,17 @@ const conversations = [
   },
   {
     id: "COM-303",
-    channel: "Team",
+    channel: "Ekip",
     audience: "Operasyon",
     subject: "Bugünkü check-out ve depozito kontrolü",
-    owner: "Sorumlu",
+    owner: "Sahip",
     status: "ready",
     priority: "high",
     lastMessage: "Temizlik, hasar ve iade kontrolü aynı akışta.",
   },
   {
     id: "COM-304",
-    channel: "Email",
+    channel: "E-posta",
     audience: "Malik",
     subject: "Aylık finans raporu hazır",
     owner: "Muhasebe",
@@ -54,7 +57,7 @@ const conversations = [
 
 const notificationRules = [
   { id: "NTF-01", trigger: "Borç > 0", target: "Malik/Kiracı", channel: "WhatsApp + E-posta", owner: "Muhasebe" },
-  { id: "NTF-02", trigger: "SLA < 4 saat", target: "Personel + Sorumlu", channel: "Push + Team", owner: "Sorumlu" },
+  { id: "NTF-02", trigger: "SLA < 4 saat", target: "Personel + Sahip", channel: "Push + Ekip", owner: "Sahip" },
   { id: "NTF-03", trigger: "Check-in bugün", target: "Kiracı/Misafir", channel: "Push + SMS", owner: "Operasyon" },
   { id: "NTF-04", trigger: "Belge eksik", target: "Malik", channel: "Portal + E-posta", owner: "Yönetim" },
 ]
@@ -108,10 +111,10 @@ function statusVariant(status: string) {
   return "success"
 }
 
-function statusLabel(status: string) {
-  if (status === "needs_reply") return "Cevap gerekli"
-  if (status === "in_progress") return "İşlemde"
-  return "Hazır"
+function statusLabel(status: string, locale: string) {
+  if (status === "needs_reply") return localizeBusinessCopy("Cevap gerekli", locale)
+  if (status === "in_progress") return localizeBusinessCopy("İşlemde", locale)
+  return localizeBusinessCopy("Hazır", locale)
 }
 
 function priorityVariant(priority: string) {
@@ -120,7 +123,15 @@ function priorityVariant(priority: string) {
   return "neutral"
 }
 
+function targetLabel(target: string, locale: string) {
+  return target
+    .split(/(\s\+\s|\/)/)
+    .map((part) => (part === "/" || part === " + " ? part : localizeBusinessCopy(part, locale)))
+    .join("")
+}
+
 export default function CommunicationsPage() {
+  const locale = resolveDashboardLocale(useLocale())
   const user = useUser()
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
@@ -130,15 +141,15 @@ export default function CommunicationsPage() {
   const ready = visibleConversations.filter((item) => item.status === "ready").length
 
   const intro = clientView
-    ? "Portal mesajları, bildirimler ve yönetim yanıtları yalnızca yetkili kaydınız kapsamında gösterilir."
+    ? localizeBusinessCopy("Portal mesajları, bildirimler ve yönetim yanıtları yalnızca yetkili kaydınız kapsamında gösterilir.", locale)
     : fieldView
-      ? "Saha ekibi için görev mesajları, SLA bildirimleri ve operasyon yanıtları sadeleştirilmiş görünümde tutulur."
-      : "Yönetim sohbeti, ekip içi koordinasyon, bildirim kuralları ve müşteri cevap takibi tek sayfada yönetilir."
+      ? localizeBusinessCopy("Saha ekibi için görev mesajları, SLA bildirimleri ve operasyon yanıtları sadeleştirilmiş görünümde tutulur.", locale)
+      : localizeBusinessCopy("Yönetim sohbeti, ekip içi koordinasyon, bildirim kuralları ve müşteri cevap takibi tek sayfada yönetilir.", locale)
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">İletişim Merkezi</h1>
+        <h1 className="text-2xl font-black text-foreground">{localizeBusinessCopy("İletişim Merkezi", locale)}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{intro}</p>
       </div>
 
@@ -147,7 +158,7 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <MessageSquareText className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Açık konuşma</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Açık konuşma", locale)}</p>
               <p className="text-2xl font-black">{visibleConversations.length}</p>
             </div>
           </div>
@@ -156,7 +167,7 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <BellRing className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Acil takip</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Acil takip", locale)}</p>
               <p className="text-2xl font-black">{urgent}</p>
             </div>
           </div>
@@ -165,7 +176,7 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <Send className="h-8 w-8 text-teal-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Hazır mesaj</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Hazır mesaj", locale)}</p>
               <p className="text-2xl font-black">{ready}</p>
             </div>
           </div>
@@ -174,7 +185,7 @@ export default function CommunicationsPage() {
           <div className="flex items-center gap-3">
             <Users className="h-8 w-8 text-amber-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Rol kuralı</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Rol kuralı", locale)}</p>
               <p className="text-2xl font-black">{visibleRules.length}</p>
             </div>
           </div>
@@ -186,26 +197,26 @@ export default function CommunicationsPage() {
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-bold text-card-foreground">
-                {clientView ? "Portal konuşmaları" : "Müşteri ve ekip konuşmaları"}
+                {clientView ? localizeBusinessCopy("Portal konuşmaları", locale) : localizeBusinessCopy("Müşteri ve ekip konuşmaları", locale)}
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 {clientView
-                  ? "Kanal, konu, son mesaj ve durum bilgisi yetki kapsamınıza göre filtrelenir."
-                  : "Her konuşmada kanal, sorumlu ekip, öncelik ve son aksiyon görünür."}
+                  ? localizeBusinessCopy("Kanal, konu, son mesaj ve durum bilgisi yetki kapsamınıza göre filtrelenir.", locale)
+                  : localizeBusinessCopy("Her konuşmada kanal, sorumlu ekip, öncelik ve son aksiyon görünür.", locale)}
               </p>
             </div>
             {!clientView && !fieldView && (
               <DashboardActionButton
                 actionType="communication.broadcast.prepare"
-                ariaLabel="Toplu bildirim hazırla"
+                ariaLabel={localizeBusinessCopy("Toplu bildirim hazırla", locale)}
                 entityTable="communications"
                 entityExternalId="broadcast"
-                title="Toplu bildirim taslağı hazırlandı"
-                successLabel="Taslak hazır"
+                title={localizeBusinessCopy("Toplu bildirim taslağı hazırlandı", locale)}
+                successLabel={localizeBusinessCopy("Taslak hazır", locale)}
                 className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted"
               >
                 <Send className="h-4 w-4" />
-                Toplu bildirim
+                {localizeBusinessCopy("Toplu bildirim", locale)}
               </DashboardActionButton>
             )}
           </div>
@@ -215,40 +226,42 @@ export default function CommunicationsPage() {
             searchValue={(item) => `${item.id} ${item.channel} ${item.audience} ${item.subject} ${item.owner}`}
             pageSize={10}
             columns={[
-              { key: "id", header: "Kayıt", sortable: true, render: (item) => item.id },
-              { key: "channel", header: "Kanal", sortable: true, render: (item) => item.channel },
+              { key: "id", header: localizeBusinessCopy("Kayıt", locale), sortable: true, render: (item) => item.id },
+              { key: "channel", header: localizeBusinessCopy("Kanal", locale), sortable: true, render: (item) => localizeBusinessCopy(item.channel, locale) },
               ...(!clientView
                 ? [
                     {
                       key: "audience",
-                      header: "Kitle",
-                      render: (item: Conversation) => item.audience,
+                      header: localizeBusinessCopy("Kitle", locale),
+                      render: (item: Conversation) => localizeBusinessCopy(item.audience, locale),
                     },
                   ]
                 : []),
-              { key: "subject", header: "Konu", render: (item) => item.subject },
+              { key: "subject", header: localizeBusinessCopy("Konu", locale), render: (item) => localizeBusinessCopy(item.subject, locale) },
               ...(!clientView
                 ? [
                     {
                       key: "owner",
-                      header: "Sorumlu",
-                      render: (item: Conversation) => item.owner,
+                      header: localizeBusinessCopy("Sorumlu", locale),
+                      render: (item: Conversation) => localizeBusinessCopy(item.owner, locale),
                     },
                   ]
                 : []),
               {
                 key: "priority",
-                header: "Öncelik",
+                header: localizeBusinessCopy("Öncelik", locale),
                 render: (item) => (
-                  <StatusBadge variant={priorityVariant(item.priority)}>{item.priority}</StatusBadge>
+                  <StatusBadge variant={priorityVariant(item.priority)}>
+                    {localizeBusinessCopy(priorityLabels[item.priority as ServicePriority], locale)}
+                  </StatusBadge>
                 ),
               },
               {
                 key: "status",
-                header: "Durum",
+                header: localizeBusinessCopy("Durum", locale),
                 render: (item) => (
                   <StatusBadge variant={statusVariant(item.status)}>
-                    {statusLabel(item.status)}
+                    {statusLabel(item.status, locale)}
                   </StatusBadge>
                 ),
               },
@@ -261,11 +274,11 @@ export default function CommunicationsPage() {
             <div className="flex items-start gap-3">
               <Smartphone className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Bildirim mantığı</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Bildirim mantığı", locale)}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {clientView
-                    ? "Bildirimler yanlış kişiye gitmeyecek şekilde daire ve rol kapsamıyla sınırlandırılır."
-                    : "Push, SMS, WhatsApp ve e-posta aynı olaydan tetiklenebilir; hassas finans ve erişim kararları insan onayı olmadan uygulanmaz."}
+                    ? localizeBusinessCopy("Bildirimler yanlış kişiye gitmeyecek şekilde daire ve rol kapsamıyla sınırlandırılır.", locale)
+                    : localizeBusinessCopy("Push, SMS, WhatsApp ve e-posta aynı olaydan tetiklenebilir; hassas finans ve erişim kararları insan onayı olmadan uygulanmaz.", locale)}
                 </p>
               </div>
             </div>
@@ -275,12 +288,12 @@ export default function CommunicationsPage() {
               <Mail className="mt-0.5 h-5 w-5 text-primary" />
               <div>
                 <h2 className="text-sm font-bold text-card-foreground">
-                  {clientView ? "Yanıt takibi" : "Negatif durumlar"}
+                  {clientView ? localizeBusinessCopy("Yanıt takibi", locale) : localizeBusinessCopy("Negatif durumlar", locale)}
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {clientView
-                    ? "Yönetim yanıtı, servis randevusu ve belge talebi aynı konuşma geçmişinde kalır."
-                    : "Yanlış alıcı, kapalı kanal, borç ihtilafı, dil uyumsuzluğu ve tekrar eden mesajlar audit kuyruğuna düşer."}
+                    ? localizeBusinessCopy("Yönetim yanıtı, servis randevusu ve belge talebi aynı konuşma geçmişinde kalır.", locale)
+                    : localizeBusinessCopy("Yanlış alıcı, kapalı kanal, borç ihtilafı, dil uyumsuzluğu ve tekrar eden mesajlar audit kuyruğuna düşer.", locale)}
                 </p>
               </div>
             </div>
@@ -293,16 +306,16 @@ export default function CommunicationsPage() {
         searchValue={(item) => `${item.id} ${item.trigger} ${item.target} ${item.channel} ${item.owner}`}
         pageSize={10}
         columns={[
-          { key: "id", header: "Kural", sortable: true, render: (item) => item.id },
-          { key: "trigger", header: "Tetikleyici", render: (item) => item.trigger },
-          { key: "target", header: "Hedef", render: (item) => item.target },
-          { key: "channel", header: "Kanal", render: (item) => item.channel },
+          { key: "id", header: localizeBusinessCopy("Kural", locale), sortable: true, render: (item) => item.id },
+          { key: "trigger", header: localizeBusinessCopy("Tetikleyici", locale), render: (item) => localizeBusinessCopy(item.trigger, locale) },
+          { key: "target", header: localizeBusinessCopy("Hedef", locale), render: (item) => targetLabel(item.target, locale) },
+          { key: "channel", header: localizeBusinessCopy("Kanal", locale), render: (item) => localizeBusinessCopy(item.channel, locale) },
           ...(!clientView
             ? [
                 {
                   key: "owner",
-                  header: "Sahip",
-                  render: (item: NotificationRule) => item.owner,
+                  header: localizeBusinessCopy("Sahip", locale),
+                  render: (item: NotificationRule) => localizeBusinessCopy(item.owner, locale),
                 },
               ]
             : []),

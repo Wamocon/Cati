@@ -10,6 +10,7 @@ import { HowItWorks } from "../sections/how-it-works"
 import { PlatformWorkflow } from "../sections/platform-workflow"
 import { CTA } from "../sections/cta"
 import { Footer } from "../sections/footer"
+import { SiteConcierge } from "@/components/site-concierge"
 
 export default function HomePage() {
   return (
@@ -30,6 +31,7 @@ export default function HomePage() {
           <CTA />
         </main>
       </div>
+      <SiteConcierge page="home" />
       <Footer />
     </>
   )

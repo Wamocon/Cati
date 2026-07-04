@@ -23,6 +23,7 @@ Current implementation checkpoint: phases 1-9 are complete as a demo/internal-QA
 | Execution runbook | `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md` | Harness commands, QA loop and stop conditions. |
 | Local Supabase | `local-supabase.md` | Local database setup, seed login and cloud migration notes. |
 | Current DOCX package | `1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
+| Demo test-scenario script | `testing/fachliche-testszenarien-demo.md` | Role-by-role manual functional test script for the login-free demo (German), aligned to the mandatory UAT scenario list. |
 
 ## Current Status Rule
 

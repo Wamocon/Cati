@@ -1,7 +1,9 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useLocale } from "next-intl"
 import { cn } from "@/lib/utils"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 
 interface PieChartProps {
   data: { label: string; value: number; color: string }[]
@@ -14,6 +16,7 @@ function svgNumber(value: number) {
 }
 
 export function PieChart({ data, className, size = 160 }: PieChartProps) {
+  const locale = resolveDashboardLocale(useLocale())
   const total = data.reduce((sum, d) => sum + d.value, 0) || 1
   const radius = size / 2 - 8
   const center = size / 2
@@ -27,7 +30,11 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
     (acc, d) => {
       const start = (acc.cumulative / total) * Math.PI * 2 - Math.PI / 2
       const nextCumulative = acc.cumulative + d.value
-      const end = (nextCumulative / total) * Math.PI * 2 - Math.PI / 2
+      const rawEnd = (nextCumulative / total) * Math.PI * 2 - Math.PI / 2
+      // A slice covering the full circle would produce a zero-length arc (start
+      // and end coincide) and render nothing; clamp just short of a full turn.
+      const end =
+        rawEnd - start >= Math.PI * 2 ? start + Math.PI * 2 - 0.001 : rawEnd
       const largeArc = end - start > Math.PI ? 1 : 0
       const x1 = center + radius * Math.cos(start)
       const y1 = center + radius * Math.sin(start)
@@ -80,7 +87,7 @@ export function PieChart({ data, className, size = 160 }: PieChartProps) {
           {total}
         </text>
         <text x={center} y={center + 14} textAnchor="middle" className="fill-muted-foreground text-[10px]" style={{ fontSize: 12 }}>
-          total
+          {localizeBusinessCopy("toplam", locale)}
         </text>
       </svg>
       <div className="grid w-full grid-cols-2 gap-x-5 gap-y-2 sm:grid-cols-1">

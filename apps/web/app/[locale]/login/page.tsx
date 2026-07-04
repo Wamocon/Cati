@@ -12,41 +12,47 @@ import { roleDefinitions, roles, type Role } from "@/lib/rbac"
 
 const pageCopy = {
   tr: {
-    eyebrow: "Guvenli ERP erisimi",
-    title: "Ataberk Estate operasyon alanina giris",
+    eyebrow: "Güvenli ERP erişimi",
+    title: "Ataberk Estate operasyon alanına giriş",
     intro:
-      "CRM, daire matrisi, finans, servis ve belgeler rol bazli yetkiyle acilir. Her aksiyon audit iziyle kaydedilir.",
+      "CRM, daire matrisi, finans, servis ve belgeler rol bazlı yetkiyle açılır. Her aksiyon audit iziyle kaydedilir.",
     email: "E-posta",
-    password: "Sifre",
-    submit: "Giris yap",
-    request: "Erisim talep et",
+    password: "Şifre",
+    submit: "Giriş yap",
+    request: "Erişim talep et",
     back: "Ana sayfa",
     roleTitle: "Yerel QA rol profilleri",
-    roleIntro: "Bu alan sadece yetkili yerel ve test ortamlarinda RBAC kontrolu icin kullanilir.",
-    locked: "Rol profilleri bu ortamda kapali.",
-    authReady: "Supabase kimlik dogrulamasi aktif.",
-    authNote: "Kimlik dogrulama anahtarlari bekleniyor. Yetkili ortamda e-posta/sifre ile giris acilir.",
-    authError: "Giris basarisiz. E-posta ve sifreyi kontrol edin.",
-    accessError: "Rol profili acilamadi. Tekrar deneyin.",
-    proof: ["New Level Premium portfoy alani", "Finans, servis ve belge merkezi", "Malik, kiraci ve ekip erisimi"],
+    roleIntro: "Bu alan sadece yetkili yerel ve test ortamlarında RBAC kontrolü için kullanılır.",
+    locked: "Rol profilleri bu ortamda kapalı.",
+    authReady: "Supabase kimlik doğrulaması aktif.",
+    authNote: "Kimlik doğrulama anahtarları bekleniyor. Yetkili ortamda e-posta/şifre ile giriş açılır.",
+    authError: "Giriş başarısız. E-posta ve şifreyi kontrol edin.",
+    accessError: "Rol profili açılamadı. Tekrar deneyin.",
+    demoButton: "Demo başlat — tam yetkili erişim",
+    demoHint: "Demo ortamı: yönetici olarak tüm modüller şifresiz açılır.",
+    or: "veya",
+    proof: ["New Level Premium portföy alanı", "Finans, servis ve belge merkezi", "Malik, kiracı ve ekip erişimi"],
   },
   en: {
     eyebrow: "Secure ERP access",
     title: "Sign in to the Ataberk Estate operations workspace",
     intro:
-      "CRM, unit matrix, finance, service and documents open through role-based permission. Every sensitive action keeps an audit trail.",
+      "CRM, unit matrix, finance, service and documents are accessible based on role-based permissions. Every sensitive action keeps an audit trail.",
     email: "Email",
     password: "Password",
     submit: "Sign in",
     request: "Request access",
-    back: "Home",
+    back: "Homepage",
     roleTitle: "Local QA role profiles",
-    roleIntro: "This area is only for authorized local and test environments to verify RBAC.",
+    roleIntro: "This area is available only in authorized local and test environments, for verifying RBAC.",
     locked: "Role profiles are disabled in this environment.",
     authReady: "Supabase authentication is active.",
-    authNote: "Authentication keys are pending. Email/password access opens in an authorized environment.",
+    authNote: "Single sign-on is not yet configured. Email/password sign-in is available only in authorized environments.",
     authError: "Sign-in failed. Check email and password.",
     accessError: "Role profile could not be opened. Try again.",
+    demoButton: "Start demo — full admin access",
+    demoHint: "Demo environment: opens every module as admin, no password needed.",
+    or: "or",
     proof: ["New Level Premium portfolio workspace", "Finance, service and document center", "Owner, tenant and team access"],
   },
   de: {
@@ -60,32 +66,38 @@ const pageCopy = {
     request: "Zugang anfragen",
     back: "Startseite",
     roleTitle: "Lokale QA-Rollenprofile",
-    roleIntro: "Nur fuer autorisierte lokale und Testumgebungen zur RBAC-Pruefung.",
+    roleIntro: "Nur für autorisierte lokale und Testumgebungen zur RBAC-Prüfung.",
     locked: "Rollenprofile sind in dieser Umgebung deaktiviert.",
     authReady: "Supabase-Authentifizierung ist aktiv.",
-    authNote: "Authentifizierungsschluessel fehlen. E-Mail/Passwort wird in autorisierter Umgebung aktiviert.",
-    authError: "Anmeldung fehlgeschlagen. E-Mail und Passwort pruefen.",
-    accessError: "Rollenprofil konnte nicht geoeffnet werden. Erneut versuchen.",
-    proof: ["New Level Premium portfolio", "Finance, service and document workspace", "Owner, tenant and team access"],
+    authNote: "Authentifizierungsschlüssel fehlen. E-Mail/Passwort-Anmeldung wird in einer autorisierten Umgebung aktiviert.",
+    authError: "Anmeldung fehlgeschlagen. E-Mail und Passwort prüfen.",
+    accessError: "Rollenprofil konnte nicht geöffnet werden. Erneut versuchen.",
+    demoButton: "Demo starten — Vollzugriff (Admin)",
+    demoHint: "Demo-Umgebung: öffnet alle Module als Admin, kein Passwort nötig.",
+    or: "oder",
+    proof: ["New Level Premium Portfolio", "Finanz-, Service- und Dokumentenzentrum", "Zugang für Eigentümer, Mieter und Team"],
   },
   ru: {
-    eyebrow: "Bezopasnyy ERP dostup",
-    title: "Vhod v operatsionnoe prostranstvo Ataberk Estate",
+    eyebrow: "Безопасный доступ к ERP",
+    title: "Вход в операционное пространство Ataberk Estate",
     intro:
-      "CRM, matrica kvartir, finansy, servis i dokumenty otkryvayutsya po rolyam. Vazhnyye deystviya sokhranyayut audit sled.",
-    email: "Email",
-    password: "Parol",
-    submit: "Voyti",
-    request: "Zaprosit dostup",
-    back: "Na glavnuyu",
-    roleTitle: "Lokalnye QA roli",
-    roleIntro: "Tolko dlya avtorizovannykh lokalnykh i testovykh sred proverki RBAC.",
-    locked: "Roli otklyucheny v etoy srede.",
-    authReady: "Supabase autentifikatsiya aktivna.",
-    authNote: "Klyuchi autentifikatsii ozhidayutsya. Email/parol vklyuchaetsya v avtorizovannoy srede.",
-    authError: "Vhod ne udalsya. Proverte email i parol.",
-    accessError: "Rol ne otkrylas. Poprobuyte eshche raz.",
-    proof: ["New Level Premium portfolio workspace", "Finance, service and document center", "Owner, tenant and team access"],
+      "CRM, матрица квартир, финансы, сервис и документы открываются по ролям. Каждое важное действие фиксируется в журнале аудита.",
+    email: "Эл. почта",
+    password: "Пароль",
+    submit: "Войти",
+    request: "Запросить доступ",
+    back: "На главную",
+    roleTitle: "Локальные QA-роли",
+    roleIntro: "Этот раздел предназначен только для авторизованных локальных и тестовых сред проверки RBAC.",
+    locked: "Ролевые профили отключены в этой среде.",
+    authReady: "Аутентификация Supabase активна.",
+    authNote: "Ключи аутентификации ожидаются. Вход по эл. почте и паролю откроется в авторизованной среде.",
+    authError: "Вход не удался. Проверьте эл. почту и пароль.",
+    accessError: "Не удалось открыть ролевой профиль. Попробуйте снова.",
+    demoButton: "Запустить демо — полный доступ (админ)",
+    demoHint: "Демо-среда: открывает все модули как администратор, без пароля.",
+    or: "или",
+    proof: ["Портфель New Level Premium", "Центр финансов, сервиса и документов", "Доступ для владельцев, арендаторов и команды"],
   },
 } as const
 
@@ -249,6 +261,31 @@ export default function LoginPage() {
                     {supabaseConfigured ? t.authReady : t.authNote}
                   </p>
                 </div>
+
+                {accessProfilesEnabled && (
+                  <div className="mb-6">
+                    <button
+                      type="button"
+                      data-testid="demo-full-access"
+                      onClick={() => signInAs("admin")}
+                      disabled={!accessProfileStatusLoaded || activeRole === "admin"}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-base font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {activeRole === "admin" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4" />
+                      )}
+                      {t.demoButton}
+                    </button>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{t.demoHint}</p>
+                    <div className="my-5 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                      <span className="h-px flex-1 bg-border" />
+                      {t.or}
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                  </div>
+                )}
 
                 <form className="space-y-4" onSubmit={handlePasswordSignIn}>
                   <div className="space-y-2">

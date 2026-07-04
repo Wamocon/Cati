@@ -15,10 +15,12 @@ import {
   TrendingUp,
 } from "lucide-react"
 import { KineticHeadline } from "@/components/kinetic-headline"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 
 export function Hero() {
   const t = useTranslations("hero")
   const locale = useLocale()
+  const dashboardLocale = resolveDashboardLocale(locale)
   const rootRef = useRef<HTMLElement>(null)
   const imageRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -100,7 +102,7 @@ export function Hero() {
 
             <KineticHeadline
               text={t("headline")}
-              className="max-w-4xl text-5xl leading-[0.98] font-black tracking-tight text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.35)] sm:text-6xl lg:text-7xl xl:text-8xl"
+              className="max-w-4xl text-4xl leading-[0.98] font-black tracking-tight break-words hyphens-auto text-white drop-shadow-[0_10px_34px_rgba(0,0,0,0.35)] sm:text-6xl lg:text-7xl xl:text-8xl"
             />
 
             <motion.p
@@ -171,7 +173,7 @@ export function Hero() {
                   <Map className="h-4 w-4" />
                 </div>
                 <p className="text-sm font-black">New Level Premium</p>
-                <p className="mt-1 text-xs text-white/70">Avsallar masterplan to operating record</p>
+                <p className="mt-1 text-xs text-white/70">{localizeBusinessCopy("Avsallar master plandan operasyon kaydına", dashboardLocale)}</p>
                 <ArrowDownRight className="absolute right-1 bottom-1 h-5 w-5 transition group-hover:translate-x-1 group-hover:translate-y-1" />
               </div>
             </Link>

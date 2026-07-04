@@ -6,11 +6,19 @@ import {
   getAiRoleSystemInstruction,
 } from "@/lib/ai-responses"
 import { getUserProfile } from "@/lib/auth"
+import { resolveDashboardLocale } from "@/lib/business-copy"
 import {
   completeWithLocalAi,
   isLocalAiConfigured,
   LocalAiPurpose,
 } from "@/lib/local-ai"
+
+const localeNames: Record<string, string> = {
+  tr: "Turkish",
+  en: "English",
+  de: "German",
+  ru: "Russian",
+}
 
 function choosePurpose(message: string): LocalAiPurpose {
   const lower = message.toLocaleLowerCase("tr-TR")
@@ -27,7 +35,7 @@ function choosePurpose(message: string): LocalAiPurpose {
 }
 
 export async function POST(request: Request) {
-  let body: { message?: unknown }
+  let body: { message?: unknown; locale?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -41,6 +49,7 @@ export async function POST(request: Request) {
   if (message.length > 2000) {
     return NextResponse.json({ error: "Message is too long" }, { status: 413 })
   }
+  const locale = resolveDashboardLocale(typeof body.locale === "string" ? body.locale : "tr")
 
   const profile = await getUserProfile()
   if (!profile) {
@@ -49,8 +58,8 @@ export async function POST(request: Request) {
 
   const role = profile.role
   const roleProfile = getAiRoleProfile(role)
-  const accessDecision = getAiAccessDecision(message, role)
-  const deterministicContext = generateAiResponse(message, role)
+  const accessDecision = getAiAccessDecision(message, role, locale)
+  const deterministicContext = generateAiResponse(message, role, locale)
 
   if (!accessDecision.allowed) {
     return NextResponse.json({
@@ -81,7 +90,8 @@ export async function POST(request: Request) {
         {
           role: "system",
           content: [
-            "Sen 1Cati site yonetim CRM icin Turkce konusan operasyon asistanisin.",
+            "Sen 1Cati site yonetim CRM icin operasyon asistanisin.",
+            `Cevabini SADECE ${localeNames[locale]} dilinde yaz; sistem baglami Turkce olsa da kullaniciya her zaman ${localeNames[locale]} dilinde yanit ver.`,
             getAiRoleSystemInstruction(role),
             "Kisa, net ve profesyonel cevap ver. Markdown, kalin yazi isareti, tablo veya kod blogu kullanma.",
             "Finans, iade, depozito, borc kisiti, erisim karti, guvenlik veya kullanici yetkisi aksiyonlarini dogrudan uygulama; sadece oner ve insan onayi gerektigini belirt.",

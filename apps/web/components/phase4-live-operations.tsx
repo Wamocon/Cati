@@ -15,6 +15,7 @@ import { Card3D } from "@/components/3d-card"
 import { StatusBadge } from "@/components/status-badge"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
+import { localizeBusinessCopy } from "@/lib/business-copy"
 import {
   interpolate,
   localizeOperationalValue,
@@ -362,7 +363,7 @@ export function Phase4LiveOperations() {
                   <tr key={unit.id} className="bg-background/60 transition hover:bg-primary/[0.045]">
                     <td className="px-3 py-2 font-black text-foreground">{unit.unitNo}</td>
                     <td className="px-3 py-2 text-muted-foreground">
-                      {unit.blockName ?? "-"} / {unit.floorLabel ?? "-"}
+                      {unit.blockName ?? "-"} / {localizeBusinessCopy(unit.floorLabel, locale) || "-"}
                     </td>
                     <td className="px-3 py-2">
                       <StatusBadge variant={badgeVariant(unit.saleStatus)}>
@@ -415,13 +416,13 @@ export function Phase4LiveOperations() {
               {(data?.importFindings ?? []).slice(0, 4).map((finding) => (
                 <div key={finding.id} className="rounded-lg border border-border/60 bg-background/70 p-2">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs font-bold text-foreground">{finding.area}</p>
+                    <p className="text-xs font-bold text-foreground">{localizeBusinessCopy(finding.area, locale)}</p>
                     <StatusBadge variant={badgeVariant(finding.severity)}>
                       {finding.severity}
                     </StatusBadge>
                   </div>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      {finding.affectedRows} {copy.common.rows}: {finding.message}
+                      {finding.affectedRows} {copy.common.rows}: {localizeBusinessCopy(finding.message, locale)}
                   </p>
                 </div>
               ))}

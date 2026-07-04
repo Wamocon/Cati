@@ -14,16 +14,16 @@ test.describe("Login page", () => {
   }, testInfo) => {
     await page.goto("/tr/login")
 
-    await expect(page.getByRole("heading", { name: "1Çatı Giriş" })).toBeVisible()
-    await expect(page.getByLabel("Email")).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Giriş yap" })).toBeVisible()
+    await expect(page.getByLabel("E-posta")).toBeVisible()
     await expect(page.getByLabel("Şifre")).toBeVisible()
 
-    const signInButton = page.getByRole("button", { name: "Giriş Yap" })
+    const signInButton = page.getByRole("button", { name: "Giriş yap" })
     await expect(signInButton).toBeVisible()
     await expect(
-      page.getByText(/E-posta ve şifrenizle giriş yapın|Kimlik doğrulaması aktif/)
+      page.getByText(/Kimlik doğrulama anahtarları bekleniyor|Supabase kimlik doğrulaması aktif/)
     ).toBeVisible()
-    await expect(page.getByText("Yetki profiliyle giriş")).toBeVisible()
+    await expect(page.getByText("Yerel QA rol profilleri")).toBeVisible()
 
     await screenshot(page, testInfo, "01-login-page")
     expect(issues).toEqual([])
@@ -31,8 +31,12 @@ test.describe("Login page", () => {
 
   test("back link works", async ({ page }) => {
     await page.goto("/tr/login")
-    await page.getByRole("link", { name: "← Ana sayfaya dön" }).click()
-    await expect(page).toHaveURL(/\/tr/)
+    const isDesktop = (page.viewportSize()?.width ?? 1280) >= 1024
+    const homeLink = isDesktop
+      ? page.getByRole("link", { name: "Ana sayfa", exact: true })
+      : page.getByRole("link", { name: /1Cati/ }).first()
+    await homeLink.click()
+    await expect(page).toHaveURL(/\/tr$/)
   })
 
   test("access profile buttons sign in and filter dashboard", async ({
@@ -41,6 +45,9 @@ test.describe("Login page", () => {
     await page.goto("/tr/login")
     await page.getByRole("button", { name: /Personel/ }).click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
+    if ((page.viewportSize()?.width ?? 1280) < 768) {
+      await page.getByRole("button", { name: "Menüyü aç" }).click()
+    }
     await expect(page.locator("aside").getByText("Personel", { exact: true })).toBeVisible()
     await expect(page.locator("aside").getByText("Servis Talepleri")).toBeVisible()
     await screenshot(page, testInfo, "04-login-access-profile")
@@ -52,5 +59,28 @@ test.describe("Login page", () => {
     })
 
     expect(response.status()).toBe(400)
+  })
+
+  test("demo full-access button opens the dashboard as admin", async ({
+    page,
+  }, testInfo) => {
+    await page.goto("/tr/login")
+    await page.getByTestId("demo-full-access").click()
+    await expect(page).toHaveURL(/\/tr\/dashboard/)
+    await expect(
+      page.getByRole("heading", { name: /ERP Operasyon Merkezi/ })
+    ).toBeVisible()
+
+    if ((page.viewportSize()?.width ?? 1280) < 768) {
+      await page.getByRole("button", { name: "Menüyü aç" }).click()
+    }
+    const aside = page.locator("aside")
+    // admin (level 90) exposes the management-only modules
+    await expect(
+      aside.getByRole("link", { name: /^Kullanıcılar & Roller$/ })
+    ).toBeVisible()
+    await expect(aside.getByRole("link", { name: /^Ayarlar$/ })).toBeVisible()
+    await expect(aside.getByRole("link", { name: /^Finans & Aidat$/ })).toBeVisible()
+    await screenshot(page, testInfo, "05-demo-full-access")
   })
 })

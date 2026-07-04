@@ -218,7 +218,7 @@ const copy = {
       },
       {
         label: "Entscheidung",
-        title: "Finanzen, Zugang und AI lesen dasselbe Signal",
+        title: "Finanzen, Zugang und KI lesen dasselbe Signal",
         text:
           "Beiträge, Schulden, Reservierungen, Dokumente und SLA werden rollenbasierte Aktionen.",
         stat: "24/7",
@@ -399,44 +399,52 @@ function IsometricScene({
             <div className="absolute bottom-[18%] right-[10%] h-[18%] w-[38%] rounded-full border border-dashed border-slate-300" />
           </div>
 
+          {/* The tile carries transform+filter (each creates a stacking context),
+              so the label lives on the untransformed group — its z-10 can then
+              paint above later sibling towers instead of being occluded. */}
           {towers.map((tower, index) => (
             <div
               key={tower.label}
-              className={cn(
-                "absolute w-20 rounded-xl border border-white bg-white shadow-[0_28px_52px_rgba(15,23,42,0.16)] transition-all duration-500",
-                activeStep >= 1 ? "opacity-100" : "opacity-75"
-              )}
-              style={{
-                left: tower.left,
-                top: tower.top,
-                height: tower.height,
-                transform: "skewY(-24deg) rotate(-1deg)",
-                filter: "drop-shadow(16px 28px 22px rgba(15, 23, 42, 0.11))",
-              }}
+              className="absolute w-20"
+              style={{ left: tower.left, top: tower.top, height: tower.height }}
             >
-              <div className="grid h-full grid-cols-3 gap-1 p-3">
-                {Array.from({ length: 15 }).map((_, cell) => (
-                  <span
-                    key={cell}
-                    className={cn(
-                      "rounded-sm",
-                      cell % 4 === 0 ? "bg-[#ffdfd8]" : "bg-teal-100"
-                    )}
-                  />
-                ))}
+              <div
+                className={cn(
+                  "h-full w-full rounded-xl border border-white bg-white shadow-[0_28px_52px_rgba(15,23,42,0.16)] transition-all duration-500",
+                  activeStep >= 1 ? "opacity-100" : "opacity-75"
+                )}
+                style={{
+                  transform: "skewY(-24deg) rotate(-1deg)",
+                  filter: "drop-shadow(16px 28px 22px rgba(15, 23, 42, 0.11))",
+                }}
+              >
+                <div className="grid h-full grid-cols-3 gap-1 p-3">
+                  {Array.from({ length: 15 }).map((_, cell) => (
+                    <span
+                      key={cell}
+                      className={cn(
+                        "rounded-sm",
+                        cell % 4 === 0 ? "bg-[#ffdfd8]" : "bg-teal-100"
+                      )}
+                    />
+                  ))}
+                </div>
+                {index === activeStep && (
+                  <span className="absolute -right-3 -top-3 h-5 w-5 rounded-full bg-[#ff6b57] shadow-[0_0_0_8px_rgba(255,107,87,0.16)]" />
+                )}
               </div>
-              <span className="absolute -bottom-8 left-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-700 shadow-sm">
+              <span
+                className="absolute -bottom-8 left-2 z-10 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-black text-slate-700 shadow-sm"
+                style={{ transform: "skewY(-24deg) rotate(-1deg)" }}
+              >
                 {sceneLabels.blockPrefix} {tower.label}
               </span>
-              {index === activeStep && (
-                <span className="absolute -right-3 -top-3 h-5 w-5 rounded-full bg-[#ff6b57] shadow-[0_0_0_8px_rgba(255,107,87,0.16)]" />
-              )}
             </div>
           ))}
 
           <div
             className={cn(
-              "absolute right-[8%] bottom-[16%] w-44 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_28px_70px_rgba(15,23,42,0.14)] transition-all duration-500",
+              "absolute right-[8%] bottom-[16%] hidden w-44 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_28px_70px_rgba(15,23,42,0.14)] transition-all duration-500 min-[520px]:block",
               activeStep >= 2 ? "translate-y-0 opacity-100" : "translate-y-4 opacity-70"
             )}
           >

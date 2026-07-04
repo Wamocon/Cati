@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/app/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
@@ -73,6 +74,12 @@ export function DashboardSidebar() {
 
   async function logout() {
     try {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        await createClient().auth.signOut()
+      }
       await fetch("/api/access-profile", { method: "DELETE" })
     } catch {
       // ignore
@@ -90,7 +97,7 @@ export function DashboardSidebar() {
 
       <button
         onClick={() => setMobileOpen(true)}
-        className="absolute top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
       >
         <Menu className="h-5 w-5" />
@@ -114,7 +121,7 @@ export function DashboardSidebar() {
               </span>
             </Link>
             <button
-              className="text-muted-foreground md:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground md:hidden"
               onClick={() => setMobileOpen(false)}
               aria-label={t("closeMenu")}
             >

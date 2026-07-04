@@ -24,7 +24,7 @@ export function Footer() {
   return (
     <footer
       id="contacts"
-      className="relative border-t border-border/50 bg-muted/20 py-12 md:py-16"
+      className="relative border-t border-border/50 bg-muted/20 pt-12 pb-24 md:pt-16 md:pb-24"
     >
       <div className="container">
         <div className="grid gap-12 md:grid-cols-5">

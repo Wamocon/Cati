@@ -27,12 +27,12 @@ const copy = {
       "1Çatı, New Level Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
     ctaPrimary: "Daire matrisini aç",
     ctaSecondary: "Platform akışını incele",
-    liveLabel: "New Level Premium kontrol gorunumu",
+    liveLabel: "New Level Premium kontrol görünümü",
     metrics: [
-      ["52k m2", "proje alani"],
+      ["52k m2", "proje alanı"],
       ["900 m", "plaj mesafesi"],
-      ["5*", "otel altyapisi"],
-      ["3 yil", "kira garantisi"],
+      ["5*", "otel altyapısı"],
+      ["3 yıl", "kira garantisi"],
     ],
     stages: [
       {
@@ -111,7 +111,7 @@ const copy = {
     ctaSecondary: "Plattformablauf prüfen",
     liveLabel: "New Level Premium Kontrollansicht",
     metrics: [
-      ["52k m2", "Projektflache"],
+      ["52k m²", "Projektfläche"],
       ["900 m", "zum Strand"],
       ["5*", "Hotelstruktur"],
       ["3 Jahre", "Mietgarantie"],
@@ -152,10 +152,10 @@ const copy = {
     ctaSecondary: "Посмотреть платформу",
     liveLabel: "New Level Premium control view",
     metrics: [
-      ["52k m2", "site area"],
-      ["900 m", "to beach"],
-      ["5*", "hotel layer"],
-      ["3 yrs", "rental guarantee"],
+      ["52k m2", "площадь участка"],
+      ["900 m", "до пляжа"],
+      ["5*", "гостиничный сервис"],
+      ["3 yrs", "гарантия аренды"],
     ],
     stages: [
       {
@@ -240,7 +240,7 @@ export function NewLevelImmersion() {
     if (!root) return
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const desktop = window.matchMedia("(min-width: 900px)").matches
+    const desktop = window.matchMedia("(min-width: 768px)").matches
     if (reduced || !desktop) return
 
     let cleanup: (() => void) | undefined
@@ -362,7 +362,7 @@ export function NewLevelImmersion() {
                 {t.liveLabel}
               </div>
 
-              <div className="relative min-h-[300px] md:min-h-[360px]">
+              <div className="relative min-h-[360px] md:min-h-[480px] lg:min-h-[520px]">
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   return (
@@ -382,10 +382,10 @@ export function NewLevelImmersion() {
                         </span>
                         0{index + 1} / {stage.label}
                       </div>
-                      <h3 className="mt-7 text-3xl leading-tight font-black md:text-5xl">
+                      <h3 className="mt-6 text-3xl leading-[1.08] font-black break-words hyphens-auto md:text-4xl lg:text-5xl">
                         {stage.title}
                       </h3>
-                      <p className="mt-5 max-w-lg text-base leading-8 text-white/78">
+                      <p className="mt-4 max-w-lg text-sm leading-7 text-white/78 md:text-base">
                         {stage.text}
                       </p>
                     </div>
@@ -397,10 +397,10 @@ export function NewLevelImmersion() {
                 {t.metrics.map(([value, label]) => (
                   <div
                     key={`${value}-${label}`}
-                    className="rounded-2xl border border-white/14 bg-white/10 px-4 py-3 backdrop-blur"
+                    className="flex flex-col justify-center rounded-2xl border border-white/14 bg-white/10 px-4 py-3 backdrop-blur"
                   >
-                    <div className="text-2xl font-black">{value}</div>
-                    <div className="text-xs font-semibold text-white/68">{label}</div>
+                    <div className="text-2xl font-black whitespace-nowrap tabular-nums">{value}</div>
+                    <div className="mt-0.5 text-xs font-semibold text-white/68">{label}</div>
                   </div>
                 ))}
               </div>
@@ -424,7 +424,7 @@ export function NewLevelImmersion() {
             </div>
 
             <div className="hidden justify-end md:flex">
-              <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
+              <div className="relative w-[300px] rounded-[2rem] border border-white/15 bg-[#061a17]/55 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl">
                 <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {
                   const Icon = stage.icon

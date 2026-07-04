@@ -126,21 +126,21 @@ export function useLiveDashboardSnapshot({
 
   useEffect(() => {
     const initialRefresh = window.setTimeout(() => {
-      void refresh()
+      refresh().catch(() => {})
     }, 0)
 
     const interval = window.setInterval(() => {
-      void refresh()
+      refresh().catch(() => {})
     }, refreshIntervalMs)
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        void refresh()
+        refresh().catch(() => {})
       }
     }
 
     const handleOperationalChange = () => {
-      void refresh()
+      refresh().catch(() => {})
     }
 
     document.addEventListener("visibilitychange", handleVisibility)
@@ -168,7 +168,7 @@ export function useLiveDashboardSnapshot({
         "postgres_changes",
         { event: "*", schema: "public", table },
         () => {
-          void refresh()
+          refresh().catch(() => {})
         }
       )
     })

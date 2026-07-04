@@ -46,7 +46,7 @@ export function PlatformWorkflow() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="lg:col-span-3"
+            className="min-w-0 lg:col-span-3"
           >
             <GlassCard glow className="overflow-hidden p-0">
               {/* Mock window chrome */}
@@ -55,11 +55,11 @@ export function PlatformWorkflow() {
                 <div className="h-3 w-3 rounded-full bg-amber-400/80" />
                 <div className="h-3 w-3 rounded-full bg-emerald-400/80" />
                 <span className="ml-4 text-xs font-medium text-muted-foreground">
-                  1Çatı — {t("tabs.crm")}
+                  1Cati — {t(`tabs.${active}`)}
                 </span>
               </div>
 
-              <div className="flex flex-col md:flex-row">
+              <div className="flex min-w-0 flex-col md:flex-row">
                 {/* Mock sidebar */}
                 <div className="hidden w-48 border-r border-border/60 bg-muted/30 p-3 md:block">
                   {tabs.map((tab) => {
@@ -103,7 +103,7 @@ export function PlatformWorkflow() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 md:p-6">
+                <div className="min-w-0 flex-1 p-4 md:p-6">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={active}

@@ -554,7 +554,7 @@ export const serviceTickets: ServiceTicket[] = ([
       priority: priority as ServicePriority,
       status: status as ServiceStatus,
       assignee: assignees[i % assignees.length],
-      requester: flat.residentName === "Boş" ? flat.ownerName : flat.residentName,
+      requester: flat.residentType === "empty" ? flat.ownerName : flat.residentName,
       openedAt: isoDaysFromAnchor(-((i % 8) + 1), 10),
       dueAt: isoDaysFromAnchor(Math.ceil(Number(slaHoursRemaining) / 24), 16),
       slaHoursRemaining: Number(slaHoursRemaining),
@@ -727,8 +727,24 @@ const catalogByCategory: Partial<Record<string, string>> = {
   Tahsilat: "CAT-AMENITY-SPA",
 }
 
+function normalizeCategoryKey(value: string): string {
+  return value
+    .replace(/İ/g, "I")
+    .replace(/ı/g, "i")
+    .replace(/ş/g, "s")
+    .replace(/Ş/g, "S")
+    .replace(/ğ/g, "g")
+    .replace(/Ğ/g, "G")
+    .replace(/ü/g, "u")
+    .replace(/Ü/g, "U")
+    .replace(/ö/g, "o")
+    .replace(/Ö/g, "O")
+    .replace(/ç/g, "c")
+    .replace(/Ç/g, "C")
+}
+
 function catalogForTicket(ticket: ServiceTicket, index: number) {
-  const matchedId = catalogByCategory[ticket.category]
+  const matchedId = catalogByCategory[normalizeCategoryKey(ticket.category)]
   return (
     serviceCatalogItems.find((item) => item.id === matchedId) ??
     serviceCatalogItems[index % serviceCatalogItems.length]
@@ -862,7 +878,7 @@ export const workforceTasks: WorkforceTaskRecord[] = serviceTickets.slice(0, 12)
 export const bookings: BookingRecord[] = ([
   ["BKG-501", 11, "Murat A.", "Direct", -2, 2, "move_in_today", "held", 6400, "active", "done"],
   ["BKG-502", 22, "Nina Volkova", "Booking.com", -6, 0, "checkout_today", "deduction_pending", 7200, "restricted", "scheduled"],
-  ["BKG-503", 37, "Corporate Group", "Corporate", 1, 8, "precheck_pending", "reserved", 12000, "pending", "scheduled"],
+  ["BKG-503", 37, "Kurumsal Grup", "Corporate", 1, 8, "precheck_pending", "reserved", 12000, "pending", "scheduled"],
   ["BKG-504", 58, "Elif D.", "Owner", 0, 5, "confirmed", "not_required", 0, "active", "done"],
   ["BKG-505", 91, "Sergey Petrov", "Airbnb", 3, 10, "confirmed", "held", 7600, "pending", "scheduled"],
   ["BKG-506", 144, "Daria P.", "Direct", -5, 0, "deposit_review", "refund_ready", 5400, "disabled", "in_progress"],
@@ -902,7 +918,7 @@ export const viewingPipeline: ViewingRecord[] = [
     scheduledAt: isoDaysFromAnchor(0, 16),
     assignedTo: "Selin Satış",
     followUpDueAt: isoDaysFromAnchor(1, 10),
-    nextAction: "ROI sheet and German project pack",
+    nextAction: "ROI tablosu ve Almanca proje paketi",
   },
   {
     id: "VIEW-602",
@@ -916,7 +932,7 @@ export const viewingPipeline: ViewingRecord[] = [
     scheduledAt: isoDaysFromAnchor(1, 13),
     assignedTo: "Daria Destek",
     followUpDueAt: isoDaysFromAnchor(2, 10),
-    nextAction: "Beach club and hotel-service walkthrough",
+    nextAction: "Beach club ve otel hizmetleri tanıtım turu",
   },
   {
     id: "VIEW-603",
@@ -930,7 +946,7 @@ export const viewingPipeline: ViewingRecord[] = [
     scheduledAt: isoDaysFromAnchor(2, 15),
     assignedTo: "Can Operasyon",
     followUpDueAt: isoDaysFromAnchor(3, 11),
-    nextAction: "Eligibility pre-check with legal partner",
+    nextAction: "Hukuk ortağıyla uygunluk ön kontrolü",
   },
   {
     id: "VIEW-604",
@@ -944,7 +960,7 @@ export const viewingPipeline: ViewingRecord[] = [
     scheduledAt: isoDaysFromAnchor(-1, 17),
     assignedTo: "Selin Satış",
     followUpDueAt: isoDaysFromAnchor(0, 12),
-    nextAction: "Reserve unit once payment plan confirmed",
+    nextAction: "Ödeme planı onaylanınca daireyi rezerve et",
   },
   {
     id: "VIEW-605",
@@ -958,7 +974,7 @@ export const viewingPipeline: ViewingRecord[] = [
     scheduledAt: isoDaysFromAnchor(-1, 11),
     assignedTo: "Merve Muhasebe",
     followUpDueAt: isoDaysFromAnchor(0, 18),
-    nextAction: "Send no-show recovery message",
+    nextAction: "Gelmeme (no-show) sonrası kurtarma mesajı gönder",
   },
 ]
 
@@ -1139,7 +1155,7 @@ export const buyerEligibility: BuyerEligibilityRecord[] = [
 ]
 
 export const cashFlow: CashFlowPoint[] = [
-  { label: "Kas", collectedTry: 1112000, outstandingTry: 426000, serviceSpendTry: 172000 },
+  { label: "Oca", collectedTry: 1112000, outstandingTry: 426000, serviceSpendTry: 172000 },
   { label: "Şub", collectedTry: 1186000, outstandingTry: 398000, serviceSpendTry: 164000 },
   { label: "Mar", collectedTry: 1248000, outstandingTry: 372000, serviceSpendTry: 188000 },
   { label: "Nis", collectedTry: 1321000, outstandingTry: 341000, serviceSpendTry: 205000 },
@@ -1215,7 +1231,7 @@ export const accessControlRecords: AccessControlRecord[] = flats
       id: `ACS-${8101 + index}`,
       flatId: flat.id,
       flatNumber: flat.number,
-      residentName: flat.residentName === "Boş" ? flat.ownerName : flat.residentName,
+      residentName: flat.residentType === "empty" ? flat.ownerName : flat.residentName,
       zone,
       credential,
       status: flat.accessStatus,
@@ -1262,7 +1278,7 @@ export const reportCards: ReportCardRecord[] = [
     cadence: "Haftalık",
     owner: "Müdür",
     status: "ready",
-    metric: "769 daire / %90 doluluk",
+    metric: "769 daire / %70 doluluk",
     insight: "Borç ve servis SLA riski aynı raporda izlenmeli.",
   },
   {
@@ -1675,6 +1691,29 @@ export const roleCoverage: RoleCoverage[] = [
   { role: "Kiracı", users: 184, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
 ]
 
+// Owner-sponsored, time-boxed tenant access grants. The owner chooses the
+// window; access expires on its own (no manual off-switch). Offsets are stored
+// relative to "today" so the demo always shows a realistic mix of active,
+// expiring-soon and expired grants; the dashboard computes live status + days
+// remaining from these at render time.
+export interface TenantAccessGrant {
+  id: string
+  tenantName: string
+  unit: string
+  ownerName: string
+  startOffsetDays: number
+  endOffsetDays: number
+  scope: string[]
+  inviteCode: string
+}
+
+export const tenantAccessGrants: TenantAccessGrant[] = [
+  { id: "grant-1", tenantName: "Ivan Petrov", unit: "B3 / 12", ownerName: "Ahmet Yılmaz", startOffsetDays: -20, endOffsetDays: 70, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-8F3A2C" },
+  { id: "grant-2", tenantName: "Sofia Novak", unit: "A1 / 5", ownerName: "Elena Kaya", startOffsetDays: -85, endOffsetDays: 6, scope: ["tickets", "calendar", "communications"], inviteCode: "NLP-INV-11B7D9" },
+  { id: "grant-3", tenantName: "Mehmet Demir", unit: "C2 / 8", ownerName: "Ahmet Yılmaz", startOffsetDays: -120, endOffsetDays: -3, scope: ["tickets", "documents"], inviteCode: "NLP-INV-77E1A0" },
+  { id: "grant-4", tenantName: "Anna Ivanova", unit: "B1 / 3", ownerName: "Deniz Aksoy", startOffsetDays: -10, endOffsetDays: 20, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-3C9F45" },
+]
+
 export const statusLabels: Record<FlatStatus, string> = {
   occupied: "Dolu",
   vacant: "Boş",
@@ -1774,7 +1813,7 @@ export function getBlockOverview(): BlockOverview[] {
       numberingSource: blockSource?.numberingSource ?? null,
       occupied: records.filter((flat) => flat.status === "occupied").length,
       vacant: records.filter((flat) => flat.status === "vacant").length,
-      blocked: records.filter((flat) => flat.accessStatus === "restricted").length,
+      blocked: records.filter((flat) => flat.status === "blocked").length,
       maintenance: records.filter((flat) => flat.status === "maintenance").length,
       debtTry: records.reduce((sum, flat) => sum + flat.balanceTry, 0),
     }

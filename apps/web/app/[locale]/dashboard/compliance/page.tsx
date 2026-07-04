@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useLocale } from "next-intl"
 import { BadgeCheck, BarChart3, Car, DoorOpen, FileSearch, KeyRound, LockKeyhole, Network, Scale, ShieldAlert, ShieldCheck } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
@@ -17,6 +18,8 @@ import {
   type AccessStatus,
   type EligibilityStatus,
 } from "@/lib/site-management-data"
+import { localizeBusinessCopy, resolveDashboardLocale, interpolate } from "@/lib/business-copy"
+import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 
 function statusVariant(status: AccessStatus) {
   if (status === "active") return "success"
@@ -32,11 +35,11 @@ function riskVariant(risk: AccessControlRecord["riskLevel"]) {
   return "success"
 }
 
-function riskLabel(risk: AccessControlRecord["riskLevel"]) {
-  if (risk === "critical") return "Kritik"
-  if (risk === "high") return "Yüksek"
-  if (risk === "medium") return "Orta"
-  return "Düşük"
+function riskLabel(risk: AccessControlRecord["riskLevel"], locale: string) {
+  if (risk === "critical") return localizeBusinessCopy("Kritik", locale)
+  if (risk === "high") return localizeBusinessCopy("Yüksek", locale)
+  if (risk === "medium") return localizeBusinessCopy("Orta", locale)
+  return localizeBusinessCopy("Düşük", locale)
 }
 
 function eligibilityVariant(status: EligibilityStatus) {
@@ -45,11 +48,11 @@ function eligibilityVariant(status: EligibilityStatus) {
   return "danger"
 }
 
-function eligibilityLabel(status: EligibilityStatus) {
-  if (status === "qualified") return "Uygun"
-  if (status === "review_required") return "Kontrol gerekli"
-  if (status === "partner_review") return "Partner incelemesi"
-  return "Blokeli"
+function eligibilityLabel(status: EligibilityStatus, locale: string) {
+  if (status === "qualified") return localizeBusinessCopy("Uygun", locale)
+  if (status === "review_required") return localizeBusinessCopy("Kontrol gerekli", locale)
+  if (status === "partner_review") return localizeBusinessCopy("Partner incelemesi", locale)
+  return localizeBusinessCopy("Blokeli", locale)
 }
 
 function ComplianceCommandScene({
@@ -57,16 +60,17 @@ function ComplianceCommandScene({
 }: {
   summary: ReturnType<typeof getAccessSummary>
 }) {
+  const locale = resolveDashboardLocale(useLocale())
   const flow = [
-    { label: "Kimlik", detail: "QR, kart, plaka", icon: KeyRound },
-    { label: "Finans", detail: "Borç ve depozito", icon: LockKeyhole },
-    { label: "Karar", detail: "Geçiş veya kısıt", icon: DoorOpen },
+    { label: localizeBusinessCopy("Kimlik", locale), detail: localizeBusinessCopy("QR, kart, plaka", locale), icon: KeyRound },
+    { label: localizeBusinessCopy("Finans", locale), detail: localizeBusinessCopy("Borç ve depozito", locale), icon: LockKeyhole },
+    { label: localizeBusinessCopy("Karar", locale), detail: localizeBusinessCopy("Geçiş veya kısıt", locale), icon: DoorOpen },
   ]
   const bars = [
-    { label: "Kapı", value: 84 },
-    { label: "Otopark", value: 63 },
-    { label: "Havuz", value: 56 },
-    { label: "Asansör", value: 48 },
+    { label: localizeBusinessCopy("Kapı", locale), value: 84 },
+    { label: localizeBusinessCopy("Otopark", locale), value: 63 },
+    { label: localizeBusinessCopy("Havuz", locale), value: 56 },
+    { label: localizeBusinessCopy("Asansör", locale), value: 48 },
   ]
 
   return (
@@ -101,20 +105,22 @@ function ComplianceCommandScene({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                Erişim karar motoru
+                {localizeBusinessCopy("Erişim karar motoru", locale)}
               </p>
               <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl 2xl:text-5xl">
-                Kapı, borç, depozito ve kimlik tek karar motorunda
+                {localizeBusinessCopy("Kapı, borç, depozito ve kimlik tek karar motorunda", locale)}
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">
-                Sistem erişim kararını sadece geçiş kartı olarak değil; ödeme, rezervasyon,
-                belge ve güvenlik sinyaliyle birlikte değerlendirir.
+                {localizeBusinessCopy(
+                  "Sistem erişim kararını sadece geçiş kartı olarak değil; ödeme, rezervasyon, belge ve güvenlik sinyaliyle birlikte değerlendirir.",
+                  locale
+                )}
               </p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
               <ShieldAlert className="ml-auto h-5 w-5 text-amber-200" />
               <p className="mt-3 text-4xl font-black">{summary.restricted}</p>
-              <p className="mt-1 text-xs text-white/65">aktif kısıt</p>
+              <p className="mt-1 text-xs text-white/65">{localizeBusinessCopy("aktif kısıt", locale)}</p>
             </div>
           </div>
 
@@ -151,10 +157,13 @@ function ComplianceCommandScene({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                Canlı risk filtresi
+                {localizeBusinessCopy("Canlı risk filtresi", locale)}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {summary.pending} bekleyen, {summary.critical} kritik karar
+                {interpolate(localizeBusinessCopy("{pending} bekleyen, {critical} kritik karar", locale), {
+                  pending: summary.pending,
+                  critical: summary.critical,
+                })}
               </h2>
             </div>
             <Network className="h-5 w-5 text-primary" />
@@ -183,9 +192,9 @@ function ComplianceCommandScene({
           <div className="flex items-center gap-3">
             <BarChart3 className="h-5 w-5 text-primary" />
             <div>
-              <h2 className="text-sm font-bold text-card-foreground">Denetim ritmi</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Denetim ritmi", locale)}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Her geçiş kararı kullanıcı, sebep, saat ve belge referansıyla kayıt altında tutulur.
+                {localizeBusinessCopy("Her geçiş kararı kullanıcı, sebep, saat ve belge referansıyla kayıt altında tutulur.", locale)}
               </p>
             </div>
           </div>
@@ -196,15 +205,19 @@ function ComplianceCommandScene({
 }
 
 export default function CompliancePage() {
+  const locale = resolveDashboardLocale(useLocale())
   const summary = getAccessSummary()
   const eligibilitySummary = getEligibilitySummary()
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">Erişim & Uyum</h1>
+        <h1 className="text-2xl font-black text-foreground">{localizeBusinessCopy("Erişim & Uyum", locale)}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          Mobil kod, kart, plaka, QR, borç kısıtı, depozito kontrolü ve güvenlik olaylarını tek karar motorunda izleyin.
+          {localizeBusinessCopy(
+            "Mobil kod, kart, plaka, QR, borç kısıtı, depozito kontrolü ve güvenlik olaylarını tek karar motorunda izleyin.",
+            locale
+          )}
         </p>
       </div>
 
@@ -215,7 +228,7 @@ export default function CompliancePage() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Takipteki kayıt</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Takipteki kayıt", locale)}</p>
               <AnimatedCounter value={summary.total} className="text-2xl font-black" />
             </div>
           </div>
@@ -224,7 +237,7 @@ export default function CompliancePage() {
           <div className="flex items-center gap-3">
             <LockKeyhole className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Kısıtlı</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Kısıtlı", locale)}</p>
               <AnimatedCounter value={summary.restricted} className="text-2xl font-black" />
             </div>
           </div>
@@ -233,7 +246,7 @@ export default function CompliancePage() {
           <div className="flex items-center gap-3">
             <KeyRound className="h-8 w-8 text-amber-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Bekleyen</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Bekleyen", locale)}</p>
               <AnimatedCounter value={summary.pending} className="text-2xl font-black" />
             </div>
           </div>
@@ -242,7 +255,7 @@ export default function CompliancePage() {
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-8 w-8 text-red-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">Kritik risk</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Kritik risk", locale)}</p>
               <AnimatedCounter value={summary.critical} className="text-2xl font-black" />
             </div>
           </div>
@@ -252,11 +265,13 @@ export default function CompliancePage() {
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-card-foreground">Erişim bölgesi yoğunluğu</h2>
-            <StatusBadge variant="accent">5 bölge</StatusBadge>
+            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Erişim bölgesi yoğunluğu", locale)}</h2>
+            <StatusBadge variant="accent">
+              {interpolate(localizeBusinessCopy("{count} bölge", locale), { count: summary.zones.length })}
+            </StatusBadge>
           </div>
           <BarChart
-            data={summary.zones.map((zone) => ({ label: zone.label, value: zone.value, color: "var(--primary)" }))}
+            data={summary.zones.map((zone) => ({ label: localizeBusinessCopy(zone.label, locale), value: zone.value, color: "var(--primary)" }))}
             height={230}
           />
         </Card3D>
@@ -266,9 +281,9 @@ export default function CompliancePage() {
             <div className="flex items-start gap-3">
               <DoorOpen className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Kapı karar motoru</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Kapı karar motoru", locale)}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Borç, rezervasyon, depozito ve kimlik kontrolü tamamlanmadan geçici erişim açılmaz.
+                  {localizeBusinessCopy("Borç, rezervasyon, depozito ve kimlik kontrolü tamamlanmadan geçici erişim açılmaz.", locale)}
                 </p>
               </div>
             </div>
@@ -277,9 +292,9 @@ export default function CompliancePage() {
             <div className="flex items-start gap-3">
               <Car className="mt-0.5 h-5 w-5 text-amber-600" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Plaka ve otopark</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Plaka ve otopark", locale)}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Otopark, misafir ve sakin erişimleri aynı uyum kayıtlarına bağlanır.
+                  {localizeBusinessCopy("Otopark, misafir ve sakin erişimleri aynı uyum kayıtlarına bağlanır.", locale)}
                 </p>
               </div>
             </div>
@@ -288,9 +303,9 @@ export default function CompliancePage() {
             <div className="flex items-start gap-3">
               <BadgeCheck className="mt-0.5 h-5 w-5 text-teal-600" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">Audit trail</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Denetim izi", locale)}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Her erişim kararı kullanıcı, sebep, saat ve belge referansıyla denetlenebilir tutulur.
+                  {localizeBusinessCopy("Her erişim kararı kullanıcı, sebep, saat ve belge referansıyla denetlenebilir tutulur.", locale)}
                 </p>
               </div>
             </div>
@@ -303,31 +318,36 @@ export default function CompliancePage() {
           <div>
             <div className="flex items-center gap-2">
               <Scale className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü</h2>
+              <h2 className="text-sm font-bold text-card-foreground">
+                {localizeBusinessCopy("Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü", locale)}
+              </h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Satış ekibi uygunluk ön kontrolünü görür; sistem hukuki garanti vermez ve riskli durumları partner incelemesine gönderir.
+              {localizeBusinessCopy(
+                "Satış ekibi uygunluk ön kontrolünü görür; sistem hukuki garanti vermez ve riskli durumları partner incelemesine gönderir.",
+                locale
+              )}
             </p>
           </div>
           <StatusBadge variant={eligibilitySummary.blocked > 0 ? "danger" : "success"}>
-            {eligibilitySummary.review} inceleme kuyruğu
+            {interpolate(localizeBusinessCopy("{count} inceleme kuyruğu", locale), { count: eligibilitySummary.review })}
           </StatusBadge>
         </div>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-border bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Alıcı dosyası</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Alıcı dosyası", locale)}</p>
             <p className="mt-1 text-2xl font-black text-foreground">{eligibilitySummary.total}</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Ön uygun</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Ön uygun", locale)}</p>
             <p className="mt-1 text-2xl font-black text-foreground">{eligibilitySummary.qualified}</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Ekspertiz gerekli</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Ekspertiz gerekli", locale)}</p>
             <p className="mt-1 text-2xl font-black text-foreground">{eligibilitySummary.appraisalRequired}</p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Blokeli</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Blokeli", locale)}</p>
             <p className="mt-1 text-2xl font-black text-foreground">{eligibilitySummary.blocked}</p>
           </div>
         </div>
@@ -336,33 +356,33 @@ export default function CompliancePage() {
           pageSize={6}
           searchValue={(record) => `${record.id} ${record.buyerName} ${record.nationality} ${record.buyerGoal} ${record.targetUnit} ${record.nextAction}`}
           columns={[
-            { key: "id", header: "Kontrol", sortable: true, render: (record) => record.id },
-            { key: "buyer", header: "Alıcı", render: (record) => record.buyerName },
-            { key: "goal", header: "Hedef", sortable: true, render: (record) => record.buyerGoal },
+            { key: "id", header: localizeBusinessCopy("Kontrol", locale), sortable: true, render: (record) => record.id },
+            { key: "buyer", header: localizeBusinessCopy("Alıcı", locale), render: (record) => record.buyerName },
+            { key: "goal", header: localizeBusinessCopy("Hedef", locale), sortable: true, render: (record) => localizeBusinessCopy(record.buyerGoal, locale) },
             {
               key: "budget",
-              header: "Bütçe",
+              header: localizeBusinessCopy("Bütçe", locale),
               sortable: true,
               sortValue: (record) => record.declaredBudgetEur,
               render: (record) => `${record.declaredBudgetEur.toLocaleString("de-DE")} €`,
             },
-            { key: "district", header: "Bölge", render: (record) => record.districtCheck },
+            { key: "district", header: localizeBusinessCopy("Bölge", locale), render: (record) => localizeBusinessCopy(record.districtCheck, locale) },
             {
               key: "appraisal",
-              header: "Ekspertiz",
+              header: localizeBusinessCopy("Ekspertiz", locale),
               render: (record) => (
                 <span className="inline-flex items-center gap-1">
                   <FileSearch className="h-3.5 w-3.5 text-muted-foreground" />
-                  {record.appraisalRequired ? "Gerekli" : "Gerekmez"}
+                  {record.appraisalRequired ? localizeBusinessCopy("Gerekli", locale) : localizeBusinessCopy("Gerekmez", locale)}
                 </span>
               ),
             },
             {
               key: "status",
-              header: "Durum",
-              render: (record) => <StatusBadge variant={eligibilityVariant(record.status)}>{eligibilityLabel(record.status)}</StatusBadge>,
+              header: localizeBusinessCopy("Durum", locale),
+              render: (record) => <StatusBadge variant={eligibilityVariant(record.status)}>{eligibilityLabel(record.status, locale)}</StatusBadge>,
             },
-            { key: "next", header: "Sonraki aksiyon", render: (record) => record.nextAction },
+            { key: "next", header: localizeBusinessCopy("Sonraki aksiyon", locale), render: (record) => localizeBusinessCopy(record.nextAction, locale) },
           ]}
         />
       </Card3D>
@@ -371,23 +391,30 @@ export default function CompliancePage() {
         data={accessControlRecords}
         searchValue={(record) => `${record.flatNumber} ${record.residentName} ${record.zone} ${record.credential} ${record.reason}`}
         columns={[
-          { key: "flat", header: "Daire", sortable: true, render: (record) => record.flatNumber },
-          { key: "resident", header: "Sakin", render: (record) => record.residentName },
-          { key: "zone", header: "Bölge", sortable: true, render: (record) => record.zone },
-          { key: "credential", header: "Kimlik", sortable: true, render: (record) => record.credential },
+          { key: "flat", header: localizeBusinessCopy("Daire", locale), sortable: true, render: (record) => record.flatNumber },
+          { key: "resident", header: localizeBusinessCopy("Sakin", locale), render: (record) => localizeOperationalValue(record.residentName, locale) },
+          { key: "zone", header: localizeBusinessCopy("Bölge", locale), sortable: true, render: (record) => localizeBusinessCopy(record.zone, locale) },
+          {
+            key: "credential",
+            header: localizeBusinessCopy("Kimlik", locale),
+            sortable: true,
+            render: (record) => localizeBusinessCopy(record.credential, locale),
+          },
           {
             key: "status",
-            header: "Erişim",
-            render: (record) => <StatusBadge variant={statusVariant(record.status)}>{accessLabels[record.status]}</StatusBadge>,
+            header: localizeBusinessCopy("Erişim", locale),
+            render: (record) => (
+              <StatusBadge variant={statusVariant(record.status)}>{localizeBusinessCopy(accessLabels[record.status], locale)}</StatusBadge>
+            ),
           },
           {
             key: "risk",
-            header: "Risk",
+            header: localizeBusinessCopy("Risk", locale),
             sortable: true,
             sortValue: (record) => record.riskLevel,
-            render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{riskLabel(record.riskLevel)}</StatusBadge>,
+            render: (record) => <StatusBadge variant={riskVariant(record.riskLevel)}>{riskLabel(record.riskLevel, locale)}</StatusBadge>,
           },
-          { key: "reason", header: "Sebep", render: (record) => record.reason },
+          { key: "reason", header: localizeBusinessCopy("Sebep", locale), render: (record) => localizeBusinessCopy(record.reason, locale) },
         ]}
       />
     </div>

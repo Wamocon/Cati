@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sparkles, Send, X, Bot, User } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import { getAiSuggestions, generateAiResponse } from "@/lib/ai-responses"
+import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 import type { Role } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
 
@@ -15,17 +16,17 @@ interface Message {
   content: string
 }
 
-function placeholderForRole(role: Role, fallback: string) {
+function placeholderForRole(role: Role, fallback: string, locale: string) {
   if (role === "accountant") {
-    return "Aidat, tahsilat, depozito veya finans raporu sorun..."
+    return localizeBusinessCopy("Aidat, tahsilat, depozito veya finans raporu sorun...", locale)
   }
 
   if (role === "staff") {
-    return "Atanan servis, saha notu veya rezervasyon işi sorun..."
+    return localizeBusinessCopy("Atanan servis, saha notu veya rezervasyon işi sorun...", locale)
   }
 
   if (role === "owner" || role === "tenant") {
-    return "Servis, rezervasyon, belge veya mesaj hakkında sorun..."
+    return localizeBusinessCopy("Servis, rezervasyon, belge veya mesaj hakkında sorun...", locale)
   }
 
   return fallback
@@ -33,6 +34,7 @@ function placeholderForRole(role: Role, fallback: string) {
 
 export function AiAssistant() {
   const t = useTranslations("aiAssistant")
+  const locale = resolveDashboardLocale(useLocale())
   const user = useUser()
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState("")
@@ -41,14 +43,14 @@ export function AiAssistant() {
       id: "welcome",
       role: "assistant",
       content: t("welcome", {
-        role: user.full_name || user.email || "Operasyon kullanıcısı",
+        role: user.full_name || user.email || localizeBusinessCopy("Operasyon Kullanıcısı", locale),
       }),
     },
   ])
   const [typing, setTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const messageIdRef = useRef(0)
-  const suggestions = getAiSuggestions(user.role)
+  const suggestions = getAiSuggestions(user.role, locale)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -68,12 +70,12 @@ export function AiAssistant() {
     setInput("")
     setTyping(true)
 
-    let response = generateAiResponse(text, user.role)
+    let response = generateAiResponse(text, user.role, locale)
     try {
       const result = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, locale }),
       })
       if (result.ok) {
         const payload = (await result.json()) as { reply?: unknown }
@@ -82,7 +84,7 @@ export function AiAssistant() {
         }
       }
     } catch {
-      response = generateAiResponse(text, user.role)
+      response = generateAiResponse(text, user.role, locale)
     }
     messageIdRef.current += 1
     const assistantMsg: Message = {
@@ -129,7 +131,7 @@ export function AiAssistant() {
                   <Bot className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">1Çatı Operasyon Asistanı</p>
+                  <p className="text-sm font-bold text-foreground">1Çatı {localizeBusinessCopy("Operasyon Asistanı", locale)}</p>
                   <p className="text-[10px] text-muted-foreground">
                     {t("subtitle")}
                   </p>
@@ -212,7 +214,7 @@ export function AiAssistant() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={placeholderForRole(user.role, t("placeholder"))}
+                placeholder={placeholderForRole(user.role, t("placeholder"), locale)}
                 className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <button

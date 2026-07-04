@@ -42,7 +42,7 @@ function StatNumber({
       initial={{ opacity: 1, y: 12 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="text-3xl font-black text-foreground sm:text-4xl"
+      className="text-2xl font-black whitespace-nowrap tabular-nums text-foreground sm:text-3xl lg:text-4xl"
     >
       <motion.span>{display}</motion.span>
       {suffix}
@@ -75,7 +75,7 @@ export function Stats() {
               transition={{ delay: index * 0.08, duration: 0.5 }}
             >
               <GlassCard
-                className="flex flex-col items-center justify-center py-6 text-center"
+                className="flex h-full flex-col items-center justify-center px-3 py-6 text-center sm:px-6"
                 hover
               >
                 <StatNumber value={stat.value} suffix={stat.suffix} />

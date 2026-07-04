@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { getLocale } from "next-intl/server"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -10,21 +11,24 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Correct lang per request enables CSS hyphens:auto for long German/Russian
+  // compounds and gives screen readers the real page language.
+  const locale = await getLocale()
+
   return (
     <html
-      lang="tr"
+      lang={locale}
       dir="ltr"
       className={cn("antialiased")}
       suppressHydrationWarning
       data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
-        <a href="#main" className="skip-link">Skip to content</a>
         {children}
       </body>
     </html>

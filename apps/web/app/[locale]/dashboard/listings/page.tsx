@@ -42,6 +42,7 @@ import {
   type PaymentStatus,
 } from "@/lib/site-management-data"
 import type { NewLevelPremiumSaleStatus } from "@/lib/new-level-premium-data"
+import { localizeBusinessCopy } from "@/lib/business-copy"
 import {
   interpolate,
   localizeOperationalValue,
@@ -51,6 +52,12 @@ import {
 } from "@/lib/unit-matrix-copy"
 
 type UnitSignalFilter = "all" | "occupied" | "vacant" | "restricted" | "debt" | "service"
+
+function formatPercent(value: number | string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  if (locale === "de" || locale === "ru") return `${value} %`
+  if (locale === "en") return `${value}%`
+  return `%${value}`
+}
 
 function flatVariant(status: FlatStatus) {
   if (status === "occupied") return "success"
@@ -186,7 +193,7 @@ export default function ListingsPage() {
     {
       key: "occupied",
       label: copy.metrics.occupancyLabel,
-      value: `%${summary.occupancyRate}`,
+      value: formatPercent(summary.occupancyRate, locale),
       helper: copy.metrics.occupancyHelper,
       icon: Home,
       tone: "text-teal-600",
@@ -382,7 +389,7 @@ export default function ListingsPage() {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-8 gap-1 sm:grid-cols-12 lg:grid-cols-16 xl:grid-cols-24">
+        <div className="grid grid-cols-6 gap-1 sm:grid-cols-12 lg:grid-cols-16 xl:grid-cols-24">
           {matrixPreview.map((flat) => {
             const active = selectedFlat?.id === flat.id
 
@@ -393,7 +400,7 @@ export default function ListingsPage() {
                 aria-label={`${flat.number} ${copy.actions.detailOpen}`}
                 aria-pressed={active}
                 className={cn(
-                  "flex aspect-square min-h-8 items-center justify-center rounded-md border text-[10px] font-bold transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex aspect-square min-h-10 items-center justify-center rounded-md border text-[10px] font-bold transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-8",
                   flat.status === "occupied" && "border-teal-500/20 bg-teal-500/10 text-teal-700 dark:text-teal-300",
                   flat.status === "vacant" && "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
                   flat.status === "reserved" && "border-primary/20 bg-primary/10 text-primary",
@@ -424,7 +431,7 @@ export default function ListingsPage() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     {interpolate(copy.selectedUnit.blockSummary, {
                       block: selectedFlat.block,
-                      floor: selectedFlat.floorLabel,
+                      floor: localizeBusinessCopy(selectedFlat.floorLabel, locale),
                       type: selectedFlat.type,
                     })}
                     {selectedFlat.areaText ? ` · ${selectedFlat.areaText}` : ""}
@@ -516,7 +523,7 @@ export default function ListingsPage() {
               </p>
             </div>
             <StatusBadge variant={importSummary.rejectedRows === 0 ? "success" : "danger"}>
-              %{importSummary.readinessRate} {copy.import.ready}
+              {formatPercent(importSummary.readinessRate, locale)} {copy.import.ready}
             </StatusBadge>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -565,7 +572,7 @@ export default function ListingsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{batch.source}</h3>
+                    <h3 className="mt-1 text-sm font-black text-foreground">{localizeBusinessCopy(batch.source, locale)}</h3>
                   </div>
                   <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
                 </div>
@@ -615,7 +622,7 @@ export default function ListingsPage() {
                     <DashboardActionButton
                       key={finding.id}
                       actionType="import.finding.view"
-                      ariaLabel={`${finding.area} ${copy.import.findingOpened}`}
+                      ariaLabel={`${localizeBusinessCopy(finding.area, locale)} ${copy.import.findingOpened}`}
                       className="w-full rounded-lg bg-muted/40 p-2 text-left transition hover:bg-primary/10"
                       entityExternalId={finding.id}
                       entityTable="import_findings"
@@ -625,10 +632,10 @@ export default function ListingsPage() {
                         severity: finding.severity,
                       }}
                       successLabel={copy.import.findingOpened}
-                      title={`${finding.area} ${copy.import.findingSummary}`}
+                      title={`${localizeBusinessCopy(finding.area, locale)} ${copy.import.findingSummary}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-foreground">{finding.area}</span>
+                        <span className="text-xs font-semibold text-foreground">{localizeBusinessCopy(finding.area, locale)}</span>
                         <StatusBadge variant={findingVariant(finding.severity)}>{findingLabel(finding.severity, copy)}</StatusBadge>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{finding.affectedRows} {copy.common.rows}</p>
