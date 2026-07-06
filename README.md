@@ -148,12 +148,38 @@ set TMP=.tmp
 ## What Must Stay Out Of Git
 
 - `.env`, `.env.local`, `.env.*.local`
+- `.env.local.example` (use `.env.example` as the only committed template name)
 - `.tmp/`
 - generated QA output folders
 - `playwright-report/`
 - `test-results/`
+- `node_modules/`
 - generated `.zip` archives
 - local browser caches, logs and temporary Word files
+
+Use the committed templates for local setup:
+
+- root `.env.example` is for repository automation such as Jira/Xray, Supabase import and QA harnesses.
+- `apps/web/.env.example` is for the Next.js application runtime and Vercel.
+
+To clean local generated files without removing dependencies:
+
+```bash
+pnpm clean:workspace
+```
+
+To preview the cleanup first:
+
+```bash
+pnpm clean:workspace -- --dry-run
+```
+
+Dependency folders are intentionally kept by default. Remove them only when you
+want a fresh install:
+
+```bash
+pnpm clean:workspace -- --include-deps
+```
 
 ## Key Commands
 

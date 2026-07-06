@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+**/node_modules/
 
 # Build outputs
 .next/
@@ -8,6 +9,9 @@ dist/
 out/
 *.tsbuildinfo
 .turbo/
+**/.next/
+**/.turbo/
+**/next-env.d.ts
 
 # QA / temporary artifacts
 qa_*.png
@@ -19,6 +23,14 @@ quality/
 .tmp/
 .graphify/
 Microsoft/
+**/qa/
+**/qa_output/
+**/quality/
+**/.tmp/
+**/.graphify/
+**/Microsoft/
+**/playwright-report/
+**/test-results/
 
 # Local raw client/source folders copied beside the repo for extraction.
 # Curated app assets and generated datasets belong under apps/web/public,
@@ -44,6 +56,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.local.example
 
 # IDE
 .vscode/
