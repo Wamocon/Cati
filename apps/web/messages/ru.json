@@ -9,7 +9,9 @@
     "platformLink": "ERP-платформа"
   },
   "nav": {
+    "skipToContent": "Перейти к содержимому",
     "home": "Главная",
+    "newLevel": "New Level",
     "catalog": "Модули",
     "about": "О нас",
     "services": "Процессы",

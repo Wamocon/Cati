@@ -15,6 +15,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
   { label: "home", href: "/" },
+  { label: "newLevel", href: "/new-level-premium" },
   { label: "catalog", href: "/#modules" },
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
@@ -149,8 +150,8 @@ export function Navbar() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl 2xl:hidden"
           >
-            <div className="container flex h-full flex-col pt-28 pb-8">
-              <nav className="flex flex-1 flex-col gap-2">
+            <div className="container flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain pt-24 pb-6 sm:pt-28 sm:pb-8">
+              <nav className="flex shrink-0 flex-col gap-1 sm:gap-2">
                 {navItems.map((item, index) => (
                   <motion.div
                     key={item.label}
@@ -160,7 +161,7 @@ export function Navbar() {
                   >
                     <Link
                       href={item.href}
-                      className="block rounded-2xl px-4 py-4 text-2xl font-bold text-foreground transition-colors hover:bg-muted"
+                      className="block rounded-2xl px-4 py-3 text-xl font-bold text-foreground transition-colors hover:bg-muted sm:py-4 sm:text-2xl"
                       onClick={() => setOpen(false)}
                     >
                       {t(item.label)}
@@ -168,7 +169,7 @@ export function Navbar() {
                   </motion.div>
                 ))}
               </nav>
-              <div className="space-y-4 border-t border-border pt-6">
+              <div className="mt-4 space-y-4 border-t border-border pt-5 sm:mt-6 sm:pt-6">
                 <div className="flex items-center">
                   <LocaleSwitcher />
                 </div>

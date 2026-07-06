@@ -27,6 +27,7 @@ import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { createClient } from "@/lib/supabase/client"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 interface MenuItem {
@@ -73,6 +74,12 @@ export function DashboardSidebar() {
 
   async function logout() {
     try {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        await createClient().auth.signOut()
+      }
       await fetch("/api/access-profile", { method: "DELETE" })
     } catch {
       // ignore
@@ -104,7 +111,7 @@ export function DashboardSidebar() {
       <aside
         id={mobileMenuId}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform overflow-hidden border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:relative md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
+          "fixed inset-y-0 left-0 z-50 w-72 transform overflow-hidden border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:sticky md:top-0 md:h-svh md:self-start md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
           mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
         )}
       >
