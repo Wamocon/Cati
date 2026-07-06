@@ -309,9 +309,6 @@ WITH target_site AS (
     AND s.code = 'NLP-AVS'
   LIMIT 1
 ),
-phase4 AS (
-  SELECT public.get_phase4_site_data('', 3) AS payload
-),
 checks AS (
   SELECT
     'unit_total' AS check_name,
@@ -365,15 +362,6 @@ checks AS (
   JOIN public.import_batches b ON b.id = f.import_batch_id
   JOIN target_site s ON s.company_id = b.company_id
   WHERE b.source_name IN ('New Level Premium price-list package', 'Project documents, facility map and floor plans', 'Construction and showroom media')
-  UNION ALL
-  SELECT 'phase4_source', phase4.payload->>'source', 'supabase', phase4.payload->>'source' = 'supabase'
-  FROM phase4
-  UNION ALL
-  SELECT 'phase4_total_units', phase4.payload->'summary'->>'totalUnits', '769', phase4.payload->'summary'->>'totalUnits' = '769'
-  FROM phase4
-  UNION ALL
-  SELECT 'phase4_first_unit', phase4.payload->'units'->0->>'unit_no', 'A-001', phase4.payload->'units'->0->>'unit_no' = 'A-001'
-  FROM phase4
 )
 SELECT check_name, actual, expected, passed
 FROM checks

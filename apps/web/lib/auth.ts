@@ -13,10 +13,10 @@ export interface UserProfile {
   avatar_url?: string | null
 }
 
-// Access-profile fallback is only for controlled local/QA review. It must never
+// Access-profile fallback is only for controlled QA review. It must never
 // become a production fallback when Supabase is missing or misconfigured.
 async function getAccessProfile(): Promise<UserProfile> {
-  let accessRole = process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ?? "manager"
+  let accessRole = process.env.ACCESS_PROFILE_ROLE ?? "manager"
 
   try {
     const cookieStore = await cookies()
@@ -54,18 +54,15 @@ export function isAccessProfileEnabled(): boolean {
     process.env.VERCEL_ENV === "production" ||
     process.env.CATI_ENV === "production"
   const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const legacyDevFlag =
-    process.env.NODE_ENV !== "production" &&
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
   const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
   const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
 
-  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
+  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
 }
 
 /**
  * Returns the current authenticated user profile with a normalized role.
- * Falls back to a local access profile only when external auth is not configured,
+ * Falls back to a QA access profile only when external auth is not configured,
  * unless access profiles are explicitly enabled for a controlled environment.
  */
 export async function getUserProfile(): Promise<UserProfile | null> {

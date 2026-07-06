@@ -46,7 +46,6 @@ function hasSupabasePublicEnv() {
 function shouldUseRealtime() {
   return (
     hasSupabasePublicEnv() &&
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES !== "true" &&
     process.env.NEXT_PUBLIC_ENABLE_REALTIME !== "false"
   )
 }

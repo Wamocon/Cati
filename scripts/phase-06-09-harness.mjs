@@ -279,8 +279,8 @@ async function runGate(gate, args, outDir) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
-  process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES =
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
+  process.env.ENABLE_ACCESS_PROFILES =
+    process.env.ENABLE_ACCESS_PROFILES ?? "true"
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const outDir = path.join(rootDir, "quality", "results", `phase-06-09-harness-${timestamp}`)
   await fs.mkdir(outDir, { recursive: true })

@@ -196,7 +196,7 @@ so all 4 languages share identical motion.**
 1. **Use seeded demo data only.** Load the demo seed so numbers (769 units, balances, tickets)
    are stable and contain no real personal data. Confirm no real owner/tenant names appear.
 2. **Enable demo mode**: run the app with access profiles on
-   (`NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true`) so we can switch roles with no login.
+   (`ENABLE_ACCESS_PROFILES=true`) so we can switch roles with no login in controlled QA.
 3. **Fix the viewport** to 1920×1080, device scale factor 2 for crisp text.
 4. **Hide local-only noise**: no dev banners, no console overlays, no realtime "connection
    refused" toast (the QA scripts already filter this — keep it off-screen).
@@ -235,7 +235,7 @@ enabled and a scene list). Run it from `apps/web`:
 
 ```text
 # 1) start the app in demo mode
-$env:NEXT_PUBLIC_ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
+$env:ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
 # 2) record the visual master (all scenes, all 4 languages)
 node scripts/demo-record.mjs
 # optional: re-record only some scenes

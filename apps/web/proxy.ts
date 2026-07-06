@@ -38,13 +38,10 @@ function accessProfilesEnabledForRequest() {
     process.env.VERCEL_ENV === "production" ||
     process.env.CATI_ENV === "production"
   const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const legacyDevFlag =
-    process.env.NODE_ENV !== "production" &&
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
   const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
   const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
 
-  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
+  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
 }
 
 export default async function proxy(request: NextRequest) {

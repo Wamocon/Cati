@@ -26,10 +26,15 @@ Copy `.env.example` to `.env.local` and fill local values. Never commit `.env.lo
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DOCUMENT_STORAGE_MODE=supabase
+SUPABASE_DOCUMENT_BUCKET=cati-documents
 AI_API_URL=
 AI_API_KEY=
 AI_CHAT_COMPLETIONS_PATH=/chat/completions
 ```
+
+`SUPABASE_SERVICE_ROLE_KEY` is required only on the server for live document uploads and must be marked sensitive in Vercel. The default private Supabase Storage bucket is `cati-documents`.
 
 ## Quality
 

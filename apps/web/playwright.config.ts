@@ -8,8 +8,8 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`
 const readinessURL = process.env.PLAYWRIGHT_SERVER_URL ?? `${baseURL}/tr`
 const nextServerCommand =
   process.platform === "win32"
-    ? `cmd /c set ENABLE_ACCESS_PROFILES=true&& set NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true&& npm run ${nextMode} -- -p ${port}`
-    : `ENABLE_ACCESS_PROFILES=true NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true npm run ${nextMode} -- -p ${port}`
+    ? `cmd /c set ENABLE_ACCESS_PROFILES=true&& npm run ${nextMode} -- -p ${port}`
+    : `ENABLE_ACCESS_PROFILES=true npm run ${nextMode} -- -p ${port}`
 
 export default defineConfig({
   testDir: "./e2e",
@@ -36,7 +36,6 @@ export default defineConfig({
     command: nextServerCommand,
     env: {
       ENABLE_ACCESS_PROFILES: "true",
-      NEXT_PUBLIC_ENABLE_ACCESS_PROFILES: "true",
     },
     url: readinessURL,
     reuseExistingServer,

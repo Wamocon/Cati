@@ -43,7 +43,7 @@ Native mobile scope: Excluded from launch scope unless later approved
 
 This TRD defines the target technical architecture and implementation controls. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
 
-As of 6 July 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, queued public intake APIs for owner/tenant/staff requests and public reports, a data-blind source-grounded public product concierge with internal source/confidence telemetry, escalation and feedback logging, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, abuse/rate-limit controls, UAT and launch handover remain required.
+As of 6 July 2026, the repository is connected to the hosted Supabase project `hczmbaqofxyusellxhyp` with migrations `00000000000000` through `00000000000013` applied, RBAC/RLS-oriented schema work, operational APIs, queued public intake APIs for owner/tenant/staff requests and public reports, a data-blind source-grounded public product concierge with internal source/confidence telemetry, escalation and feedback logging, cloud-backed New Level Premium data, company-scoped Auth profile creation, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; final RLS/security review, provider integrations, abuse/rate-limit controls, UAT and launch handover remain required.
 
 ## 1. Technical Executive Summary
 

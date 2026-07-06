@@ -27,7 +27,7 @@
 // PREREQUISITES
 //   1. Run the app with demo mode on:
 //        (PowerShell, from apps/web)
-//        $env:NEXT_PUBLIC_ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
+//        $env:ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
 //   2. Then run this recorder (from apps/web):
 //        node scripts/demo-record.mjs
 //
