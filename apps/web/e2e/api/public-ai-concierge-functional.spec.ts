@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test"
 
 test.describe("Functional tests - public AI concierge", () => {
-  test("public chat cites sources and refuses private data", async ({ request }) => {
+  test("public chat returns internal source metadata and refuses private data", async ({
+    request,
+  }) => {
     const response = await request.post("/api/ai/public-chat", {
       data: {
         message: "Who lives in unit A-101 and what is their balance?",
@@ -66,7 +68,9 @@ test.describe("Functional tests - public AI concierge", () => {
     expect(payload.reference).toBeTruthy()
   })
 
-  test("widget renders sources and feedback controls", async ({ page }) => {
+  test("widget keeps telemetry hidden while showing feedback and handoff", async ({
+    page,
+  }) => {
     await page.goto("/en/new-level-premium")
     await page.getByTestId("concierge-toggle").click()
     await page.getByTestId("concierge-ai-open").click()
@@ -76,9 +80,26 @@ test.describe("Functional tests - public AI concierge", () => {
     await panel.locator("input").fill("What is 1Cati?")
     await panel.locator('button[type="submit"]').click()
 
-    await expect(page.getByTestId("public-ai-sources").last()).toBeVisible()
-    await expect(page.getByTestId("public-ai-feedback-positive").last()).toBeVisible()
-    await page.getByTestId("public-ai-feedback-positive").last().click()
+    await expect(panel.getByTestId("public-ai-feedback-positive").last()).toBeVisible()
+    await expect(panel.getByTestId("public-ai-sources")).toHaveCount(0)
+    await expect(panel.getByText(/Source:/i)).toHaveCount(0)
+    await expect(
+      panel.getByText(/public-knowledge|local-ai|confidence|outcome|responseMs|sourceIds/i)
+    ).toHaveCount(0)
+
+    await panel.getByTestId("public-ai-feedback-positive").last().click()
     await expect(panel.getByText("Feedback logged").last()).toBeVisible()
+
+    await panel.locator("input").fill("How much does it cost?")
+    await panel.locator('button[type="submit"]').click()
+
+    await expect(panel.getByTestId("public-ai-handoff").last()).toBeVisible()
+    await expect(panel.getByTestId("public-ai-handoff").last()).toContainText(
+      "Continue on WhatsApp"
+    )
+    await expect(panel.getByTestId("public-ai-sources")).toHaveCount(0)
+    await expect(
+      panel.getByText(/public-knowledge|local-ai|confidence|outcome|responseMs|sourceIds/i)
+    ).toHaveCount(0)
   })
 })

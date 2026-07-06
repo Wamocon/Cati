@@ -29,7 +29,7 @@ As of 30 June 2026, the repository evidence shows:
 
 | Area | Current status | Evidence |
 |---|---|---|
-| Public web app | Implemented as Next.js app with localized routes, including a New Level Premium public page for owner/tenant/staff requests, public reports and a source-cited product concierge with WhatsApp handoff and CSAT feedback. | `apps/web/app/[locale]`, `apps/web/app/[locale]/new-level-premium`, `apps/web/messages/*.json` |
+| Public web app | Implemented as Next.js app with localized routes, including a New Level Premium public page for owner/tenant/staff requests, public reports and a source-grounded product concierge with internal quality telemetry, WhatsApp handoff and CSAT feedback. | `apps/web/app/[locale]`, `apps/web/app/[locale]/new-level-premium`, `apps/web/messages/*.json` |
 | Dashboard shell | Implemented with role-aware navigation, RBAC-aware drilldowns, module pages and the full 15-phase ERP delivery map. | `apps/web/app/[locale]/dashboard`, `apps/web/lib/site-management-data.ts` |
 | Local access profiles | Implemented for controlled local/staging review when production auth is not available. | `apps/web/lib/auth.ts`, `apps/web/proxy.ts` |
 | Supabase schema | Local migrations and seed data exist for RBAC, site CRM, ledger, tickets, booking/checkout, communications, documents, operational APIs, fuzzy search, dashboard realtime publication and queued public intake via `submit_public_intake`. | `supabase/migrations`, `supabase/seed.sql` |

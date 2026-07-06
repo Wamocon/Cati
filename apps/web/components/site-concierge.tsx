@@ -89,7 +89,7 @@ const copy = {
 const supportCopy: Record<
   LocaleKey,
   {
-    sources: string
+    handoffIntro: string
     handoff: string
     helpful: string
     yes: string
@@ -98,32 +98,32 @@ const supportCopy: Record<
   }
 > = {
   tr: {
-    sources: "Kaynak",
-    handoff: "WhatsApp ile bir kişiye aktar",
+    handoffIntro: "Ekibimiz bu konuda size yardımcı olabilir.",
+    handoff: "WhatsApp'ta devam et",
     helpful: "Yardımcı oldu mu?",
     yes: "Evet",
     no: "Hayır",
     feedbackThanks: "Geri bildirim alındı",
   },
   en: {
-    sources: "Source",
-    handoff: "Hand off to a person on WhatsApp",
+    handoffIntro: "Our team can help you with this.",
+    handoff: "Continue on WhatsApp",
     helpful: "Helpful?",
     yes: "Yes",
     no: "No",
     feedbackThanks: "Feedback logged",
   },
   de: {
-    sources: "Quelle",
-    handoff: "Per WhatsApp an eine Person übergeben",
+    handoffIntro: "Unser Team kann Ihnen dabei helfen.",
+    handoff: "In WhatsApp fortfahren",
     helpful: "Hilfreich?",
     yes: "Ja",
     no: "Nein",
     feedbackThanks: "Feedback erfasst",
   },
   ru: {
-    sources: "Источник",
-    handoff: "Передать человеку в WhatsApp",
+    handoffIntro: "Наша команда поможет вам с этим вопросом.",
+    handoff: "Продолжить в WhatsApp",
     helpful: "Помогло?",
     yes: "Да",
     no: "Нет",
@@ -442,36 +442,24 @@ export function SiteConcierge({ page }: { page: string }) {
                     )}
                   >
                     <p>{msg.content}</p>
-                    {msg.role === "assistant" &&
-                      ((msg.sources && msg.sources.length > 0) || msg.shouldEscalate) && (
-                        <div className="mt-2 border-t border-border/70 pt-2 text-[10px] leading-snug text-muted-foreground">
-                          {msg.sources && msg.sources.length > 0 && (
-                            <div data-testid="public-ai-sources">
-                              <span className="font-semibold text-foreground/80">
-                                {support.sources}:
-                              </span>{" "}
-                              {msg.sources.map((source, index) => (
-                                <span key={source.id}>
-                                  {index > 0 ? " · " : ""}
-                                  <span title={source.section}>{source.title}</span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          {msg.shouldEscalate && (
-                            <a
-                              href={whatsappHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              data-testid="public-ai-handoff"
-                              className="mt-1 inline-flex text-primary underline-offset-2 hover:underline"
-                              title={msg.escalationReason ?? support.handoff}
-                            >
-                              {support.handoff}
-                            </a>
-                          )}
-                        </div>
-                      )}
+                    {msg.role === "assistant" && msg.shouldEscalate && (
+                      <div
+                        data-testid="public-ai-handoff"
+                        className="mt-2 rounded-xl border border-primary/20 bg-primary/10 p-2 text-[11px] leading-snug text-muted-foreground"
+                      >
+                        <p>{support.handoffIntro}</p>
+                        <a
+                          href={whatsappHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1.5 font-semibold text-primary underline-offset-2 hover:underline"
+                          title={msg.escalationReason ?? support.handoff}
+                        >
+                          <WhatsAppIcon className="h-3.5 w-3.5" />
+                          {support.handoff}
+                        </a>
+                      </div>
+                    )}
                     {msg.role === "assistant" && msg.id !== "welcome" && (
                       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         <span>{msg.feedback ? support.feedbackThanks : support.helpful}</span>
