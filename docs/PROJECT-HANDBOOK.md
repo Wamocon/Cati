@@ -1,7 +1,7 @@
 # 1Cati Project Handbook
 
 Status: active source-of-truth guide
-Last reviewed: 30 June 2026
+Last reviewed: 6 July 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 Primary audience: Ataberk Estate leadership, WAMOCON delivery, product, engineering, QA and future AI coding agents
 
@@ -19,7 +19,7 @@ If another document conflicts with this handbook, update the conflicting documen
 |---|---|---|
 | Web ERP app | `apps/web` | Next.js public product site, login, role-aware CRM dashboard and operational ERP modules. |
 
-The current implementation is a strong delivery foundation. It includes the public app, localized pages, role-aware dashboard, controlled access-profile flow for local QA, operational modules, AI assistant surface, Supabase migrations, seed data, realtime/polling dashboard refresh, Playwright tests and browser QA harnesses.
+The current implementation is a strong delivery foundation. It includes the public app, localized pages, New Level Premium public intake page, role-aware dashboard, controlled access-profile flow for local QA, operational modules, AI assistant surfaces, Supabase migrations, seed data, realtime/polling dashboard refresh, Playwright tests and browser QA harnesses.
 
 It is not yet a fully production-launched customer system. Production still requires client-approved source data, Supabase cloud environment setup, final RLS/security verification, payment/access/vendor decisions, UAT sign-off, legal/accounting review and launch handover.
 
@@ -29,11 +29,11 @@ As of 30 June 2026, the repository evidence shows:
 
 | Area | Current status | Evidence |
 |---|---|---|
-| Public web app | Implemented as Next.js app with localized routes. | `apps/web/app/[locale]`, `apps/web/messages/*.json` |
+| Public web app | Implemented as Next.js app with localized routes, including a New Level Premium public page for owner/tenant/staff requests, public reports and a source-grounded product concierge with internal quality telemetry, WhatsApp handoff and CSAT feedback. | `apps/web/app/[locale]`, `apps/web/app/[locale]/new-level-premium`, `apps/web/messages/*.json` |
 | Dashboard shell | Implemented with role-aware navigation, RBAC-aware drilldowns, module pages and the full 15-phase ERP delivery map. | `apps/web/app/[locale]/dashboard`, `apps/web/lib/site-management-data.ts` |
 | Local access profiles | Implemented for controlled local/staging review when production auth is not available. | `apps/web/lib/auth.ts`, `apps/web/proxy.ts` |
-| Supabase schema | Local migrations and seed data exist for RBAC, site CRM, ledger, tickets, booking/checkout, communications, documents, operational APIs, fuzzy search and dashboard realtime publication. | `supabase/migrations`, `supabase/seed.sql` |
-| Operational APIs | Dashboard snapshot, phase status, search, action logging, import preview/commit, Phase 4 data, Phase 5 people, Phase 6 ledger, Phase 7 payment-control, Phase 8-9 service operations, Phase 10-11 demo contracts, document upload/storage contract, Phase 12 offline/mobile-web contract, Phase 13 integration readiness and Phase 14 AI premium contracts exist with Supabase-first/local seed behavior where applicable. | `apps/web/app/api/site-management/*`, `apps/web/app/api/ai/*`, `apps/web/lib/site-management-repository.ts` |
+| Supabase schema | Local migrations and seed data exist for RBAC, site CRM, ledger, tickets, booking/checkout, communications, documents, operational APIs, fuzzy search, dashboard realtime publication and queued public intake via `submit_public_intake`. | `supabase/migrations`, `supabase/seed.sql` |
+| Operational APIs | Dashboard snapshot, phase status, search, action logging, import preview/commit, Phase 4 data, Phase 5 people, Phase 6 ledger, Phase 7 payment-control, Phase 8-9 service operations, Phase 10-11 demo contracts, document upload/storage contract, Phase 12 offline/mobile-web contract, Phase 13 integration readiness, Phase 14 AI premium contracts, public registration/report intake and public product concierge exist with Supabase-first/local seed behavior where applicable. Public AI logs topic, outcome, confidence, latency, source IDs, escalation and CSAT feedback without storing raw anonymous questions. | `apps/web/app/api/site-management/*`, `apps/web/app/api/ai/*`, `apps/web/lib/site-management-repository.ts` |
 | Operational modules | Data/API-backed screens exist for listings, leads, calendar, finance, documents, compliance, users, reports, tickets and communications. Some workflows remain foundation depth until production vendors/data are confirmed. | `apps/web/app/[locale]/dashboard/*` |
 | Live dashboard refresh | Implemented with a shared live snapshot hook, Supabase Realtime subscriptions where configured and 30-second polling fallback. | `apps/web/hooks/use-live-dashboard-snapshot.ts`, `apps/web/components/sync-badge.tsx`, `supabase/migrations/00000000000004_realtime_operational_dashboard.sql` |
 | QA and phase control | Current app status and QA harnesses use the 15-phase ERP model. Generated evidence is disposable unless promoted into the active Markdown package. | `scripts/phase-06-09-harness.mjs`, `scripts/phase-10-11-harness.mjs`, `apps/web/e2e/dashboard.spec.ts` |
@@ -120,6 +120,7 @@ These items are intentionally not resolved by documentation alone. They require 
 | Access system | Confirm vendor/API/manual fallback and legal boundary for restriction actions. |
 | Debt-based restrictions | Legal/accounting review and client-approved policy. |
 | Data retention | Retention periods for finance, identity, documents, media, chat and AI events. |
+| Public intake, AI concierge and IDV | Confirm production identity-verification provider, KBS/legal retention period, abuse/rate-limit controls, human triage ownership, support metrics review cadence and knowledge-base update owner before public launch. |
 | Native app | Confirm whether PWA-first remains accepted or native wrappers are needed later. |
 | Historical migration | Decide which history is useful, legal and clean enough to import. |
 | Production UAT | Run mandatory UAT with realistic data and record sign-off. |

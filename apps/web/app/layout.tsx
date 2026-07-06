@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { PwaClient } from "@/components/pwa-client"
+import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -25,9 +26,10 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
-        <a href="#main" className="skip-link">Skip to content</a>
-        {children}
-        <PwaClient />
+        <ThemeProvider>
+          {children}
+          <PwaClient />
+        </ThemeProvider>
       </body>
     </html>
   )

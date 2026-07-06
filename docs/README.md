@@ -1,12 +1,12 @@
 # Documentation Hub
 
 Status: active documentation map
-Last reviewed: 30 June 2026
+Last reviewed: 6 July 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 
-Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 30 June 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
+Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 6 July 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
 
-Current implementation checkpoint: phases 1-14 are complete as a demo/internal-QA foundation, including private document upload/storage contract in demo/provider-ready mode; phase 15 remains launch hardening, security, final QA, client acceptance preparation, training and go-live readiness. Full exploratory manual QA and client UAT are tracked separately from this development target.
+Current implementation checkpoint: phases 1-14 are complete as a demo/internal-QA foundation, including private document upload/storage contract in demo/provider-ready mode and queued public New Level Premium intake plus source-grounded AI concierge with internal telemetry, handoff, escalation logging and CSAT feedback in provider-ready mode; phase 15 remains launch hardening, security, final QA, client acceptance preparation, training and go-live readiness. Full exploratory manual QA and client UAT are tracked separately from this development target.
 
 ## Active Source-Of-Truth Documents
 

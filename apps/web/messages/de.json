@@ -9,7 +9,9 @@
     "platformLink": "ERP-Plattform"
   },
   "nav": {
+    "skipToContent": "Zum Inhalt springen",
     "home": "Startseite",
+    "newLevel": "New Level",
     "catalog": "Module",
     "about": "Über uns",
     "services": "Abläufe",

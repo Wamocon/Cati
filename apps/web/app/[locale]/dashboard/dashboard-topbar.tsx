@@ -3,10 +3,12 @@
 import { BriefcaseBusiness, LogOut, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useUser } from "@/components/user-provider"
 import { useRouter } from "@/app/navigation"
 import { clientProfile } from "@/lib/client-context"
 import { roleDefinitions } from "@/lib/rbac"
+import { createClient } from "@/lib/supabase/client"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 export function DashboardTopbar() {
@@ -22,6 +24,12 @@ export function DashboardTopbar() {
 
   async function logout() {
     try {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
+        await createClient().auth.signOut()
+      }
       await fetch("/api/access-profile", { method: "DELETE" })
     } catch {
       // Session cleanup is best-effort; the redirect below is the user-visible state change.
@@ -47,6 +55,7 @@ export function DashboardTopbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <ThemeToggle />
           <LocaleSwitcher compact className="hidden min-[360px]:flex" />
           <details className="group relative">
             <summary

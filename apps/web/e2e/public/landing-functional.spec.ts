@@ -14,11 +14,22 @@ test.describe("Functional tests - public pages", () => {
 
   test("public navigation opens login without broken route", async ({ page }) => {
     await page.goto("/tr")
-    let loginLink = page.locator('a[href="/tr/login"]:visible, a[href^="/tr/login?"]:visible').first()
-    if (!(await loginLink.isVisible().catch(() => false))) {
+
+    const menuToggle = page.getByTestId("menu-toggle")
+    let loginLink = page
+      .getByTestId("public-navbar")
+      .locator('a[href="/tr/login"]:visible, a[href^="/tr/login?"]:visible')
+      .first()
+
+    if (await menuToggle.isVisible().catch(() => false)) {
       await page.getByTestId("menu-toggle").click()
-      loginLink = page.locator('a[href="/tr/login"]:visible, a[href^="/tr/login?"]:visible').first()
+      loginLink = page
+        .locator("#public-mobile-menu")
+        .locator('a[href="/tr/login"]:visible, a[href^="/tr/login?"]:visible')
+        .first()
     }
+
+    await expect(loginLink).toBeVisible()
     await loginLink.click()
     await expect(page).toHaveURL(/\/tr\/login/)
     await expect(page.locator("main")).toBeVisible()
