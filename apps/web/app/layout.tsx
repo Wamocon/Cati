@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getLocale } from "next-intl/server"
 import { cn } from "@/lib/utils"
+import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -29,7 +30,7 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
     >
       <body className="min-h-screen bg-background font-sans text-foreground">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

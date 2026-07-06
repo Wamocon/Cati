@@ -105,7 +105,7 @@ export function DashboardSidebar() {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:relative md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
+          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none md:sticky md:top-0 md:h-svh md:self-start",
           mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
         )}
       >
@@ -150,7 +150,7 @@ export function DashboardSidebar() {
             </div>
           </div>
 
-          <nav className="mt-5 space-y-1">
+          <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
             {filteredMenu.map((item) => {
               const Icon = item.icon
               const active =
@@ -176,7 +176,7 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          <div className="mt-auto space-y-2">
+          <div className="mt-3 shrink-0 space-y-2 border-t border-sidebar-border/60 pt-3">
             <button
               onClick={logout}
               className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"

@@ -3,6 +3,7 @@
 import { BriefcaseBusiness, LogOut, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { useUser } from "@/components/user-provider"
 import { useRouter } from "@/app/navigation"
 import { createClient } from "@/lib/supabase/client"
@@ -54,6 +55,7 @@ export function DashboardTopbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <LocaleSwitcher compact />
           <details className="group relative">
             <summary
