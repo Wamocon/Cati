@@ -16,6 +16,7 @@ import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { matchesSearchText } from "@/lib/search"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { cn } from "@/lib/utils"
 import {
   localizeOperationalValue,
@@ -103,10 +104,7 @@ function matchesQuery(unit: Phase4Unit, query: string) {
 }
 
 function readSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 export function Phase4LiveOperations() {

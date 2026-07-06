@@ -11,6 +11,7 @@ import { GoogleLogo, MagicLinkLogo, YandexLogo } from "@/components/brand-logos"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { roleDefinitions, roles, type Role } from "@/lib/rbac"
 
 const pageCopy = {
@@ -223,10 +224,7 @@ export default function LoginPage() {
   const requestedNext = searchParams.get("next")
   const nextPath = requestedNext?.startsWith("/dashboard") ? requestedNext : "/dashboard"
   const signupHref = nextPath === "/dashboard" ? "/signup" : `/signup?next=${encodeURIComponent(nextPath)}`
-  const supabaseConfigured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabaseConfigured = isPublicSupabaseConfigured()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [authPending, setAuthPending] = useState(false)

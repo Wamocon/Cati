@@ -24,12 +24,20 @@ Open `http://localhost:3100/tr/dashboard`.
 Copy `.env.example` to `.env.local` and fill local values. Never commit `.env.local`.
 
 ```bash
+SUPABASE_URL=
+SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 AI_API_URL=
 AI_API_KEY=
 AI_CHAT_COMPLETIONS_PATH=/chat/completions
 ```
+
+Only values used directly by browser code should use the `NEXT_PUBLIC_` prefix.
+For Supabase, the URL and publishable key are safe to expose and are required
+for browser auth/realtime. Keep `SUPABASE_SERVICE_ROLE_KEY`, AI keys and
+provider credentials server-only.
 
 ## Quality
 

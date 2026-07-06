@@ -23,6 +23,7 @@ import {
   toIntlLocale,
 } from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { cn } from "@/lib/utils"
 import type {
   PaymentRestrictionData,
@@ -43,10 +44,7 @@ const PHASE7_REALTIME_TABLES = [
 ]
 
 function hasSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {

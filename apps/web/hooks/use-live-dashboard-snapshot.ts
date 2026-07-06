@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import type {
   DashboardSnapshot,
   Phase4SiteData,
@@ -37,10 +38,7 @@ const DASHBOARD_REALTIME_TABLES = [
 ]
 
 function hasSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 function shouldUseRealtime() {

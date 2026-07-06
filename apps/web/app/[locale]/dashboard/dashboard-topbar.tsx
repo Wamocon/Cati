@@ -9,6 +9,7 @@ import { useRouter } from "@/app/navigation"
 import { clientProfile } from "@/lib/client-context"
 import { roleDefinitions } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 export function DashboardTopbar() {
@@ -24,10 +25,7 @@ export function DashboardTopbar() {
 
   async function logout() {
     try {
-      if (
-        process.env.NEXT_PUBLIC_SUPABASE_URL &&
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      ) {
+      if (isPublicSupabaseConfigured()) {
         await createClient().auth.signOut()
       }
       await fetch("/api/access-profile", { method: "DELETE" })

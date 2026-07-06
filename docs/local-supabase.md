@@ -21,8 +21,11 @@ npx supabase status
 Copy the `API URL` and `anon key` from `npx supabase status` into `apps/web/.env.local` or the root `.env.local`:
 
 ```env
+SUPABASE_URL=http://127.0.0.1:55321
+SUPABASE_PUBLISHABLE_KEY=<copy-anon-or-publishable-key-from-status>
 NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:55321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<copy-from-status>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<copy-anon-or-publishable-key-from-status>
+ENABLE_ACCESS_PROFILES=true
 NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true
 ```
 
@@ -145,9 +148,12 @@ This second import is intentionally separate from the client file import. It see
 For local or staging QA with access-profile role switching, the server process also needs a server-only service role key so API routes can read cloud data after their own RBAC checks without changing table RLS policies:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=<cloud-api-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<cloud-anon-key>
+SUPABASE_URL=<cloud-api-url>
+SUPABASE_PUBLISHABLE_KEY=<cloud-publishable-key>
 SUPABASE_SERVICE_ROLE_KEY=<cloud-service-role-key>
+NEXT_PUBLIC_SUPABASE_URL=<cloud-api-url>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<cloud-publishable-key>
+ENABLE_ACCESS_PROFILES=true
 NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true
 ```
 
@@ -156,9 +162,13 @@ Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser, commit it to `.env`, or
 Then set Vercel environment variables:
 
 ```env
+SUPABASE_URL=<cloud-api-url>
+SUPABASE_PUBLISHABLE_KEY=<cloud-publishable-key>
+SUPABASE_SERVICE_ROLE_KEY=<cloud-service-role-key>
 NEXT_PUBLIC_SUPABASE_URL=<cloud-api-url>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<cloud-anon-key>
-NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=false
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<cloud-publishable-key>
+ENABLE_ACCESS_PROFILES=false
+CATI_ALLOW_REMOTE_ACCESS_PROFILES=false
 ```
 
 Keep access profiles enabled only in controlled local/staging environments where role preview is intentionally allowed. Production user access must use Supabase Auth plus database-backed profiles and RLS.

@@ -2,6 +2,7 @@ import createIntlMiddleware from "next-intl/middleware"
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { locales, defaultLocale } from "./i18n"
+import { getServerSupabaseConfig } from "./lib/supabase/server-env"
 
 const intlMiddleware = createIntlMiddleware({
   locales,
@@ -56,8 +57,7 @@ export default async function proxy(request: NextRequest) {
     request: { headers: request.headers },
   })
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const { supabaseUrl, publishableKey } = getServerSupabaseConfig()
   const accessProfilesEnabled = accessProfilesEnabledForRequest()
   const { locale, pathWithoutLocale } = getLocaleAndPath(
     request.nextUrl.pathname
@@ -67,14 +67,14 @@ export default async function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith(prefix)
   )
 
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !publishableKey) {
     if (isProtected && !accessProfilesEnabled) {
       return NextResponse.redirect(signInUrl(locale, request))
     }
     return intlResponse
   }
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  const supabase = createServerClient(supabaseUrl, publishableKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll()

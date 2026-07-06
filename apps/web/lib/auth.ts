@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { createClient } from "./supabase/server"
+import { getServerSupabaseConfig } from "./supabase/server-env"
 import { Role, roles, isValidRole } from "./rbac"
 
 export interface UserProfile {
@@ -16,7 +17,10 @@ export interface UserProfile {
 // Access-profile fallback is only for controlled local/QA review. It must never
 // become a production fallback when Supabase is missing or misconfigured.
 async function getAccessProfile(): Promise<UserProfile> {
-  let accessRole = process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ?? "manager"
+  let accessRole =
+    process.env.ACCESS_PROFILE_ROLE ??
+    process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ??
+    "manager"
 
   try {
     const cookieStore = await cookies()
@@ -43,10 +47,7 @@ async function getAccessProfile(): Promise<UserProfile> {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return getServerSupabaseConfig().isConfigured
 }
 
 export function isAccessProfileEnabled(): boolean {

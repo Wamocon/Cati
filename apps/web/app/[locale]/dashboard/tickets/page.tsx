@@ -35,6 +35,7 @@ import {
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import type { ServiceTicketQueueData } from "@/lib/site-management-repository"
 import {
   isClientRole,
@@ -207,10 +208,7 @@ const SERVICE_OPERATIONS_REALTIME_TABLES = [
 ]
 
 function hasSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 function priorityVariant(priority: ServicePriority) {

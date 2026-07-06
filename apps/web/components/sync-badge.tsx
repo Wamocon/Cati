@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { AlertCircle, CheckCircle2, RefreshCw } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { cn } from "@/lib/utils"
 
 interface SyncBadgeProps {
@@ -36,10 +37,7 @@ interface DashboardHeartbeat {
 }
 
 function hasSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 export function SyncBadge({ lastSync, className }: SyncBadgeProps) {

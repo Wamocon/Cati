@@ -10,6 +10,7 @@ import { CatiLogoMark } from "@/components/cati-logo"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import { StatusBadge } from "@/components/status-badge"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { roleDefinitions, roles, type Role } from "@/lib/rbac"
 
 const copy = {
@@ -183,10 +184,7 @@ export default function SignupPage() {
   const locale = useLocale()
   const t = copy[(locale as keyof typeof copy) in copy ? (locale as keyof typeof copy) : "en"]
   const roleT = useTranslations("roles")
-  const supabaseConfigured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  const supabaseConfigured = isPublicSupabaseConfigured()
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")

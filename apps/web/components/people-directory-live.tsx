@@ -21,6 +21,7 @@ import {
 import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { hasPermission } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
+import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { cn } from "@/lib/utils"
 import type {
   PeopleDirectoryData,
@@ -40,10 +41,7 @@ const PEOPLE_REALTIME_TABLES = [
 ]
 
 function hasSupabasePublicEnv() {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  )
+  return isPublicSupabaseConfigured()
 }
 
 function formatNumber(value: number, locale = "tr-TR") {
