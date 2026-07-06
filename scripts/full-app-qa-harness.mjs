@@ -714,12 +714,27 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     results.push({ id, role, route, viewport, checks, screenshotPath, passed: true })
   }
 
+  async function clickActionMenuItem(page, menuName, itemName) {
+    const button = page.getByRole("button", { name: menuName }).first()
+    await button.waitFor({ state: "visible", timeout: 10_000 })
+    await button.click()
+    const item = page.getByRole("menuitem", { name: itemName }).first()
+    await item.waitFor({ state: "visible", timeout: 10_000 })
+    await item.click()
+  }
+
   const desktop = { width: 1440, height: 900 }
   const mobile = { width: 390, height: 844 }
 
   await runFlow("flow-login-role-staff", "manager", desktop, "/login", [
     async (page) => {
-      await page.getByRole("button", { name: /Personel/ }).click()
+      const staffButton = page.getByRole("button", { name: /Personel/ })
+      if (!(await staffButton.isVisible().catch(() => false))) {
+        await page.locator("details").nth(1).evaluate((node) => {
+          node.open = true
+        })
+      }
+      await staffButton.click()
       await page.getByRole("heading", { name: /Saha Ekibi Çalışma Alanı|Saha Ekibi Ã‡alÄ±ÅŸma AlanÄ±/ }).waitFor({ state: "visible", timeout: 12_000 })
       return "local access profile signs in as staff"
     },
@@ -764,7 +779,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
       return "unit search returns A-001"
     },
     async (page) => {
-      await page.getByRole("button", { name: /A-001 detay/i }).first().click()
+      await page.getByRole("button", { name: /A-001.*(detay|görüntüle|gÃ¶rÃ¼ntÃ¼le)/i }).first().click()
       await page.getByRole("heading", { name: "A-001" }).waitFor({ state: "visible", timeout: 10_000 })
       return "unit detail drawer opens"
     },
@@ -779,7 +794,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     async (page) => {
       await page.getByRole("heading", { name: /Ödeme, depozito ve kısıt kontrol merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByRole("button", { name: /Kontrolleri yenile/i }).click()
-      await page.getByRole("button", { name: /Mutabakat inceleme/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /Ödeme kontrol|Odeme kontrol|Payment control/i, /İnceleme aç|Inceleme ac|Mutabakat inceleme|Review/i)
       return "phase 7 payment-control panel refresh and action are visible"
     },
   ])
@@ -791,7 +806,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
       return "people directory refresh works"
     },
     async (page) => {
-      await page.getByRole("button", { name: /Export iste|Dışa aktar|DÄ±ÅŸa aktar/i }).first().click()
+      await clickActionMenuItem(page, /Kişi dizini|Kisi dizini|People directory/i, /Dışa aktar|Disa aktar|disa aktarim|Export/i)
       return "people directory export action is clickable for admin"
     },
   ])
@@ -800,11 +815,11 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     async (page) => {
       await page.getByRole("heading", { name: /Move-in readiness command board|Giriş hazırlığı komuta panosu/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByRole("heading", { name: /Access handoff queue/i }).waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/Move-in hazirligini hazirla/i).first().click()
+      await clickActionMenuItem(page, /Rezervasyon aksiyon|Reservation actions/i, /Move-in|hazırlığını hazırla|hazirligini hazirla|Prepare move-in/i)
       return "phase 10 readiness board and move-in action are clickable"
     },
     async (page) => {
-      await page.getByLabel(/Depozito kararini incele/i).first().click()
+      await clickActionMenuItem(page, /Depozito aksiyon|Deposit actions/i, /Depozito karar|Deposit decision|Deposit/i)
       return "phase 10 deposit-settlement action is clickable"
     },
   ])
@@ -812,12 +827,12 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
   await runFlow("flow-communications-broadcast", "manager", desktop, "/dashboard/communications", [
     async (page) => {
       await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/Toplu bildirim hazirla/i).click()
+      await clickActionMenuItem(page, /İletişim merkezi|Iletisim merkezi|Communication/i, /Toplu bildirim|Broadcast/i)
       return "communication broadcast action is clickable"
     },
     async (page) => {
-      await page.getByRole("heading", { name: /Delivery and retry queue/i }).waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/Bildirim teslimini yeniden dene/i).first().click()
+      await page.getByRole("heading", { name: /Delivery and retry queue|Teslim ve yeniden deneme kuyruğu/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /Teslim aksiyon|Delivery actions/i, /Bildirim teslim|Retry delivery|yeniden dene/i)
       return "phase 11 delivery retry action is clickable"
     },
   ])
@@ -825,7 +840,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
   await runFlow("flow-documents-phase11-packets", "manager", desktop, "/dashboard/documents", [
     async (page) => {
       await page.getByRole("heading", { name: /Document packet board/i }).waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/Belge paketini hazirla/i).first().click()
+      await clickActionMenuItem(page, /belge paketi|document packet/i, /Belge paketini|Prepare document packet/i)
       return "phase 11 document packet board action is clickable"
     },
   ])
@@ -834,7 +849,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     async (page) => {
       await page.getByRole("heading", { name: /Mobile Web & Offline Sync|Mobil Web & Offline Sync/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByText(/No native app|native app yok/i).first().waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/Offline sync item review/i).first().click()
+      await clickActionMenuItem(page, /offline kuyruk|queue actions/i, /Offline sync kayd|Offline sync item review/i)
       return "phase 12 offline/mobile web page and queue action work"
     },
   ])
@@ -851,7 +866,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     async (page) => {
       await page.getByRole("heading", { name: /Phase 14 AI command layer|Faz 14 AI komuta katmanı/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByText(/Same-language assistant|Aynı dilde asistan/i).first().waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByLabel(/AI oneriyi hazirla/i).first().click()
+      await clickActionMenuItem(page, /AI aksiyon|AI actions/i, /AI öneriyi|AI oneriyi|Prepare AI/i)
       return "phase 14 AI recommendations and action logging work"
     },
   ])

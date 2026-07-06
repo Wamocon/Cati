@@ -488,7 +488,7 @@ export function SolutionGrid() {
                   src={chapter.image}
                   alt={chapter.alt}
                   fill
-                  sizes="100vw"
+                  sizes="(min-width: 1024px) 100vw, 1px"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,10,0.94)_0%,rgba(2,12,10,0.72)_42%,rgba(2,12,10,0.46)_100%)]" />
