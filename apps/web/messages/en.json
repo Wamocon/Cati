@@ -9,7 +9,9 @@
     "platformLink": "ERP Platform"
   },
   "nav": {
+    "skipToContent": "Skip to content",
     "home": "Home",
+    "newLevel": "New Level",
     "catalog": "Modules",
     "about": "About Us",
     "services": "Workflows",

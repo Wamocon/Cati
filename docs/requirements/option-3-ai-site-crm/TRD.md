@@ -43,7 +43,7 @@ Native mobile scope: Excluded from launch scope unless later approved
 
 This TRD defines the target technical architecture and implementation controls. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
 
-As of 26 June 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, UAT and launch handover remain required.
+As of 6 July 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, queued public intake APIs for owner/tenant/staff requests and public reports, a data-blind public product concierge, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, abuse/rate-limit controls, UAT and launch handover remain required.
 
 ## 1. Technical Executive Summary
 
@@ -134,6 +134,7 @@ The existing stack is a good foundation for the web/PWA product. The missing par
 - AI recommendations must include source data.
 - AI should be evaluated through a test set.
 - AI must respect role permissions and data boundaries.
+- Public, anonymous AI must stay data-blind: it may answer from curated product knowledge only and must not load operational records.
 
 ---
 

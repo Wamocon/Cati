@@ -9,7 +9,9 @@
     "platformLink": "ERP Platformu"
   },
   "nav": {
+    "skipToContent": "İçeriğe geç",
     "home": "Ana Sayfa",
+    "newLevel": "New Level",
     "catalog": "Modüller",
     "about": "Hakkımızda",
     "services": "İş Akışları",

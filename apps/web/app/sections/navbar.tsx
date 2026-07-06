@@ -15,6 +15,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
   { label: "home", href: "/" },
+  { label: "newLevel", href: "/new-level-premium" },
   { label: "catalog", href: "/#modules" },
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },

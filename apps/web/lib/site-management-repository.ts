@@ -3407,3 +3407,168 @@ export async function updateClientActionRequestStatus({
     throw error
   }
 }
+
+export interface PublicIntakeResult {
+  reference: string
+  source: DataSource
+  status: "received"
+}
+
+export interface RegistrationRequestInput {
+  role: "owner" | "tenant" | "staff"
+  fullName: string
+  email: string
+  phone?: string | null
+  language?: string | null
+  unitClaim?: string | null
+  proofType?: string | null
+  proofReference?: string | null
+  inviteCode?: string | null
+  position?: string | null
+  idType?: string | null
+  idNumber?: string | null
+  issuingCountry?: string | null
+  idVerificationRef?: string | null
+  idVerificationStatus?: string | null
+  consent: boolean
+  metadata?: Record<string, unknown>
+}
+
+export interface PublicReportInput {
+  category: string
+  zone: string
+  description: string
+  contact?: string | null
+  language?: string | null
+  consent: boolean
+  metadata?: Record<string, unknown>
+}
+
+export interface PublicAiInterestInput {
+  topic: string
+  language?: string | null
+  question: string
+  answeredBy: "public-knowledge" | "local-ai"
+  page?: string | null
+}
+
+function publicIntakeReference(prefix: string): string {
+  const stamp = Date.now().toString(36).toUpperCase().slice(-6)
+  return `${prefix}-${stamp}`
+}
+
+async function submitPublicIntake(
+  actionType: string,
+  title: string,
+  metadata: Record<string, unknown>,
+  referencePrefix: string
+): Promise<PublicIntakeResult> {
+  if (!isSupabaseConfigured()) {
+    return {
+      reference: publicIntakeReference(referencePrefix),
+      source: "local-seed",
+      status: "received",
+    }
+  }
+
+  try {
+    const supabase = await createDataClient()
+    const { data, error } = await supabase.rpc("submit_public_intake", {
+      p_action_type: actionType,
+      p_title: title,
+      p_metadata: metadata,
+    })
+    if (error) throw error
+    return {
+      reference: typeof data === "string" ? data : publicIntakeReference(referencePrefix),
+      source: "supabase",
+      status: "received",
+    }
+  } catch (error) {
+    if (canUseLocalSeedFallback()) {
+      return {
+        reference: publicIntakeReference(referencePrefix),
+        source: "local-seed",
+        status: "received",
+      }
+    }
+    throw error
+  }
+}
+
+export async function submitRegistrationRequest(
+  input: RegistrationRequestInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    role: input.role,
+    fullName: input.fullName,
+    email: input.email,
+    phone: input.phone ?? null,
+    language: input.language ?? null,
+    unitClaim: input.unitClaim ?? null,
+    proofType: input.proofType ?? null,
+    proofReference: input.proofReference ?? null,
+    inviteCode: input.inviteCode ?? null,
+    position: input.position ?? null,
+    idType: input.idType ?? null,
+    idNumber: input.idNumber ?? null,
+    issuingCountry: input.issuingCountry ?? null,
+    idVerificationRef: input.idVerificationRef ?? null,
+    idVerificationStatus: input.idVerificationStatus ?? null,
+    consent: input.consent,
+    channel: "new-level-premium-landing",
+    ...(input.metadata ?? {}),
+  }
+
+  return submitPublicIntake(
+    `registration.request.${input.role}`,
+    `${input.role} access request - ${input.fullName}`,
+    metadata,
+    "NLP-REG"
+  )
+}
+
+export async function submitPublicReport(
+  input: PublicReportInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    verified: false,
+    reportSource: "public",
+    category: input.category,
+    zone: input.zone,
+    description: input.description,
+    contact: input.contact ?? null,
+    language: input.language ?? null,
+    consent: input.consent,
+    channel: "new-level-premium-landing",
+    ...(input.metadata ?? {}),
+  }
+
+  return submitPublicIntake(
+    "public.report",
+    `Public report - ${input.category} @ ${input.zone}`,
+    metadata,
+    "NLP-RPT"
+  )
+}
+
+export async function logPublicAiInterest(
+  input: PublicAiInterestInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    kind: "ai_interest",
+    topic: input.topic,
+    language: input.language ?? null,
+    questionLength: input.question.length,
+    answeredBy: input.answeredBy,
+    page: input.page ?? null,
+    channel: "landing-concierge",
+  }
+
+  return submitPublicIntake(
+    "public.ai_question",
+    `AI interest - ${input.topic}`,
+    metadata,
+    "NLP-AIQ"
+  )
+}

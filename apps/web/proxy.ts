@@ -101,6 +101,13 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
   }
 
+  if (
+    intlResponse.headers.has("location") ||
+    intlResponse.headers.has("x-middleware-rewrite")
+  ) {
+    return intlResponse
+  }
+
   // Merge any cookies set by intlMiddleware into the final response.
   intlResponse.headers.forEach((value, key) => {
     if (key.toLowerCase() === "set-cookie") {
