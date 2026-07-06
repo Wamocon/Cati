@@ -57,7 +57,12 @@ export function isAccessProfileEnabled(): boolean {
   const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
   const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
 
-  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
+  // Access profiles require ENABLE_ACCESS_PROFILES=true. On remote/production
+  // deployments they stay OFF unless CATI_ALLOW_REMOTE_ACCESS_PROFILES=true is
+  // ALSO set — that flag is the explicit, documented approval for running a
+  // controlled demo/QA environment (incl. production), per the security policy.
+  // Removing that flag re-locks the deployment to real authentication.
+  return (!productionDeployment || remoteQaAllowed) && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
 }
 
 /**
