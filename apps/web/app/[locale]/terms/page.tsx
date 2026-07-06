@@ -1,16 +1,13 @@
-"use client"
-
 import { useTranslations } from "next-intl"
 import { Link } from "@/app/navigation"
 
 export default function TermsPage() {
   const t = useTranslations("terms")
-  const tNav = useTranslations("nav")
 
   return (
     <main id="main" className="container max-w-3xl py-16">
       <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-        ← {tNav("home")}
+        ← Home
       </Link>
       <h1 className="mt-6 text-3xl font-black text-foreground">{t("title")}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{t("updated")}</p>

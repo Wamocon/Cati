@@ -30,46 +30,46 @@ test.describe("Landing page journey", () => {
     await screenshot(page, testInfo, "02-stats")
 
     await scrollToSection(page, "[data-testid='problem-bento']")
-    await expect(page.locator("[data-testid='problem-bento'] .auto-rows-fr > div")).toHaveCount(9)
+    await expect(page.locator("[data-testid='problem-bento'] h3")).toHaveCount(9)
     await expect(page.getByText("EİDS yetkilendirmesi takibi zor")).toBeVisible()
     await screenshot(page, testInfo, "03-problems")
 
     await scrollToSection(page, "[data-testid='solution-grid']")
+    const solution = page.locator("[data-testid='solution-grid']")
     await expect(
-      page.getByRole("heading", { name: /aynı ERP kaydında buluşur/ })
+      solution.getByRole("heading", {
+        name: /Satis, site yonetimi, finans ve servis ayni ERP kaydinda bulusur/i,
+      })
     ).toBeVisible()
-    await expect(page.getByText("Kaydırarak ürün akışlarını aç")).toBeVisible()
+    await expect(solution.getByText(/02\s*\/?\s*Daire matrisi/i).filter({ visible: true }).first()).toBeVisible()
+    await expect(solution.getByText(/03\s*\/?\s*Servis/i).filter({ visible: true }).first()).toBeVisible()
     await screenshot(page, testInfo, "04-solution")
 
     await scrollToSection(page, "[data-testid='compliance-features']")
-    await expect(page.locator("[data-testid='compliance-features'] > div > div.grid > div")).toHaveCount(6)
-    await expect(
-      page.getByRole("heading", { name: "Türkiye'nin 2026 kuralları için tasarlandı" })
-    ).toBeVisible()
-    await expect(page.getByText("EİDS yetkilendirme takibi", { exact: true })).toBeVisible()
+    const compliance = page.locator("[data-testid='compliance-features']")
+    await expect(compliance.locator("> div > div.grid > div")).toHaveCount(6)
+    await expect(compliance.getByText("Turkiye kontrol akisi")).toBeVisible()
+    await expect(compliance.getByText("KBS/e-GUEST", { exact: true })).toBeVisible()
     await screenshot(page, testInfo, "05-compliance")
 
     await scrollToSection(page, "section#platform")
-    await expect(page.getByText("ERP iş akışı").first()).toBeVisible()
-    await expect(
-      page.locator("section#platform").getByRole("button", { name: "CRM" }).first()
-    ).toBeVisible()
-    await screenshot(page, testInfo, "07-platform-workflow")
+    const platform = page.locator("section#platform")
+    await expect(platform.getByText(/ERP iş akışı/i).filter({ visible: true }).first()).toBeVisible()
+    await expect(platform.getByRole("button", { name: "CRM", exact: true })).toBeVisible()
+    await screenshot(page, testInfo, "06-platform-workflow")
 
     await scrollToSection(page, "section#how-it-works")
-    await expect(
-      page.getByRole("heading", { name: "Tek ERP kaydı, birden fazla iş akışı" })
-    ).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Tek ERP kaydi, birden fazla is akisi" })).toBeVisible()
     await expect(page.getByText("Site ve daire modeli")).toBeVisible()
-    await screenshot(page, testInfo, "08-how-it-works")
+    await screenshot(page, testInfo, "07-connected-workflows")
 
     await scrollToSection(page, "section#contact")
     await expect(page.getByRole("link", { name: "Ürün görüşmesi planla" })).toBeVisible()
     await expect(page.getByRole("link", { name: "Panele Giriş Yap" })).toBeVisible()
-    await screenshot(page, testInfo, "09-cta")
+    await screenshot(page, testInfo, "08-cta")
 
     await scrollToSection(page, "footer")
-    await screenshot(page, testInfo, "10-footer", { fullPage: false })
+    await screenshot(page, testInfo, "09-footer", { fullPage: false })
 
     expect(issues).toEqual([])
   })

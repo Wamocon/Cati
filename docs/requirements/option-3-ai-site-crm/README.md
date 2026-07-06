@@ -1,20 +1,21 @@
 # Option 3 AI Site CRM Requirements Package
 
 Status: active requirements package
-Last reviewed: 29 June 2026
+Last reviewed: 30 June 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 
 This folder contains the canonical requirements package for the 1Cati AI-powered residential site management CRM. Markdown files are the editable source of truth. Matching `.docx` files are generated stakeholder exports unless explicitly stated otherwise.
 
 ## Current Implementation Checkpoint
 
-For current delivery control, use the 15-phase ERP model in `../../PROJECT-HANDBOOK.md`. On 29 June 2026 the active state is:
+For current delivery control, use the 15-phase ERP model in `../../PROJECT-HANDBOOK.md`. On 30 June 2026 the active state is:
 
 | Phase range | Status | Notes |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Requirements, UX/RBAC, Supabase schema, site/block/floor/unit model, import validation and live dashboard foundation exist. |
-| Phase 5-9 | Ready for UAT review | User, owner, tenant and staff relationships, core ledger, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA board and media-proof workflow exist with API/UI/harness evidence. Production-grade provider/accounting/legal decisions and real client-data validation remain open. |
-| Phase 10-15 | Planned production work | Booking/checkout, communications, mobile/PWA, integrations, AI premium layer and launch hardening remain planned work under the accelerated delivery target. |
+| Phase 5-11 | Ready for UAT review | User, owner, tenant and staff relationships, core ledger, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA board, media-proof workflow, booking readiness, checkout settlement, access handoff, communication center, notification retry, multilingual templates, document packets and private document upload/storage contract exist with API/UI/harness evidence. Production-grade provider/accounting/legal/storage decisions and real client-data validation remain open. |
+| Phase 12-14 | Ready-for-UAT implementation foundation | Mobile-friendly web/PWA shell, offline-safe queue, provider-ready integration placeholders and guardrailed AI premium features are implemented for demo/internal QA. |
+| Phase 15 | Remaining planned production work | Final QA, security, UAT, training, launch hardening and production sign-off remain planned work under the accelerated delivery target. |
 
 ## Reading Order
 

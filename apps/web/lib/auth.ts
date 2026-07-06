@@ -13,11 +13,8 @@ export interface UserProfile {
   avatar_url?: string | null
 }
 
-// Access-profile fallback used when external auth is not configured.
-// Priority:
-//   1. access_profile_role cookie (set by role-selector on the login page)
-//   2. NEXT_PUBLIC_ACCESS_PROFILE_ROLE env var
-//   3. default "manager"
+// Access-profile fallback is only for controlled local/QA review. It must never
+// become a production fallback when Supabase is missing or misconfigured.
 async function getAccessProfile(): Promise<UserProfile> {
   let accessRole = process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ?? "manager"
 
@@ -53,10 +50,17 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function isAccessProfileEnabled(): boolean {
-  return (
-    !isSupabaseConfigured() ||
+  const productionDeployment =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.CATI_ENV === "production"
+  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
+  const legacyDevFlag =
+    process.env.NODE_ENV !== "production" &&
     process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
-  )
+  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
+  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
+
+  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
 }
 
 /**
@@ -66,6 +70,7 @@ export function isAccessProfileEnabled(): boolean {
  */
 export async function getUserProfile(): Promise<UserProfile | null> {
   if (!isSupabaseConfigured()) {
+    if (!isAccessProfileEnabled()) return null
     return getAccessProfile()
   }
 

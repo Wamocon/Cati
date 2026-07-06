@@ -87,7 +87,7 @@ export function NlpHero({ locale }: { locale: LocaleKey }) {
           src="/new-level-premium/resort-exterior.jpg"
           alt="New Level Premium resort exterior with landscaped residence blocks"
           fill
-          priority
+          loading="eager"
           sizes="100vw"
           className="object-cover"
         />

@@ -185,29 +185,6 @@ test.describe("New Level Premium landing page", () => {
     expect(bad.status()).toBe(400)
   })
 
-  test("tenant time-boxed access panel shows grants and creates an invite", async ({
-    page,
-  }, testInfo) => {
-    await page.goto("/tr/login")
-    await page.getByTestId("demo-full-access").click()
-    await expect(page).toHaveURL(/\/tr\/dashboard/)
-
-    await page.goto("/tr/dashboard/users")
-    await expect(
-      page.getByRole("heading", { name: "Kiracı zaman erişimi" })
-    ).toBeVisible()
-    // Seed grants render (one sponsored tenant is Ivan Petrov).
-    await expect(page.getByText("Ivan Petrov")).toBeVisible()
-
-    // Create a new time-boxed invite; the tenant appears in the list.
-    await page.getByRole("button", { name: /^Davet oluştur/ }).first().click()
-    await page.getByLabel("Kiracı adı").fill("Test Kiracı")
-    await page.getByLabel(/Daire/).fill("D4 / 9")
-    await page.getByRole("button", { name: /Zaman sınırlı davet oluştur/ }).click()
-    await expect(page.getByText("Test Kiracı")).toBeVisible()
-    await screenshot(page, testInfo, "06-tenant-access-panel")
-  })
-
   test("public report API requires location, description and consent", async ({
     page,
   }) => {

@@ -30,11 +30,11 @@ interface Flow {
 
 const copy = {
   tr: {
-    eyebrow: "Bağlı iş akışları",
-    title: "Tek ERP kaydı, birden fazla iş akışı",
+    eyebrow: "Bagli is akislari",
+    title: "Tek ERP kaydi, birden fazla is akisi",
     subtitle:
-      "Sistem tek bir doğruluk kaynağı kurar; satış, site yönetimi, finans, servis, rezervasyon ve raporlama kendi akışında çalışır.",
-    center: "Ortak ERP kaydı",
+      "Sistem tek bir dogruluk kaynagi kurar; satis, site yonetimi, finans, servis, rezervasyon ve raporlama kendi akisinda calisir.",
+    center: "Ortak ERP kaydi",
     centerKicker: "Proje merkezi",
     centerProject: "New Level Premium",
     centerStats: [
@@ -45,37 +45,37 @@ const copy = {
     flows: [
       {
         title: "Site ve daire modeli",
-        text: "Blok, kat, daire, durum, fiyat, belge ve ortak alan verisi aynı envantere bağlanır.",
+        text: "Blok, kat, daire, durum, fiyat, belge ve ortak alan verisi ayni envantere baglanir.",
         icon: Building2,
         accent: "bg-teal-500",
       },
       {
-        title: "Kişi ve rol bağlantısı",
-        text: "Malik, kiracı, personel, muhasebe ve yönetim yalnızca gerekli ekranı görür.",
+        title: "Kisi ve rol baglantisi",
+        text: "Malik, kiraci, personel, muhasebe ve yonetim yalnizca gerekli ekrani gorur.",
         icon: Users,
         accent: "bg-sky-500",
       },
       {
-        title: "Finans ve karar kapısı",
-        text: "Aidat, depozito, borç, mutabakat ve erişim kararı aynı kontrol zemininde okunur.",
+        title: "Finans ve karar kapisi",
+        text: "Aidat, depozito, borc, mutabakat ve erisim karari ayni kontrol zemininde okunur.",
         icon: CircleDollarSign,
         accent: "bg-amber-500",
       },
       {
-        title: "Servis ve saha işi",
-        text: "Talep, borç kontrolü, ekip atama, fotoğraf kanıtı ve kapanış raporu birlikte ilerler.",
+        title: "Servis ve saha isi",
+        text: "Talep, borc kontrolu, ekip atama, fotograf kaniti ve kapanis raporu birlikte ilerler.",
         icon: TicketCheck,
         accent: "bg-rose-500",
       },
       {
         title: "Rezervasyon ve teslim",
-        text: "Müsaitlik, depozito, temizlik, kontrol, giriş ve çıkış (check-out) aynı zaman çizelgesine bağlanır.",
+        text: "Musaitlik, depozito, temizlik, kontrol, move-in ve checkout ayni zaman cizelgesine baglanir.",
         icon: CalendarCheck,
         accent: "bg-violet-500",
       },
       {
-        title: "Belge, iletişim ve rapor",
-        text: "TAPU, DASK, sözleşme, mesaj ve AI özeti kaynak kayda bağlı kalır.",
+        title: "Belge, iletisim ve rapor",
+        text: "TAPU, DASK, sozlesme, mesaj ve AI ozeti kaynak kayda bagli kalir.",
         icon: FileText,
         accent: "bg-emerald-500",
       },
@@ -134,108 +134,34 @@ const copy = {
     ],
   },
   de: {
-    eyebrow: "Verbundene Abläufe",
-    title: "Ein ERP-Datensatz, mehrere Betriebsabläufe",
+    eyebrow: "Verbundene Ablaufe",
+    title: "Ein ERP-Datensatz, mehrere Betriebsablaufe",
     subtitle:
-      "Die Plattform schafft eine gemeinsame Datenbasis, während Vertrieb, Standortbetrieb, Finanzen, Service, Buchung und Reporting eigene Abläufe behalten.",
+      "Die Plattform schafft eine Wahrheit, waehrend Vertrieb, Standortbetrieb, Finanzen, Service, Buchung und Reporting eigene Ablaufe behalten.",
     center: "Gemeinsamer ERP-Datensatz",
     centerKicker: "Projektkern",
     centerProject: "New Level Premium",
     centerStats: [
       ["769", "Einheiten"],
-      ["7", "Blöcke"],
-      ["52k", "m² Areal"],
+      ["7", "Bloecke"],
+      ["52k", "m2 Areal"],
     ],
-    flows: [
-      {
-        title: "Standort- und Einheitenmodell",
-        text: "Blöcke, Etagen, Einheiten, Status, Preis, Dokumente und Gemeinschaftsflächen laufen im selben Bestand zusammen.",
-        icon: Building2,
-        accent: "bg-teal-500",
-      },
-      {
-        title: "Personen- und Rollenanbindung",
-        text: "Eigentümer, Mieter, Personal, Buchhaltung und Geschäftsführung sehen jeweils nur den Arbeitsbereich, den ihre Aufgabe erfordert.",
-        icon: Users,
-        accent: "bg-sky-500",
-      },
-      {
-        title: "Finanz-Entscheidungsebene",
-        text: "Nebenkosten, Kaution, Schuldenstand, Abstimmung und Zugangsentscheidungen werden auf derselben Kontrollebene gelesen.",
-        icon: CircleDollarSign,
-        accent: "bg-amber-500",
-      },
-      {
-        title: "Service und Außendienst",
-        text: "Anfrage, Schuldenprüfung, Zuweisung, Fotonachweis und Abschlussbericht laufen gemeinsam durch den Prozess.",
-        icon: TicketCheck,
-        accent: "bg-rose-500",
-      },
-      {
-        title: "Buchung und Übergabe",
-        text: "Verfügbarkeit, Kaution, Reinigung, Abnahme, Einzug und Auszug teilen sich einen gemeinsamen Zeitplan.",
-        icon: CalendarCheck,
-        accent: "bg-violet-500",
-      },
-      {
-        title: "Dokumente, Nachrichten und Berichte",
-        text: "TAPU, DASK, Verträge, Nachrichten und KI-Zusammenfassungen bleiben mit der Quelle verknüpft.",
-        icon: FileText,
-        accent: "bg-emerald-500",
-      },
-    ],
+    flows: [],
   },
   ru: {
-    eyebrow: "Связанные рабочие процессы",
-    title: "Единая запись ERP, несколько рабочих процессов",
+    eyebrow: "Connected workflows",
+    title: "One ERP record, several operating flows",
     subtitle:
-      "Платформа создает единый источник достоверных данных, а продажи, управление объектом, финансы, сервис, бронирование и отчетность сохраняют собственный профессиональный процесс.",
-    center: "Общая запись ERP",
-    centerKicker: "Ядро проекта",
+      "Sales, site management, finance, service, booking and reporting remain connected without becoming one forced linear process.",
+    center: "Shared ERP record",
+    centerKicker: "Project core",
     centerProject: "New Level Premium",
     centerStats: [
-      ["769", "юнитов"],
-      ["7", "блоков"],
-      ["52k", "м² участка"],
+      ["769", "units"],
+      ["7", "blocks"],
+      ["52k", "sqm site"],
     ],
-    flows: [
-      {
-        title: "Модель объекта и юнитов",
-        text: "Блоки, этажи, юниты, статус, цена, документы и общие зоны объединены в единый реестр.",
-        icon: Building2,
-        accent: "bg-teal-500",
-      },
-      {
-        title: "Связь людей и ролей",
-        text: "Владелец, арендатор, персонал, бухгалтерия и руководство видят только тот рабочий раздел, который нужен для их задач.",
-        icon: Users,
-        accent: "bg-sky-500",
-      },
-      {
-        title: "Финансовый контрольный узел",
-        text: "Взносы, депозит, задолженность, сверка и решения по доступу читаются на одном уровне контроля.",
-        icon: CircleDollarSign,
-        accent: "bg-amber-500",
-      },
-      {
-        title: "Сервис и работа на объекте",
-        text: "Заявка, проверка задолженности, назначение исполнителя, фотоподтверждение и отчет о закрытии проходят единым потоком.",
-        icon: TicketCheck,
-        accent: "bg-rose-500",
-      },
-      {
-        title: "Бронирование и передача",
-        text: "Доступность, депозит, уборка, осмотр, заезд и выезд связаны единым графиком.",
-        icon: CalendarCheck,
-        accent: "bg-violet-500",
-      },
-      {
-        title: "Документы, сообщения и отчеты",
-        text: "ТАПУ, DASK, договоры, сообщения и AI-сводки остаются привязаны к первоисточнику.",
-        icon: FileText,
-        accent: "bg-emerald-500",
-      },
-    ],
+    flows: [],
   },
 } satisfies Record<
   LocaleKey,
@@ -391,7 +317,7 @@ export function HowItWorks() {
                     {localized.centerStats.map(([value, label]) => (
                       <div key={`${value}-${label}`} className="rounded-xl bg-slate-50 px-2 py-2 text-center">
                         <p className="text-sm font-black text-foreground">{value}</p>
-                        <p className="mt-0.5 text-[10px] leading-tight font-semibold break-words text-muted-foreground">{label}</p>
+                        <p className="mt-0.5 truncate text-[10px] font-semibold text-muted-foreground">{label}</p>
                       </div>
                     ))}
                   </div>

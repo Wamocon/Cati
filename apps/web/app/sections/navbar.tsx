@@ -11,23 +11,24 @@ import {
 } from "framer-motion"
 import { Link } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 
 const navItems = [
   { label: "home", href: "/" },
-  { label: "catalog", href: "#modules" },
+  { label: "newLevel", href: "/new-level-premium" },
+  { label: "catalog", href: "/#modules" },
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
-  { label: "services", href: "#modules" },
+  { label: "services", href: "/#modules" },
   { label: "reviews", href: "/reviews" },
-  { label: "contacts", href: "#contacts" },
+  { label: "contacts", href: "/#contacts" },
 ]
 
 export function Navbar() {
   const t = useTranslations("nav")
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
+  const mobileMenuId = "public-mobile-menu"
   const { scrollY } = useScroll()
 
   useMotionValueEvent(scrollY, "change", (latest) => {
@@ -53,15 +54,16 @@ export function Navbar() {
   return (
     <>
       <motion.header
+        data-testid="public-navbar"
         variants={{ visible: { y: 0 }, hidden: { y: "-100%" } }}
         animate={hidden ? "hidden" : "visible"}
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="glass fixed top-0 right-0 left-0 z-50 border-b border-border/50"
       >
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="group flex items-center gap-2.5">
+        <div className="container flex h-16 items-center justify-between gap-3">
+          <Link href="/" className="group flex min-w-0 shrink-0 items-center gap-2.5">
             <CatiLogoMark className="shadow-lg shadow-primary/20 transition-transform group-hover:scale-105" />
-            <div className="flex flex-col">
+            <div className="hidden min-w-0 flex-col min-[420px]:flex">
               <span className="text-sm leading-tight font-bold tracking-tight text-foreground">
                 Ataberk Estate
               </span>
@@ -71,79 +73,84 @@ export function Navbar() {
             </div>
           </Link>
 
-          {/* RU/DE labels overflow a 1024px row; the pill nav only fits from xl up. */}
-          <nav className="hidden items-center gap-1 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm xl:flex">
+          <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm 2xl:flex">
             {navItems.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-full px-4 py-1.5 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 {t(item.label)}
               </Link>
             ))}
           </nav>
 
-          <div className="hidden items-center gap-2 xl:flex">
-            <LocaleSwitcher compact />
-            <ThemeToggle />
+          <div className="hidden shrink-0 items-center gap-2 2xl:flex">
+            <LocaleSwitcher />
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               {t("login")}
             </Link>
             <Link
-              href="/dashboard"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium whitespace-nowrap text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
+              href="/login?next=/dashboard"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
             >
               {t("portal")}
             </Link>
           </div>
 
-          <button
-            data-testid="menu-toggle"
-            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground xl:hidden"
-            onClick={() => setOpen(!open)}
-            aria-label={t("toggleMenu")}
-          >
-            <AnimatePresence mode="wait">
-              {open ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X className="h-4 w-4" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Menu className="h-4 w-4" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </button>
+          <div className="flex shrink-0 items-center gap-2 2xl:hidden">
+            <LocaleSwitcher compact className="hidden min-[390px]:flex" />
+            <button
+              type="button"
+              data-testid="menu-toggle"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground"
+              onClick={() => setOpen(!open)}
+              aria-label={t("toggleMenu")}
+              aria-expanded={open}
+              aria-controls={mobileMenuId}
+            >
+              <AnimatePresence mode="wait">
+                {open ? (
+                  <motion.div
+                    key="close"
+                    initial={{ rotate: -90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: 90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <X className="h-4 w-4" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="menu"
+                    initial={{ rotate: 90, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                    exit={{ rotate: -90, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          </div>
         </div>
       </motion.header>
 
       <AnimatePresence>
         {open && (
           <motion.div
+            id={mobileMenuId}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-background/95 backdrop-blur-xl xl:hidden"
+            className="fixed inset-0 z-40 bg-background/95 backdrop-blur-xl 2xl:hidden"
           >
-            <div className="container flex min-h-full flex-col pt-28 pb-8">
-              <nav className="flex flex-1 flex-col gap-2">
+            <div className="container flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain pt-24 pb-6 sm:pt-28 sm:pb-8">
+              <nav className="flex shrink-0 flex-col gap-1 sm:gap-2">
                 {navItems.map((item, index) => (
                   <motion.div
                     key={item.label}
@@ -153,7 +160,7 @@ export function Navbar() {
                   >
                     <Link
                       href={item.href}
-                      className="block rounded-2xl px-4 py-4 text-2xl font-bold text-foreground transition-colors hover:bg-muted"
+                      className="block rounded-2xl px-4 py-3 text-xl font-bold text-foreground transition-colors hover:bg-muted sm:py-4 sm:text-2xl"
                       onClick={() => setOpen(false)}
                     >
                       {t(item.label)}
@@ -161,10 +168,9 @@ export function Navbar() {
                   </motion.div>
                 ))}
               </nav>
-              <div className="space-y-4 border-t border-border pt-6">
-                <div className="flex items-center justify-between">
-                  <LocaleSwitcher compact />
-                  <ThemeToggle />
+              <div className="mt-4 space-y-4 border-t border-border pt-5 sm:mt-6 sm:pt-6">
+                <div className="flex items-center">
+                  <LocaleSwitcher />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Link
@@ -175,7 +181,7 @@ export function Navbar() {
                     {t("login")}
                   </Link>
                   <Link
-                    href="/dashboard"
+                    href="/login?next=/dashboard"
                     className="inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
                     onClick={() => setOpen(false)}
                   >

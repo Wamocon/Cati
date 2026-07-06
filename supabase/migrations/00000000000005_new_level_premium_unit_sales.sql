@@ -75,11 +75,11 @@ DECLARE
   v_limit INTEGER;
   v_payload JSONB;
 BEGIN
-  v_company_id := public.current_user_company_id();
-
-  IF v_company_id IS NULL THEN
-    SELECT id INTO v_company_id FROM public.companies ORDER BY created_at LIMIT 1;
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required for phase 4 site data.';
   END IF;
+
+  v_company_id := public.current_user_company_id();
 
   IF v_company_id IS NULL THEN
     RAISE EXCEPTION 'No company context for phase 4 site data.';
@@ -324,5 +324,6 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) FROM anon;
 GRANT EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.get_phase4_site_data(TEXT, INTEGER) TO anon;

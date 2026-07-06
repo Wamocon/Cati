@@ -27,12 +27,12 @@ const copy = {
       "1Çatı, New Level Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
     ctaPrimary: "Daire matrisini aç",
     ctaSecondary: "Platform akışını incele",
-    liveLabel: "New Level Premium kontrol görünümü",
+    liveLabel: "New Level Premium kontrol gorunumu",
     metrics: [
-      ["52k m2", "proje alanı"],
+      ["52k m2", "proje alani"],
       ["900 m", "plaj mesafesi"],
-      ["5*", "otel altyapısı"],
-      ["3 yıl", "kira garantisi"],
+      ["5*", "otel altyapisi"],
+      ["3 yil", "kira garantisi"],
     ],
     stages: [
       {
@@ -65,7 +65,7 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "Read the project from aerial plan to apartment to operating record",
     intro:
-      "1Cati treats a large residence like New Level Premium as a commercial operation: units, services, dues, reservations, documents and access decisions connected to one operating record.",
+      "1Çatı treats a large residence like New Level Premium as a commercial operation: units, services, dues, reservations, documents and access decisions connected to one operating record.",
     ctaPrimary: "Open unit matrix",
     ctaSecondary: "Review platform flow",
     liveLabel: "New Level Premium control view",
@@ -106,12 +106,12 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "Vom Lageplan über das Gebäude bis zum ERP-Ablauf",
     intro:
-      "1Cati behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
+      "1Çatı behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
     ctaPrimary: "Wohnungsmatrix öffnen",
     ctaSecondary: "Plattformablauf prüfen",
     liveLabel: "New Level Premium Kontrollansicht",
     metrics: [
-      ["52k m²", "Projektfläche"],
+      ["52k m2", "Projektflache"],
       ["900 m", "zum Strand"],
       ["5*", "Hotelstruktur"],
       ["3 Jahre", "Mietgarantie"],
@@ -147,15 +147,15 @@ const copy = {
     eyebrow: "New Level Premium / Avsallar",
     title: "От генплана и здания до квартиры и ERP-процесса",
     intro:
-      "1Cati рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
+      "1Çatı рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
     ctaPrimary: "Открыть матрицу квартир",
     ctaSecondary: "Посмотреть платформу",
     liveLabel: "New Level Premium control view",
     metrics: [
-      ["52k m2", "площадь участка"],
-      ["900 m", "до пляжа"],
-      ["5*", "гостиничный сервис"],
-      ["3 yrs", "гарантия аренды"],
+      ["52k m2", "site area"],
+      ["900 m", "to beach"],
+      ["5*", "hotel layer"],
+      ["3 yrs", "rental guarantee"],
     ],
     stages: [
       {
@@ -240,7 +240,7 @@ export function NewLevelImmersion() {
     if (!root) return
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const desktop = window.matchMedia("(min-width: 768px)").matches
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
     if (reduced || !desktop) return
 
     let cleanup: (() => void) | undefined
@@ -314,7 +314,7 @@ export function NewLevelImmersion() {
   }, [stages])
 
   return (
-    <section ref={rootRef} id="new-level" className="relative bg-[#f7faf8]">
+    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8]">
       <div className="container pt-8 pb-12 md:pt-10 md:pb-16">
         <ScrollReveal className="max-w-4xl">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-primary uppercase shadow-sm">
@@ -330,8 +330,8 @@ export function NewLevelImmersion() {
         </ScrollReveal>
       </div>
 
-      <div className="relative md:min-h-[230svh]">
-        <div className="min-h-svh overflow-hidden border-y border-border/60 bg-[#061a17] text-white md:sticky md:top-0">
+      <div className="relative xl:min-h-[230svh]">
+        <div className="min-h-svh overflow-hidden border-y border-border/60 bg-[#061a17] text-white xl:sticky xl:top-0">
           <div className="absolute inset-0">
             {stages.map((stage, index) => (
               <div
@@ -355,24 +355,25 @@ export function NewLevelImmersion() {
 
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px)] bg-[size:76px_76px] opacity-70" />
 
-          <div className="relative z-10 container grid min-h-svh items-center gap-8 py-20 md:grid-cols-[0.92fr_1.08fr]">
+          <div className="relative z-10 container grid min-h-svh items-start gap-8 py-14 sm:py-16 xl:grid-cols-[0.92fr_1.08fr] xl:items-center xl:py-10 2xl:py-20">
             <div className="max-w-xl">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white/90 backdrop-blur">
                 <ShieldCheck className="h-4 w-4 text-emerald-200" />
                 {t.liveLabel}
               </div>
 
-              <div className="relative min-h-[360px] md:min-h-[480px] lg:min-h-[520px]">
+              <div className="relative space-y-4 xl:min-h-[460px] xl:space-y-0 2xl:min-h-[520px]">
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   return (
                     <div
                       key={stage.label}
+                      data-testid={`new-level-stage-card-${index}`}
                       ref={(node) => {
                         cardRefs.current[index] = node
                       }}
                       className={cn(
-                        "relative inset-x-0 top-0 mb-4 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:md:absolute motion-safe:md:mb-0 md:p-8",
+                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:xl:absolute motion-safe:xl:mb-0 xl:p-8",
                         index === 0 && "opacity-100"
                       )}
                     >
@@ -382,10 +383,10 @@ export function NewLevelImmersion() {
                         </span>
                         0{index + 1} / {stage.label}
                       </div>
-                      <h3 className="mt-6 text-3xl leading-[1.08] font-black break-words hyphens-auto md:text-4xl lg:text-5xl">
+                      <h3 className="mt-6 text-3xl leading-tight font-black xl:text-4xl 2xl:text-5xl">
                         {stage.title}
                       </h3>
-                      <p className="mt-4 max-w-lg text-sm leading-7 text-white/78 md:text-base">
+                      <p className="mt-4 max-w-lg text-base leading-7 text-white/78 2xl:leading-8">
                         {stage.text}
                       </p>
                     </div>
@@ -393,14 +394,14 @@ export function NewLevelImmersion() {
                 })}
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div data-testid="new-level-metrics" className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {t.metrics.map(([value, label]) => (
                   <div
                     key={`${value}-${label}`}
-                    className="flex flex-col justify-center rounded-2xl border border-white/14 bg-white/10 px-4 py-3 backdrop-blur"
+                    className="rounded-2xl border border-white/14 bg-white/10 px-4 py-3 backdrop-blur"
                   >
-                    <div className="text-2xl font-black whitespace-nowrap tabular-nums">{value}</div>
-                    <div className="mt-0.5 text-xs font-semibold text-white/68">{label}</div>
+                    <div className="text-2xl font-black">{value}</div>
+                    <div className="text-xs font-semibold text-white/68">{label}</div>
                   </div>
                 ))}
               </div>
@@ -423,8 +424,8 @@ export function NewLevelImmersion() {
               </div>
             </div>
 
-            <div className="hidden justify-end md:flex">
-              <div className="relative w-[300px] rounded-[2rem] border border-white/15 bg-[#061a17]/55 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl">
+            <div className="hidden justify-end xl:flex">
+              <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
                 <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {
                   const Icon = stage.icon

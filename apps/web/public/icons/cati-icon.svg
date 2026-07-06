@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="1Çatı">
+  <rect width="128" height="128" rx="28" fill="#0f766e"/>
+  <path d="M24 65 64 28l40 37v39a8 8 0 0 1-8 8H32a8 8 0 0 1-8-8Z" fill="#ecfeff"/>
+  <path d="M48 112V72h32v40" fill="#14b8a6"/>
+  <path d="M43 51h42" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+  <path d="M64 28v84" stroke="#0f766e" stroke-width="6" stroke-linecap="round" opacity=".24"/>
+</svg>

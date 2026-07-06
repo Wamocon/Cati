@@ -10,7 +10,6 @@ import {
   phaseDeliveryRecords,
   serviceTickets,
 } from "./site-management-data"
-import { localizeBusinessCopy, interpolate } from "./business-copy"
 
 export type AiSuggestion = {
   id: string
@@ -31,6 +30,23 @@ export type AiRoleProfile = {
   allowedFocus: string[]
   deniedFocus: string[]
   operatingRule: string
+}
+
+export type AiLanguage = "tr" | "en" | "de" | "ru"
+
+export function detectAiLanguage(prompt: string): AiLanguage {
+  const lower = prompt.toLocaleLowerCase("tr-TR")
+  if (/[а-яё]/i.test(prompt)) return "ru"
+  if (/\b(und|oder|bitte|danke|bericht|zahlung|schulden|buchung|zugang|heute|warum|serviceticket|serviceanfrage|störung|stoerung|reparatur|wohnung|dringend|defekt)\b/i.test(lower)) return "de"
+  if (/\b(the|and|or|please|report|payment|debt|booking|access|today|summary|image|photo|integration)\b/i.test(lower)) return "en"
+  return "tr"
+}
+
+const languageNames: Record<AiLanguage, string> = {
+  tr: "Turkish",
+  en: "English",
+  de: "German",
+  ru: "Russian",
 }
 
 const aiRoleProfiles: Record<Role, AiRoleProfile> = {
@@ -151,7 +167,30 @@ const aiIntentMatchers: Array<{ resource: Resource; patterns: string[] }> = [
   },
   {
     resource: "tickets",
-    patterns: ["bakım", "maintenance", "service", "servis", "sla", "talep", "ticket"],
+    patterns: [
+      "arıza",
+      "ariza",
+      "bakım",
+      "bakim",
+      "defekt",
+      "maintenance",
+      "reparatur",
+      "ремонт",
+      "service",
+      "serviceanfrage",
+      "serviceticket",
+      "servis",
+      "sla",
+      "störung",
+      "stoerung",
+      "talep",
+      "ticket",
+      "заявк",
+      "неисправ",
+      "поломк",
+      "сервис",
+      "тикет",
+    ],
   },
 ]
 
@@ -175,8 +214,37 @@ function detectRequestedResource(prompt: string): Resource | undefined {
   )?.resource
 }
 
-function denialForRole(resource: Resource, role: Role, locale: string) {
-  const labels: Record<Resource, string> = {
+function denialForRole(resource: Resource, role: Role, language: AiLanguage = "tr") {
+  const labels: Record<Resource, Record<AiLanguage, string>> = {
+    calendar: { tr: "rezervasyon ve takvim", en: "booking and calendar", de: "Buchung und Kalender", ru: "бронирования и календаря" },
+    communications: { tr: "iletişim", en: "communication", de: "Kommunikation", ru: "коммуникации" },
+    dashboard: { tr: "genel panel", en: "dashboard", de: "Dashboard", ru: "панели" },
+    deals: { tr: "iş akışı", en: "workflow", de: "Workflow", ru: "рабочего процесса" },
+    documents: { tr: "belge", en: "documents", de: "Dokumente", ru: "документов" },
+    eids_compliance: { tr: "erişim ve uyum", en: "access and compliance", de: "Zugang und Compliance", ru: "доступа и соответствия" },
+    finance: { tr: "finans defteri", en: "finance ledger", de: "Finanzbuch", ru: "финансового журнала" },
+    leads: { tr: "sakin ve CRM", en: "resident and CRM", de: "Bewohner und CRM", ru: "жителей и CRM" },
+    listings: { tr: "daire matrisi ve portföy", en: "unit matrix and portfolio", de: "Wohnungsmatrix und Portfolio", ru: "матрицы квартир и портфеля" },
+    offline_sync: { tr: "offline senkron", en: "offline sync", de: "Offline-Synchronisierung", ru: "офлайн-синхронизации" },
+    reports: { tr: "rapor ve analiz", en: "reports and analytics", de: "Berichte und Analysen", ru: "отчетов и аналитики" },
+    settings: { tr: "platform ayarları", en: "platform settings", de: "Plattformeinstellungen", ru: "настроек платформы" },
+    tickets: { tr: "servis talebi", en: "service tickets", de: "Servicetickets", ru: "сервисных заявок" },
+    users: { tr: "kullanıcı ve rol yönetimi", en: "user and role management", de: "Benutzer- und Rollenverwaltung", ru: "пользователей и ролей" },
+  }
+
+  if (language === "en") {
+    return `This request needs ${labels[resource].en} permission. Your active role (${role}) cannot view that data. I can only help with modules visible to your role and records inside your allowed scope.`
+  }
+
+  if (language === "de") {
+    return `Diese Anfrage benötigt die Berechtigung für ${labels[resource].de}. Deine aktive Rolle (${role}) darf diese Daten nicht sehen. Ich kann nur bei Modulen helfen, die für deine Rolle sichtbar sind.`
+  }
+
+  if (language === "ru") {
+    return `Для этого запроса нужны права на ${labels[resource].ru}. Ваша активная роль (${role}) не может видеть эти данные. Я могу помогать только с модулями и записями в рамках вашей роли.`
+  }
+
+  const trLabels: Record<Resource, string> = {
     calendar: "rezervasyon ve takvim",
     communications: "iletişim",
     dashboard: "genel panel",
@@ -193,13 +261,7 @@ function denialForRole(resource: Resource, role: Role, locale: string) {
     users: "kullanıcı ve rol yönetimi",
   }
 
-  return interpolate(
-    localizeBusinessCopy(
-      "Bu istek {resourceLabel} yetkisi gerektirir. Aktif rolünüz ({role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.",
-      locale
-    ),
-    { resourceLabel: localizeBusinessCopy(labels[resource], locale), role }
-  )
+  return `Bu istek ${trLabels[resource]} yetkisi gerektirir. Aktif rolünüz (${role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.`
 }
 
 export function getAiRoleProfile(role: Role): AiRoleProfile {
@@ -217,14 +279,14 @@ export function getAiRoleSystemInstruction(role: Role) {
   ].join(" ")
 }
 
-export function getAiAccessDecision(prompt: string, role: Role, locale = "tr"): AiAccessDecision {
+export function getAiAccessDecision(prompt: string, role: Role, language: AiLanguage = detectAiLanguage(prompt)): AiAccessDecision {
   const resource = detectRequestedResource(prompt)
   if (!resource) return { allowed: true }
 
   if (!hasPermission(role, resource, "view")) {
     return {
       allowed: false,
-      deniedMessage: denialForRole(resource, role, locale),
+      deniedMessage: denialForRole(resource, role, language),
       resource,
     }
   }
@@ -232,162 +294,327 @@ export function getAiAccessDecision(prompt: string, role: Role, locale = "tr"): 
   return { allowed: true, resource }
 }
 
-function generateResidentPortalResponse(role: Role, resource: Resource | undefined, locale: string) {
-  const roleName = localizeBusinessCopy(role === "owner" ? "Malik" : "Kiracı", locale)
-  const ownershipText = localizeBusinessCopy(
+function generateResidentPortalResponse(role: Role, resource?: Resource) {
+  const roleName = role === "owner" ? "Malik" : "Kiracı"
+  const ownershipText =
     role === "owner"
       ? "kendi dairenize ve yetkili sakin kayıtlarınıza"
-      : "yetkili olduğunuz daireye",
-    locale
-  )
+      : "yetkili olduğunuz daireye"
 
   if (resource === "tickets") {
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleName} rolünde {ownershipText} bağlı servis taleplerini açabilir, durumunu takip edebilir ve yönetim ekibiyle mesajlaşabilirsiniz. Şirket geneli servis kuyruğu, borç listesi ve başka daire kayıtları gösterilmez.",
-        locale
-      ),
-      { roleName, ownershipText }
-    )
+    return `${roleName} rolünde ${ownershipText} bağlı servis taleplerini açabilir, durumunu takip edebilir ve yönetim ekibiyle mesajlaşabilirsiniz. Şirket geneli servis kuyruğu, borç listesi ve başka daire kayıtları gösterilmez.`
   }
 
   if (resource === "calendar") {
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleName} rolünde yalnızca {ownershipText} bağlı rezervasyon, giriş-çıkış ve uygunluk akışlarını görebilirsiniz. Başka dairelerin takvimi ve operasyon planı kapalıdır.",
-        locale
-      ),
-      { roleName, ownershipText }
-    )
+    return `${roleName} rolünde yalnızca ${ownershipText} bağlı rezervasyon, giriş-çıkış ve uygunluk akışlarını görebilirsiniz. Başka dairelerin takvimi ve operasyon planı kapalıdır.`
   }
 
   if (resource === "documents") {
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleName} rolünde sadece {ownershipText} ait yetkili sözleşme, TAPU veya operasyon belgelerini görebilirsiniz. Diğer malik/kiracı belgeleri ve iç finans evrakı kapalıdır.",
-        locale
-      ),
-      { roleName, ownershipText }
-    )
+    return `${roleName} rolünde sadece ${ownershipText} ait yetkili sözleşme, TAPU veya operasyon belgelerini görebilirsiniz. Diğer malik/kiracı belgeleri ve iç finans evrakı kapalıdır.`
   }
 
   if (resource === "communications") {
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleName} rolünde yönetim ekibiyle güvenli iletişim, bildirim ve talep takibini kullanabilirsiniz. İç ekip mesajları, finans onayları ve kullanıcı yönetimi kapalıdır.",
-        locale
-      ),
-      { roleName }
-    )
+    return `${roleName} rolünde yönetim ekibiyle güvenli iletişim, bildirim ve talep takibini kullanabilirsiniz. İç ekip mesajları, finans onayları ve kullanıcı yönetimi kapalıdır.`
   }
 
-  return interpolate(
-    localizeBusinessCopy(
-      "{roleName} çalışma alanında servis, rezervasyon, belge ve iletişim işlemleri kendi yetki kapsamınızla sınırlıdır. Daire matrisi, finans defteri, raporlar, kullanıcılar ve ayarlar bu rolde kapalıdır.",
-      locale
-    ),
-    { roleName }
-  )
+  return `${roleName} çalışma alanında servis, rezervasyon, belge ve iletişim işlemleri kendi yetki kapsamınızla sınırlıdır. Daire matrisi, finans defteri, raporlar, kullanıcılar ve ayarlar bu rolde kapalıdır.`
 }
 
-function generateStaffPortalResponse(resource: Resource | undefined, locale: string) {
+function generateStaffPortalResponse(resource?: Resource) {
   if (resource === "tickets") {
-    return localizeBusinessCopy(
-      "Personel rolünde atanan servis talepleri, SLA durumu, saha notları ve fotoğraf/video kanıtı önceliklidir. Borç listesi, finans onayı ve tüm portföy görünümü bu rolde kapalıdır.",
-      locale
-    )
+    return "Personel rolünde atanan servis talepleri, SLA durumu, saha notları ve fotoğraf/video kanıtı önceliklidir. Borç listesi, finans onayı ve tüm portföy görünümü bu rolde kapalıdır."
   }
 
   if (resource === "calendar") {
-    return localizeBusinessCopy(
-      "Personel rolünde günlük saha takvimi; giriş, çıkış, temizlik, gezinti ve görev saatlerini gösterir. Şirket geneli rezervasyon geliri veya finans mutabakatı kapalıdır.",
-      locale
-    )
+    return "Personel rolünde günlük saha takvimi; giriş, çıkış, temizlik, gezinti ve görev saatlerini gösterir. Şirket geneli rezervasyon geliri veya finans mutabakatı kapalıdır."
   }
 
   if (resource === "documents") {
-    return localizeBusinessCopy(
-      "Personel rolünde belge alanı iş kanıtı, fotoğraf, servis formu ve operasyon dokümanları içindir. Finans, TAPU ve kullanıcı yönetimi evrakı bu rolde kapalıdır.",
-      locale
-    )
+    return "Personel rolünde belge alanı iş kanıtı, fotoğraf, servis formu ve operasyon dokümanları içindir. Finans, TAPU ve kullanıcı yönetimi evrakı bu rolde kapalıdır."
   }
 
   if (resource === "communications") {
-    return localizeBusinessCopy(
-      "Personel rolünde iletişim alanı atanan işler, saha notları ve yönetici bildirimleri içindir. İç finans veya yönetici onay trafiği gösterilmez.",
-      locale
-    )
+    return "Personel rolünde iletişim alanı atanan işler, saha notları ve yönetici bildirimleri içindir. İç finans veya yönetici onay trafiği gösterilmez."
   }
 
-  return localizeBusinessCopy(
-    "Personel çalışma alanında atanan servis, rezervasyon, belge kanıtı ve ekip iletişimi görünür. Finans defteri, daire matrisi, raporlar, kullanıcılar ve ayarlar kapalıdır.",
-    locale
-  )
+  return "Personel çalışma alanında atanan servis, rezervasyon, belge kanıtı ve ekip iletişimi görünür. Finans defteri, daire matrisi, raporlar, kullanıcılar ve ayarlar kapalıdır."
 }
 
-export function getAiSuggestions(role: Role, locale = "tr"): AiSuggestion[] {
+function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclude<AiLanguage, "tr">, resource?: Resource) {
+  const lower = prompt.toLocaleLowerCase("tr-TR")
+  const summary = getSummary()
+  const debtAccounts = getDebtAccounts()
+  const legalAccounts = debtAccounts.filter((account) => account.paymentStatus === "legal")
+  const blockedTickets = serviceTickets.filter((ticket) => ticket.debtBlocked)
+  const overdueTickets = serviceTickets.filter((ticket) => ticket.slaHoursRemaining < 0)
+  const checkoutBookings = bookings.filter((booking) => booking.status === "checkout_today" || booking.status === "deposit_review")
+  const readyForUatPhases = phaseDeliveryRecords.filter((phase) => phase.status === "ready_for_uat")
+
+  const topAccounts = debtAccounts
+    .slice(0, 3)
+    .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
+    .join("; ")
+  const urgentTickets = overdueTickets
+    .slice(0, 3)
+    .map((ticket) => `${ticket.flatNumber} ${ticket.title} (${ticket.slaHoursRemaining}h)`)
+    .join("; ")
+  const checkoutQueue = checkoutBookings
+    .map((booking) => `${booking.flatNumber} ${booking.guestName} (${formatTry(booking.depositTry)})`)
+    .join("; ")
+
+  const copy = {
+    en: {
+      resident:
+        role === "owner"
+          ? "As owner, you can ask about your own unit, documents, bookings, service requests and management messages. Other owners, staff records, global reports and company finance stay hidden."
+          : "As tenant/guest, you can ask about your authorized unit, bookings, service requests, documents and management messages. Global finance, user roles and other units stay hidden.",
+      staff: "As staff, I can help with assigned field jobs, SLA, route notes and photo/video proof. I will not show full finance ledgers or approve access/refund decisions.",
+      phase: `Phase status: ${readyForUatPhases.map((phase) => `Phase ${phase.phase}`).join(", ")} are ready for UAT/demo QA. Phase 15 remains launch hardening, security, training and final acceptance.`,
+      managerSummary: `Today's priority: ${summary.openTickets} open service tickets, ${summary.overdueTickets} SLA breaches, ${summary.restrictedAccess} access restrictions and ${summary.checkoutsToday} check-outs. Start with SLA risk, debt-blocked work and deposit evidence.`,
+      accountantSummary: `Finance priority: ${topAccounts}. Total open debt is ${formatTry(summary.totalDebtTry)} and ${legalAccounts.length} accounts are in legal/90+ day risk. Payments, refunds, deposits and restrictions still need human approval.`,
+      summary: `Current snapshot: ${summary.totalFlats} units, ${summary.occupancyRate}% occupancy, ${formatTry(summary.totalDebtTry)} open debt, ${summary.openTickets} open tickets and ${summary.checkoutsToday} check-outs.`,
+      debt: `Collection priority: ${topAccounts}. ${legalAccounts.length} accounts are in legal/90+ day risk. AI can explain and draft follow-up text, but cannot apply restrictions or payments.`,
+      service: urgentTickets
+        ? `Service priority: ${urgentTickets}. ${blockedTickets.length} tickets are blocked by debt and need finance approval before dispatch.`
+        : "No critical SLA breach is visible right now. Plan the field route by location, SLA and payment approval.",
+      access: `${summary.restrictedAccess} units have restricted access. Review legal-risk debt first, then upcoming check-in access credentials. AI cannot activate or block access by itself.`,
+      booking: checkoutQueue
+        ? `Booking/deposit queue: ${checkoutQueue}. Do not refund a deposit before checkout photos, cleaning proof and manager/finance review are closed.`
+        : "No critical deposit checkout queue is visible today. Pre-check ID, deposit, arrival time and access status for upcoming arrivals.",
+      route: "Suggested field flow: handle overdue SLA work first, then paid/approved service orders, then proof uploads. Debt-blocked tickets stay in review.",
+      automation: "Highest safe automation value: debt reminders, check-in checklist nudges, SLA alerts, and checkout proof packets. Sensitive execution remains approval-based.",
+      integration: "Integration recommendation: keep Supabase live, keep payment/bank/SMS/email/access/camera providers in demo/provider-ready mode until client contracts, API keys and legal approval are confirmed.",
+      image: "Image workflow: AI can summarize service photos, checkout proof and document scan quality, but it must not decide damage deductions, identity approval or camera-based access actions.",
+      report: "Report draft flow: AI can create a short owner/manager narrative from approved metrics, then a human reviews it before sending.",
+      default: `I can help with operations in ${languageNames.en}: units, tickets, finance summaries, bookings, communications, integrations and reports, limited by your role (${role}).`,
+    },
+    de: {
+      resident:
+        role === "owner"
+          ? "Als Eigentümer können Sie Fragen zu Ihrer eigenen Einheit, Dokumenten, Buchungen, Serviceanfragen und Nachrichten stellen. Andere Eigentümer, Personal, globale Berichte und Firmenfinanzen bleiben verborgen."
+          : "Als Mieter/Gast können Sie Fragen zu Ihrer berechtigten Einheit, Buchungen, Serviceanfragen, Dokumenten und Nachrichten stellen. Globale Finanzen, Rollen und andere Einheiten bleiben verborgen.",
+      staff: "Als Mitarbeiter helfe ich bei zugewiesenen Aufgaben, SLA, Route, Notizen und Foto-/Videonachweisen. Finanzbücher oder Freigaben für Zugang/Rückerstattung zeige ich nicht.",
+      phase: `Phasenstatus: ${readyForUatPhases.map((phase) => `Phase ${phase.phase}`).join(", ")} sind für UAT/Demo-QA bereit. Phase 15 bleibt Launch-Härtung, Security, Training und finale Abnahme.`,
+      managerSummary: `Heutige Priorität: ${summary.openTickets} offene Servicetickets, ${summary.overdueTickets} SLA-Verstöße, ${summary.restrictedAccess} Zugangsbeschränkungen und ${summary.checkoutsToday} Check-outs. Zuerst SLA-Risiko, gesperrte Arbeiten und Depositenachweise prüfen.`,
+      accountantSummary: `Finanzpriorität: ${topAccounts}. Offene Gesamtschuld: ${formatTry(summary.totalDebtTry)}; ${legalAccounts.length} Konten haben 90+ Tage/Rechtsrisiko. Zahlungen, Rückerstattungen, Kautionen und Sperren brauchen menschliche Freigabe.`,
+      summary: `Aktueller Stand: ${summary.totalFlats} Einheiten, ${summary.occupancyRate}% Belegung, ${formatTry(summary.totalDebtTry)} offene Schuld, ${summary.openTickets} offene Tickets und ${summary.checkoutsToday} Check-outs.`,
+      debt: `Inkasso-Priorität: ${topAccounts}. ${legalAccounts.length} Konten haben 90+ Tage/Rechtsrisiko. AI darf erklären und Textentwürfe erstellen, aber keine Zahlungen oder Sperren ausführen.`,
+      service: urgentTickets
+        ? `Service-Priorität: ${urgentTickets}. ${blockedTickets.length} Tickets sind wegen Schulden blockiert und brauchen Finanzfreigabe vor Einsatz.`
+        : "Aktuell ist kein kritischer SLA-Verstoß sichtbar. Planen Sie die Route nach Ort, SLA und Zahlungsfreigabe.",
+      access: `${summary.restrictedAccess} Einheiten haben beschränkten Zugang. Zuerst Rechts-/Schuldenrisiko prüfen, dann Check-in-Zugangsdaten. AI aktiviert oder sperrt keinen Zugang selbst.`,
+      booking: checkoutQueue
+        ? `Buchungs-/Kautionsqueue: ${checkoutQueue}. Keine Rückerstattung vor Check-out-Fotos, Reinigungsnachweis und Manager-/Finanzfreigabe.`
+        : "Heute ist keine kritische Kautionsqueue sichtbar. Prüfen Sie ID, Kaution, Ankunftszeit und Zugang bei kommenden Anreisen.",
+      route: "Empfohlener Außendienst: zuerst überfällige SLA-Arbeiten, dann bezahlte/freigegebene Aufträge, danach Nachweise hochladen. Schuldenblockierte Tickets bleiben in Prüfung.",
+      automation: "Sichere Automatisierung mit hohem Nutzen: Schuldenerinnerungen, Check-in-Checklisten, SLA-Alarme und Check-out-Nachweispakete. Sensible Ausführung bleibt genehmigungspflichtig.",
+      integration: "Integrationsempfehlung: Supabase live lassen; Zahlung, Bank, SMS, E-Mail, Zugang und Kameras im Demo-/Provider-ready-Modus lassen, bis Verträge, API-Keys und rechtliche Freigabe bestätigt sind.",
+      image: "Bildworkflow: AI kann Servicefotos, Check-out-Nachweise und Scanqualität zusammenfassen, aber keine Schadenabzüge, Identitätsfreigaben oder kamerabasierten Zugangsaktionen entscheiden.",
+      report: "Berichtsentwurf: AI erstellt kurze Owner-/Manager-Texte aus geprüften Metriken; ein Mensch prüft vor Versand.",
+      default: `Ich kann auf Deutsch bei Betrieb, Tickets, Finanzen, Buchungen, Kommunikation, Integrationen und Berichten helfen, begrenzt durch Ihre Rolle (${role}).`,
+    },
+    ru: {
+      resident:
+        role === "owner"
+          ? "Как собственник, вы можете спрашивать о своей квартире, документах, бронированиях, сервисных заявках и сообщениях. Другие собственники, персонал, глобальные отчеты и финансы компании скрыты."
+          : "Как арендатор/гость, вы можете спрашивать о своей разрешенной квартире, бронированиях, заявках, документах и сообщениях. Общие финансы, роли и другие квартиры скрыты.",
+      staff: "Для персонала я помогаю с назначенными задачами, SLA, маршрутом, заметками и фото/видео-доказательствами. Финансовый журнал и решения по доступу/возвратам не показываю.",
+      phase: `Статус фаз: ${readyForUatPhases.map((phase) => `фаза ${phase.phase}`).join(", ")} готовы для UAT/демо-QA. Фаза 15 остается для безопасности, обучения, запуска и финальной приемки.`,
+      managerSummary: `Приоритет на сегодня: ${summary.openTickets} открытых заявок, ${summary.overdueTickets} нарушений SLA, ${summary.restrictedAccess} ограничений доступа и ${summary.checkoutsToday} выездов. Сначала SLA-риск, долги и депозитные доказательства.`,
+      accountantSummary: `Финансовый приоритет: ${topAccounts}. Общий открытый долг: ${formatTry(summary.totalDebtTry)}; ${legalAccounts.length} счетов в 90+ днях/юридическом риске. Платежи, возвраты, депозиты и ограничения требуют одобрения человека.`,
+      summary: `Текущий снимок: ${summary.totalFlats} квартир, занятость ${summary.occupancyRate}%, открытый долг ${formatTry(summary.totalDebtTry)}, ${summary.openTickets} открытых заявок и ${summary.checkoutsToday} выездов.`,
+      debt: `Приоритет взыскания: ${topAccounts}. ${legalAccounts.length} счетов имеют 90+ дней/юридический риск. AI может объяснить и подготовить текст, но не выполняет платежи или ограничения.`,
+      service: urgentTickets
+        ? `Приоритет сервиса: ${urgentTickets}. ${blockedTickets.length} заявок заблокированы из-за долга и требуют финансового одобрения.`
+        : "Критических нарушений SLA сейчас не видно. Планируйте маршрут по локации, SLA и подтверждению оплаты.",
+      access: `${summary.restrictedAccess} квартир имеют ограниченный доступ. Сначала проверьте юридический долг, затем доступы для ближайших заездов. AI сам не активирует и не блокирует доступ.`,
+      booking: checkoutQueue
+        ? `Очередь бронирований/депозитов: ${checkoutQueue}. Не возвращайте депозит до фото выезда, подтверждения уборки и проверки менеджера/финансов.`
+        : "Критической очереди депозитов сегодня не видно. Проверьте ID, депозит, время прибытия и доступ для будущих заездов.",
+      route: "Полевой маршрут: сначала просроченные SLA, затем оплаченные/одобренные работы, затем загрузка доказательств. Заявки с долгом остаются на проверке.",
+      automation: "Самая безопасная автоматизация: напоминания о долгах, чек-лист заезда, SLA-уведомления и пакеты доказательств после выезда. Чувствительные действия требуют одобрения.",
+      integration: "Рекомендация по интеграциям: Supabase оставить live; платежи, банк, SMS, email, доступ и камеры держать в demo/provider-ready до контрактов, API-ключей и юридического одобрения.",
+      image: "Workflow изображений: AI может резюмировать сервисные фото, доказательства выезда и качество сканов, но не решает удержания депозита, верификацию личности или доступ по камере.",
+      report: "Черновик отчета: AI готовит короткий текст для собственника/менеджера на основе утвержденных метрик; человек проверяет перед отправкой.",
+      default: `Я могу отвечать по-русски по операциям, заявкам, финансам, бронированиям, коммуникациям, интеграциям и отчетам в рамках вашей роли (${role}).`,
+    },
+  }[language]
+
+  if (role === "owner" || role === "tenant") return copy.resident
+  if (role === "staff") return copy.staff
+  if (lower.includes("phase") || lower.includes("faz") || lower.includes("roadmap") || lower.includes("next")) return copy.phase
+  if (role === "manager" && (lower.includes("summary") || lower.includes("operations") || lower.includes("plan") || lower.includes("heute"))) return copy.managerSummary
+  if (role === "accountant" && (lower.includes("finance") || lower.includes("collection") || lower.includes("payment") || lower.includes("zahlung"))) return copy.accountantSummary
+  if (lower.includes("debt") || lower.includes("collection") || lower.includes("schulden") || lower.includes("долг")) return copy.debt
+  if (
+    lower.includes("service") ||
+    lower.includes("ticket") ||
+    lower.includes("sla") ||
+    lower.includes("serviceticket") ||
+    lower.includes("serviceanfrage") ||
+    lower.includes("störung") ||
+    lower.includes("stoerung") ||
+    lower.includes("reparatur") ||
+    lower.includes("сервис") ||
+    lower.includes("заявк") ||
+    lower.includes("тикет") ||
+    lower.includes("ремонт")
+  ) return copy.service
+  if (lower.includes("access") || lower.includes("zugang") || lower.includes("доступ")) return copy.access
+  if (lower.includes("booking") || lower.includes("check") || lower.includes("buchung") || lower.includes("бронир")) return copy.booking
+  if (lower.includes("route") || lower.includes("technical") || lower.includes("techniker") || lower.includes("маршрут")) return copy.route
+  if (lower.includes("automation") || lower.includes("automatisierung") || lower.includes("автомат")) return copy.automation
+  if (lower.includes("integration") || lower.includes("provider") || lower.includes("api") || lower.includes("интеграц")) return copy.integration
+  if (lower.includes("image") || lower.includes("photo") || lower.includes("foto") || lower.includes("bild") || lower.includes("фото")) return copy.image
+  if (lower.includes("report") || lower.includes("bericht") || lower.includes("отчет")) return copy.report
+  if (resource === "reports") return copy.report
+  if (resource === "settings") return copy.integration
+  return copy.summary || copy.default
+}
+
+const aiSuggestionCopy: Record<AiLanguage, Record<string, Omit<AiSuggestion, "id">>> = {
+  tr: {
+    summary: { label: "Günlük özet", prompt: "Bugünkü site operasyonlarını özetle." },
+    "debt-risk": { label: "Borç riski", prompt: "Bugün hangi daireler için borç aksiyonu gerekiyor?" },
+    "service-priority": { label: "Servis önceliği", prompt: "Servis taleplerini SLA ve borç durumuna göre önceliklendir." },
+    "finance-summary": { label: "Finans özeti", prompt: "Tahsilatları ve açık finans işlerini özetle." },
+    "portfolio-health": { label: "Portföy sağlığı", prompt: "769 dairelik portföy sağlığını analiz et." },
+    automation: { label: "Otomasyon fırsatı", prompt: "Sırada hangi iş akışları otomatikleştirilmeli?" },
+    "cash-flow": { label: "Nakit akışı", prompt: "Tahsilatları ve açık borcu özetle." },
+    operations: { label: "Operasyon planı", prompt: "Bugünkü operasyon planını oluştur." },
+    "access-control": { label: "Erişim kontrolü", prompt: "Kısıtlı erişim risklerini göster." },
+    legal: { label: "Yasal takip", prompt: "Hangi daireler yasal takip aşamasına taşınmalı?" },
+    route: { label: "Teknik rota", prompt: "Bugün için teknisyen rotasını oluştur." },
+    blocked: { label: "Blokeli servis", prompt: "Hangi servis talepleri borç nedeniyle blokeli?" },
+    "my-flat": { label: "Daire durumu", prompt: "Dairemin durumu nedir?" },
+    rentals: { label: "Kiralama", prompt: "Rezervasyon, belge ve açık servis durumumu göster." },
+    "my-reservation": { label: "Rezervasyonum", prompt: "Rezervasyonumu ve yetkili belgelerimi göster." },
+    "my-service": { label: "Servis talebim", prompt: "Açık servis taleplerimi göster." },
+  },
+  en: {
+    summary: { label: "Daily summary", prompt: "Summarize today's site operations." },
+    "debt-risk": { label: "Debt risk", prompt: "Which units need debt action today?" },
+    "service-priority": { label: "Service priority", prompt: "Prioritize service tickets by SLA and debt status." },
+    "finance-summary": { label: "Finance summary", prompt: "Summarize collections and open finance work." },
+    "portfolio-health": { label: "Portfolio health", prompt: "Analyze the full 769-unit portfolio health." },
+    automation: { label: "Automation opportunity", prompt: "Which workflows should be automated next?" },
+    "cash-flow": { label: "Cash flow", prompt: "Summarize collections and outstanding debt." },
+    operations: { label: "Operations plan", prompt: "Create today's operations plan." },
+    "access-control": { label: "Access control", prompt: "Show restricted access risks." },
+    legal: { label: "Legal follow-up", prompt: "Which units should move to legal follow-up?" },
+    route: { label: "Technician route", prompt: "Build the technician route for today." },
+    blocked: { label: "Blocked service", prompt: "Which service tickets are blocked by debt?" },
+    "my-flat": { label: "Unit status", prompt: "What is the status of my unit?" },
+    rentals: { label: "Rentals", prompt: "Show my reservation, documents and open service status." },
+    "my-reservation": { label: "My reservation", prompt: "Show my reservation and authorized documents." },
+    "my-service": { label: "My service request", prompt: "Show my open service requests." },
+  },
+  de: {
+    summary: { label: "Tagesübersicht", prompt: "Fasse den heutigen Standortbetrieb zusammen." },
+    "debt-risk": { label: "Schuldenrisiko", prompt: "Welche Einheiten brauchen heute eine Schuldenaktion?" },
+    "service-priority": { label: "Servicepriorität", prompt: "Priorisiere Servicetickets nach SLA und Schuldenstatus." },
+    "finance-summary": { label: "Finanzübersicht", prompt: "Fasse Zahlungseingänge und offene Finanzarbeit zusammen." },
+    "portfolio-health": { label: "Portfoliogesundheit", prompt: "Analysiere die Gesundheit des gesamten Portfolios mit 769 Einheiten." },
+    automation: { label: "Automatisierungschance", prompt: "Welche Workflows sollten als Nächstes automatisiert werden?" },
+    "cash-flow": { label: "Cashflow", prompt: "Fasse Zahlungseingänge und offene Schulden zusammen." },
+    operations: { label: "Operationsplan", prompt: "Erstelle den heutigen Operationsplan." },
+    "access-control": { label: "Zugangskontrolle", prompt: "Zeige Risiken durch eingeschränkten Zugang." },
+    legal: { label: "Rechtliche Nachverfolgung", prompt: "Welche Einheiten sollten in die rechtliche Nachverfolgung wechseln?" },
+    route: { label: "Technikerroute", prompt: "Erstelle die Technikerroute für heute." },
+    blocked: { label: "Blockierter Service", prompt: "Welche Servicetickets sind wegen Schulden blockiert?" },
+    "my-flat": { label: "Einheitenstatus", prompt: "Wie ist der Status meiner Einheit?" },
+    rentals: { label: "Vermietung", prompt: "Zeige meine Reservierung, Dokumente und offenen Servicestatus." },
+    "my-reservation": { label: "Meine Reservierung", prompt: "Zeige meine Reservierung und autorisierten Dokumente." },
+    "my-service": { label: "Meine Serviceanfrage", prompt: "Zeige meine offenen Serviceanfragen." },
+  },
+  ru: {
+    summary: { label: "Дневная сводка", prompt: "Кратко опишите сегодняшние операции объекта." },
+    "debt-risk": { label: "Риск долга", prompt: "Какие юниты сегодня требуют действия по долгу?" },
+    "service-priority": { label: "Приоритет сервиса", prompt: "Расставьте сервисные заявки по SLA и статусу долга." },
+    "finance-summary": { label: "Финансовая сводка", prompt: "Суммируйте оплаты и открытые финансовые задачи." },
+    "portfolio-health": { label: "Состояние портфеля", prompt: "Проанализируйте состояние всего портфеля из 769 юнитов." },
+    automation: { label: "Возможность автоматизации", prompt: "Какие рабочие процессы нужно автоматизировать следующими?" },
+    "cash-flow": { label: "Денежный поток", prompt: "Суммируйте оплаты и открытый долг." },
+    operations: { label: "Операционный план", prompt: "Создайте операционный план на сегодня." },
+    "access-control": { label: "Контроль доступа", prompt: "Покажите риски ограниченного доступа." },
+    legal: { label: "Юридический контроль", prompt: "Какие юниты нужно перевести в юридическое сопровождение?" },
+    route: { label: "Маршрут техника", prompt: "Составьте маршрут техника на сегодня." },
+    blocked: { label: "Заблокированный сервис", prompt: "Какие сервисные заявки заблокированы из-за долга?" },
+    "my-flat": { label: "Статус юнита", prompt: "Какой статус моего юнита?" },
+    rentals: { label: "Аренда", prompt: "Покажите мою бронь, документы и открытый статус сервиса." },
+    "my-reservation": { label: "Моя бронь", prompt: "Покажите мою бронь и авторизованные документы." },
+    "my-service": { label: "Моя сервисная заявка", prompt: "Покажите мои открытые сервисные заявки." },
+  },
+}
+
+function suggestion(id: keyof typeof aiSuggestionCopy.en, language: AiLanguage): AiSuggestion {
+  return { id, ...aiSuggestionCopy[language][id] }
+}
+
+export function getAiSuggestions(role: Role, language: AiLanguage = "tr"): AiSuggestion[] {
   const common: AiSuggestion[] =
     role === "admin" || role === "manager"
       ? [
-          { id: "summary", label: "Günlük özet", prompt: "Give me today's site operations summary." },
-          { id: "debt-risk", label: "Borç riski", prompt: "Which flats need debt action today?" },
-          { id: "service-priority", label: "Servis önceliği", prompt: "Prioritize service tickets by SLA and debt status." },
+          suggestion("summary", language),
+          suggestion("debt-risk", language),
+          suggestion("service-priority", language),
         ]
       : role === "accountant"
         ? [
-            { id: "finance-summary", label: "Finans özeti", prompt: "Summarize collections and open finance work." },
-            { id: "debt-risk", label: "Borç riski", prompt: "Which accounts need finance follow-up today?" },
+            suggestion("finance-summary", language),
+            suggestion("debt-risk", language),
           ]
         : []
 
   const roleSpecific: Record<Role, AiSuggestion[]> = {
     admin: [
-      { id: "portfolio-health", label: "Portföy sağlığı", prompt: "Analyze the full 769-flat portfolio health." },
-      { id: "automation", label: "Otomasyon fırsatı", prompt: "Which workflows should be automated next?" },
-      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
+      suggestion("portfolio-health", language),
+      suggestion("automation", language),
+      suggestion("cash-flow", language),
     ],
     manager: [
-      { id: "operations", label: "Operasyon planı", prompt: "Create today's operations plan." },
-      { id: "access-control", label: "Erişim kontrolü", prompt: "Show restricted access risks." },
+      suggestion("operations", language),
+      suggestion("access-control", language),
     ],
     accountant: [
-      { id: "cash-flow", label: "Nakit akışı", prompt: "Summarize collections and outstanding debt." },
-      { id: "legal", label: "Yasal takip", prompt: "Which flats should move to legal follow-up?" },
+      suggestion("cash-flow", language),
+      suggestion("legal", language),
     ],
     staff: [
-      { id: "route", label: "Teknik rota", prompt: "Build the technician route for today." },
-      { id: "blocked", label: "Blokeli servis", prompt: "Which service tickets are blocked by debt?" },
+      suggestion("route", language),
+      suggestion("blocked", language),
     ],
     owner: [
-      { id: "my-flat", label: "Daire durumu", prompt: "What is the status of my flat?" },
-      { id: "rentals", label: "Kiralama", prompt: "Show my reservation, documents and open service status." },
+      suggestion("my-flat", language),
+      suggestion("rentals", language),
     ],
     tenant: [
-      { id: "my-reservation", label: "Rezervasyonum", prompt: "Show my reservation and authorized documents." },
-      { id: "my-service", label: "Servis talebim", prompt: "Show my open service requests." },
+      suggestion("my-reservation", language),
+      suggestion("my-service", language),
     ],
   }
 
-  return [...common, ...roleSpecific[role]].map((suggestion) => ({
-    ...suggestion,
-    label: localizeBusinessCopy(suggestion.label, locale),
-  }))
+  return [...common, ...roleSpecific[role]]
 }
 
-export function generateAiResponse(prompt: string, role: Role, locale = "tr"): string {
+export function generateAiResponse(prompt: string, role: Role, language: AiLanguage = detectAiLanguage(prompt)): string {
   const lower = prompt.toLocaleLowerCase("tr-TR")
   const profile = getAiRoleProfile(role)
-  const accessDecision = getAiAccessDecision(prompt, role, locale)
+  const accessDecision = getAiAccessDecision(prompt, role, language)
   if (!accessDecision.allowed) {
-    return accessDecision.deniedMessage ?? denialForRole("dashboard", role, locale)
+    return accessDecision.deniedMessage ?? denialForRole("dashboard", role, language)
+  }
+
+  if (language !== "tr") {
+    return generateLocalizedAiResponse(prompt, role, language, accessDecision.resource)
   }
 
   if (role === "owner" || role === "tenant") {
-    return generateResidentPortalResponse(role, accessDecision.resource, locale)
+    return generateResidentPortalResponse(role, accessDecision.resource)
   }
 
   if (role === "staff") {
-    return generateStaffPortalResponse(accessDecision.resource, locale)
+    return generateStaffPortalResponse(accessDecision.resource)
   }
 
   const summary = getSummary()
@@ -401,31 +628,11 @@ export function generateAiResponse(prompt: string, role: Role, locale = "tr"): s
   const plannedPhases = phaseDeliveryRecords.filter((phase) => phase.status === "planned")
 
   if (role === "admin" && (lower.includes("phase") || lower.includes("faz") || lower.includes("roadmap") || lower.includes("next"))) {
-    const readyList = readyForUatPhases.map((phase) => `Faz ${phase.phase}`).join(", ")
-    const activeList = activePhases.map((phase) => `Faz ${phase.phase}`).join(", ")
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleLabel} kapsamı: {readyList} UAT için hazır, {activeList} aktif geliştirmede, {plannedCount} faz planlı durumda. Sıradaki doğru adım Faz 7 ödeme/depozito/mutabakat kararlarını sağlayıcı ve hukuk onayıyla kapatmak; ardından servis siparişi, görev/SLA, rezervasyon ve iletişim fazları aynı RBAC ve audit modeliyle bağlanmalı.",
-        locale
-      ),
-      { roleLabel: localizeBusinessCopy(profile.label, locale), readyList, activeList, plannedCount: plannedPhases.length }
-    )
+    return `${profile.label} kapsamı: ${readyForUatPhases.map((phase) => `Faz ${phase.phase}`).join(", ")} UAT için hazır, ${activePhases.map((phase) => `Faz ${phase.phase}`).join(", ")} aktif geliştirmede, ${plannedPhases.length} faz planlı durumda. Sıradaki doğru adım Faz 7 ödeme/depozito/mutabakat kararlarını sağlayıcı ve hukuk onayıyla kapatmak; ardından servis siparişi, görev/SLA, rezervasyon ve iletişim fazları aynı RBAC ve audit modeliyle bağlanmalı.`
   }
 
   if (role === "manager" && (lower.includes("summary") || lower.includes("özet") || lower.includes("operations") || lower.includes("plan"))) {
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleLabel} çalışma alanı için bugün öncelik: {openTickets} açık servis talebi, {overdueTickets} SLA dışı iş, {restrictedAccess} erişim kısıtı ve {checkoutsToday} check-out. Ekip yönlendirmesi önce SLA riski ve borç nedeniyle bekleyen servislerden başlamalı; finans kaydı oluşturulmadan muhasebe onayı istenmeli.",
-        locale
-      ),
-      {
-        roleLabel: localizeBusinessCopy(profile.label, locale),
-        openTickets: summary.openTickets,
-        overdueTickets: summary.overdueTickets,
-        restrictedAccess: summary.restrictedAccess,
-        checkoutsToday: summary.checkoutsToday,
-      }
-    )
+    return `${profile.label} çalışma alanı için bugün öncelik: ${summary.openTickets} açık servis talebi, ${summary.overdueTickets} SLA dışı iş, ${summary.restrictedAccess} erişim kısıtı ve ${summary.checkoutsToday} check-out. Ekip yönlendirmesi önce SLA riski ve borç nedeniyle bekleyen servislerden başlamalı; finans kaydı oluşturulmadan muhasebe onayı istenmeli.`
   }
 
   if (role === "accountant" && (lower.includes("summary") || lower.includes("özet") || lower.includes("finance") || lower.includes("finans") || lower.includes("collection") || lower.includes("tahsilat"))) {
@@ -433,35 +640,11 @@ export function generateAiResponse(prompt: string, role: Role, locale = "tr"): s
       .slice(0, 3)
       .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
       .join("; ")
-    return interpolate(
-      localizeBusinessCopy(
-        "{roleLabel} kapsamı için tahsilat önceliği: {topAccounts}. Toplam açık borç {totalDebt}, 90+ gün/yasal riskte {legalCount} hesap var. Ödeme, iade, depozito veya erişim kısıtı aksiyonu doğrudan uygulanmaz; mutabakat ve insan onayı gerekir.",
-        locale
-      ),
-      {
-        roleLabel: localizeBusinessCopy(profile.label, locale),
-        topAccounts,
-        totalDebt: formatTry(summary.totalDebtTry),
-        legalCount: legalAccounts.length,
-      }
-    )
+    return `${profile.label} kapsamı için tahsilat önceliği: ${topAccounts}. Toplam açık borç ${formatTry(summary.totalDebtTry)}, 90+ gün/yasal riskte ${legalAccounts.length} hesap var. Ödeme, iade, depozito veya erişim kısıtı aksiyonu doğrudan uygulanmaz; mutabakat ve insan onayı gerekir.`
   }
 
   if (lower.includes("summary") || lower.includes("özet") || lower.includes("operations")) {
-    return interpolate(
-      localizeBusinessCopy(
-        "Bugün {totalFlats} daire yönetimde, doluluk %{occupancyRate}. Açık borç {totalDebt}, {openTickets} açık servis talebi, {overdueTickets} SLA dışı talep ve {checkoutsToday} check-out var. İlk öncelik borç kısıtı, SLA dışı servis ve depozito kontrolü.",
-        locale
-      ),
-      {
-        totalFlats: summary.totalFlats,
-        occupancyRate: summary.occupancyRate,
-        totalDebt: formatTry(summary.totalDebtTry),
-        openTickets: summary.openTickets,
-        overdueTickets: summary.overdueTickets,
-        checkoutsToday: summary.checkoutsToday,
-      }
-    )
+    return `Bugün ${summary.totalFlats} daire yönetimde, doluluk %${summary.occupancyRate}. Açık borç ${formatTry(summary.totalDebtTry)}, ${summary.openTickets} açık servis talebi, ${summary.overdueTickets} SLA dışı talep ve ${summary.checkoutsToday} check-out var. İlk öncelik borç kısıtı, SLA dışı servis ve depozito kontrolü.`
   }
 
   if (lower.includes("debt") || lower.includes("borç") || lower.includes("cash") || lower.includes("collection")) {
@@ -469,42 +652,21 @@ export function generateAiResponse(prompt: string, role: Role, locale = "tr"): s
       .slice(0, 3)
       .map((account) => `${account.flatNumber}: ${formatTry(account.balanceTry)}`)
       .join("; ")
-    return interpolate(
-      localizeBusinessCopy(
-        "Tahsilat önceliği: {topAccounts}. Toplam açık borç {totalDebt}. 90+ gün borçta {legalCount} hesap var; bu hesaplarda erişim kısıtı ve yasal takip hazırlığı önerilir.",
-        locale
-      ),
-      { topAccounts, totalDebt: formatTry(summary.totalDebtTry), legalCount: legalAccounts.length }
-    )
+    return `Tahsilat önceliği: ${topAccounts}. Toplam açık borç ${formatTry(summary.totalDebtTry)}. 90+ gün borçta ${legalAccounts.length} hesap var; bu hesaplarda erişim kısıtı ve yasal takip hazırlığı önerilir.`
   }
 
   if (lower.includes("service") || lower.includes("ticket") || lower.includes("sla") || lower.includes("servis")) {
     const urgent = overdueTickets
       .slice(0, 3)
-      .map((ticket) => `${ticket.flatNumber} ${localizeBusinessCopy(ticket.title, locale)} (${ticket.slaHoursRemaining} ${localizeBusinessCopy("saat", locale)})`)
+      .map((ticket) => `${ticket.flatNumber} ${ticket.title} (${ticket.slaHoursRemaining} saat)`)
       .join("; ")
     return urgent
-      ? interpolate(
-          localizeBusinessCopy(
-            "Servis önceliği: {urgent}. Borç blokeli {blockedCount} talep finans onayı bekliyor; personel yönlendirmeden önce ödeme durumu kontrol edilmeli.",
-            locale
-          ),
-          { urgent, blockedCount: blockedTickets.length }
-        )
-      : localizeBusinessCopy(
-          "Şu anda SLA dışı servis talebi yok. Günlük saha rotası açık taleplerin maliyet ve lokasyonuna göre planlanabilir.",
-          locale
-        )
+      ? `Servis önceliği: ${urgent}. Borç blokeli ${blockedTickets.length} talep finans onayı bekliyor; personel yönlendirmeden önce ödeme durumu kontrol edilmeli.`
+      : "Şu anda SLA dışı servis talebi yok. Günlük saha rotası açık taleplerin maliyet ve lokasyonuna göre planlanabilir."
   }
 
   if (lower.includes("access") || lower.includes("erişim") || lower.includes("restricted")) {
-    return interpolate(
-      localizeBusinessCopy(
-        "{restrictedAccess} dairede erişim kısıtı görünüyor. AI önerisi: önce yasal takipteki borçlu daireler, sonra check-in öncesi bekleyen erişim kodları kontrol edilmeli.",
-        locale
-      ),
-      { restrictedAccess: summary.restrictedAccess }
-    )
+    return `${summary.restrictedAccess} dairede erişim kısıtı görünüyor. AI önerisi: önce yasal takipteki borçlu daireler, sonra check-in öncesi bekleyen erişim kodları kontrol edilmeli.`
   }
 
   if (lower.includes("booking") || lower.includes("check") || lower.includes("rezervasyon") || lower.includes("depozito")) {
@@ -512,56 +674,25 @@ export function generateAiResponse(prompt: string, role: Role, locale = "tr"): s
       .map((booking) => `${booking.flatNumber} ${booking.guestName} (${formatTry(booking.depositTry)})`)
       .join("; ")
     return queue
-      ? interpolate(
-          localizeBusinessCopy(
-            "Bugünkü rezervasyon/depozito kuyruğu: {queue}. Check-out fotoğrafı, temizlik onayı ve hasar kesintisi kapanmadan depozito iadesi yapılmamalı.",
-            locale
-          ),
-          { queue }
-        )
-      : localizeBusinessCopy(
-          "Bugün depozito incelemesi bekleyen kritik çıkış yok. Yaklaşan girişler için kimlik, ödeme ve erişim kodu ön kontrolü yapılabilir.",
-          locale
-        )
+      ? `Bugünkü rezervasyon/depozito kuyruğu: ${queue}. Check-out fotoğrafı, temizlik onayı ve hasar kesintisi kapanmadan depozito iadesi yapılmamalı.`
+      : "Bugün depozito incelemesi bekleyen kritik çıkış yok. Yaklaşan girişler için kimlik, ödeme ve erişim kodu ön kontrolü yapılabilir."
   }
 
   if (lower.includes("route") || lower.includes("technical") || lower.includes("teknik")) {
     const route = serviceTickets
       .filter((ticket) => ticket.status !== "closed" && ticket.status !== "resolved" && !ticket.debtBlocked)
       .slice(0, 4)
-      .map((ticket) => `${ticket.flatNumber} - ${localizeBusinessCopy(ticket.category, locale)}`)
+      .map((ticket) => `${ticket.flatNumber} - ${ticket.category}`)
       .join("; ")
-    return interpolate(
-      localizeBusinessCopy(
-        "Bugünkü saha rota önerisi: {route}. Borç blokeli işler ayrıldı; önce SLA riski olan ve ödeme onayı tamamlanan talepler kapatılmalı.",
-        locale
-      ),
-      { route }
-    )
+    return `Bugünkü saha rota önerisi: ${route}. Borç blokeli işler ayrıldı; önce SLA riski olan ve ödeme onayı tamamlanan talepler kapatılmalı.`
   }
 
   if (lower.includes("automation") || lower.includes("otomasyon")) {
-    return localizeBusinessCopy(
-      "En yüksek otomasyon getirisi üç akışta: aidat gecikme hatırlatmaları, borç durumuna göre erişim kodu kontrolü, check-out sonrası depozito ve hasar kapama. Bu üç akış operasyon süresini ciddi azaltır.",
-      locale
-    )
+    return "En yüksek otomasyon getirisi üç akışta: aidat gecikme hatırlatmaları, borç durumuna göre erişim kodu kontrolü, check-out sonrası depozito ve hasar kapama. Bu üç akış operasyon süresini ciddi azaltır."
   }
 
-  const roleContext = localizeBusinessCopy(
-    "Rolünüze göre daire, finans, servis, rezervasyon, iletişim ve rapor modülleri önceliklendirilir.",
-    locale
-  )
+  const roleContext =
+    "Rolünüze göre daire, finans, servis, rezervasyon, iletişim ve rapor modülleri önceliklendirilir."
 
-  return interpolate(
-    localizeBusinessCopy(
-      "Bu konuda yardımcı olabilirim. Mevcut veride {totalFlats} daire, {openTickets} açık servis talebi ve {totalDebt} açık borç var. {roleContext}",
-      locale
-    ),
-    {
-      totalFlats: summary.totalFlats,
-      openTickets: summary.openTickets,
-      totalDebt: formatTry(summary.totalDebtTry),
-      roleContext,
-    }
-  )
+  return `Bu konuda yardımcı olabilirim. Mevcut veride ${summary.totalFlats} daire, ${summary.openTickets} açık servis talebi ve ${formatTry(summary.totalDebtTry)} açık borç var. ${roleContext}`
 }

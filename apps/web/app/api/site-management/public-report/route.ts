@@ -7,11 +7,10 @@ import {
 export const dynamic = "force-dynamic"
 
 // Account-free "report an issue" channel for the New Level Premium landing page.
-// Anyone — owner, tenant, guest, visitor, contractor — can raise an observation
-// about the grounds without logging in. Every report lands as an UNVERIFIED,
-// queued triage item; it is write-only and never returns internal data. The AI
-// layer must treat these as weak signals only (never a basis for finance/access
-// decisions) — see docs/offers/new-level-premium-landing-page-offer.md §8.
+// Anyone can raise an observation about the grounds without logging in. Every
+// report lands as an unverified queued triage item; it is write-only and never
+// returns internal data. AI and automation must treat these as weak signals
+// only, never as a basis for finance or access decisions.
 const REPORT_CATEGORIES = [
   "cleaning",
   "technical",

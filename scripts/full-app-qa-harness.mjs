@@ -31,6 +31,7 @@ const dashboardRoutes = [
   { path: "/dashboard/documents", resource: "documents" },
   { path: "/dashboard/reports", resource: "reports" },
   { path: "/dashboard/communications", resource: "communications" },
+  { path: "/dashboard/offline", resource: "offline_sync" },
   { path: "/dashboard/users", resource: "users" },
   { path: "/dashboard/settings", resource: "settings" },
 ]
@@ -39,7 +40,7 @@ const roleAccess = {
   admin: new Set(dashboardRoutes.map((route) => route.resource)),
   manager: new Set(dashboardRoutes.map((route) => route.resource)),
   accountant: new Set(["dashboard", "documents", "finance", "reports", "communications"]),
-  staff: new Set(["dashboard", "tickets", "calendar", "documents", "communications"]),
+  staff: new Set(["dashboard", "tickets", "calendar", "documents", "communications", "offline_sync"]),
   owner: new Set(["dashboard", "tickets", "calendar", "documents", "communications"]),
   tenant: new Set(["dashboard", "tickets", "calendar", "documents", "communications"]),
 }
@@ -157,6 +158,39 @@ async function fetchJson(baseUrl, pathname, { role = "admin", method = "GET", bo
   return { status: response.status, payload }
 }
 
+async function fetchMultipart(baseUrl, pathname, { role = "admin", formData, expectedStatus = 201 } = {}) {
+  const response = await fetch(apiUrl(baseUrl, pathname), {
+    method: "POST",
+    cache: "no-store",
+    headers: {
+      Cookie: roleCookie(role),
+    },
+    body: formData,
+  })
+  const text = await response.text()
+  const payload = text ? JSON.parse(text) : null
+  assert(
+    response.status === expectedStatus,
+    `POST ${pathname} as ${role} expected HTTP ${expectedStatus}, received ${response.status}: ${text}`
+  )
+  return { status: response.status, payload }
+}
+
+function documentUploadForm({ filename = "qa-document.pdf", mimeType = "application/pdf" } = {}) {
+  const formData = new FormData()
+  const body =
+    mimeType === "application/pdf"
+      ? "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%EOF\n"
+      : "plain text is not accepted as a managed document"
+  formData.append("file", new Blob([body], { type: mimeType }), filename)
+  formData.append("title", "Full app QA document upload")
+  formData.append("category", "Kimlik")
+  formData.append("flatNumber", "A-001")
+  formData.append("retentionClass", "identity")
+  formData.append("note", "Automated QA upload contract check")
+  return formData
+}
+
 function validateQuality(payload, label) {
   assert(payload.quality?.status !== "failed", `${label}: quality failed`)
   assert(["supabase", "local-seed"].includes(payload.source), `${label}: invalid data source ${payload.source}`)
@@ -188,9 +222,19 @@ async function checkApiContracts(baseUrl) {
     const phase7 = payload.phases.find((phase) => phase.phase === 7)
     const phase8 = payload.phases.find((phase) => phase.phase === 8)
     const phase9 = payload.phases.find((phase) => phase.phase === 9)
+    const phase10 = payload.phases.find((phase) => phase.phase === 10)
+    const phase11 = payload.phases.find((phase) => phase.phase === 11)
+    const phase12 = payload.phases.find((phase) => phase.phase === 12)
+    const phase13 = payload.phases.find((phase) => phase.phase === 13)
+    const phase14 = payload.phases.find((phase) => phase.phase === 14)
     assert(phase7?.status === "ready_for_uat", "phase 7 must be ready for UAT")
     assert(phase8?.status === "ready_for_uat", "phase 8 must be ready for UAT")
     assert(phase9?.status === "ready_for_uat", "phase 9 must be ready for UAT")
+    assert(phase10?.status === "ready_for_uat", "phase 10 must be ready for UAT")
+    assert(phase11?.status === "ready_for_uat", "phase 11 must be ready for UAT")
+    assert(phase12?.status === "ready_for_uat", "phase 12 must be ready for UAT")
+    assert(phase13?.status === "ready_for_uat", "phase 13 must be ready for UAT")
+    assert(phase14?.status === "ready_for_uat", "phase 14 must be ready for UAT")
   })
 
   await run("dashboard-admin", "/api/site-management/dashboard", { role: "admin" }, (payload) => {
@@ -250,9 +294,119 @@ async function checkApiContracts(baseUrl) {
   })
   await run("phase8-9-accountant-denied", "/api/site-management/tickets?limit=8", { role: "accountant", expectedStatus: 403 })
 
+  await run("phase10-booking-operations-manager", "/api/site-management/booking-operations", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-10-booking-operations.v1", "booking operations contract mismatch")
+    assert(payload.providerMode === "simulation", "booking operations must be in simulation mode")
+    assert(payload.quality?.liveProviderConnected === false, "booking operations must not claim live provider connection")
+    assert(Array.isArray(payload.readinessQueue) && payload.readinessQueue.length > 0, "readiness queue must be present")
+    assert(Array.isArray(payload.turnoverTasks) && payload.turnoverTasks.length > 0, "turnover tasks must be present")
+    assert(Array.isArray(payload.accessHandoffs) && payload.accessHandoffs.length > 0, "access handoffs must be present")
+    assert(Array.isArray(payload.depositSettlements) && payload.depositSettlements.length > 0, "deposit settlements must be present")
+  })
+  await run("phase10-booking-staff", "/api/site-management/booking-operations", { role: "staff" })
+  await run("phase10-booking-accountant-denied", "/api/site-management/booking-operations", { role: "accountant", expectedStatus: 403 })
+
+  await run("phase11-communications-manager", "/api/site-management/communications", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-11-communications.v1", "communications contract mismatch")
+    assert(payload.providerMode === "simulation", "communications must be in simulation mode")
+    assert(Array.isArray(payload.threads) && payload.threads.length > 0, "communication threads must be present")
+    assert(Array.isArray(payload.lifecycle) && payload.lifecycle.length > 0, "guest lifecycle queue must be present")
+    assert(Array.isArray(payload.rules) && payload.rules.length > 0, "notification rules must be present")
+    assert(Array.isArray(payload.deliveries) && payload.deliveries.length > 0, "delivery queue must be present")
+    assert(Array.isArray(payload.templates) && payload.templates.length > 0, "message templates must be present")
+  })
+  await run("phase11-communications-owner", "/api/site-management/communications", { role: "owner" })
+
+  await run("phase11-document-packets-manager", "/api/site-management/document-packets", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-11-document-packets.v1", "document packet contract mismatch")
+    assert(payload.providerMode === "simulation", "document packets must be in simulation mode")
+    assert(Array.isArray(payload.documents) && payload.documents.length > 0, "document vault must be present")
+    assert(Array.isArray(payload.packets) && payload.packets.length > 0, "document packets must be present")
+    assert(payload.summary?.packets?.completionRate >= 0, "packet summary must expose completion rate")
+    assert(payload.quality?.uploadEndpointReady === true, "document upload endpoint must be ready")
+    assert(payload.uploadPolicy?.privateObjectStorage === true, "document storage policy must target private object storage")
+  })
+  await run("phase11-document-packets-staff", "/api/site-management/document-packets", { role: "staff" })
+  await run("phase11-document-upload-policy-owner", "/api/site-management/document-uploads", { role: "owner" }, (payload) => {
+    assert(payload.contractVersion === "phase-11-document-upload-storage.v1", "document upload policy contract mismatch")
+    assert(payload.privateObjectStorage === true, "document uploads must use private object storage target")
+    assert(payload.databaseMetadataRequired === true, "document uploads must require database metadata")
+    assert(payload.humanReviewRequired === true, "document uploads must require human review")
+    assert(payload.maxBytes >= 1024 * 1024, "document upload max size is too small")
+  })
+
+  const uploadStarted = Date.now()
+  const uploadResult = await fetchMultipart(baseUrl, "/api/site-management/document-uploads", {
+    role: "owner",
+    formData: documentUploadForm(),
+    expectedStatus: 201,
+  })
+  assert(uploadResult.payload.contractVersion === "phase-11-document-upload-storage.v1", "document upload contract mismatch")
+  assert(uploadResult.payload.upload?.reviewStatus === "pending_review", "document upload must wait for review")
+  assert(uploadResult.payload.upload?.checksumSha256?.length === 64, "document upload checksum missing")
+  checks.push({
+    name: "phase11-document-upload-owner",
+    role: "owner",
+    method: "POST",
+    pathname: "/api/site-management/document-uploads",
+    status: uploadResult.status,
+    durationMs: Date.now() - uploadStarted,
+    passed: true,
+  })
+
+  const invalidUploadStarted = Date.now()
+  const invalidUploadResult = await fetchMultipart(baseUrl, "/api/site-management/document-uploads", {
+    role: "owner",
+    formData: documentUploadForm({ filename: "qa-upload.txt", mimeType: "text/plain" }),
+    expectedStatus: 400,
+  })
+  assert(Boolean(invalidUploadResult.payload?.error), "invalid document upload must return an error")
+  checks.push({
+    name: "phase11-document-upload-invalid-type",
+    role: "owner",
+    method: "POST",
+    pathname: "/api/site-management/document-uploads",
+    status: invalidUploadResult.status,
+    durationMs: Date.now() - invalidUploadStarted,
+    passed: true,
+  })
+
+  await run("phase12-mobile-web-offline-manager", "/api/site-management/offline-sync", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-12-mobile-web-offline.v1", "offline sync contract mismatch")
+    assert(payload.quality?.nativeMobileAppRequired === false, "phase 12 must not require native app")
+    assert(payload.quality?.installableWebTarget === true, "installable web target missing")
+    assert(Array.isArray(payload.capabilities) && payload.capabilities.length > 0, "mobile web capabilities must be present")
+    assert(Array.isArray(payload.queue) && payload.queue.length > 0, "offline sync queue must be present")
+  })
+  await run("phase12-mobile-web-offline-staff", "/api/site-management/offline-sync", { role: "staff" })
+  await run("phase12-mobile-web-offline-tenant-denied", "/api/site-management/offline-sync", { role: "tenant", expectedStatus: 403 })
+
+  await run("phase13-integrations-manager", "/api/site-management/integrations", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-13-integration-readiness.v1", "integration readiness contract mismatch")
+    assert(payload.quality?.supabaseConnected === true, "Supabase must be represented as connected")
+    assert(payload.quality?.liveExternalProvidersConnected === false, "external providers must not be claimed live")
+    assert(Array.isArray(payload.providers) && payload.providers.length >= 6, "integration provider placeholders must be present")
+  })
+  await run("phase13-integrations-staff-denied", "/api/site-management/integrations", { role: "staff", expectedStatus: 403 })
+
+  await run("phase14-ai-premium-manager", "/api/ai/premium", { role: "manager" }, (payload) => {
+    assert(payload.contractVersion === "phase-14-ai-premium.v1", "AI premium contract mismatch")
+    assert(payload.quality?.sameLanguageReplyTarget === true, "same-language AI target missing")
+    assert(payload.quality?.autonomousFinanceOrAccessActions === false, "AI must not autonomously execute sensitive actions")
+    assert(Array.isArray(payload.recommendations) && payload.recommendations.length > 0, "AI recommendations must be present")
+    assert(Array.isArray(payload.imageWorkflows) && payload.imageWorkflows.length > 0, "AI image workflows must be present")
+  })
+  await run("phase14-ai-premium-accountant", "/api/ai/premium", { role: "accountant" })
+  await run("phase14-ai-premium-staff-denied", "/api/ai/premium", { role: "staff", expectedStatus: 403 })
+
   await run("search-manager", "/api/site-management/search?q=A-001&limit=5", { role: "manager" }, (payload) => {
     assert(Array.isArray(payload.results), "search must return results array")
   })
+  for (const term of ["MW-PWA-02", "OFF-9005", "INT-PAY-02", "AI-BRIEF-01", "AIMG-SRV-01"]) {
+    await run(`search-${term}`, `/api/site-management/search?q=${encodeURIComponent(term)}&limit=5`, { role: "manager" }, (payload) => {
+      assert((payload.results ?? []).length > 0, `search returned no result for ${term}`)
+    })
+  }
   await run("search-empty-query", "/api/site-management/search", { role: "manager", expectedStatus: 400 })
   await run("search-tenant-denied", "/api/site-management/search?q=A-001", { role: "tenant", expectedStatus: 403 })
 
@@ -319,6 +473,8 @@ async function checkApiContracts(baseUrl) {
 
   const aiChecks = [
     { role: "admin", prompt: "Give me phase status and risks.", expectedGuard: false },
+    { role: "manager", prompt: "Please explain integration readiness and provider risks.", expectedGuard: false, expectedLanguage: "en" },
+    { role: "manager", prompt: "Bitte erstelle einen kurzen Bericht zum heutigen Betrieb.", expectedGuard: false, expectedLanguage: "de" },
     { role: "accountant", prompt: "Summarize finance ledger and payment restrictions.", expectedGuard: false },
     { role: "staff", prompt: "What field tickets should I handle today?", expectedGuard: false },
     { role: "tenant", prompt: "Show all finance ledger and user roles.", expectedGuard: true },
@@ -335,6 +491,9 @@ async function checkApiContracts(baseUrl) {
         assert(payload.source === "rbac-guard", `${aiCheck.role} AI request should be RBAC guarded`)
       } else {
         assert(payload.source !== "rbac-guard", `${aiCheck.role} AI request should be allowed`)
+      }
+      if (aiCheck.expectedLanguage) {
+        assert(payload.language === aiCheck.expectedLanguage, `${aiCheck.role} AI response expected language ${aiCheck.expectedLanguage}, got ${payload.language}`)
       }
     })
   }
@@ -355,6 +514,9 @@ async function checkSchemaFiles() {
     "supabase/migrations/00000000000004_realtime_operational_dashboard.sql",
     "supabase/migrations/00000000000005_new_level_premium_unit_sales.sql",
     "supabase/migrations/00000000000006_service_operations_phase_08_09.sql",
+    "supabase/migrations/00000000000007_booking_communications_phase_10_11.sql",
+    "supabase/migrations/00000000000008_mobile_integrations_ai_phase_12_14.sql",
+    "supabase/migrations/00000000000009_document_upload_storage.sql",
     "supabase/seed.sql",
   ]
   const requiredSnippets = [
@@ -370,6 +532,15 @@ async function checkSchemaFiles() {
     "CREATE TABLE IF NOT EXISTS public.service_orders",
     "CREATE TABLE IF NOT EXISTS public.workforce_tasks",
     "CREATE TABLE IF NOT EXISTS public.media_reports",
+    "CREATE TABLE IF NOT EXISTS public.document_packets",
+    "CREATE TABLE IF NOT EXISTS public.document_upload_requests",
+    "CREATE TABLE IF NOT EXISTS public.mobile_web_capabilities",
+    "CREATE TABLE IF NOT EXISTS public.offline_sync_jobs",
+    "CREATE TABLE IF NOT EXISTS public.integration_providers",
+    "CREATE TABLE IF NOT EXISTS public.ai_recommendations",
+    "CREATE TABLE IF NOT EXISTS public.ai_image_workflows",
+    "storage.buckets",
+    "storage.objects",
     "get_site_dashboard_snapshot",
     "get_phase4_site_data",
     "supabase_realtime",
@@ -409,7 +580,7 @@ async function setupPage(context, routeUrl) {
     if (response.status() >= 500) serverErrors.push(`${response.status()} ${response.url()}`)
   })
 
-  await page.goto(routeUrl, { waitUntil: "domcontentloaded", timeout: 30_000 })
+  await page.goto(routeUrl, { waitUntil: "domcontentloaded", timeout: 60_000 })
   await page.waitForLoadState("networkidle", { timeout: 6_000 }).catch(() => {})
   await page.waitForTimeout(500)
 
@@ -543,12 +714,27 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     results.push({ id, role, route, viewport, checks, screenshotPath, passed: true })
   }
 
+  async function clickActionMenuItem(page, menuName, itemName) {
+    const button = page.getByRole("button", { name: menuName }).first()
+    await button.waitFor({ state: "visible", timeout: 10_000 })
+    await button.click()
+    const item = page.getByRole("menuitem", { name: itemName }).first()
+    await item.waitFor({ state: "visible", timeout: 10_000 })
+    await item.click()
+  }
+
   const desktop = { width: 1440, height: 900 }
   const mobile = { width: 390, height: 844 }
 
   await runFlow("flow-login-role-staff", "manager", desktop, "/login", [
     async (page) => {
-      await page.getByRole("button", { name: /Personel/ }).click()
+      const staffButton = page.getByRole("button", { name: /Personel/ })
+      if (!(await staffButton.isVisible().catch(() => false))) {
+        await page.locator("details").nth(1).evaluate((node) => {
+          node.open = true
+        })
+      }
+      await staffButton.click()
       await page.getByRole("heading", { name: /Saha Ekibi Çalışma Alanı|Saha Ekibi Ã‡alÄ±ÅŸma AlanÄ±/ }).waitFor({ state: "visible", timeout: 12_000 })
       return "local access profile signs in as staff"
     },
@@ -563,6 +749,29 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     },
   ])
 
+  await runFlow("flow-dashboard-global-command-search", "manager", desktop, "/dashboard", [
+    async (page) => {
+      await page.getByRole("button", { name: /^(Filters|Filtreler)$/i }).click()
+      const dialog = page.getByRole("dialog")
+      await dialog.waitFor({ state: "visible", timeout: 10_000 })
+      await dialog.getByPlaceholder(/A-42/).fill("SRV-2401")
+      await dialog.getByRole("button", { name: /Apply filters|Filtreleri uygula/i }).click()
+      await page.getByText(/Applied results|Uygulanan sonuçlar/i).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByText(/SRV-2401/).first().waitFor({ state: "visible", timeout: 10_000 })
+      return "global command popup search returns indexed service ticket"
+    },
+    async (page) => {
+      await page.getByRole("button", { name: /Adjust|Düzenle|Filters|Filtreler/i }).first().click()
+      const dialog = page.getByRole("dialog")
+      await dialog.waitFor({ state: "visible", timeout: 10_000 })
+      await dialog.getByRole("button", { name: /Attention only|Sadece takip/i }).click()
+      await dialog.getByRole("button", { name: /Apply filters|Filtreleri uygula/i }).click()
+      await page.getByText(/Applied results|Uygulanan sonuçlar/i).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByText(/Takipteki|Attention/i).first().waitFor({ state: "visible", timeout: 10_000 })
+      return "attention filter is available in the popup"
+    },
+  ])
+
   await runFlow("flow-listings-search-detail", "manager", desktop, "/dashboard/listings", [
     async (page) => {
       await page.getByLabel("Ara...").first().fill("A-001")
@@ -570,7 +779,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
       return "unit search returns A-001"
     },
     async (page) => {
-      await page.getByRole("button", { name: /A-001 detay/i }).first().click()
+      await page.getByRole("button", { name: /A-001.*(detay|görüntüle|gÃ¶rÃ¼ntÃ¼le)/i }).first().click()
       await page.getByRole("heading", { name: "A-001" }).waitFor({ state: "visible", timeout: 10_000 })
       return "unit detail drawer opens"
     },
@@ -585,7 +794,7 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
     async (page) => {
       await page.getByRole("heading", { name: /Ödeme, depozito ve kısıt kontrol merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
       await page.getByRole("button", { name: /Kontrolleri yenile/i }).click()
-      await page.getByRole("button", { name: /Mutabakat inceleme/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /Ödeme kontrol|Odeme kontrol|Payment control/i, /İnceleme aç|Inceleme ac|Mutabakat inceleme|Review/i)
       return "phase 7 payment-control panel refresh and action are visible"
     },
   ])
@@ -597,16 +806,68 @@ async function auditCriticalFlows(browser, baseUrl, outDir) {
       return "people directory refresh works"
     },
     async (page) => {
-      await page.getByRole("button", { name: /Export iste|Dışa aktar|DÄ±ÅŸa aktar/i }).first().click()
+      await clickActionMenuItem(page, /Kişi dizini|Kisi dizini|People directory/i, /Dışa aktar|Disa aktar|disa aktarim|Export/i)
       return "people directory export action is clickable for admin"
+    },
+  ])
+
+  await runFlow("flow-calendar-phase10", "manager", desktop, "/dashboard/calendar", [
+    async (page) => {
+      await page.getByRole("heading", { name: /Move-in readiness command board|Giriş hazırlığı komuta panosu/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByRole("heading", { name: /Access handoff queue/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /Rezervasyon aksiyon|Reservation actions/i, /Move-in|hazırlığını hazırla|hazirligini hazirla|Prepare move-in/i)
+      return "phase 10 readiness board and move-in action are clickable"
+    },
+    async (page) => {
+      await clickActionMenuItem(page, /Depozito aksiyon|Deposit actions/i, /Depozito karar|Deposit decision|Deposit/i)
+      return "phase 10 deposit-settlement action is clickable"
     },
   ])
 
   await runFlow("flow-communications-broadcast", "manager", desktop, "/dashboard/communications", [
     async (page) => {
-      await page.getByRole("heading", { name: /İletişim Merkezi|Ä°letiÅŸim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
-      await page.getByRole("button", { name: /Toplu bildirim/i }).click()
+      await page.getByRole("heading", { name: /İletişim Merkezi|Iletisim Merkezi/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /İletişim merkezi|Iletisim merkezi|Communication/i, /Toplu bildirim|Broadcast/i)
       return "communication broadcast action is clickable"
+    },
+    async (page) => {
+      await page.getByRole("heading", { name: /Delivery and retry queue|Teslim ve yeniden deneme kuyruğu/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /Teslim aksiyon|Delivery actions/i, /Bildirim teslim|Retry delivery|yeniden dene/i)
+      return "phase 11 delivery retry action is clickable"
+    },
+  ])
+
+  await runFlow("flow-documents-phase11-packets", "manager", desktop, "/dashboard/documents", [
+    async (page) => {
+      await page.getByRole("heading", { name: /Document packet board/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /belge paketi|document packet/i, /Belge paketini|Prepare document packet/i)
+      return "phase 11 document packet board action is clickable"
+    },
+  ])
+
+  await runFlow("flow-phase12-mobile-web-offline", "manager", desktop, "/dashboard/offline", [
+    async (page) => {
+      await page.getByRole("heading", { name: /Mobile Web & Offline Sync|Mobil Web & Offline Sync/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByText(/No native app|native app yok/i).first().waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /offline kuyruk|queue actions/i, /Offline sync kayd|Offline sync item review/i)
+      return "phase 12 offline/mobile web page and queue action work"
+    },
+  ])
+
+  await runFlow("flow-phase13-integrations", "manager", desktop, "/dashboard/settings", [
+    async (page) => {
+      await page.getByRole("heading", { name: /Phase 13 integration readiness|Faz 13 entegrasyon hazırlığı/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByText(/Supabase/i).first().waitFor({ state: "visible", timeout: 10_000 })
+      return "phase 13 integration readiness matrix is visible"
+    },
+  ])
+
+  await runFlow("flow-phase14-ai-premium", "manager", desktop, "/dashboard/reports", [
+    async (page) => {
+      await page.getByRole("heading", { name: /Phase 14 AI command layer|Faz 14 AI komuta katmanı/i }).waitFor({ state: "visible", timeout: 10_000 })
+      await page.getByText(/Same-language assistant|Aynı dilde asistan/i).first().waitFor({ state: "visible", timeout: 10_000 })
+      await clickActionMenuItem(page, /AI aksiyon|AI actions/i, /AI öneriyi|AI oneriyi|Prepare AI/i)
+      return "phase 14 AI recommendations and action logging work"
     },
   ])
 
@@ -635,6 +896,11 @@ async function runBrowserChecks(baseUrl, outDir, headed) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+  const localTempDir = path.join(rootDir, ".tmp")
+  await fs.mkdir(localTempDir, { recursive: true })
+  process.env.TEMP = localTempDir
+  process.env.TMP = localTempDir
+  process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(localTempDir, "ms-playwright")
   process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES =
     process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
 

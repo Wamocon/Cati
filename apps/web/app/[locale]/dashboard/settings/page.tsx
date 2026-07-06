@@ -1,21 +1,197 @@
 "use client"
 
+import { Bell, CheckCircle2, Eye, FileClock, Globe, PlugZap, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
 import { useLocale } from "next-intl"
-import { Bell, CheckCircle2, Eye, FileClock, Globe, Palette, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LocaleSwitcher } from "@/components/locale-switcher"
-import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
 import {
   auditEvents,
+  getIntegrationSummary,
   getPlatformControlSummary,
+  integrationProviders,
   platformControls,
   roleCoverage,
   type AuditEvent,
+  type IntegrationProviderRecord,
   type PlatformControl,
 } from "@/lib/site-management-data"
+
+const settingsCopy = {
+  tr: {
+    title: "Platform Yönetim Merkezi",
+    subtitle: "Rol yetki kapsamı, denetim izi, güvenlik kontrolleri ve kullanıcı görünürlüğü tek yönetim alanında takip edilir.",
+    metrics: { controls: "Kontrol", active: "Aktif", review: "İnceleme", highRisk: "Yüksek risk denetim" },
+    controlsTitle: "Güvenlik ve platform kontrolleri",
+    controlsBody: "Her kontrolün sahibi, amacı ve canlı durumu yönetim için görünür.",
+    operationsTitle: "Operasyon ayarları",
+    operationsBody: "Yönetici, finans, güvenlik ve saha ekipleri aynı kontrol merkezinden standart kuralları görür.",
+    configuration: [
+      { title: "Bildirim kuralları", desc: "Borç, SLA, check-in, check-out ve belge eksikliği için rol bazlı uyarılar." },
+      { title: "Güvenlik politikası", desc: "Rol bazlı erişim, hassas finans işlemleri ve insan onaylı AI kararları." },
+      { title: "Dil ve yerelleştirme", desc: "Türkçe ana kullanım, çok dilli sakin desteği ve resmi ton standardı." },
+    ],
+    integrationsTitle: "Faz 13 entegrasyon hazırlığı",
+    integrationsBody: "Supabase bağlı backend olarak çalışır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.",
+    live: "Canlı",
+    demo: "Demo",
+    waitingClient: "Müşteri bekliyor",
+    version: "Platform sürümü",
+    yes: "Var",
+    no: "Yok",
+    controlStatus: { active: "Aktif", review: "İnceleme", planned: "Planlı" },
+    integrationStatus: { connected: "Bağlı", demo_ready: "Demo hazır", blocked_pending_client: "Müşteri bekleniyor", manual_fallback: "Manuel yedek" },
+    risk: { high: "Yüksek", medium: "Orta", low: "Düşük" },
+    headers: {
+      role: "Rol",
+      users: "Kullanıcı",
+      financeApproval: "Finans onayı",
+      accessRestriction: "Erişim kısıtı",
+      export: "Dışa aktarım",
+      audit: "Denetim",
+      actor: "Aktör",
+      module: "Modül",
+      risk: "Risk",
+      action: "Aksiyon",
+      service: "Servis",
+      provider: "Provider",
+      status: "Status",
+      required: "Needed from client",
+      fallback: "Fallback",
+    },
+  },
+  en: {
+    title: "Platform Administration Center",
+    subtitle: "Role permission scope, audit trail, security controls and user visibility are tracked in one administration area.",
+    metrics: { controls: "Controls", active: "Active", review: "Review", highRisk: "High-risk audits" },
+    controlsTitle: "Security and platform controls",
+    controlsBody: "Each control owner, purpose and live status is visible to management.",
+    operationsTitle: "Operation settings",
+    operationsBody: "Administration, finance, security and field teams see standard rules from the same control center.",
+    configuration: [
+      { title: "Notification rules", desc: "Role-based alerts for debt, SLA, check-in, check-out and missing documents." },
+      { title: "Security policy", desc: "Role-based access, sensitive finance actions and human-approved AI decisions." },
+      { title: "Language and localization", desc: "Turkish primary operations, multilingual resident support and formal tone standards." },
+    ],
+    integrationsTitle: "Phase 13 integration readiness",
+    integrationsBody: "Supabase is the connected backend. Payment, bank, SMS, email, access, camera and OAuth providers stay in demo/provider-ready mode until client contracts and API keys are approved.",
+    live: "Live",
+    demo: "Demo",
+    waitingClient: "Waiting for client",
+    version: "Platform version",
+    yes: "Yes",
+    no: "No",
+    controlStatus: { active: "Active", review: "Review", planned: "Planned" },
+    integrationStatus: { connected: "Connected", demo_ready: "Demo ready", blocked_pending_client: "Waiting for client", manual_fallback: "Manual fallback" },
+    risk: { high: "High", medium: "Medium", low: "Low" },
+    headers: {
+      role: "Role",
+      users: "Users",
+      financeApproval: "Finance approval",
+      accessRestriction: "Access restriction",
+      export: "Export",
+      audit: "Audit",
+      actor: "Actor",
+      module: "Module",
+      risk: "Risk",
+      action: "Action",
+      service: "Service",
+      provider: "Provider",
+      status: "Status",
+      required: "Needed from client",
+      fallback: "Fallback",
+    },
+  },
+  de: {
+    title: "Plattform-Administrationszentrum",
+    subtitle: "Rollenberechtigungen, Audit-Trail, Sicherheitskontrollen und Benutzersichtbarkeit werden zentral verwaltet.",
+    metrics: { controls: "Kontrollen", active: "Aktiv", review: "Prüfung", highRisk: "Hochrisiko-Audits" },
+    controlsTitle: "Sicherheits- und Plattformkontrollen",
+    controlsBody: "Owner, Zweck und Live-Status jeder Kontrolle sind für das Management sichtbar.",
+    operationsTitle: "Operationseinstellungen",
+    operationsBody: "Administration, Finanzen, Sicherheit und Feldteams sehen Standardregeln im selben Kontrollzentrum.",
+    configuration: [
+      { title: "Benachrichtigungsregeln", desc: "Rollenbasierte Warnungen für Schulden, SLA, Check-in, Check-out und fehlende Dokumente." },
+      { title: "Sicherheitsrichtlinie", desc: "Rollenbasierter Zugriff, sensible Finanzaktionen und KI-Entscheidungen mit menschlicher Freigabe." },
+      { title: "Sprache und Lokalisierung", desc: "Türkische Hauptoperationen, mehrsprachige Bewohnerunterstützung und formaler Tonstandard." },
+    ],
+    integrationsTitle: "Phase-13-Integrationsbereitschaft",
+    integrationsBody: "Supabase läuft als angebundenes Backend. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo/Provider-ready-Modus, bis Verträge und API-Schlüssel freigegeben sind.",
+    live: "Live",
+    demo: "Demo",
+    waitingClient: "Wartet auf Kunde",
+    version: "Plattformversion",
+    yes: "Ja",
+    no: "Nein",
+    controlStatus: { active: "Aktiv", review: "Prüfung", planned: "Geplant" },
+    integrationStatus: { connected: "Verbunden", demo_ready: "Demo bereit", blocked_pending_client: "Wartet auf Kunde", manual_fallback: "Manueller Ersatz" },
+    risk: { high: "Hoch", medium: "Mittel", low: "Niedrig" },
+    headers: {
+      role: "Rolle",
+      users: "Benutzer",
+      financeApproval: "Finanzfreigabe",
+      accessRestriction: "Zugangssperre",
+      export: "Export",
+      audit: "Audit",
+      actor: "Akteur",
+      module: "Modul",
+      risk: "Risiko",
+      action: "Aktion",
+      service: "Service",
+      provider: "Provider",
+      status: "Status",
+      required: "Vom Kunden benötigt",
+      fallback: "Fallback",
+    },
+  },
+  ru: {
+    title: "Центр администрирования платформы",
+    subtitle: "Ролевые права, аудит, контроль безопасности и видимость пользователей отслеживаются в одной зоне управления.",
+    metrics: { controls: "Контроли", active: "Активно", review: "Проверка", highRisk: "Аудит высокого риска" },
+    controlsTitle: "Безопасность и контроль платформы",
+    controlsBody: "Владелец, цель и live-статус каждого контроля видны управлению.",
+    operationsTitle: "Операционные настройки",
+    operationsBody: "Администрация, финансы, безопасность и полевая команда видят стандартные правила в одном центре контроля.",
+    configuration: [
+      { title: "Правила уведомлений", desc: "Ролевые уведомления по долгам, SLA, check-in, check-out и отсутствующим документам." },
+      { title: "Политика безопасности", desc: "Ролевой доступ, чувствительные финансовые действия и AI-решения с одобрением человека." },
+      { title: "Язык и локализация", desc: "Турецкий как основной язык операций, многоязычная поддержка резидентов и официальный тон." },
+    ],
+    integrationsTitle: "Готовность интеграций фазы 13",
+    integrationsBody: "Supabase работает как подключенный backend. Провайдеры оплат, банка, SMS, e-mail, доступа, камер и OAuth остаются в demo/provider-ready режиме до одобрения договоров и API-ключей клиентом.",
+    live: "Live",
+    demo: "Демо",
+    waitingClient: "Ожидает клиента",
+    version: "Версия платформы",
+    yes: "Да",
+    no: "Нет",
+    controlStatus: { active: "Активно", review: "Проверка", planned: "Запланировано" },
+    integrationStatus: { connected: "Подключено", demo_ready: "Демо готово", blocked_pending_client: "Ожидает клиента", manual_fallback: "Ручной fallback" },
+    risk: { high: "Высокий", medium: "Средний", low: "Низкий" },
+    headers: {
+      role: "Роль",
+      users: "Пользователи",
+      financeApproval: "Финансовое одобрение",
+      accessRestriction: "Ограничение доступа",
+      export: "Экспорт",
+      audit: "Аудит",
+      actor: "Актор",
+      module: "Модуль",
+      risk: "Риск",
+      action: "Действие",
+      service: "Сервис",
+      provider: "Провайдер",
+      status: "Статус",
+      required: "Нужно от клиента",
+      fallback: "Fallback",
+    },
+  },
+} as const
+
+function resolveSettingsLocale(locale: string): keyof typeof settingsCopy {
+  return locale === "tr" || locale === "de" || locale === "ru" ? locale : "en"
+}
 
 function controlVariant(status: PlatformControl["status"]) {
   if (status === "active") return "success"
@@ -23,10 +199,8 @@ function controlVariant(status: PlatformControl["status"]) {
   return "neutral"
 }
 
-function controlLabel(status: PlatformControl["status"], locale: string) {
-  if (status === "active") return localizeBusinessCopy("Aktif", locale)
-  if (status === "review") return localizeBusinessCopy("İnceleme", locale)
-  return localizeBusinessCopy("Planlı", locale)
+function controlLabel(status: PlatformControl["status"], copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
+  return copy.controlStatus[status]
 }
 
 function riskVariant(risk: AuditEvent["risk"]) {
@@ -35,39 +209,51 @@ function riskVariant(risk: AuditEvent["risk"]) {
   return "success"
 }
 
-function riskLabel(risk: AuditEvent["risk"], locale: string) {
-  if (risk === "high") return localizeBusinessCopy("Yüksek", locale)
-  if (risk === "medium") return localizeBusinessCopy("Orta", locale)
-  return localizeBusinessCopy("Düşük", locale)
+function riskLabel(risk: AuditEvent["risk"], copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
+  return copy.risk[risk]
 }
 
-function booleanBadge(value: boolean, locale: string) {
-  return (
-    <StatusBadge variant={value ? "success" : "neutral"}>
-      {value ? localizeBusinessCopy("Var", locale) : localizeBusinessCopy("Yok", locale)}
-    </StatusBadge>
-  )
+function integrationVariant(status: IntegrationProviderRecord["status"]) {
+  if (status === "connected") return "success"
+  if (status === "demo_ready") return "info"
+  if (status === "blocked_pending_client") return "warning"
+  return "neutral"
+}
+
+function integrationLabel(status: IntegrationProviderRecord["status"], copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
+  return copy.integrationStatus[status]
+}
+
+function integrationRiskVariant(risk: IntegrationProviderRecord["riskLevel"]) {
+  if (risk === "high") return "danger"
+  if (risk === "medium") return "warning"
+  return "success"
+}
+
+function booleanBadge(value: boolean, copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
+  return <StatusBadge variant={value ? "success" : "neutral"}>{value ? copy.yes : copy.no}</StatusBadge>
 }
 
 export default function SettingsPage() {
-  const locale = resolveDashboardLocale(useLocale())
+  const copy = settingsCopy[resolveSettingsLocale(useLocale())]
   const summary = getPlatformControlSummary()
+  const integrationSummary = getIntegrationSummary()
 
   const configurationItems = [
     {
       icon: Bell,
-      title: localizeBusinessCopy("Bildirim kuralları", locale),
-      desc: localizeBusinessCopy("Borç, SLA, check-in, check-out ve belge eksikliği için rol bazlı uyarılar.", locale),
+      title: copy.configuration[0].title,
+      desc: copy.configuration[0].desc,
     },
     {
       icon: Shield,
-      title: localizeBusinessCopy("Güvenlik politikası", locale),
-      desc: localizeBusinessCopy("Rol bazlı erişim, hassas finans işlemleri ve insan onaylı AI kararları.", locale),
+      title: copy.configuration[1].title,
+      desc: copy.configuration[1].desc,
     },
     {
       icon: Globe,
-      title: localizeBusinessCopy("Dil ve yerelleştirme", locale),
-      desc: localizeBusinessCopy("Türkçe ana kullanım, çok dilli sakin desteği ve resmi ton standardı.", locale),
+      title: copy.configuration[2].title,
+      desc: copy.configuration[2].desc,
       action: <LocaleSwitcher />,
     },
   ]
@@ -75,9 +261,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">{localizeBusinessCopy("Platform Yönetim Merkezi", locale)}</h1>
+        <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          {localizeBusinessCopy("Rol yetki kapsamı, denetim izi, güvenlik kontrolleri ve kullanıcı görünürlüğü tek yönetim alanında takip edilir.", locale)}
+          {copy.subtitle}
         </p>
       </div>
 
@@ -86,7 +272,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-8 w-8 text-primary" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Kontrol", locale)}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.metrics.controls}</p>
               <p className="text-2xl font-black">{summary.total}</p>
             </div>
           </div>
@@ -95,7 +281,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-8 w-8 text-teal-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Aktif", locale)}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.metrics.active}</p>
               <p className="text-2xl font-black">{summary.active}</p>
             </div>
           </div>
@@ -104,7 +290,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <FileClock className="h-8 w-8 text-amber-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("İnceleme", locale)}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.metrics.review}</p>
               <p className="text-2xl font-black">{summary.review}</p>
             </div>
           </div>
@@ -113,7 +299,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Eye className="h-8 w-8 text-rose-600" />
             <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Yüksek risk denetim", locale)}</p>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.metrics.highRisk}</p>
               <p className="text-2xl font-black">{summary.highRiskAuditEvents}</p>
             </div>
           </div>
@@ -123,20 +309,20 @@ export default function SettingsPage() {
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4">
-            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Güvenlik ve platform kontrolleri", locale)}</h2>
-            <p className="mt-1 text-xs text-muted-foreground">{localizeBusinessCopy("Her kontrolün sahibi, amacı ve canlı durumu yönetim için görünür.", locale)}</p>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.controlsTitle}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">{copy.controlsBody}</p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {platformControls.map((control) => (
               <div key={control.id} className="rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p lang="en" className="text-xs font-semibold uppercase text-muted-foreground">{control.area} - {control.owner}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{localizeBusinessCopy(control.title, locale)}</h3>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">{control.area} - {control.owner}</p>
+                    <h3 className="mt-1 text-sm font-black text-foreground">{control.title}</h3>
                   </div>
-                  <StatusBadge variant={controlVariant(control.status)}>{controlLabel(control.status, locale)}</StatusBadge>
+                  <StatusBadge variant={controlVariant(control.status)}>{controlLabel(control.status, copy)}</StatusBadge>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{localizeBusinessCopy(control.detail, locale)}</p>
+                <p className="mt-3 text-xs text-muted-foreground">{control.detail}</p>
               </div>
             ))}
           </div>
@@ -147,9 +333,9 @@ export default function SettingsPage() {
             <div className="flex items-start gap-3">
               <SlidersHorizontal className="mt-0.5 h-5 w-5 text-primary" />
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Operasyon ayarları", locale)}</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.operationsTitle}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {localizeBusinessCopy("Yönetici, finans, güvenlik ve saha ekipleri aynı kontrol merkezinden standart kuralları görür.", locale)}
+                  {copy.operationsBody}
                 </p>
               </div>
             </div>
@@ -168,20 +354,42 @@ export default function SettingsPage() {
               </div>
             </Card3D>
           ))}
-          <Card3D glow={false}>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Palette className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Görünüm", locale)}</p>
-                  <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Açık/koyu tema desteği.", locale)}</p>
-                </div>
-              </div>
-              <ThemeToggle />
-            </div>
-          </Card3D>
         </div>
       </div>
+
+      <Card3D glow={false}>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.integrationsTitle}</h2>
+            <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
+              {copy.integrationsBody}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge variant="success">{copy.live} {integrationSummary.liveProviders}</StatusBadge>
+            <StatusBadge variant="info">{copy.demo} {integrationSummary.demoReady}</StatusBadge>
+            <StatusBadge variant="warning">{copy.waitingClient} {integrationSummary.blockedPendingClient}</StatusBadge>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {integrationProviders.slice(0, 6).map((provider) => (
+            <div key={provider.id} className="rounded-xl border border-border bg-muted/30 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">{provider.category}</p>
+                  <h3 className="mt-1 text-sm font-black text-foreground">{provider.provider}</h3>
+                </div>
+                <PlugZap className="h-4 w-4 shrink-0 text-primary" />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge>
+                <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{provider.riskLevel}</StatusBadge>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">{provider.idealNow}</p>
+            </div>
+          ))}
+        </div>
+      </Card3D>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <DataTable
@@ -189,12 +397,12 @@ export default function SettingsPage() {
           searchValue={(role) => role.role}
           pageSize={10}
           columns={[
-            { key: "role", header: localizeBusinessCopy("Rol", locale), sortable: true, render: (role) => localizeBusinessCopy(role.role, locale) },
-            { key: "users", header: localizeBusinessCopy("Kullanıcı", locale), sortable: true, sortValue: (role) => role.users, render: (role) => role.users },
-            { key: "finance", header: localizeBusinessCopy("Finans onayı", locale), render: (role) => booleanBadge(role.canApproveFinance, locale) },
-            { key: "access", header: localizeBusinessCopy("Erişim kısıtı", locale), render: (role) => booleanBadge(role.canRestrictAccess, locale) },
-            { key: "usersManage", header: localizeBusinessCopy("Kullanıcı", locale), render: (role) => booleanBadge(role.canManageUsers, locale) },
-            { key: "export", header: localizeBusinessCopy("Dışa aktarım", locale), render: (role) => booleanBadge(role.canExportData, locale) },
+            { key: "role", header: copy.headers.role, sortable: true, render: (role) => role.role },
+            { key: "users", header: copy.headers.users, sortable: true, sortValue: (role) => role.users, render: (role) => role.users },
+            { key: "finance", header: copy.headers.financeApproval, render: (role) => booleanBadge(role.canApproveFinance, copy) },
+            { key: "access", header: copy.headers.accessRestriction, render: (role) => booleanBadge(role.canRestrictAccess, copy) },
+            { key: "usersManage", header: copy.headers.users, render: (role) => booleanBadge(role.canManageUsers, copy) },
+            { key: "export", header: copy.headers.export, render: (role) => booleanBadge(role.canExportData, copy) },
           ]}
         />
 
@@ -203,20 +411,37 @@ export default function SettingsPage() {
           searchValue={(event) => `${event.actor} ${event.action} ${event.module} ${event.decision}`}
           pageSize={10}
           columns={[
-            { key: "id", header: localizeBusinessCopy("Denetim", locale), sortable: true, render: (event) => event.id },
-            { key: "actor", header: localizeBusinessCopy("Aktör", locale), render: (event) => localizeBusinessCopy(event.actor, locale) },
-            { key: "module", header: localizeBusinessCopy("Modül", locale), sortable: true, render: (event) => localizeBusinessCopy(event.module, locale) },
-            { key: "risk", header: localizeBusinessCopy("Risk", locale), render: (event) => <StatusBadge variant={riskVariant(event.risk)}>{riskLabel(event.risk, locale)}</StatusBadge> },
-            { key: "action", header: localizeBusinessCopy("Aksiyon", locale), render: (event) => localizeBusinessCopy(event.action, locale) },
+            { key: "id", header: copy.headers.audit, sortable: true, render: (event) => event.id },
+            { key: "actor", header: copy.headers.actor, render: (event) => event.actor },
+            { key: "module", header: copy.headers.module, sortable: true, render: (event) => event.module },
+            { key: "risk", header: copy.headers.risk, render: (event) => <StatusBadge variant={riskVariant(event.risk)}>{riskLabel(event.risk, copy)}</StatusBadge> },
+            { key: "action", header: copy.headers.action, render: (event) => event.action },
           ]}
         />
       </div>
+
+      <DataTable
+        data={integrationProviders}
+        searchValue={(provider) =>
+          `${provider.id} ${provider.category} ${provider.provider} ${provider.status} ${provider.requiredFromClient} ${provider.fallback}`
+        }
+        pageSize={10}
+        columns={[
+          { key: "id", header: "ID", sortable: true, render: (provider) => provider.id },
+          { key: "category", header: copy.headers.service, sortable: true, render: (provider) => provider.category },
+          { key: "provider", header: copy.headers.provider, render: (provider) => provider.provider },
+          { key: "status", header: copy.headers.status, render: (provider) => <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge> },
+          { key: "risk", header: copy.headers.risk, render: (provider) => <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{copy.risk[provider.riskLevel]}</StatusBadge> },
+          { key: "required", header: copy.headers.required, render: (provider) => provider.requiredFromClient },
+          { key: "fallback", header: copy.headers.fallback, render: (provider) => provider.fallback },
+        ]}
+      />
 
       <Card3D innerClassName="p-5" glow={false}>
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-5 w-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            {localizeBusinessCopy("Platform sürümü:", locale)} <span className="font-mono text-foreground">1Çatı ERP v2.5.0</span>
+            {copy.version}: <span className="font-mono text-foreground">1Çatı ERP v2.5.0</span>
           </p>
         </div>
       </Card3D>

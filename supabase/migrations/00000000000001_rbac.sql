@@ -93,7 +93,7 @@ $$;
 --    - Everyone can read their own profile.
 --    - Admins and managers can read any profile in the same company scope
 --      (when multi-tenancy is added, scope this by company_id).
---    - Users can update only their own profile.
+--    - Users can update only their own non-privileged profile fields.
 DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Admins and managers can read profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
@@ -110,7 +110,28 @@ CREATE POLICY "Admins and managers can read profiles"
 
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = id);
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+CREATE OR REPLACE FUNCTION public.prevent_profile_privilege_escalation()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF (
+    NEW.role IS DISTINCT FROM OLD.role OR
+    NEW.company_id IS DISTINCT FROM OLD.company_id OR
+    NEW.office_id IS DISTINCT FROM OLD.office_id
+  ) AND NOT public.is_super_admin() THEN
+    RAISE EXCEPTION 'Profile role, company and office assignments require an administrator.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+DROP TRIGGER IF EXISTS prevent_profile_privilege_escalation ON public.profiles;
+CREATE TRIGGER prevent_profile_privilege_escalation
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.prevent_profile_privilege_escalation();
 
 -- 8. Ensure the signup trigger respects the expanded role set and falls back safely.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
@@ -119,15 +140,8 @@ DECLARE
   requested_role text;
   safe_role text;
 BEGIN
-  requested_role := COALESCE(NEW.raw_user_meta_data->>'role', 'tenant');
-
-  -- Validate against the canonical role set.
-  safe_role := CASE
-    WHEN requested_role IN (
-      'admin','manager','accountant','staff','owner','tenant'
-    ) THEN requested_role
-    ELSE 'tenant'
-  END;
+  requested_role := 'tenant';
+  safe_role := 'tenant';
 
   INSERT INTO public.profiles (id, full_name, role, language)
   VALUES (

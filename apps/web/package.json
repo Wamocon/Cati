@@ -10,7 +10,8 @@
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:structured": "playwright test public/landing-functional.spec.ts auth/access-profile-functional.spec.ts roles/role-access-functional.spec.ts dashboard/dashboard-navigation-functional.spec.ts operations/operations-functional.spec.ts operations/workflow-action-menu-functional.spec.ts api/openapi-contract-functional.spec.ts api/site-management-post-functional.spec.ts api/public-ai-concierge-functional.spec.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -25,7 +26,6 @@
     "next": "16.2.6",
     "next-intl": "^4.13.0",
     "next-themes": "^0.4.6",
-    "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "shadcn": "^4.11.0",
@@ -36,7 +36,6 @@
     "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
-    "@types/qrcode": "^1.5.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

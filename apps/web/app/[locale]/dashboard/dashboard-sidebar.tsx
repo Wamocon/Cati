@@ -21,13 +21,13 @@ import {
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Link, usePathname, useRouter } from "@/app/navigation"
-import { createClient } from "@/lib/supabase/client"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { createClient } from "@/lib/supabase/client"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 interface MenuItem {
@@ -88,6 +88,7 @@ export function DashboardSidebar() {
   }
 
   const filteredMenu = menu.filter((item) => hasPermission(user.role, item.resource, "view"))
+  const mobileMenuId = "dashboard-mobile-sidebar"
 
   return (
     <>
@@ -96,20 +97,25 @@ export function DashboardSidebar() {
       )}
 
       <button
+        type="button"
+        data-testid="dashboard-menu-toggle"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
+        aria-expanded={mobileOpen}
+        aria-controls={mobileMenuId}
       >
         <Menu className="h-5 w-5" />
       </button>
 
       <aside
+        id={mobileMenuId}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none md:sticky md:top-0 md:h-svh md:self-start",
+          "fixed inset-y-0 left-0 z-50 w-72 transform overflow-hidden border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:sticky md:top-0 md:h-svh md:self-start md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
           mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
         )}
       >
-        <div className="flex h-full flex-col p-4">
+        <div className="flex h-full min-h-0 flex-col p-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <CatiLogoMark className="shadow-lg shadow-primary/20" />
@@ -121,7 +127,8 @@ export function DashboardSidebar() {
               </span>
             </Link>
             <button
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground md:hidden"
+              type="button"
+              className="text-muted-foreground md:hidden"
               onClick={() => setMobileOpen(false)}
               aria-label={t("closeMenu")}
             >
@@ -150,7 +157,7 @@ export function DashboardSidebar() {
             </div>
           </div>
 
-          <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
+          <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1">
             {filteredMenu.map((item) => {
               const Icon = item.icon
               const active =
@@ -176,7 +183,7 @@ export function DashboardSidebar() {
             })}
           </nav>
 
-          <div className="mt-3 shrink-0 space-y-2 border-t border-sidebar-border/60 pt-3">
+          <div className="mt-4 shrink-0 space-y-2 border-t border-sidebar-border pt-3">
             <button
               onClick={logout}
               className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"

@@ -44,7 +44,7 @@ const copy = {
         "Ataberk Estate ve WAMOCON GmbH kişisel verilerinizi korumaya kararlıdır. Bu politika hangi verileri topladığımızı, nasıl kullandığımızı ve haklarınızı açıklar.",
       dataTitle: "Topladığımız veriler",
       dataText:
-        "İletişim bilgileri, mülk tercihleri, işlemler için gerekli belgeler (pasaport kopyası, TAPU taraması vb.) ve platform kullanım verileri toplanır.",
+        "İletişim bilgileri, mülk tercihleri, işlemler için gerekli belgeler (pasaport kopyası, TAPU taraması vb.) ve platform kullanım verileri tolanır.",
       useTitle: "Verileri nasıl kullanıyoruz",
       useText:
         "Veriler, emlak hizmetleri sunmak, mülk yönetimi yapmak, Türk yasal gerekliliklerine uymak ve platformu geliştirmek için kullanılır.",

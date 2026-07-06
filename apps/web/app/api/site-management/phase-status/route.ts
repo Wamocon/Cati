@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server"
-import { getUserProfile } from "@/lib/auth"
-import { hasAnyPermission } from "@/lib/rbac"
 import {
   auditEvents,
   getEligibilitySummary,
@@ -19,18 +17,7 @@ import {
 
 export const dynamic = "force-dynamic"
 
-export async function GET() {
-  const profile = await getUserProfile()
-  if (!profile) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
-  }
-  if (!hasAnyPermission(profile.role, "reports", ["view"])) {
-    return NextResponse.json(
-      { error: "Your role is not allowed to view phase-status data." },
-      { status: 403 }
-    )
-  }
-
+export function GET() {
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     phases: phaseDeliveryRecords,

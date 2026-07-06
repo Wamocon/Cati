@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useLocale } from "next-intl"
-import { AlertCircle, CheckCircle2, Loader2, Megaphone, QrCode, Send } from "lucide-react"
+import { AlertCircle, CheckCircle2, Loader2, Megaphone, Send } from "lucide-react"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
 
@@ -187,13 +187,6 @@ export function NlpReport() {
         </span>
         <h2 className="mt-5 text-3xl leading-tight font-black md:text-4xl">{t.title}</h2>
         <p className="mt-4 text-base leading-8 text-white/78">{t.intro}</p>
-        <a
-          href={`/${locale}/new-level-premium/report-poster`}
-          className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-bold text-white backdrop-blur transition hover:bg-white/16"
-        >
-          <QrCode className="h-4 w-4 text-emerald-200" />
-          {t.posterLink}
-        </a>
 
         {status === "success" ? (
           <div className="mt-8 rounded-3xl border border-emerald-300/30 bg-emerald-400/10 p-6" role="status">

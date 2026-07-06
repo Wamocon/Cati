@@ -1,4 +1,4 @@
-import { ArrowRight, KeyRound, Megaphone, QrCode, Share2, UserPlus } from "lucide-react"
+import { ArrowRight, KeyRound, Megaphone, Share2, UserPlus } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { ScrollReveal } from "@/components/scroll-reveal"
 
@@ -104,12 +104,12 @@ export function NlpShare({ locale }: { locale: LocaleKey }) {
               <Megaphone className="h-5 w-5" />
             </span>
             <h3 className="mt-5 flex items-start gap-2 text-lg font-black text-card-foreground">
-              <QrCode className="mt-1 h-4 w-4 shrink-0 text-primary" />
+              <Megaphone className="mt-1 h-4 w-4 shrink-0 text-primary" />
               <span className="min-w-0">{t.reportTitle}</span>
             </h3>
             <p className="mt-2 flex-1 text-sm leading-7 text-muted-foreground">{t.reportBody}</p>
             <Link
-              href="/new-level-premium/report-poster"
+              href="/new-level-premium#report"
               className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background px-5 text-sm font-black text-foreground transition hover:border-primary/40"
             >
               {t.reportCta}

@@ -12,7 +12,7 @@ export function Card3D({ children, className, innerClassName, glow = true }: Car
     <div className={cn("group min-w-0", className)}>
       <div
         className={cn(
-          "premium-surface relative isolate min-w-0 overflow-hidden rounded-xl p-5 transition-colors duration-150",
+          "premium-surface relative isolate min-w-0 overflow-visible rounded-xl p-5 transition-all duration-200 ease-out group-hover/command:border-primary/35 group-hover/command:shadow-[0_22px_70px_color-mix(in_srgb,var(--primary)_14%,transparent)] group-focus-visible/command:border-primary/45",
           glow && "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-primary/20",
           innerClassName
         )}

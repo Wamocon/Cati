@@ -1,5 +1,10 @@
 "use client"
 
+import { useLocale } from "next-intl"
+import {
+  localizeDashboardText,
+  resolveDashboardLocale,
+} from "@/lib/operational-copy"
 import { cn } from "@/lib/utils"
 
 type StatusVariant = "success" | "warning" | "danger" | "info" | "neutral" | "accent"
@@ -20,6 +25,10 @@ const variants: Record<StatusVariant, string> = {
 }
 
 export function StatusBadge({ children, variant = "neutral", className }: StatusBadgeProps) {
+  const locale = resolveDashboardLocale(useLocale())
+  const displayChildren =
+    typeof children === "string" ? localizeDashboardText(children, locale) : children
+
   return (
     <span
       className={cn(
@@ -28,7 +37,7 @@ export function StatusBadge({ children, variant = "neutral", className }: Status
         className
       )}
     >
-      {children}
+      {displayChildren}
     </span>
   )
 }

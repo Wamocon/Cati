@@ -1,16 +1,17 @@
--- 00000000000011_public_ai_interest.sql
--- Landing-page AI concierge: capture what visitors ask about, so the internal
--- 1Cati assistant and the team can learn which topics prospects care about.
+-- Public, account-free intake for the New Level Premium landing page.
 --
--- Decision (client, 03.07.2026): the public landing assistant must (a) know the
--- product well enough to explain why/how/advantages, (b) NEVER expose internal
--- 1Cati data (it is given no data access at the application layer), and (c)
--- feed the questions back into 1Cati as interest analytics.
---
--- This migration only extends the submit_public_intake allowlist with
--- 'public.ai_question'. Everything else is byte-identical to migration 0009
--- (identity retention stamping + queued KBS report); AI questions carry no
--- identity fields, so those branches stay inert for them.
+-- This is the one intentional anonymous write path. It only accepts a small
+-- allowlist of public intake types, writes queued client_action_requests for
+-- human triage, and returns only the generated request id.
+
+CREATE OR REPLACE FUNCTION public.kbs_identity_retention_days()
+RETURNS INTEGER
+LANGUAGE sql
+IMMUTABLE
+SET search_path = ''
+AS $$ SELECT 180 $$;
+
+REVOKE ALL ON FUNCTION public.kbs_identity_retention_days() FROM PUBLIC;
 
 CREATE OR REPLACE FUNCTION public.submit_public_intake(
   p_action_type TEXT,
@@ -26,37 +27,39 @@ DECLARE
   v_company_id UUID;
   v_request_id UUID;
   v_metadata JSONB;
+  v_action_type TEXT;
   v_has_identity BOOLEAN;
 BEGIN
-  -- Allowlist: only public landing-page intake types may use this anon path.
-  IF p_action_type NOT IN (
+  v_action_type := COALESCE(p_action_type, '');
+
+  IF v_action_type NOT IN (
     'registration.request.owner',
     'registration.request.tenant',
     'registration.request.staff',
     'public.report',
-    'public.ai_question'
+    'public.ai_question',
+    'public.ai_escalation',
+    'public.ai_feedback'
   ) THEN
-    RAISE EXCEPTION 'Unsupported public intake action type: %', p_action_type;
+    RAISE EXCEPTION 'Unsupported public intake action type: %', v_action_type;
   END IF;
 
   v_company_id := public.default_company_id();
   IF v_company_id IS NULL THEN
-    SELECT id INTO v_company_id FROM public.companies ORDER BY created_at LIMIT 1;
-  END IF;
-  IF v_company_id IS NULL THEN
-    RAISE EXCEPTION 'No company context available for public intake.';
+    RAISE EXCEPTION 'No default company context available for public intake.';
   END IF;
 
   v_metadata := COALESCE(p_metadata, '{}'::JSONB);
+  IF octet_length(v_metadata::TEXT) > 20000 THEN
+    RAISE EXCEPTION 'Public intake metadata is too large.';
+  END IF;
 
-  -- If an identity document number is present (owner/tenant), stamp a retention
-  -- deadline so the data is not held longer than its KBS legal basis permits.
   v_has_identity :=
     (v_metadata ? 'idNumber') AND NULLIF(v_metadata->>'idNumber', '') IS NOT NULL;
 
   IF v_has_identity THEN
     v_metadata := v_metadata || jsonb_build_object(
-      'identityRetentionBasis', 'kbs',
+      'identityRetentionBasis', 'kbs_public_intake',
       'identityRetentionUntil',
         to_char(
           (now() + make_interval(days => public.kbs_identity_retention_days())) AT TIME ZONE 'UTC',
@@ -66,10 +69,15 @@ BEGIN
   END IF;
 
   INSERT INTO public.client_action_requests (
-    company_id, action_type, title, status, requested_by, metadata
+    company_id,
+    action_type,
+    title,
+    status,
+    requested_by,
+    metadata
   ) VALUES (
     v_company_id,
-    p_action_type,
+    v_action_type,
     LEFT(COALESCE(p_title, ''), 200),
     'queued',
     NULL,
@@ -77,14 +85,18 @@ BEGIN
   )
   RETURNING id INTO v_request_id;
 
-  -- Queue (do NOT send) a KBS guest report for owner/tenant registrations that
-  -- carry identity data. A gated production integration performs the actual
-  -- transmission to authorities; this row is only the durable intent to report.
+  -- Queue only; no authority/provider transmission happens in this function.
   IF v_has_identity
-     AND p_action_type IN ('registration.request.owner', 'registration.request.tenant')
+     AND v_action_type IN ('registration.request.owner', 'registration.request.tenant')
   THEN
     INSERT INTO public.integration_outbox (
-      company_id, integration_key, action_type, entity_table, entity_id, payload, status
+      company_id,
+      integration_key,
+      action_type,
+      entity_table,
+      entity_id,
+      payload,
+      status
     ) VALUES (
       v_company_id,
       'kbs',

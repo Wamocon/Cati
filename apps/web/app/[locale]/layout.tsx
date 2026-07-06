@@ -13,16 +13,10 @@ export default async function LocaleLayout({
 }) {
   const { locale: rawLocale } = await params
   type Locale = (typeof locales)[number]
-  // Unprefixed / unknown single-segment paths (e.g. /dashboard, /robots.txt)
-  // must 404, not silently render the Turkish homepage with HTTP 200.
   if (!locales.includes(rawLocale as Locale)) {
     notFound()
   }
   const locale = rawLocale as Locale
-  // Binds this request's locale for server-only APIs (getLocale/getTranslations
-  // in next-intl/server) used by async Server Components under this segment
-  // (e.g. app/[locale]/platform/page.tsx). Without this, those calls fall back
-  // to the configured defaultLocale ("tr") regardless of the URL segment.
   setRequestLocale(locale)
   const messages = await getMessages({ locale })
   const t = await getTranslations({ locale, namespace: "nav" })

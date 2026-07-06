@@ -113,9 +113,27 @@
   }
   html {
     @apply font-sans scroll-smooth;
+    max-width: 100%;
+    overflow-x: clip;
   }
   body {
     @apply bg-background text-foreground;
+    max-width: 100%;
+    overflow-x: clip;
+    overflow-wrap: break-word;
+  }
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+  }
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-width: 0;
   }
   ::selection {
     background-color: color-mix(in srgb, var(--primary) 30%, transparent);
@@ -202,6 +220,18 @@
   }
   .dark .glass {
     background: color-mix(in srgb, var(--card) 62%, transparent);
+  }
+
+  .app-dialog {
+    color-scheme: light dark;
+  }
+
+  .app-dialog::backdrop {
+    background:
+      radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 34%),
+      color-mix(in srgb, #000 58%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   /* Gradient text */

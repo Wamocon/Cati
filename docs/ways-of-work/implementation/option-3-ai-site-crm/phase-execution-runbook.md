@@ -1,6 +1,6 @@
 # Option 3 AI Site CRM - Phase Execution Runbook
 
-Last reviewed: 29 June 2026
+Last reviewed: 30 June 2026
 Scope: Phase-wise implementation, automated harnesses, retry loops, quality loops, browser QA, Jira/Xray dry-run review and manual testing.
 
 ---
@@ -28,9 +28,8 @@ The current delivery model is the 15-phase ERP model in `docs/PROJECT-HANDBOOK.m
 | Phase range | Current state on 29 June 2026 | Delivery control |
 |---|---|---|
 | Phase 1-4 | Complete as local/product foundation | Maintain regression coverage and do not reopen unless production data exposes a gap. |
-| Phase 5-9 | Complete as implementation foundation / ready-for-UAT slice | Validate people/role relationships, ledger surfaces, payment/deposit/restriction controls, service catalogue, service orders, workforce tasks, SLA and media-proof workflows with real client data, accounting/legal review and UAT before production activation. |
-| Phase 10 | Next active build | Build booking, move-in and checkout on top of the Phase 5-9 people, finance, service and task foundation. |
-| Phase 11-15 | Accelerated delivery window | Target remaining development and automated QA evidence by Wednesday 8 July 2026, excluding a full exploratory manual testing round. Do not mark complete without harness/browser evidence. |
+| Phase 5-14 | Complete as implementation foundation / ready for functional QA and client data validation | Validate people/role relationships, ledger surfaces, payment/deposit/restriction controls, service catalogue, workforce, booking/checkout, communication/document, mobile web/PWA, offline-safe queue, integration placeholders and AI premium workflows with real client data, accounting/legal review and client UAT before production activation. |
+| Phase 15 | Accelerated delivery window | Target launch hardening, final QA/security, UAT pack, training and automated QA evidence by Wednesday 8 July 2026, excluding a full exploratory manual testing round. Do not mark complete without harness/browser evidence. |
 
 Delivery boundary: the 8 July 2026 target covers implementation, developer-side unit checks, automated E2E/regression scripts and browser smoke/manual spot checks. A full exploratory manual QA/UAT round is a separate activity after implementation and should be planned with additional days if required.
 
@@ -88,7 +87,23 @@ pnpm phase:07 -- --base-url http://127.0.0.1:3104 --max-attempts 2
 
 Use the focused alias when changing `payment-controls`, payment/deposit/restriction UI, reconciliation actions or finance-access guardrails.
 
-### 3.6 Jira/Xray Dry Run
+### 3.6 Phase 10-11 Booking, Communication And Documents Harness
+
+```powershell
+pnpm phase:10-11 -- --base-url http://127.0.0.1:3104 --max-attempts 2
+```
+
+Use this when touching reservations, move-in readiness, checkout settlement, access handoff, communication threads, notification rules/delivery retry, multilingual templates or document packet workflows. It validates API contracts, RBAC boundaries, audited actions and browser smoke flows for Phase 10 and Phase 11.
+
+### 3.7 Phase 12-14 Mobile/Integration/AI Harness
+
+```powershell
+pnpm phase:12-14 -- --base-url http://127.0.0.1:3104 --max-attempts 2
+```
+
+Use this when touching mobile-friendly web/PWA behavior, offline sync, external integration placeholders, provider readiness, same-language AI chat, AI recommendations or image/proof AI workflows.
+
+### 3.8 Jira/Xray Dry Run
 
 ```powershell
 pnpm jira:sync -- --dry-run
@@ -96,7 +111,15 @@ pnpm jira:sync -- --dry-run
 
 Use this before any Jira/Xray update. The current dry-run model creates or updates 15 phase epics, phase stories, one documentation issue and Xray tests. Running `pnpm jira:sync` without `--dry-run` writes to remote Jira/Xray and may attach confidential documents, so it requires explicit approval.
 
-### 3.7 Browser Audit Only
+Current Jira/Xray structure:
+
+- One master Xray Test Plan for Phase 01-15 functional system testing, regression and launch readiness.
+- Three Test Sets: functional system tests for critical workflows, exploratory role/functionality tests and automated QA/regression/API harnesses.
+- Eight Test Executions: Phase 01-04, Phase 05-07, Phase 08-09, Phase 10-11, Phase 12-14, Phase 15, major functionality/roles and exploratory role sessions.
+- 20 functional system test cases, 10 exploratory role/functionality test cases and 13 automated QA/API test cases.
+- Latest local QA JSON/JUnit summaries are linked to the relevant Test Execution issues when live sync is explicitly approved. Use `--skip-attachments` to skip confidential documentation files; QA evidence is separate from documentation attachments.
+
+### 3.9 Browser Audit Only
 
 ```powershell
 pnpm build
@@ -105,7 +128,7 @@ pnpm browser:audit -- --start-server --server-mode start
 
 Use this for screenshot and console-error evidence.
 
-### 3.8 Manual Browser Session
+### 3.10 Manual Browser Session
 
 ```powershell
 pnpm build

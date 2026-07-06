@@ -3,6 +3,15 @@ import { isValidRole } from "@/lib/rbac"
 import { isAccessProfileEnabled } from "@/lib/auth"
 
 // Sets or clears a local access-profile cookie for role-scoped workspace access.
+function shouldUseSecureCookie(request: Request) {
+  const url = new URL(request.url)
+  return (
+    url.protocol === "https:" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.CATI_ENV === "production"
+  )
+}
+
 export async function GET() {
   return NextResponse.json({ enabled: isAccessProfileEnabled() })
 }
@@ -33,20 +42,20 @@ export async function POST(request: Request) {
     maxAge: 60 * 60 * 24, // 1 day
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(request),
   })
 
   return response
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   const response = NextResponse.json({ ok: true })
   response.cookies.set("access_profile_role", "", {
     path: "/",
     maxAge: 0,
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookie(request),
   })
   return response
 }

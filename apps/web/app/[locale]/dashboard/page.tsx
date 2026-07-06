@@ -37,12 +37,17 @@ import { PieChart } from "@/components/charts/pie-chart"
 import { GlassCard } from "@/components/glass-card"
 import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
-import { IsometricErpWorld } from "@/components/isometric-erp-world"
+import { LiveErpSimulation } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
-import { localizeBusinessCopy, resolveDashboardLocale, interpolate } from "@/lib/business-copy"
 import { useLiveDashboardSnapshot } from "@/hooks/use-live-dashboard-snapshot"
+import {
+  dashboardHomeCopy,
+  resolveDashboardHomeLocale,
+  type DashboardHomeCopy,
+  type WorkloadKind,
+} from "@/lib/dashboard-home-copy"
 import type {
   DashboardSnapshot,
   Phase4SiteData,
@@ -75,6 +80,32 @@ interface Kpi {
   href: string
 }
 
+type FocusedRole = "accountant" | "staff" | "owner" | "tenant"
+type RoleWorkspaceCardKey = "calendar" | "communications" | "documents" | "finance" | "reports" | "tickets"
+
+function copyText(
+  template: string,
+  values: Record<string, string | number> = {}
+) {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    values[key] === undefined ? `{${key}}` : String(values[key])
+  )
+}
+
+const workloadKindClassNames: Record<WorkloadKind, string> = {
+  access: "bg-rose-500/75 shadow-rose-500/20",
+  booking: "bg-sky-500/75 shadow-sky-500/20",
+  finance: "bg-amber-500/80 shadow-amber-500/20",
+  service: "bg-teal-500/75 shadow-teal-500/20",
+}
+
+const workloadLegendClassNames: Record<WorkloadKind, string> = {
+  access: "bg-rose-500",
+  booking: "bg-sky-500",
+  finance: "bg-amber-500",
+  service: "bg-teal-500",
+}
+
 function CommandLink({
   ariaLabel,
   children,
@@ -88,13 +119,13 @@ function CommandLink({
   href: string
   role: Role
 }) {
-  const locale = resolveDashboardLocale(useLocale())
+  const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
   const resource = resourceForDashboardPath(href)
   const allowed = hasPermission(role, resource, "view")
   const content = typeof children === "function" ? children({ allowed }) : children
   const baseClassName = cn(
-    "group/command relative block rounded-xl outline-none transition after:absolute after:inset-0 after:z-20 after:rounded-xl after:content-[''] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-    allowed ? "cursor-pointer" : "cursor-not-allowed opacity-65 grayscale-[0.2]",
+    "group/command relative block rounded-xl outline-none transition-transform duration-200 ease-out focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+    allowed ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-0" : "cursor-not-allowed opacity-65 grayscale-[0.2]",
     className
   )
 
@@ -102,11 +133,11 @@ function CommandLink({
     return (
       <div
         aria-disabled="true"
-        aria-label={`${ariaLabel} - ${localizeBusinessCopy("rol izni yok", locale)}`}
+        aria-label={`${ariaLabel} - ${copy.command.lockedAriaSuffix}`}
         className={baseClassName}
         data-access="locked"
         role="group"
-        title={localizeBusinessCopy("Bu modül mevcut rol için kapalı", locale)}
+        title={copy.command.lockedTitle}
       >
         {content}
       </div>
@@ -126,20 +157,20 @@ function CommandLink({
 }
 
 function DrilldownCue({ allowed }: { allowed: boolean }) {
-  const locale = resolveDashboardLocale(useLocale())
+  const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
 
   if (!allowed) {
     return (
       <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border/80 bg-background/70 px-2 py-1 text-[11px] font-black text-muted-foreground">
-        {localizeBusinessCopy("Rol kapalı", locale)}
+        {copy.command.locked}
         <LockKeyhole className="h-3 w-3" />
       </span>
     )
   }
 
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/15 bg-background/50 px-2 py-1 text-[11px] font-black">
-      {localizeBusinessCopy("İncele", locale)}
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-current/15 bg-background/60 px-2 py-1 text-[11px] font-black shadow-sm transition-colors group-hover/command:bg-primary group-hover/command:text-primary-foreground">
+      {copy.command.inspect}
       <ChevronRight className="h-3 w-3" />
     </span>
   )
@@ -196,174 +227,126 @@ const phaseStatusMeta: Record<
 
 const roleWorkspaceConfig: Partial<
   Record<
-    Role,
+    FocusedRole,
     {
-      title: string
-      description: string
-      accessNotes: string[]
       cards: Array<{
         href: string
         resource: Resource
         icon: LucideIcon
-        title: string
-        description: string
+        copyKey: RoleWorkspaceCardKey
       }>
     }
   >
 > = {
   accountant: {
-    title: "Finans Çalışma Alanı",
-    description:
-      "Bu rol aidat, tahsilat, depozito, belge ve finans raporlarına odaklanır. Operasyon, kullanıcı ve ayar ekranları kapalıdır.",
-    accessNotes: [
-      "Kullanıcı yönetimi kapalı",
-      "Saha işi kapatma operasyon kanıtı olmadan yapılamaz",
-    ],
     cards: [
       {
         href: "/dashboard/finance",
         resource: "finance",
         icon: CreditCard,
-        title: "Finans & Aidat",
-        description: "Aidat, tahsilat, açık bakiye ve finans defteri kontrolleri.",
+        copyKey: "finance",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Ödeme, TAPU, sözleşme ve muhasebe evrakı takibi.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/reports",
         resource: "reports",
         icon: Brain,
-        title: "Raporlar",
-        description: "Finans ve tahsilat çıktıları, dışa aktarım ve kontrol raporları.",
+        copyKey: "reports",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Finans hatırlatmaları ve ilgili bildirim taslakları.",
+        copyKey: "communications",
       },
     ],
   },
   staff: {
-    title: "Saha Ekibi Çalışma Alanı",
-    description:
-      "Bu rol kendisine atanan servis, görev, rezervasyon, belge ve iletişim akışlarını görür. Finans, kullanıcı yönetimi ve ayarlar kapalıdır.",
-    accessNotes: [
-      "Finans defteri kapalı",
-      "İade, erişim kısıtı ve rol onayı kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Atanan işler, SLA, durum güncelleme ve saha notları.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Giriş, çıkış, gezinti, temizlik ve günlük görev takibi.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "İş kanıtı, fotoğraf ve operasyon dokümanları.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Operasyon ekibiyle mesaj ve bildirim akışı.",
+        copyKey: "communications",
       },
     ],
   },
   owner: {
-    title: "Malik Çalışma Alanı",
-    description:
-      "Bu rol kendi dairesiyle ilgili servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer maliklerin kayıtları ve şirket içi ekranlar kapalıdır.",
-    accessNotes: [
-      "Sadece kendi dairesi ve yetkili kayıtlar",
-      "Diğer malik, personel, rapor ve finans ekranları kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Kendi daireniz için servis talebi açın ve durum takip edin.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Kiralama, giriş-çıkış ve uygunluk takvimi.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Yetkili olduğunuz sözleşme, TAPU ve operasyon evrakı.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Yönetim ekibiyle güvenli mesajlaşma ve bildirimler.",
+        copyKey: "communications",
       },
     ],
   },
   tenant: {
-    title: "Kiracı Çalışma Alanı",
-    description:
-      "Bu rol yalnızca kendi kullanım alanındaki servis, rezervasyon, belge ve iletişim işlemlerini görür. Daire matrisi, finans defteri, raporlar ve kullanıcı yönetimi kapalıdır.",
-    accessNotes: [
-      "Sadece yetkili daire ve izin verilen işlemler",
-      "Malik kayıtları, raporlar, finans defteri ve diğer daireler kapalı",
-    ],
     cards: [
       {
         href: "/dashboard/tickets",
         resource: "tickets",
         icon: TicketCheck,
-        title: "Servis Talepleri",
-        description: "Bakım talebi oluşturun ve mevcut taleplerin durumunu takip edin.",
+        copyKey: "tickets",
       },
       {
         href: "/dashboard/calendar",
         resource: "calendar",
         icon: CalendarCheck,
-        title: "Rezervasyon",
-        description: "Giriş, çıkış ve yetkili rezervasyon akışları.",
+        copyKey: "calendar",
       },
       {
         href: "/dashboard/documents",
         resource: "documents",
         icon: FileText,
-        title: "Belgeler",
-        description: "Yetkili olduğunuz kira ve operasyon belgeleri.",
+        copyKey: "documents",
       },
       {
         href: "/dashboard/communications",
         resource: "communications",
         icon: MessageSquareText,
-        title: "İletişim",
-        description: "Yönetim ekibine mesaj gönderin ve bildirimleri takip edin.",
+        copyKey: "communications",
       },
     ],
   },
@@ -371,103 +354,50 @@ const roleWorkspaceConfig: Partial<
 
 const roleSceneConfig: Partial<
   Record<
-    Role,
+    FocusedRole,
     {
-      eyebrow: string
-      title: string
       metric: string
-      metricLabel: string
-      status: string
       accent: string
       icon: LucideIcon
-      bars: Array<{ label: string; value: number }>
-      timeline: Array<{ label: string; detail: string }>
+      bars: number[]
     }
   >
 > = {
   accountant: {
-    eyebrow: "Finans kontrol akışı",
-    title: "Tahsilat, belge ve onay tek ekranda",
     metric: "1.4M ₺",
-    metricLabel: "bu ay doğrulanan tahsilat",
-    status: "Finans verisi açık, operasyon verisi kapalı",
     accent: "from-emerald-500 via-cyan-500 to-amber-400",
     icon: CreditCard,
-    bars: [
-      { label: "Tahsilat", value: 88 },
-      { label: "Depozito", value: 62 },
-      { label: "Belge", value: 76 },
-    ],
-    timeline: [
-      { label: "Defter", detail: "Aidat ve bakiye kontrolü" },
-      { label: "Belge", detail: "Ödeme/TAPU evrakı" },
-      { label: "Rapor", detail: "Finans çıktısı" },
-    ],
+    bars: [88, 62, 76],
   },
   staff: {
-    eyebrow: "Saha operasyon akışı",
-    title: "Atanan işler, SLA ve kanıt üretimi",
     metric: "14",
-    metricLabel: "bugün görünür görev",
-    status: "Saha kuyruğu açık, finans ve kullanıcı yönetimi kapalı",
     accent: "from-teal-500 via-sky-500 to-lime-400",
     icon: TicketCheck,
-    bars: [
-      { label: "SLA", value: 72 },
-      { label: "Kanıt", value: 84 },
-      { label: "Rota", value: 58 },
-    ],
-    timeline: [
-      { label: "Talep", detail: "Atanan servis işi" },
-      { label: "Saha", detail: "Fotoğraf ve not" },
-      { label: "Kapatma", detail: "Yönetici kontrolü" },
-    ],
+    bars: [72, 84, 58],
   },
   owner: {
-    eyebrow: "Malik portal akışı",
-    title: "Kendi daireniz için net durum görünümü",
     metric: "4",
-    metricLabel: "yetkili işlem alanı",
-    status: "Sadece kendi dairesi, belge ve iletişim kapsamı",
     accent: "from-cyan-500 via-emerald-500 to-orange-300",
     icon: Building2,
-    bars: [
-      { label: "Servis", value: 68 },
-      { label: "Rezervasyon", value: 54 },
-      { label: "Belge", value: 81 },
-    ],
-    timeline: [
-      { label: "Daire", detail: "Yetkili kayıt" },
-      { label: "Servis", detail: "Talep ve durum" },
-      { label: "Mesaj", detail: "Yönetim iletişimi" },
-    ],
+    bars: [68, 54, 81],
   },
   tenant: {
-    eyebrow: "Kiracı portal akışı",
-    title: "Servis, rezervasyon ve belgeye hızlı erişim",
     metric: "4",
-    metricLabel: "açık kullanıcı modülü",
-    status: "Daire matrisi, finans ve raporlar kapalı",
     accent: "from-sky-500 via-teal-500 to-amber-300",
     icon: CalendarCheck,
-    bars: [
-      { label: "Servis", value: 64 },
-      { label: "Takvim", value: 71 },
-      { label: "Belge", value: 57 },
-    ],
-    timeline: [
-      { label: "Talep", detail: "Bakım veya destek" },
-      { label: "Takvim", detail: "Giriş/çıkış akışı" },
-      { label: "Belge", detail: "Yetkili evrak" },
-    ],
+    bars: [64, 71, 57],
   },
 }
 
-function RoleWorkspaceScene({ role }: { role: Role }) {
-  const locale = resolveDashboardLocale(useLocale())
+function isFocusedRole(role: Role): role is FocusedRole {
+  return role === "accountant" || role === "staff" || role === "owner" || role === "tenant"
+}
+
+function RoleWorkspaceScene({ copy, role }: { copy: DashboardHomeCopy; role: FocusedRole }) {
   const config = roleSceneConfig[role]
   if (!config) return null
 
+  const sceneCopy = copy.roleScenes[role]
   const Icon = config.icon
 
   return (
@@ -503,23 +433,23 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                {localizeBusinessCopy(config.eyebrow, locale)}
+                {sceneCopy.eyebrow}
               </p>
               <h2 className="mt-4 max-w-xl text-2xl font-black leading-tight sm:text-3xl 2xl:text-4xl">
-                {localizeBusinessCopy(config.title, locale)}
+                {sceneCopy.title}
               </h2>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
               <Icon className="ml-auto h-5 w-5 text-emerald-200" />
               <p className="mt-3 text-3xl font-black">{config.metric}</p>
               <p className="mt-1 max-w-36 text-xs leading-5 text-white/70">
-                {localizeBusinessCopy(config.metricLabel, locale)}
+                {sceneCopy.metricLabel}
               </p>
             </div>
           </div>
 
           <div className="mt-auto grid grid-cols-3 gap-2 sm:gap-3">
-            {config.timeline.map((item, index) => (
+            {sceneCopy.timeline.map((item, index) => (
               <motion.div
                 key={item.label}
                 className="min-w-0 rounded-xl border border-white/12 bg-white/[0.075] p-3 backdrop-blur transition-colors hover:bg-white/[0.12]"
@@ -530,8 +460,8 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
                 <p className="text-[11px] font-black uppercase text-white/55">
                   0{index + 1}
                 </p>
-                <p className="mt-1 text-sm font-black">{localizeBusinessCopy(item.label, locale)}</p>
-                <p className="mt-1 text-xs leading-5 text-white/65">{localizeBusinessCopy(item.detail, locale)}</p>
+                <p className="mt-1 text-sm font-black">{item.label}</p>
+                <p className="mt-1 text-xs leading-5 text-white/65">{item.detail}</p>
               </motion.div>
             ))}
           </div>
@@ -543,10 +473,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                {localizeBusinessCopy("Canlı yetki filtresi", locale)}
+                {copy.roleScenes.common.liveFilterLabel}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {localizeBusinessCopy(config.status, locale)}
+                {sceneCopy.status}
               </h2>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -554,17 +484,17 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             </div>
           </div>
           <div className="mt-5 space-y-4">
-            {config.bars.map((bar, index) => (
-              <div key={bar.label} className="group">
+            {config.bars.map((value, index) => (
+              <div key={sceneCopy.bars[index]} className="group">
                 <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-bold text-card-foreground">{localizeBusinessCopy(bar.label, locale)}</span>
-                  <span className="font-black text-primary">{bar.value}%</span>
+                  <span className="font-bold text-card-foreground">{sceneCopy.bars[index]}</span>
+                  <span className="font-black text-primary">{value}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <motion.div
                     className={cn("h-full rounded-full bg-gradient-to-r", config.accent)}
                     initial={{ width: 0 }}
-                    animate={{ width: `${bar.value}%` }}
+                    animate={{ width: `${value}%` }}
                     transition={{ delay: 0.2 + index * 0.08, duration: 0.65 }}
                   />
                 </div>
@@ -578,10 +508,10 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
             <BarChart3 className="h-5 w-5 text-primary" />
             <div>
               <p className="text-sm font-black text-card-foreground">
-                {localizeBusinessCopy("Çalışma alanı ritmi", locale)}
+                {copy.roleScenes.common.rhythmTitle}
               </p>
               <p className="text-xs text-muted-foreground">
-                {localizeBusinessCopy("Hover ve kart geçişleri gerçek modül akışlarını gösterir.", locale)}
+                {copy.roleScenes.common.rhythmDescription}
               </p>
             </div>
           </div>
@@ -594,7 +524,7 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
                 initial={{ scaleY: 0.2, transformOrigin: "bottom" }}
                 animate={{ scaleY: 1 }}
                 transition={{ delay: 0.1 + index * 0.05 }}
-                title={interpolate(localizeBusinessCopy("Gün {day}: {value}%", locale), { day: index + 1, value: height })}
+                title={`Gün ${index + 1}: ${height}%`}
               />
             ))}
           </div>
@@ -605,34 +535,35 @@ function RoleWorkspaceScene({ role }: { role: Role }) {
 }
 
 function GlobalOperationsScene({
+  copy,
   roleLabel,
   summary,
 }: {
+  copy: DashboardHomeCopy
   roleLabel: string
   summary: SiteSummary
 }) {
-  const locale = resolveDashboardLocale(useLocale())
   const panels = [
     {
-      label: localizeBusinessCopy("Canlı daire", locale),
+      label: copy.globalScene.panels.liveUnits,
       value: summary.totalFlats,
-      helper: interpolate(localizeBusinessCopy("{rate}% doluluk", locale), {
-        rate: summary.occupancyRate,
+      helper: copyText(copy.globalScene.panels.occupancy, {
+        value: summary.occupancyRate,
       }),
       icon: Building2,
     },
     {
-      label: localizeBusinessCopy("Açık servis", locale),
+      label: copy.globalScene.panels.openService,
       value: summary.openTickets,
-      helper: interpolate(localizeBusinessCopy("{count} SLA dışı", locale), {
-        count: summary.overdueTickets,
+      helper: copyText(copy.globalScene.panels.overdue, {
+        value: summary.overdueTickets,
       }),
       icon: TicketCheck,
     },
     {
-      label: localizeBusinessCopy("Erişim riski", locale),
+      label: copy.globalScene.panels.accessRisk,
       value: summary.restrictedAccess,
-      helper: localizeBusinessCopy("finans kontrolü", locale),
+      helper: copy.globalScene.panels.financeCheck,
       icon: LockKeyhole,
     },
   ]
@@ -667,22 +598,23 @@ function GlobalOperationsScene({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                {localizeBusinessCopy("Operasyon merkezi", locale)}
+                {copy.globalScene.eyebrow}
               </p>
               <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl 2xl:text-5xl">
-                {localizeBusinessCopy("Daire, servis, finans ve rezervasyon aynı kontrol düzleminde", locale)}
+                {copy.globalScene.title}
               </h2>
               <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">
-                {localizeBusinessCopy("Aktif rol:", locale)} {roleLabel}. {localizeBusinessCopy(
-                  "Bu görünüm yönetim ve sorumlu rolü için portföy ölçeğinde risk, iş yükü ve tahsilat sinyallerini birleştirir.",
-                  locale
-                )}
+                {copyText(copy.globalScene.description, { role: roleLabel })}
               </p>
             </div>
             <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
-              <p className="text-xs font-black uppercase text-white/60">{localizeBusinessCopy("AI risk", locale)}</p>
+              <p className="text-xs font-black uppercase text-white/60">
+                {copy.globalScene.aiRisk}
+              </p>
               <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
-              <p className="mt-1 text-xs text-white/65">{localizeBusinessCopy("öncelikli aksiyon", locale)}</p>
+              <p className="mt-1 text-xs text-white/65">
+                {copy.globalScene.aiRiskHelper}
+              </p>
             </div>
           </div>
 
@@ -721,26 +653,71 @@ function GlobalOperationsScene({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-black uppercase text-muted-foreground">
-                {localizeBusinessCopy("İş yoğunluğu", locale)}
+                {copy.globalScene.workload.eyebrow}
               </p>
               <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {localizeBusinessCopy("Saatlik sinyal", locale)}
+                {copy.globalScene.workload.title}
               </h2>
             </div>
             <TrendingUp className="h-5 w-5 text-primary" />
           </div>
-          <div className="mt-6 grid grid-cols-8 items-end gap-2">
-            {[42, 64, 52, 88, 70, 96, 61, 78].map((height, index) => (
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">
+            {copy.globalScene.workload.description}
+          </p>
+          <div className="mt-4 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+            <span>{copy.globalScene.workload.scaleLow}</span>
+            <span>{copy.globalScene.workload.scaleHigh}</span>
+          </div>
+          <div className="mt-2 flex h-36 items-end gap-2 border-b border-border/80 pb-2">
+            {copy.globalScene.workload.bars.map((bar, index) => (
               <motion.div
-                key={index}
-                className="rounded-t-lg bg-primary/20 transition-colors hover:bg-primary"
-                style={{ height }}
-                initial={{ scaleY: 0.1, transformOrigin: "bottom" }}
-                animate={{ scaleY: 1 }}
-                transition={{ delay: 0.2 + index * 0.04 }}
-                title={interpolate(localizeBusinessCopy("Saat {hour}: {value}%", locale), { hour: index + 9, value: height })}
-              />
+                key={`${bar.time}-${bar.kind}`}
+                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.04 }}
+                title={`${bar.time} ${bar.label}: ${bar.value}% ${copy.globalScene.workload.loadUnit}`}
+              >
+                <span className="opacity-0 text-[10px] font-black text-foreground transition-opacity group-hover:opacity-100">
+                  {bar.value}%
+                </span>
+                <span
+                  className={cn(
+                    "w-full rounded-t-lg shadow-lg transition-opacity hover:opacity-100",
+                    workloadKindClassNames[bar.kind]
+                  )}
+                  style={{ height: `${Math.max(bar.value, 18)}%` }}
+                />
+              </motion.div>
             ))}
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-1 text-[10px] font-bold text-muted-foreground">
+            {copy.globalScene.workload.bars
+              .filter((_, index) => index % 2 === 0)
+              .map((bar) => (
+                <span key={bar.time}>{bar.time}</span>
+              ))}
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {Object.entries(copy.globalScene.workload.legend).map(([kind, label]) => (
+              <div key={kind} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <span
+                  className={cn(
+                    "h-2.5 w-2.5 rounded-full",
+                    workloadLegendClassNames[kind as WorkloadKind]
+                  )}
+                />
+                <span>{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-xl border border-border bg-muted/35 p-3">
+            <p className="text-xs font-black uppercase text-card-foreground">
+              {copy.globalScene.workload.peakLabel}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {copy.globalScene.workload.peakText}
+            </p>
           </div>
         </div>
 
@@ -751,10 +728,10 @@ function GlobalOperationsScene({
             </div>
             <div>
               <p className="text-sm font-black text-card-foreground">
-                {localizeBusinessCopy("Rol bağlantıları aktif", locale)}
+                {copy.globalScene.rbacTitle}
               </p>
               <p className="text-xs leading-5 text-muted-foreground">
-                {localizeBusinessCopy("Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.", locale)}
+                {copy.globalScene.rbacDescription}
               </p>
             </div>
           </div>
@@ -765,69 +742,84 @@ function GlobalOperationsScene({
 }
 
 function RoleFocusedDashboard({
+  copy,
   role,
   roleLabel,
 }: {
-  role: Role
+  copy: DashboardHomeCopy
+  role: FocusedRole
   roleLabel: string
 }) {
-  const locale = resolveDashboardLocale(useLocale())
   const config = roleWorkspaceConfig[role]
   if (!config) return null
 
+  const workspaceCopy = copy.roleWorkspaces[role]
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
+  const summary = getSummary()
+  const blocks = getBlockOverview()
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-black text-foreground md:text-3xl">
-          {localizeBusinessCopy(config.title, locale)}
+          {workspaceCopy.title}
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {localizeBusinessCopy(config.description, locale)} {localizeBusinessCopy("Aktif rol:", locale)}{" "}
+          {workspaceCopy.description} {copy.erpWorld.activeRole}:{" "}
           <span className="font-semibold text-foreground">{roleLabel}</span>.
         </p>
       </div>
 
-      <IsometricErpWorld
-        mode="dashboard"
+      <LiveErpSimulation
+        blocks={blocks}
+        criticalTickets={[]}
+        realtimeState="disabled"
+        requestState="success"
         roleLabel={roleLabel}
-        dashboardMetrics={[
-          [String(cards.length), localizeBusinessCopy("açık modül", locale)],
-          [role === "staff" ? "14" : "4", localizeBusinessCopy("yetkili iş", locale)],
-          [roleLabel, localizeBusinessCopy("aktif rol", locale)],
-        ]}
+        source="local-seed"
+        summary={{
+          ...summary,
+          openTickets: role === "staff" ? summary.openTickets : cards.length,
+        }}
       />
 
-      <RoleWorkspaceScene role={role} />
+      <RoleWorkspaceScene copy={copy} role={role} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {cards.map((card) => (
-          <CommandLink
-            key={card.href}
-            href={card.href}
-            ariaLabel={`${localizeBusinessCopy(card.title, locale)} ${localizeBusinessCopy("ekranını aç", locale)}`}
-            role={role}
+        {cards.map((card) => {
+          const cardCopies = workspaceCopy.cards as Record<
+            RoleWorkspaceCardKey,
+            { title: string; description: string }
           >
-            <Card3D glow={false}>
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <card.icon className="h-5 w-5" />
+          const cardCopy = cardCopies[card.copyKey]
+
+          return (
+            <CommandLink
+              key={card.href}
+              href={card.href}
+              ariaLabel={cardCopy.title}
+              role={role}
+            >
+              <Card3D glow={false}>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-black text-card-foreground">
+                      {cardCopy.title}
+                    </h2>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                      {cardCopy.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h2 className="text-sm font-black text-card-foreground">
-                    {localizeBusinessCopy(card.title, locale)}
-                  </h2>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                    {localizeBusinessCopy(card.description, locale)}
-                  </p>
-                </div>
-              </div>
-            </Card3D>
-          </CommandLink>
-        ))}
+              </Card3D>
+            </CommandLink>
+          )
+        })}
       </div>
 
       <Card3D glow={false}>
@@ -835,22 +827,19 @@ function RoleFocusedDashboard({
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
           <div>
             <h2 className="text-sm font-bold text-card-foreground">
-              {localizeBusinessCopy("Yetki sınırları", locale)}
+              {copy.roleWorkspaces.common.boundariesTitle}
             </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {localizeBusinessCopy(
-                "Bu ekranda şirket geneli daire matrisi, finans defteri, kullanıcı yönetimi ve platform ayarları gösterilmez. Kapalı bir sayfa URL ile açılırsa sistem sizi tekrar kendi çalışma alanınıza döndürür.",
-                locale
-              )}
+              {copy.roleWorkspaces.common.boundariesBody}
             </p>
-            {config.accessNotes.length ? (
+            {workspaceCopy.accessNotes.length ? (
               <div className="mt-4 flex flex-wrap gap-2">
-                {config.accessNotes.map((constraint) => (
+                {workspaceCopy.accessNotes.map((constraint) => (
                   <span
                     key={constraint}
                     className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground"
                   >
-                    {localizeBusinessCopy(constraint, locale)}
+                    {constraint}
                   </span>
                 ))}
               </div>
@@ -1087,29 +1076,33 @@ function mapLiveActivities(snapshot: DashboardSnapshot | null) {
 
 export default function DashboardHomePage() {
   const user = useUser()
+  const locale = resolveDashboardHomeLocale(useLocale())
+  const copy = dashboardHomeCopy[locale]
   const roleT = useTranslations("roles")
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabel = roleDef ? roleT(roleDef.labelKey.replace("roles.", "")) : user.role
 
-  if (roleWorkspaceConfig[user.role]) {
-    return <RoleFocusedDashboard role={user.role} roleLabel={roleLabel} />
+  if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
+    return <RoleFocusedDashboard copy={copy} role={user.role} roleLabel={roleLabel} />
   }
 
-  return <OperationsDashboard user={user} roleLabel={roleLabel} />
+  return <OperationsDashboard copy={copy} user={user} roleLabel={roleLabel} />
 }
 
 function OperationsDashboard({
+  copy,
   user,
   roleLabel,
 }: {
+  copy: DashboardHomeCopy
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
-  const locale = resolveDashboardLocale(useLocale())
   const {
     snapshot,
     phase4,
     refresh,
+    realtimeState,
     requestState,
   } = useLiveDashboardSnapshot({ includePhase4: true })
   const fallbackSummary = useMemo(() => getSummary(), [])
@@ -1159,49 +1152,40 @@ function OperationsDashboard({
   const kpis: Kpi[] = [
     {
       icon: Building2,
-      label: localizeBusinessCopy("Toplam Daire", locale),
+      label: copy.kpis.totalUnits,
       value: summary.totalFlats,
-      suffix: interpolate(localizeBusinessCopy("{rate}% doluluk", locale), {
-        rate: summary.occupancyRate,
+      suffix: copyText(copy.kpis.occupancy, { value: summary.occupancyRate }),
+      helper: copyText(copy.kpis.unitHelper, {
+        maintenance: summary.maintenanceFlats,
+        vacant: summary.vacantFlats,
       }),
-      helper: interpolate(
-        localizeBusinessCopy("{vacant} boş, {maintenance} bakımda", locale),
-        { vacant: summary.vacantFlats, maintenance: summary.maintenanceFlats }
-      ),
       color: "text-teal-600",
       href: "/dashboard/listings",
     },
     {
       icon: CreditCard,
-      label: localizeBusinessCopy("Toplam Borç", locale),
+      label: copy.kpis.totalDebt,
       value: Math.round(summary.totalDebtTry / 1000),
       suffix: "K ₺",
-      helper: interpolate(
-        localizeBusinessCopy("{count} erişim kısıtı", locale),
-        { count: summary.restrictedAccess }
-      ),
+      helper: copyText(copy.kpis.restricted, { value: summary.restrictedAccess }),
       color: "text-rose-600",
       href: "/dashboard/finance",
     },
     {
       icon: TicketCheck,
-      label: localizeBusinessCopy("Açık Servis", locale),
+      label: copy.kpis.openService,
       value: summary.openTickets,
-      suffix: interpolate(localizeBusinessCopy("{count} SLA dışı", locale), {
-        count: summary.overdueTickets,
-      }),
-      helper: localizeBusinessCopy("Teknik, finans ve depozito işleri", locale),
+      suffix: copyText(copy.kpis.overdue, { value: summary.overdueTickets }),
+      helper: copy.kpis.serviceHelper,
       color: "text-amber-600",
       href: "/dashboard/tickets",
     },
     {
       icon: CalendarCheck,
-      label: localizeBusinessCopy("Bugünkü İşler", locale),
+      label: copy.kpis.todayWork,
       value: summary.activeBookings,
-      suffix: interpolate(localizeBusinessCopy("{count} çıkış", locale), {
-        count: summary.checkoutsToday,
-      }),
-      helper: localizeBusinessCopy("Giriş, çıkış, temizlik, depozito", locale),
+      suffix: copyText(copy.kpis.checkouts, { value: summary.checkoutsToday }),
+      helper: copy.kpis.bookingHelper,
       color: "text-sky-600",
       href: "/dashboard/calendar",
     },
@@ -1210,37 +1194,19 @@ function OperationsDashboard({
   const alerts = [
     {
       icon: AlertTriangle,
-      text: interpolate(
-        localizeBusinessCopy(
-          "{count} operasyon riski AI kuyruğunda: borç, SLA ve check-out birlikte takip ediliyor.",
-          locale
-        ),
-        { count: summary.aiRiskCount }
-      ),
+      text: copyText(copy.alerts.aiRisk, { count: summary.aiRiskCount }),
       variant: "danger" as const,
       href: "/dashboard/reports",
     },
     {
       icon: LockKeyhole,
-      text: interpolate(
-        localizeBusinessCopy(
-          "{count} dairede erişim kısıtı var. Finans onayı olmadan servis yönlendirilmemeli.",
-          locale
-        ),
-        { count: summary.restrictedAccess }
-      ),
+      text: copyText(copy.alerts.access, { count: summary.restrictedAccess }),
       variant: "warning" as const,
       href: "/dashboard/compliance",
     },
     {
       icon: Clock3,
-      text: interpolate(
-        localizeBusinessCopy(
-          "{count} servis talebi SLA dışına çıktı. Teknik ekip için öncelik listesi hazır.",
-          locale
-        ),
-        { count: summary.overdueTickets }
-      ),
+      text: copyText(copy.alerts.sla, { count: summary.overdueTickets }),
       variant: "warning" as const,
       href: "/dashboard/tickets",
     },
@@ -1251,19 +1217,17 @@ function OperationsDashboard({
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-black text-foreground md:text-3xl">
-            {clientProfile.clientName} {localizeBusinessCopy("ERP Operasyon Merkezi", locale)}
+            {copyText(copy.hero.title, { client: clientProfile.clientName })}
           </h1>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            {localizeBusinessCopy(
-              "Satış, proje takibi, WhatsApp/Telegram lead akışı, evrak, servis, finans ve AI önceliklendirme tek çalışma alanında toplanır. Operasyon görünümü 769 birim ölçeğinde yönetim, kontrol ve takip için çalışır.",
-              locale
-            )}{" "}
-            {localizeBusinessCopy("Aktif rol:", locale)}{" "}
-            <span className="font-semibold text-foreground">{roleLabel}</span>.
+            {copyText(copy.hero.subtitle, {
+              role: roleLabel,
+              units: summary.totalFlats,
+            })}
           </p>
           {requestState === "error" && (
             <p className="mt-3 text-xs font-semibold text-rose-600">
-              {localizeBusinessCopy("Veri yenilenemedi. Lütfen tekrar deneyin.", locale)}
+              {copy.hero.refreshError}
             </p>
           )}
         </div>
@@ -1275,30 +1239,32 @@ function OperationsDashboard({
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <ArrowUpRight className="h-3.5 w-3.5" />
-            {localizeBusinessCopy("Portföy kaynağı", locale)}
+            {copy.hero.portfolioSource}
           </a>
           <DashboardRefreshButton onRefresh={refresh} />
         </div>
       </div>
 
-      <IsometricErpWorld
-        mode="dashboard"
+      <LiveErpSimulation
+        activityItems={activityItems}
+        blocks={blocks}
+        criticalTickets={criticalTickets}
+        generatedAt={snapshot?.generatedAt}
+        realtimeState={realtimeState}
+        requestState={requestState}
         roleLabel={roleLabel}
-        dashboardMetrics={[
-          [String(summary.totalFlats), localizeBusinessCopy("daire", locale)],
-          [String(summary.openTickets), localizeBusinessCopy("açık servis", locale)],
-          [roleLabel, localizeBusinessCopy("aktif rol", locale)],
-        ]}
+        source={snapshot?.source}
+        summary={summary}
       />
 
-      <GlobalOperationsScene roleLabel={roleLabel} summary={summary} />
+      <GlobalOperationsScene copy={copy} roleLabel={roleLabel} summary={summary} />
 
       <div className="grid gap-3 lg:grid-cols-3">
         {alerts.map((alert, index) => (
           <CommandLink
             key={alert.text}
             href={alert.href}
-            ariaLabel={`${alert.text} ${localizeBusinessCopy("modülüne git", locale)}`}
+            ariaLabel={alert.text}
             role={user.role}
           >
             {({ allowed }) => (
@@ -1328,28 +1294,19 @@ function OperationsDashboard({
           <div>
             <div className="flex items-center gap-2">
               <Route className="h-5 w-5 text-primary" />
-              <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("ERP modül durumu", locale)}</h2>
+              <h2 className="text-sm font-bold text-card-foreground">{copy.modules.title}</h2>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {localizeBusinessCopy(
-                "CRM, daire matrisi, kullanıcı rolleri, finans, servis, saha, rezervasyon, iletişim, mobil PWA, entegrasyon, AI ve güvenlik kontrolleri aynı işletim planında izlenir.",
-                locale
-              )}
+              {copy.modules.description}
             </p>
           </div>
           <span className="flex shrink-0 items-center gap-2">
           <StatusBadge variant="success">
-            {interpolate(
-              localizeBusinessCopy(
-                "{complete} aktif · {readyForUat} kontrol hazır · {inProgress} yapımda",
-                locale
-              ),
-              {
-                complete: phaseSummary.complete,
-                readyForUat: phaseSummary.readyForUat,
-                inProgress: phaseSummary.inProgress,
-              }
-            )}
+            {copyText(copy.modules.badge, {
+              complete: phaseSummary.complete,
+              progress: phaseSummary.inProgress,
+              ready: phaseSummary.readyForUat,
+            })}
             </StatusBadge>
             <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-90" />
           </span>
@@ -1363,26 +1320,33 @@ function OperationsDashboard({
               <CommandLink
                 key={phase.phase}
                 href={phaseRoutes[phase.phase] ?? "/dashboard"}
-                ariaLabel={`${localizeBusinessCopy("Modül", locale)} ${phase.phase} ${localizeBusinessCopy(phase.title, locale)} ${localizeBusinessCopy("ekranını aç", locale)}`}
+                ariaLabel={copyText(copy.modules.openAria, {
+                  phase: phase.phase,
+                  title: phase.title,
+                })}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeBusinessCopy("Modül", locale)} {phase.phase}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{localizeBusinessCopy(phase.title, locale)}</h3>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {copy.modules.module} {phase.phase}
+                    </p>
+                    <h3 className="mt-1 text-sm font-black text-foreground">{phase.title}</h3>
                   </div>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black", status.className)}>
                     <StatusIcon className="h-3 w-3" />
-                    {localizeBusinessCopy(status.label, locale)}
+                    {copy.phaseStatus[phase.status]}
                   </span>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{localizeBusinessCopy(phase.businessOutcome, locale)}</p>
-                <p className="mt-3 text-xs font-semibold text-foreground">{localizeBusinessCopy("Nasıl kullanılır:", locale)} {localizeBusinessCopy(phase.userGuide, locale)}</p>
+                <p className="mt-3 text-xs text-muted-foreground">{phase.businessOutcome}</p>
+                <p className="mt-3 text-xs font-semibold text-foreground">
+                  {copy.modules.howTo}: {phase.userGuide}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {phase.evidence.slice(0, 2).map((item) => (
                     <span key={item} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                      {localizeBusinessCopy(item, locale)}
+                      {item}
                     </span>
                   ))}
                 </div>
@@ -1395,7 +1359,7 @@ function OperationsDashboard({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi) => (
-          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={`${kpi.label} ${localizeBusinessCopy("modülünü aç", locale)}`} role={user.role}>
+          <CommandLink key={kpi.label} href={kpi.href} ariaLabel={kpi.label} role={user.role}>
             <Card3D glow={false}>
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -1422,55 +1386,96 @@ function OperationsDashboard({
       />
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <CommandLink href="/dashboard/finance" ariaLabel={localizeBusinessCopy("Doluluk ve tahsilat sağlığı detayını aç", locale)} className="xl:col-span-2" role={user.role}>
-        <Card3D glow={false}>
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Doluluk ve tahsilat sağlığı", locale)}</h2>
-              <p className="text-xs text-muted-foreground">{localizeBusinessCopy("Doluluk oranı, gecikmiş borç ve servis baskısı birlikte okunur.", locale)}</p>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-              <TrendingUp className="h-4 w-4" />
-              {localizeBusinessCopy("Haziran hedefi korunuyor", locale)}
-            </div>
-          </div>
-          <LineChart data={occupancyTrend.map((point) => ({ ...point, label: localizeBusinessCopy(point.label, locale) }))} formatValue={(value) => (locale === "tr" ? `%${value}` : `${value}%`)} height={172} />
-        </Card3D>
+        <CommandLink href="/dashboard/finance" ariaLabel={copy.charts.occupancyTitle} className="xl:col-span-2" role={user.role}>
+          {({ allowed }) => (
+            <Card3D glow={false} innerClassName="min-h-full">
+              <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-sm font-bold text-card-foreground">{copy.charts.occupancyTitle}</h2>
+                  <p className="text-xs text-muted-foreground">{copy.charts.occupancyDescription}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-emerald-600">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1">
+                    <TrendingUp className="h-4 w-4" />
+                    {copy.charts.trendLabel}
+                  </span>
+                  <DrilldownCue allowed={allowed} />
+                </div>
+              </div>
+              <div className="mb-3 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.occupancyMetric}</p>
+                  <p className="text-base font-black text-foreground">%{summary.occupancyRate}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.accessMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.restrictedAccess}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.slaMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.overdueTickets}</p>
+                </div>
+              </div>
+              <LineChart
+                data={occupancyTrend}
+                ariaLabel={copy.charts.occupancyTitle}
+                formatValue={(value) => `%${value}`}
+                height={172}
+              />
+            </Card3D>
+          )}
         </CommandLink>
 
-        <CommandLink href="/dashboard/listings" ariaLabel={localizeBusinessCopy("Daire durum dağılımı detayını aç", locale)} role={user.role}>
-        <Card3D glow={false}>
-          <h2 className="mb-1 text-sm font-bold text-card-foreground">{localizeBusinessCopy("Daire durum dağılımı", locale)}</h2>
-          <p className="mb-4 text-xs text-muted-foreground">{localizeBusinessCopy("Operasyon ekibi için canlı portföy kırılımı.", locale)}</p>
-          <PieChart data={statusDistribution.map((item) => ({ ...item, label: localizeBusinessCopy(item.label, locale) }))} size={164} />
-        </Card3D>
+        <CommandLink href="/dashboard/listings" ariaLabel={copy.charts.statusTitle} role={user.role}>
+          {({ allowed }) => (
+            <Card3D glow={false} innerClassName="min-h-full">
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-card-foreground">{copy.charts.statusTitle}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">{copy.charts.statusDescription}</p>
+                </div>
+                <DrilldownCue allowed={allowed} />
+              </div>
+              <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.totalMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.totalFlats}</p>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/55 px-3 py-2">
+                  <p className="text-[11px] font-bold uppercase text-muted-foreground">{copy.charts.vacantMetric}</p>
+                  <p className="text-base font-black text-foreground">{summary.vacantFlats}</p>
+                </div>
+              </div>
+              <PieChart data={statusDistribution} size={164} ariaLabel={copy.charts.statusTitle} totalLabel={copy.charts.totalMetric} />
+            </Card3D>
+          )}
         </CommandLink>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Blok bazlı operasyon", locale)}</h2>
-            <StatusBadge variant="accent">{interpolate(localizeBusinessCopy("{count} blok", locale), { count: blocks.length })}</StatusBadge>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.charts.blockTitle}</h2>
+            <StatusBadge variant="accent">{copyText(copy.charts.blocks, { count: blocks.length })}</StatusBadge>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {blocks.map((block) => (
               <CommandLink
                 key={block.block}
                 href="/dashboard/listings"
-                ariaLabel={`${localizeBusinessCopy("Blok", locale)} ${block.block} ${localizeBusinessCopy("daire matrisi detayını aç", locale)}`}
+                ariaLabel={`${copy.charts.block} ${block.block}`}
                 role={user.role}
               >
               <div className="min-h-full rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-foreground">{localizeBusinessCopy("Blok", locale)} {block.block}</p>
-                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{interpolate(localizeBusinessCopy("{count} daire", locale), { count: block.total })}</StatusBadge>
+                  <p className="text-sm font-bold text-foreground">{copy.charts.block} {block.block}</p>
+                  <StatusBadge variant={block.blocked > 0 ? "warning" : "success"}>{block.total} {copy.charts.units}</StatusBadge>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <span>{localizeBusinessCopy("Dolu:", locale)} {block.occupied}</span>
-                  <span>{localizeBusinessCopy("Boş:", locale)} {block.vacant}</span>
-                  <span>{localizeBusinessCopy("Bakım:", locale)} {block.maintenance}</span>
-                  <span>{localizeBusinessCopy("Borç:", locale)} {formatTryShort(block.debtTry)}</span>
+                  <span>{copy.charts.occupied}: {block.occupied}</span>
+                  <span>{copy.charts.vacant}: {block.vacant}</span>
+                  <span>{copy.charts.maintenance}: {block.maintenance}</span>
+                  <span>{copy.charts.debt}: {formatTryShort(block.debtTry)}</span>
                 </div>
               </div>
               </CommandLink>
@@ -1479,16 +1484,16 @@ function OperationsDashboard({
         </Card3D>
 
         <div className="space-y-4">
-          <CommandLink href="/dashboard/reports" ariaLabel={localizeBusinessCopy("AI operasyon asistanı raporlarını aç", locale)} role={user.role}>
+          <CommandLink href="/dashboard/reports" ariaLabel={copy.charts.aiTitle} role={user.role}>
           <GlassCard glow className="p-5">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Brain className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("AI operasyon asistanı", locale)}</h2>
+                <h2 className="text-sm font-bold text-card-foreground">{copy.charts.aiTitle}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {localizeBusinessCopy("Borç, SLA, depozito ve rezervasyon verilerini birleştirerek günlük yapılacakları sıralar.", locale)}
+                  {copy.charts.aiDescription}
                 </p>
               </div>
             </div>
@@ -1498,7 +1503,7 @@ function OperationsDashboard({
             <CommandLink
               key={insight.title}
               href={routeForInsight(insight.title)}
-              ariaLabel={`${localizeBusinessCopy(insight.title, locale)} ${localizeBusinessCopy("detayını aç", locale)}`}
+              ariaLabel={insight.title}
               role={user.role}
             >
               {({ allowed }) => (
@@ -1506,8 +1511,8 @@ function OperationsDashboard({
                   <div className="flex items-start gap-3">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy(insight.title, locale)}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{localizeBusinessCopy(insight.detail, locale)}</p>
+                      <h3 className="text-sm font-bold text-card-foreground">{insight.title}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{insight.detail}</p>
                     </div>
                     <DrilldownCue allowed={allowed} />
                   </div>
@@ -1521,7 +1526,7 @@ function OperationsDashboard({
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
           <div className="mb-4">
-            <h2 className="text-sm font-bold text-card-foreground">{localizeBusinessCopy("Son operasyon akışı", locale)}</h2>
+            <h2 className="text-sm font-bold text-card-foreground">{copy.charts.recentFlow}</h2>
           </div>
           <ul className="space-y-3">
             {activityItems.map((activity, index) => (
@@ -1533,7 +1538,7 @@ function OperationsDashboard({
               >
                 <CommandLink
                   href={activity.href}
-                  ariaLabel={`${localizeBusinessCopy(activity.message, locale)} ${localizeBusinessCopy("detayını aç", locale)}`}
+                  ariaLabel={activity.message}
                   role={user.role}
                 >
                   {({ allowed }) => (
@@ -1545,9 +1550,9 @@ function OperationsDashboard({
                     >
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">{localizeBusinessCopy(activity.message, locale)}</p>
+                        <p className="text-sm text-foreground">{activity.message}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {localizeBusinessCopy(activity.actor, locale)} - {localizeBusinessCopy(activity.type, locale)}
+                          {activity.actor} - {activity.type}
                         </p>
                       </div>
                       <DrilldownCue allowed={allowed} />
@@ -1560,21 +1565,21 @@ function OperationsDashboard({
         </Card3D>
 
         <Card3D glow={false}>
-          <h2 className="mb-4 text-sm font-bold text-card-foreground">{localizeBusinessCopy("Bugünkü kritik işler", locale)}</h2>
+          <h2 className="mb-4 text-sm font-bold text-card-foreground">{copy.charts.criticalToday}</h2>
           <div className="space-y-3">
             {criticalTickets.map((ticket) => (
               <CommandLink
                 key={`ticket-${ticket.label}`}
                 href="/dashboard/tickets"
-                ariaLabel={`${ticket.label} ${localizeBusinessCopy("servis talebini aç", locale)}`}
+                ariaLabel={ticket.label}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
-                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{interpolate(localizeBusinessCopy("{hours} saat", locale), { hours: ticket.slaHoursRemaining })}</StatusBadge>
+                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
                 </div>
-                <p className="mt-2 text-sm text-foreground">{localizeBusinessCopy(ticket.title, locale)}</p>
+                <p className="mt-2 text-sm text-foreground">{ticket.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
               </div>
               </CommandLink>
@@ -1583,7 +1588,7 @@ function OperationsDashboard({
               <CommandLink
                 key={booking.id}
                 href="/dashboard/calendar"
-                ariaLabel={`${booking.flatNumber} ${localizeBusinessCopy("rezervasyon detayını aç", locale)}`}
+                ariaLabel={booking.flatNumber}
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
@@ -1592,7 +1597,7 @@ function OperationsDashboard({
                   <StatusBadge variant="info">{booking.channel}</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{booking.guestName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{localizeBusinessCopy("Depozito:", locale)} {formatTryShort(booking.depositTry)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{copy.charts.depositRisk}: {formatTryShort(booking.depositTry)}</p>
               </div>
               </CommandLink>
             ))}
@@ -1600,19 +1605,19 @@ function OperationsDashboard({
         </Card3D>
       </div>
 
-      <CommandLink href="/dashboard/finance" ariaLabel={localizeBusinessCopy("Finans özetini aç", locale)} role={user.role}>
+      <CommandLink href="/dashboard/finance" ariaLabel={copy.charts.financeSummaryAria} role={user.role}>
       <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Aylık beklenen aidat", locale)}</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.monthlyExpected}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.monthlyExpectedTry)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Haziran tahsilat", locale)}</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.juneCollection}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(cashFlow.at(-1)?.collectedTry ?? 0)}</p>
           </div>
           <div>
-            <p className="text-xs uppercase text-muted-foreground">{localizeBusinessCopy("Depozito riski", locale)}</p>
+            <p className="text-xs uppercase text-muted-foreground">{copy.charts.depositRisk}</p>
             <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.depositExposureTry)}</p>
           </div>
         </div>

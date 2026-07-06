@@ -13,12 +13,15 @@ import {
   WalletCards,
 } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
+import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
-import { localizeBusinessCopy, resolveDashboardLocale } from "@/lib/business-copy"
-import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { hasPermission } from "@/lib/rbac"
+import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+  toIntlLocale,
+} from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 import type {
@@ -46,31 +49,28 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatCents(cents: number, currency = "TRY") {
-  return new Intl.NumberFormat("tr-TR", {
+function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(cents / 100)
 }
 
-function formatEur(value: number) {
-  return new Intl.NumberFormat("tr-TR", {
+function formatEur(value: number, locale = "tr-TR") {
+  return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
   }).format(value)
 }
 
-function shortDate(value: string | null, locale: string) {
+function shortDate(value: string | null, locale = "tr-TR") {
   if (!value) return "-"
-  return new Intl.DateTimeFormat("tr-TR", {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
-  })
-    .formatToParts(new Date(value))
-    .map((part) => (part.type === "month" ? localizeBusinessCopy(part.value, locale) : part.value))
-    .join("")
+  }).format(new Date(value))
 }
 
 function planVariant(status: string) {
@@ -79,19 +79,19 @@ function planVariant(status: string) {
   return "danger" as const
 }
 
-function planLabel(status: string, locale: string) {
-  if (status === "on_track") return localizeBusinessCopy("Planında", locale)
-  if (status === "due_soon") return localizeBusinessCopy("Vade yaklaştı", locale)
-  if (status === "overdue") return localizeBusinessCopy("Gecikti", locale)
-  if (status === "blocked") return localizeBusinessCopy("Blokeli", locale)
+function planLabel(status: string) {
+  if (status === "on_track") return "Planında"
+  if (status === "due_soon") return "Vade yaklaştı"
+  if (status === "overdue") return "Gecikti"
+  if (status === "blocked") return "Blokeli"
   return status
 }
 
-function blockerLabel(value: string, locale: string) {
-  if (value === "No blocker") return localizeBusinessCopy("Blokaj yok", locale)
-  if (value === "Reservation contract missing") return localizeBusinessCopy("Rezervasyon sözleşmesi eksik", locale)
-  if (value === "Installment not verified") return localizeBusinessCopy("Taksit doğrulanmadı", locale)
-  if (value === "Payment plan signature pending") return localizeBusinessCopy("Ödeme planı imzası bekliyor", locale)
+function blockerLabel(value: string) {
+  if (value === "No blocker") return "Blokaj yok"
+  if (value === "Reservation contract missing") return "Rezervasyon sözleşmesi eksik"
+  if (value === "Second installment not verified") return "İkinci taksit doğrulanmadı"
+  if (value === "Payment plan signature pending") return "Ödeme planı imzası bekliyor"
   return value
 }
 
@@ -102,15 +102,15 @@ function depositVariant(status: string) {
   return "neutral" as const
 }
 
-function depositLabel(status: string, locale: string) {
-  if (status === "held") return localizeBusinessCopy("Blokede", locale)
-  if (status === "reserved") return localizeBusinessCopy("Rezerve", locale)
-  if (status === "pending") return localizeBusinessCopy("Bekliyor", locale)
-  if (status === "refund_ready") return localizeBusinessCopy("İade hazır", locale)
-  if (status === "released") return localizeBusinessCopy("İade edildi", locale)
-  if (status === "deduction_pending") return localizeBusinessCopy("Kesinti bekliyor", locale)
-  if (status === "deducted") return localizeBusinessCopy("Kesildi", locale)
-  if (status === "not_required") return localizeBusinessCopy("Gerekmez", locale)
+function depositLabel(status: string) {
+  if (status === "held") return "Blokede"
+  if (status === "reserved") return "Rezerve"
+  if (status === "pending") return "Bekliyor"
+  if (status === "refund_ready") return "İade hazır"
+  if (status === "released") return "İade edildi"
+  if (status === "deduction_pending") return "Kesinti bekliyor"
+  if (status === "deducted") return "Kesildi"
+  if (status === "not_required") return "Gerekmez"
   return status
 }
 
@@ -120,11 +120,11 @@ function restrictionVariant(item: Phase7RestrictionDecision) {
   return "neutral" as const
 }
 
-function riskLabel(risk: Phase7RestrictionDecision["riskLevel"], locale: string) {
-  if (risk === "critical") return localizeBusinessCopy("Kritik", locale)
-  if (risk === "high") return localizeBusinessCopy("Yüksek", locale)
-  if (risk === "medium") return localizeBusinessCopy("Orta", locale)
-  return localizeBusinessCopy("Düşük", locale)
+function riskLabel(risk: Phase7RestrictionDecision["riskLevel"]) {
+  if (risk === "critical") return "Kritik"
+  if (risk === "high") return "Yüksek"
+  if (risk === "medium") return "Orta"
+  return "Düşük"
 }
 
 function reconVariant(item: Phase7ReconciliationItem) {
@@ -134,20 +134,20 @@ function reconVariant(item: Phase7ReconciliationItem) {
   return "neutral" as const
 }
 
-function reconLabel(status: string, locale: string) {
-  if (status === "pending_review") return localizeBusinessCopy("İnceleme", locale)
-  if (status === "pending") return localizeBusinessCopy("Bekliyor", locale)
-  if (status === "authorized") return localizeBusinessCopy("Onaylandı", locale)
-  if (status === "captured") return localizeBusinessCopy("Tahsil edildi", locale)
-  if (status === "failed") return localizeBusinessCopy("Hatalı", locale)
-  if (status === "cancelled") return localizeBusinessCopy("İptal", locale)
-  if (status === "refunded") return localizeBusinessCopy("İade", locale)
+function reconLabel(status: string) {
+  if (status === "pending_review") return "İnceleme"
+  if (status === "pending") return "Bekliyor"
+  if (status === "authorized") return "Onaylandı"
+  if (status === "captured") return "Tahsil edildi"
+  if (status === "failed") return "Hatalı"
+  if (status === "cancelled") return "İptal"
+  if (status === "refunded") return "İade"
   return status
 }
 
-function providerLabel(provider: string, locale: string) {
-  if (provider === "bank-transfer") return localizeBusinessCopy("Banka transferi", locale)
-  if (provider === "manual-bank") return localizeBusinessCopy("Manuel banka", locale)
+function providerLabel(provider: string) {
+  if (provider === "bank-transfer") return "Banka transferi"
+  if (provider === "manual-bank") return "Manuel banka"
   return provider
 }
 
@@ -168,59 +168,83 @@ function WorkItem({
   )
 }
 
-function PaymentPlanRow({ plan, locale }: { plan: Phase7PaymentPlan; locale: string }) {
+function PaymentPlanRow({
+  intlLocale,
+  plan,
+  t,
+}: {
+  intlLocale: string
+  plan: Phase7PaymentPlan
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={CreditCard}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-foreground">
-            {plan.dealName.replace("satış planı", localizeBusinessCopy("satış planı", locale))} / {plan.buyerName}
+            {plan.dealName} / {plan.buyerName}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatEur(plan.nextDueEur)} {localizeBusinessCopy("vade", locale)} / {shortDate(plan.nextDueAt, locale)} / {plan.completionPercent}% {localizeBusinessCopy("tamamlandı", locale)}
+            {formatEur(plan.nextDueEur, intlLocale)} {t("vade")} / {shortDate(plan.nextDueAt, intlLocale)} / {plan.completionPercent}% {t("tamamlandı")}
           </p>
         </div>
-        <StatusBadge variant={planVariant(plan.status)}>{planLabel(plan.status, locale)}</StatusBadge>
+        <StatusBadge variant={planVariant(plan.status)}>{t(planLabel(plan.status))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{blockerLabel(plan.approvalBlocker, locale)}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(blockerLabel(plan.approvalBlocker))}</p>
     </WorkItem>
   )
 }
 
-function DepositRow({ item, locale }: { item: Phase7DepositDecision; locale: string }) {
+function DepositRow({
+  intlLocale,
+  item,
+  t,
+}: {
+  intlLocale: string
+  item: Phase7DepositDecision
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={WalletCards}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-foreground">
-            {item.unitNo ?? item.reservationId} / {item.guestName ?? localizeBusinessCopy("Misafir", locale)}
+            {item.unitNo ?? item.reservationId} / {item.guestName ?? t("Misafir")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {localizeBusinessCopy("Checkout", locale)} {shortDate(item.checkOutAt, locale)} / {formatCents(item.depositCents, item.currency)}
+            {t("Çıkış")} {shortDate(item.checkOutAt, intlLocale)} / {formatCents(item.depositCents, item.currency, intlLocale)}
           </p>
         </div>
-        <StatusBadge variant={depositVariant(item.depositStatus)}>{depositLabel(item.depositStatus, locale)}</StatusBadge>
+        <StatusBadge variant={depositVariant(item.depositStatus)}>{t(depositLabel(item.depositStatus))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{localizeBusinessCopy(item.nextAction, locale)}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(item.nextAction)}</p>
     </WorkItem>
   )
 }
 
-function RestrictionRow({ item, locale }: { item: Phase7RestrictionDecision; locale: string }) {
+function RestrictionRow({
+  intlLocale,
+  item,
+  t,
+}: {
+  intlLocale: string
+  item: Phase7RestrictionDecision
+  t: (value: string) => string
+}) {
   return (
     <WorkItem icon={LockKeyhole}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-black text-foreground">
-            {item.unitNo ?? item.unitId} / {item.residentName ? localizeOperationalValue(item.residentName, resolveDashboardLocale(locale)) : localizeBusinessCopy("Kayıt", locale)}
+            {item.unitNo ?? item.unitId} / {item.residentName ?? t("Kayıt")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatCents(item.balanceCents, item.currency)} / {item.agingBucket} {localizeBusinessCopy("gün", locale)}
+            {formatCents(item.balanceCents, item.currency, intlLocale)} / {item.agingBucket} {t("gün")}
           </p>
         </div>
-        <StatusBadge variant={restrictionVariant(item)}>{riskLabel(item.riskLevel, locale)}</StatusBadge>
+        <StatusBadge variant={restrictionVariant(item)}>{t(riskLabel(item.riskLevel))}</StatusBadge>
       </div>
-      <p className="mt-2 text-xs font-semibold text-muted-foreground">{localizeBusinessCopy(item.suggestedAction, locale)}</p>
+      <p className="mt-2 text-xs font-semibold text-muted-foreground">{t(item.suggestedAction)}</p>
     </WorkItem>
   )
 }
@@ -228,6 +252,8 @@ function RestrictionRow({ item, locale }: { item: Phase7RestrictionDecision; loc
 export function PaymentRestrictionControl() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
+  const intlLocale = toIntlLocale(locale)
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const [data, setData] = useState<PaymentRestrictionData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const canApproveFinance =
@@ -287,18 +313,14 @@ export function PaymentRestrictionControl() {
     }
   }, [data?.source, fetchControls])
 
-  const lastUpdated = useMemo(() => {
-    if (!data?.generatedAt) return null
-    return new Intl.DateTimeFormat("tr-TR", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-      .formatToParts(new Date(data.generatedAt))
-      .map((part) => (part.type === "month" ? localizeBusinessCopy(part.value, locale) : part.value))
-      .join("")
-  }, [data, locale])
+  const lastUpdated = data?.generatedAt
+    ? new Intl.DateTimeFormat(intlLocale, {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(new Date(data.generatedAt))
+    : null
 
   const attentionChecks = useMemo(
     () => data?.quality.checks.filter((check) => check.status !== "passed") ?? [],
@@ -311,27 +333,27 @@ export function PaymentRestrictionControl() {
   const currency = data?.summary.currency ?? "TRY"
   const summaryCards = [
     {
-      label: localizeBusinessCopy("Riskli plan", locale),
+      label: "Riskli plan",
       value: data?.summary.paymentPlansAtRisk ?? 0,
       Icon: AlertTriangle,
     },
     {
-      label: localizeBusinessCopy("Depozito kuyruğu", locale),
+      label: "Depozito kuyruğu",
       value: data?.summary.depositQueue ?? 0,
       Icon: WalletCards,
     },
     {
-      label: localizeBusinessCopy("Kısıt kararı", locale),
+      label: "Kısıt kararı",
       value: data?.summary.restrictionQueue ?? 0,
       Icon: LockKeyhole,
     },
     {
-      label: localizeBusinessCopy("Mutabakat", locale),
+      label: "Mutabakat",
       value: data?.summary.reconciliationQueue ?? 0,
       Icon: CreditCard,
     },
     {
-      label: localizeBusinessCopy("Onay kuyruğu", locale),
+      label: "Onay kuyruğu",
       value: data?.summary.approvalQueue ?? 0,
       Icon: KeyRound,
     },
@@ -344,19 +366,16 @@ export function PaymentRestrictionControl() {
           <div className="flex flex-wrap items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-primary" />
             <h2 className="text-base font-black text-card-foreground">
-              {localizeBusinessCopy("Ödeme, depozito ve kısıt kontrol merkezi", locale)}
+              {t("Ödeme, depozito ve kısıt kontrol merkezi")}
             </h2>
-            <StatusBadge variant="accent">{localizeBusinessCopy("Phase 7", locale)}</StatusBadge>
+            <StatusBadge variant="accent">Phase 7</StatusBadge>
           </div>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-            {localizeBusinessCopy(
-              "Satış ödeme planı, depozito iadesi, banka mutabakatı ve borca bağlı erişim kısıtı aynı onay kuyruğunda izlenir. Sistem karar önerir; finans ve erişim aksiyonları insan onayıyla kapanır.",
-              locale
-            )}
+            {t("Satış ödeme planı, depozito iadesi, banka mutabakatı ve borca bağlı erişim kısıtı aynı onay kuyruğunda izlenir. Sistem karar önerir; finans ve erişim aksiyonları insan onayıyla kapanır.")}
           </p>
           {lastUpdated && (
             <p className="mt-2 text-xs font-semibold text-muted-foreground">
-              {localizeBusinessCopy("Son güncelleme:", locale)} {lastUpdated}
+              {t("Son güncelleme")}: {lastUpdated}
             </p>
           )}
         </div>
@@ -369,41 +388,44 @@ export function PaymentRestrictionControl() {
             className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-bold text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
           >
             <RefreshCw className={cn("h-4 w-4", requestState === "loading" && "animate-spin")} />
-            {localizeBusinessCopy("Kontrolleri yenile", locale)}
+            {t("Kontrolleri yenile")}
           </button>
           {canApproveFinance && (
-            <DashboardActionButton
-              actionType="finance.reconciliation.create"
-              ariaLabel={localizeBusinessCopy("Mutabakat inceleme isteği oluştur", locale)}
-              className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition hover:bg-primary/15"
-              entityTable="payment_transactions"
-              metadata={{
-                phase: 7,
-                approvalQueue: data?.summary.approvalQueue ?? 0,
-                source: data?.source ?? "unknown",
-              }}
-              successLabel={localizeBusinessCopy("İnceleme isteği alındı", locale)}
-              title={localizeBusinessCopy("Phase 7 mutabakat inceleme isteği", locale)}
-            >
-              <BadgeCheck className="h-4 w-4" />
-              {localizeBusinessCopy("İnceleme aç", locale)}
-            </DashboardActionButton>
+            <DashboardActionMenu
+              label="Aksiyonlar"
+              ariaLabel="Odeme kontrol aksiyonlari"
+              buttonClassName="border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              items={[
+                {
+                  key: "review",
+                  label: "Inceleme ac",
+                  description: `${data?.summary.approvalQueue ?? 0} onay kaydi takipte.`,
+                  icon: <BadgeCheck />,
+                  actionType: "finance.reconciliation.create",
+                  ariaLabel: "Mutabakat inceleme istegi olustur",
+                  entityTable: "payment_transactions",
+                  title: "Phase 7 mutabakat inceleme istegi",
+                  metadata: {
+                    phase: 7,
+                    approvalQueue: data?.summary.approvalQueue ?? 0,
+                    source: data?.source ?? "unknown",
+                  },
+                },
+              ]}
+            />
           )}
         </div>
       </div>
 
       {requestState === "error" && (
         <div role="alert" className="mt-4 rounded-lg border border-rose-500/20 bg-rose-500/10 p-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
-          {localizeBusinessCopy(
-            "Ödeme kontrol verisi şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.",
-            locale
-          )}
+          {t("Ödeme kontrol verisi şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.")}
         </div>
       )}
 
       {attentionChecks.length > 0 && (
         <div role="alert" className="mt-4 rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
-          {localizeBusinessCopy("Kalite kontrolü dikkat istiyor:", locale)} {attentionChecks.map((check) => check.label).join(", ")}
+          {t("Kalite kontrolü dikkat istiyor")}: {attentionChecks.map((check) => check.label).join(", ")}
         </div>
       )}
 
@@ -411,7 +433,7 @@ export function PaymentRestrictionControl() {
         {summaryCards.map(({ label, value, Icon }) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase text-muted-foreground">{label}</p>
+              <p className="text-xs font-bold uppercase text-muted-foreground">{t(label)}</p>
               <Icon className="h-4 w-4 text-primary" />
             </div>
             <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
@@ -422,46 +444,46 @@ export function PaymentRestrictionControl() {
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-foreground">{localizeBusinessCopy("Ödeme planı ve depozito işi", locale)}</h3>
+            <h3 className="text-sm font-black text-foreground">{t("Ödeme planı ve depozito işi")}</h3>
             <StatusBadge variant="warning">
-              {localizeBusinessCopy("Açık vade", locale)} {formatEur(data?.summary.openPlanExposureEur ?? 0)}
+              {t("Açık vade")} {formatEur(data?.summary.openPlanExposureEur ?? 0, intlLocale)}
             </StatusBadge>
           </div>
-          {topPlan.map((plan) => <PaymentPlanRow key={plan.id} plan={plan} locale={locale} />)}
-          {topDeposits.map((item) => <DepositRow key={item.id} item={item} locale={locale} />)}
+          {topPlan.map((plan) => <PaymentPlanRow key={plan.id} intlLocale={intlLocale} plan={plan} t={t} />)}
+          {topDeposits.map((item) => <DepositRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
           {topPlan.length + topDeposits.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              {localizeBusinessCopy("Açık ödeme veya depozito işi bulunamadı.", locale)}
+              {t("Açık ödeme veya depozito işi bulunamadı.")}
             </div>
           )}
         </div>
 
         <div className="grid gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-black text-foreground">{localizeBusinessCopy("Kısıt ve mutabakat kuyruğu", locale)}</h3>
+            <h3 className="text-sm font-black text-foreground">{t("Kısıt ve mutabakat kuyruğu")}</h3>
             <StatusBadge variant="danger">
-              {formatCents(data?.summary.depositExposureCents ?? 0, currency)} {localizeBusinessCopy("depozito", locale)}
+              {formatCents(data?.summary.depositExposureCents ?? 0, currency, intlLocale)} {t("Depozito")}
             </StatusBadge>
           </div>
-          {topRestrictions.map((item) => <RestrictionRow key={item.id} item={item} locale={locale} />)}
+          {topRestrictions.map((item) => <RestrictionRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
           {topReconciliation.map((item) => (
             <WorkItem key={item.id} icon={CreditCard}>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-black text-foreground">
-                    {providerLabel(item.provider, locale)} / {item.providerReference ?? item.id}
+                    {t(providerLabel(item.provider))} / {item.providerReference ?? item.id}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatCents(item.amountCents, item.currency)} / {shortDate(item.paidAt, locale)}
+                    {formatCents(item.amountCents, item.currency, intlLocale)} / {shortDate(item.paidAt, intlLocale)}
                   </p>
                 </div>
-                <StatusBadge variant={reconVariant(item)}>{reconLabel(item.status, locale)}</StatusBadge>
+                <StatusBadge variant={reconVariant(item)}>{t(reconLabel(item.status))}</StatusBadge>
               </div>
             </WorkItem>
           ))}
           {topRestrictions.length + topReconciliation.length === 0 && (
             <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              {localizeBusinessCopy("Kısıt veya mutabakat kuyruğu boş.", locale)}
+              {t("Kısıt veya mutabakat kuyruğu boş.")}
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { resolveDashboardLocale } from "@/lib/business-copy"
+import { resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 import { NewLevelImmersion } from "../../sections/new-level-immersion"
 import { Footer } from "../../sections/footer"
 import { Navbar } from "../../sections/navbar"

@@ -26,65 +26,142 @@ export type PublicAiTopic =
   | "private-data"
   | "general"
 
+export type PublicAiSourceId =
+  | "product-overview"
+  | "registration-access"
+  | "privacy-security"
+  | "finance-service"
+  | "new-level-site"
+  | "support-handoff"
+
+export interface PublicAiSource {
+  id: PublicAiSourceId
+  title: string
+  section: string
+}
+
+export type PublicAiOutcome =
+  | "answered"
+  | "handoff_recommended"
+  | "refused_private_data"
+  | "uncertain"
+
+export interface PublicAiAnswer {
+  reply: string
+  topic: PublicAiTopic
+  confidence: number
+  outcome: PublicAiOutcome
+  shouldEscalate: boolean
+  escalationReason: string | null
+  sources: PublicAiSource[]
+}
+
 export function resolvePublicAiLocale(value: string | null | undefined): PublicAiLocale {
   return (["tr", "en", "de", "ru"] as const).includes(value as PublicAiLocale)
     ? (value as PublicAiLocale)
     : "tr"
 }
 
+function messageWithoutBrandToken(message: string): string {
+  return message
+    .replace(/1\s*[ÇçCc]at[ıiIİ]/g, " ")
+    .replace(/\b[ÇçCc]at[ıiIİ]\b/g, " ")
+}
+
+export function detectPublicAiLocaleFromMessage(
+  message: string
+): PublicAiLocale | null {
+  const text = messageWithoutBrandToken(message)
+
+  if (/[А-Яа-яЁё]/.test(text)) return "ru"
+
+  if (
+    /[äöüßÄÖÜ]|\b(was|wie|warum|vorteil|nutzen|unterschied|registrier|anmeld|mieter|eigentümer|kosten|preis|datenschutz|sicherheit|konto|zugang|deutsch|gebühr|schulden|saldo|wohnt)\b/i.test(
+      text
+    )
+  ) {
+    return "de"
+  }
+
+  if (
+    /[çğıöşüÇĞİÖŞÜ]|\b(nedir|nasıl|nasil|neden|kayıt|kayit|kaydol|malik|kiracı|kiraci|aidat|borç|borc|güvenli|guvenli|fiyat|ücret|ucret|şikayet|sikayet|başvur|basvur|daire|oturuyor|türkçe|turkce)\b/i.test(
+      text
+    )
+  ) {
+    return "tr"
+  }
+
+  if (
+    /\b(what|how|why|who|owner|tenant|register|registration|benefit|advantage|price|cost|security|privacy|data|payment|service|demo|language|report|issue|help|safe|does|is|are)\b/i.test(
+      text
+    )
+  ) {
+    return "en"
+  }
+
+  return null
+}
+
+export function resolvePublicAiResponseLocale(
+  message: string,
+  fallbackLocale: string | null | undefined
+): PublicAiLocale {
+  return detectPublicAiLocaleFromMessage(message) ?? resolvePublicAiLocale(fallbackLocale)
+}
+
 // Order matters: the private-data guard wins over everything else.
 const topicMatchers: Array<[PublicAiTopic, RegExp]> = [
   [
     "private-data",
-    /\b(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)\b/i,
+    /(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)/i,
   ],
   [
     "registration",
-    /\b(kayıt|kaydol|üye|erişim tale|başvur|register|sign ?up|apply|access request|registrier|anmeld|zugang beantrag|регистрац|зарегистрир|заявк|доступ получ)/i,
+    /(kayıt|kaydol|üye|erişim tale|başvur|register|sign ?up|apply|access request|registrier|anmeld|zugang beantrag|регистрац|зарегистрир|заявк|доступ получ)/i,
   ],
   [
     "tenant-access",
-    /\b(kiracı|davet kodu|süreli erişim|tenant|invite code|time-?boxed|mieter|einladungscode|zeitzugang|арендатор|код приглашени|временн\w* доступ)/i,
+    /(kiracı|davet kodu|süreli erişim|tenant|invite code|time-?boxed|mieter|einladungscode|zeitzugang|арендатор|код приглашени|временн[а-яё]* доступ)/i,
   ],
   [
     "reporting",
-    /\b(bildirim|sorun bildir|arıza|şikayet|report|issue|complaint|qr|meldung|melden|störung|beschwerde|сообщить|жалоб|неисправност|проблем)/i,
+    /(bildirim|sorun bildir|arıza|şikayet|report|issue|complaint|qr|meldung|melden|störung|beschwerde|сообщить|жалоб|неисправност|проблем)/i,
   ],
   [
     "security-kvkk",
-    /\b(kvkk|kbs|kimlik|güvenli|gizlilik|veri koruma|security|privacy|identity|gdpr|data protection|sicherheit|datenschutz|ausweis|identität|безопасност|конфиденциальн|персональн\w* данн|удостоверени)/i,
+    /(kvkk|kbs|kimlik|güvenli|gizlilik|veri koruma|security|privacy|identity|gdpr|data protection|sicherheit|datenschutz|ausweis|identität|безопасност|конфиденциальн|персональн[а-яё]* данн|удостоверени)/i,
   ],
   [
     "finance-features",
-    /\b(aidat|ödeme|depozito|fatura|finans|muhasebe|dues|payment|deposit|invoice|finance|accounting|beitrag|zahlung|kaution|rechnung|finanz|buchhaltung|взнос|платеж|платёж|депозит|счет|счёт|финанс|бухгалтер)/i,
+    /(aidat|ödeme|depozito|fatura|finans|muhasebe|dues|payment|deposit|invoice|finance|accounting|beitrag|zahlung|kaution|rechnung|finanz|buchhaltung|взнос|платеж|платёж|депозит|счет|счёт|финанс|бухгалтер)/i,
   ],
   [
     "service-features",
-    /\b(servis|temizlik|bakım|onarım|talep|sla|service|cleaning|maintenance|repair|request|reinigung|wartung|reparatur|anfrage|сервис|уборк|обслуживани|ремонт|заявк)/i,
+    /(servis|temizlik|bakım|onarım|talep|sla|service|cleaning|maintenance|repair|request|reinigung|wartung|reparatur|anfrage|сервис|уборк|обслуживани|ремонт|заявк)/i,
   ],
   [
     "languages",
-    /\b(dil|dili|türkçe|rusça|language|turkish|russian|sprache|deutsch|türkisch|russisch|язык|языках|турецк|русск)/i,
+    /(dil|dili|türkçe|rusça|language|turkish|russian|sprache|deutsch|türkisch|russisch|язык|языках|турецк|русск)/i,
   ],
   [
     "project-info",
-    /\b(new level|avsallar|daire sayısı|blok|havuz|plaj|otel|olanak|amenit|units|blocks|pool|beach|hotel|wohnung|einheiten|strand|ausstattung|квартир|блок|бассейн|пляж|отел|удобств)/i,
+    /(new level|avsallar|daire sayısı|blok|havuz|plaj|otel|olanak|amenit|units|blocks|pool|beach|hotel|wohnung|einheiten|strand|ausstattung|квартир|блок|бассейн|пляж|отел|удобств)/i,
   ],
   [
     "pricing",
-    /\b(fiyat|ücret|maliyet|ne kadar|price|cost|how much|fee|preis|kosten|was kostet|gebühr|цена|стоимост|сколько стоит|тариф)/i,
+    /(fiyat|ücret|maliyet|ne kadar|price|cost|how much|fee|preis|kosten|was kostet|gebühr|цена|стоимост|сколько стоит|тариф)/i,
   ],
   [
     "demo",
-    /\b(demo|deneme|test|canlı|try|live demo|ausprobier|попробовать|демо)/i,
+    /(demo|deneme|test|canlı|try|live demo|ausprobier|попробовать|демо)/i,
   ],
   [
     "advantages",
-    /\b(neden|avantaj|fayda|fark|why|advantage|benefit|difference|warum|vorteil|nutzen|unterschied|почему|преимуществ|польза|отличи)/i,
+    /(neden|avantaj|fayda|fark|why|advantage|benefit|difference|warum|vorteil|nutzen|unterschied|почему|преимуществ|польза|отличи)/i,
   ],
   [
     "what-is",
-    /\b(nedir|ne işe|nasıl çalışır|what is|how does|was ist|wie funktioniert|что такое|как работает)/i,
+    /(nedir|ne işe|nasıl çalışır|what is|how does|was ist|wie funktioniert|что такое|как работает)/i,
   ],
 ]
 
@@ -220,12 +297,136 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
   },
 }
 
+const publicAiSourceCatalog: Record<PublicAiSourceId, PublicAiSource> = {
+  "product-overview": {
+    id: "product-overview",
+    title: "1Cati public product knowledge",
+    section: "System purpose, roles and operating model",
+  },
+  "registration-access": {
+    id: "registration-access",
+    title: "Registration and access workflow",
+    section: "Owner, tenant and staff onboarding rules",
+  },
+  "privacy-security": {
+    id: "privacy-security",
+    title: "Security, KVKK and role-boundary notes",
+    section: "Private data refusal and retention boundaries",
+  },
+  "finance-service": {
+    id: "finance-service",
+    title: "Finance and service operations knowledge",
+    section: "Ledger, ticket, SLA and proof workflows",
+  },
+  "new-level-site": {
+    id: "new-level-site",
+    title: "New Level Premium project facts",
+    section: "Site, amenity and public project details",
+  },
+  "support-handoff": {
+    id: "support-handoff",
+    title: "Public support handoff policy",
+    section: "WhatsApp, sales, registration and public report routing",
+  },
+}
+
+const topicSourceIds: Record<PublicAiTopic, PublicAiSourceId[]> = {
+  "what-is": ["product-overview", "new-level-site"],
+  advantages: ["product-overview", "finance-service", "privacy-security"],
+  registration: ["registration-access", "privacy-security", "support-handoff"],
+  "tenant-access": ["registration-access", "privacy-security"],
+  reporting: ["support-handoff", "finance-service"],
+  "security-kvkk": ["privacy-security", "registration-access"],
+  "finance-features": ["finance-service", "privacy-security"],
+  "service-features": ["finance-service", "support-handoff"],
+  languages: ["product-overview"],
+  "project-info": ["new-level-site"],
+  pricing: ["support-handoff", "new-level-site"],
+  demo: ["product-overview", "support-handoff"],
+  "private-data": ["privacy-security", "support-handoff"],
+  general: ["product-overview", "support-handoff"],
+}
+
+const topicConfidence: Record<PublicAiTopic, number> = {
+  "what-is": 0.94,
+  advantages: 0.92,
+  registration: 0.9,
+  "tenant-access": 0.9,
+  reporting: 0.88,
+  "security-kvkk": 0.9,
+  "finance-features": 0.88,
+  "service-features": 0.88,
+  languages: 0.96,
+  "project-info": 0.95,
+  pricing: 0.72,
+  demo: 0.92,
+  "private-data": 0.98,
+  general: 0.42,
+}
+
+const topicOutcome: Record<PublicAiTopic, PublicAiOutcome> = {
+  "what-is": "answered",
+  advantages: "answered",
+  registration: "answered",
+  "tenant-access": "answered",
+  reporting: "answered",
+  "security-kvkk": "answered",
+  "finance-features": "answered",
+  "service-features": "answered",
+  languages: "answered",
+  "project-info": "answered",
+  pricing: "handoff_recommended",
+  demo: "answered",
+  "private-data": "refused_private_data",
+  general: "uncertain",
+}
+
+const escalationCopy: Record<PublicAiLocale, Record<PublicAiOutcome, string | null>> = {
+  tr: {
+    answered: null,
+    handoff_recommended: "Bu konu fiyat/sözleşme kararı gerektirir; satış veya site yönetimiyle WhatsApp üzerinden netleştirilmelidir.",
+    refused_private_data: "Bu konu kişisel veya daireye özel veri içerebilir; güvenli yanıt için giriş yapın veya yönetimle WhatsApp üzerinden iletişime geçin.",
+    uncertain: "Bilgi tabanında bu soruya güvenli ve net yanıt yok; bir kişinin yanıtlaması daha doğru olur.",
+  },
+  en: {
+    answered: null,
+    handoff_recommended: "This needs a price or contract decision, so sales or site management should confirm it on WhatsApp.",
+    refused_private_data: "This may involve personal or unit-specific data; please log in or contact management on WhatsApp for a safe answer.",
+    uncertain: "The knowledge base does not contain a reliable answer for this; a person should handle it.",
+  },
+  de: {
+    answered: null,
+    handoff_recommended: "Das braucht eine Preis- oder Vertragsentscheidung; Vertrieb oder Verwaltung sollten es per WhatsApp bestätigen.",
+    refused_private_data: "Das kann persönliche oder einheitsbezogene Daten betreffen; bitte anmelden oder die Verwaltung per WhatsApp kontaktieren.",
+    uncertain: "Die Wissensbasis enthält dafür keine verlässliche Antwort; ein Mensch sollte übernehmen.",
+  },
+  ru: {
+    answered: null,
+    handoff_recommended: "Для этого нужны цена или договорные условия; отдел продаж или управление должны подтвердить ответ в WhatsApp.",
+    refused_private_data: "Это может касаться персональных данных или конкретной квартиры; войдите в систему или напишите управлению в WhatsApp.",
+    uncertain: "В базе знаний нет надежного ответа на этот вопрос; лучше передать его человеку.",
+  },
+}
+
+export function getPublicAiSources(topic: PublicAiTopic): PublicAiSource[] {
+  return topicSourceIds[topic].map((id) => publicAiSourceCatalog[id])
+}
+
 export function answerPublicAiQuestion(
   message: string,
   locale: PublicAiLocale
-): { reply: string; topic: PublicAiTopic } {
+): PublicAiAnswer {
   const topic = classifyPublicAiTopic(message)
-  return { reply: answers[locale][topic], topic }
+  const outcome = topicOutcome[topic]
+  return {
+    reply: answers[locale][topic],
+    topic,
+    confidence: topicConfidence[topic],
+    outcome,
+    shouldEscalate: outcome !== "answered",
+    escalationReason: escalationCopy[locale][outcome],
+    sources: getPublicAiSources(topic),
+  }
 }
 
 // Suggested starter questions shown as chips in the concierge widget.
@@ -271,6 +472,8 @@ export function getPublicAiSystemPrompt(locale: PublicAiLocale): string {
     "You are the public concierge assistant on the 1Cati / New Level Premium landing page, speaking to prospects and residents who are NOT logged in.",
     `Always answer in ${localeNames[locale]}, in a warm, concise, human tone. No markdown, no tables, no code blocks.`,
     "You may only use the product knowledge below. You have NO access to any internal 1Cati data.",
+    "If the product knowledge does not clearly answer the question, say so and recommend WhatsApp handoff instead of guessing.",
+    "Ground every answer in these source sections: product overview, registration/access workflow, privacy/security notes, finance/service operations, New Level Premium project facts and public support handoff policy.",
     "HARD RULES: Never state or invent balances, debts, resident names, unit occupancy, documents, phone numbers, passwords or any personal or unit-specific data. If asked, politely explain that you only cover product information and that personal data is visible only inside 1Cati after registration and role-based login, or via management on WhatsApp.",
     "Never promise to execute actions (payments, access, bookings); the system requires human approval for such actions.",
     "PRODUCT KNOWLEDGE: 1Cati is the role-based property-management ERP that Ataberk Estate uses to run New Level Premium in Avsallar (52,000 m2, 7 blocks, 769 units, 900 m to the beach, 5-star hotel infrastructure, 22 amenities).",
