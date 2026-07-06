@@ -20,6 +20,7 @@ For current delivery control, use the 15-phase ERP model in `../../PROJECT-HANDB
 
 | Order | Document | Purpose |
 |---:|---|---|
+| 0 | `Anforderungsdokument-1Cati.md` | Consolidated German client-facing requirements document (WAMOCON standard format) covering current implementation state, fresh dated market/competitor research and the forward roadmap in one document. Does not replace the detailed BRD/PRD/TRD/QA package below — use it for a single-document overview, use the documents below for implementation detail. Exported as `Anforderungsdokument-1Cati.docx` and additionally published at `apps/web/public/Anforderungsdokument_1Cati.docx`. |
 | 1 | `BRD.md` | Business requirements, market context, workflows and business acceptance logic. |
 | 2 | `PRD.md` | Product scope, personas, user stories, module requirements and product roadmap. |
 | 3 | `TRD.md` | Technical architecture, data model, security controls, APIs and integration approach. |

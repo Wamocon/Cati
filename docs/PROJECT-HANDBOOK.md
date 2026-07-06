@@ -65,6 +65,7 @@ The documentation is intentionally divided by document type. This prevents a sin
 |---|---|---|
 | Start here | `docs/README.md` | Navigation and maintenance rules for the whole docs tree. |
 | Full project overview | `docs/PROJECT-HANDBOOK.md` | This document. |
+| Consolidated German requirements document | `docs/requirements/option-3-ai-site-crm/Anforderungsdokument-1Cati.md` | Single-document client-facing overview (WAMOCON standard format) covering current implementation state, dated market/competitor research and the forward roadmap. Complements, does not replace, the BRD/PRD/TRD package below. Also published as `apps/web/public/Anforderungsdokument_1Cati.docx`. |
 | Business requirements | `docs/requirements/option-3-ai-site-crm/BRD.md` | Business goals, workflows and market context. |
 | Product requirements | `docs/requirements/option-3-ai-site-crm/PRD.md` | Personas, scope, user stories and acceptance criteria. |
 | Technical requirements | `docs/requirements/option-3-ai-site-crm/TRD.md` | Architecture, data model, integrations and technical controls. |
