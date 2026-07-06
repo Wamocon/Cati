@@ -96,7 +96,7 @@ This grounds every script line so we never promise something the app cannot show
 | Phase model | 15-phase ERP map shown in dashboard | The roadmap chapter is real, on-screen |
 | AI surface | AI assistant + recommendations + image/proof workflows | The "AI roadmap" claims are grounded |
 | Capture tool | Playwright already drives + screenshots the app | Reuse it to record deterministic video |
-| Demo home | `apps/web/app/[locale]/pitch` exists but is empty | Natural place to build the Demo Center page |
+| Demo home | `apps/web/app/[locale]/pitch/page.tsx` is implemented | Native Demo Center page for the client offer, role paths and chapter playlist |
 
 **Honesty rule for every script:** Phases 1–4 are foundation-complete, Phases 5–14 are
 "implementation foundation / ready-for-UAT", Phase 15 is launch hardening. The walkthrough
@@ -172,6 +172,7 @@ data says directly affects brand perception.
 
 | Chapter file | Title | Target length |
 |---|---|---|
+| `00-offer-and-value` | Offer, value model and Demo Center | ~2 min |
 | `01-overview` | What 1Çatı is | ~2 min |
 | `02-dashboard-and-units` | Dashboard & 769 units | ~3 min |
 | `03-people-and-rbac` | People, owners, tenants, staff & roles | ~2 min |
@@ -195,7 +196,7 @@ so all 4 languages share identical motion.**
 1. **Use seeded demo data only.** Load the demo seed so numbers (769 units, balances, tickets)
    are stable and contain no real personal data. Confirm no real owner/tenant names appear.
 2. **Enable demo mode**: run the app with access profiles on
-   (`NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true`) so we can switch roles with no login.
+   (`ENABLE_ACCESS_PROFILES=true`) so we can switch roles with no login in controlled QA.
 3. **Fix the viewport** to 1920×1080, device scale factor 2 for crisp text.
 4. **Hide local-only noise**: no dev banners, no console overlays, no realtime "connection
    refused" toast (the QA scripts already filter this — keep it off-screen).
@@ -234,7 +235,7 @@ enabled and a scene list). Run it from `apps/web`:
 
 ```text
 # 1) start the app in demo mode
-$env:NEXT_PUBLIC_ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
+$env:ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
 # 2) record the visual master (all scenes, all 4 languages)
 node scripts/demo-record.mjs
 # optional: re-record only some scenes
@@ -518,7 +519,7 @@ described with the *same words*, which builds trust and avoids confusion.
 
 ## 10. The website Demo Center (what we build in the app)
 
-The Demo Center lives at the existing-but-empty route `/{locale}/pitch`. We build it natively
+The Demo Center lives at the implemented route `/{locale}/pitch`. We build it natively
 so it is free, always in our 4 languages, and always matches the product.
 
 ### 10.1 Page structure
@@ -544,7 +545,7 @@ so it is free, always in our 4 languages, and always matches the product.
 
 ### 10.3 Engineering tasks (small, contained)
 
-1. Build the `pitch` page and components (hero, role cards, player, playlist).
+1. Keep the `pitch` page and components current (offer hero, role cards, AI guardrails, chapter playlist).
 2. Add a localized strings block to each `messages/{locale}.json` (titles, captions, CTAs).
 3. Host video files (start in `apps/web/public/` for simplicity; move to a CDN/storage bucket
    before production if file sizes grow).

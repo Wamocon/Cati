@@ -1,7 +1,7 @@
 # Supabase configuration for 1Çatı
-# Run: supabase start (requires Supabase CLI)
+# Cloud-only project. Use Supabase CLI for linked migrations and type generation.
 
-project_id = "cati-platform"
+project_id = "hczmbaqofxyusellxhyp"
 
 [api]
 enabled = true
@@ -18,7 +18,7 @@ major_version = 15
 enabled = true
 port = 55323
 
-[inbucket]
+[local_smtp]
 enabled = true
 port = 55324
 

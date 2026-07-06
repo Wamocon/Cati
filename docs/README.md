@@ -6,7 +6,7 @@ Confidentiality: STRICTLY CONFIDENTIAL
 
 Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 6 July 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
 
-Current implementation checkpoint: phases 1-14 are complete as a demo/internal-QA foundation, including private document upload/storage contract in demo/provider-ready mode and queued public New Level Premium intake plus source-grounded AI concierge with internal telemetry, handoff, escalation logging and CSAT feedback in provider-ready mode; phase 15 remains launch hardening, security, final QA, client acceptance preparation, training and go-live readiness. Full exploratory manual QA and client UAT are tracked separately from this development target.
+Current implementation checkpoint: phases 1-14 are complete as a cloud-backed demo/internal-QA foundation, including private Supabase document upload/storage, queued public New Level Premium intake and source-grounded AI concierge with internal telemetry, handoff, escalation logging and CSAT feedback in provider-ready mode; phase 15 remains launch hardening, security, final QA, client acceptance preparation, training and go-live readiness. Full exploratory manual QA and client UAT are tracked separately from this development target.
 
 ## Active Source-Of-Truth Documents
 
@@ -21,7 +21,7 @@ Current implementation checkpoint: phases 1-14 are complete as a demo/internal-Q
 | Delivery plan | `requirements/option-3-ai-site-crm/Implementation-Delivery-Plan.md` | Delivery phases, governance, risks and handover. |
 | Engineering plan | `ways-of-work/plan/option-3-ai-site-crm/implementation-plan.md` | Detailed implementation planning and feature inventory. |
 | Execution runbook | `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md` | Harness commands, QA loop and stop conditions. |
-| Local Supabase | `local-supabase.md` | Local database setup, seed login and cloud migration notes. |
+| Supabase Cloud | `supabase-cloud.md` | Hosted Supabase project, migrations, storage, realtime and Vercel env rules. |
 | Current DOCX package | `1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
 | User handbook and manual testing mail | `user-handbook/` | German user handbook DOCX and bilingual manual exploratory testing email draft for internal QA. |
 

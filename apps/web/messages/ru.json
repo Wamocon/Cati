@@ -22,7 +22,8 @@
     "portal": "Личный кабинет",
     "platformSubtitle": "Платформа 1Çatı",
     "toggleMenu": "Переключить меню",
-    "platform": "Платформа"
+    "platform": "Платформа",
+    "demo": "Demo"
   },
   "hero": {
     "badge": "платформа для операций с недвижимостью",

@@ -515,8 +515,8 @@ async function main() {
   process.env.TEMP = localTempDir
   process.env.TMP = localTempDir
   process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(localTempDir, "ms-playwright")
-  process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES =
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
+  process.env.ENABLE_ACCESS_PROFILES =
+    process.env.ENABLE_ACCESS_PROFILES ?? "true"
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const outDir = path.join(args.outDir, `manual-phase-01-11-flow-${timestamp}`)

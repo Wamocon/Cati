@@ -127,7 +127,7 @@ async function runCommand(gate, logFile) {
         ...process.env,
         TEMP: localTempDir,
         TMP: localTempDir,
-        NEXT_PUBLIC_ENABLE_ACCESS_PROFILES: "true",
+        ENABLE_ACCESS_PROFILES: "true",
         PLAYWRIGHT_BROWSERS_PATH: path.join(localTempDir, "ms-playwright"),
         ...gate.env,
       },

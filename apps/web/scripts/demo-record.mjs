@@ -27,7 +27,7 @@
 // PREREQUISITES
 //   1. Run the app with demo mode on:
 //        (PowerShell, from apps/web)
-//        $env:NEXT_PUBLIC_ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
+//        $env:ENABLE_ACCESS_PROFILES="true"; npm run dev -- -p 3100
 //   2. Then run this recorder (from apps/web):
 //        node scripts/demo-record.mjs
 //
@@ -83,6 +83,29 @@ const mobile = { width: 390, height: 844 }
 // ---------------------------------------------------------------------------
 
 const scenes = [
+  {
+    id: "S00",
+    feature: "Offer and Demo Center",
+    role: "manager",
+    route: "/pitch",
+    viewport: desktop,
+    status: "live",
+    chapter: "00-offer-and-value",
+    explain:
+      "The customer-facing demo center. It frames the zero-upfront-cost offer, the €5/user/month maintenance model, role paths, AI guardrails and the 15-minute demo agenda.",
+    narration:
+      "Start with the business offer: zero development cost for the property developer, a simple five euro per user per month maintenance model, and a premium platform operated by WAMOCON. Then move into the role-based demo paths, the AI layer and the exact live-versus-UAT boundary.",
+    comingSoon: [
+      "Provider-dependent integrations still need contract, API-key and UAT approval before production activation.",
+    ],
+    steps: [
+      ["settle"],
+      ["scrollTo", 0.28, 1800],
+      ["mouseTour"],
+      ["scrollTo", 0.52, 1700],
+      ["scrollTo", 0.82, 1500],
+    ],
+  },
   {
     id: "S01",
     feature: "What 1Çatı is",

@@ -19,6 +19,7 @@ const navItems = [
   { label: "catalog", href: "/#modules" },
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
+  { label: "demo", href: "/pitch" },
   { label: "services", href: "/#modules" },
   { label: "reviews", href: "/reviews" },
   { label: "contacts", href: "/#contacts" },

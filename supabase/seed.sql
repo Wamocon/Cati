@@ -1,5 +1,5 @@
--- Local seed data for the 1Cati Supabase stack.
--- Run with: npx supabase db reset
+-- Fixture seed data for the 1Cati Supabase schema.
+-- Cloud runtime uses migrations/import scripts; do not run local reset workflows for production.
 
 DO $$
 DECLARE

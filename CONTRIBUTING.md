@@ -55,7 +55,7 @@ pnpm phase:06-09
 
 ## Security Rules
 
-- Never commit `.env.local`, tokens, API keys, passwords or local certificates.
+- Never commit `.env.local`, `.env.tooling.local`, tokens, API keys, passwords or local certificates.
 - Use placeholders in `.env.example`.
 - Keep generated QA screenshots and local browser caches out of Git.
 - Store CI/Jira credentials as GitHub repository secrets.
