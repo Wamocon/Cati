@@ -31,6 +31,9 @@ const pageCopy = {
     authNote: "Kimlik doğrulama anahtarları bekleniyor. Yetkili ortamda e-posta/şifre ile giriş açılır.",
     authError: "Giriş başarısız. E-posta ve şifreyi kontrol edin.",
     accessError: "Rol profili açılamadı. Tekrar deneyin.",
+    demoButton: "Demo başlat — tam yetkili erişim",
+    demoHint: "Demo ortamı: yönetici olarak tüm modüller şifresiz açılır.",
+    or: "veya",
     providerTitle: "Modern giriş seçenekleri",
     providerSummary: "Diğer giriş yöntemleri",
     providerIntro: "Demo modunda hazırlık gösterilir; canlı bağlantı için sözleşme, OAuth anahtarı ve yönetici onayı gerekir.",
@@ -72,6 +75,9 @@ const pageCopy = {
     authNote: "Authentication keys are pending. Email/password access opens in an authorized environment.",
     authError: "Sign-in failed. Check email and password.",
     accessError: "Role profile could not be opened. Try again.",
+    demoButton: "Start demo — full admin access",
+    demoHint: "Demo environment: opens every module as admin, no password needed.",
+    or: "or",
     providerTitle: "Modern sign-in options",
     providerSummary: "Other sign-in methods",
     providerIntro: "Demo mode shows provider readiness; live connection needs contract, OAuth keys and administrator approval.",
@@ -113,6 +119,9 @@ const pageCopy = {
     authNote: "Authentifizierungsschlüssel fehlen. E-Mail/Passwort wird in autorisierter Umgebung aktiviert.",
     authError: "Anmeldung fehlgeschlagen. E-Mail und Passwort prüfen.",
     accessError: "Rollenprofil konnte nicht geöffnet werden. Erneut versuchen.",
+    demoButton: "Demo starten — Vollzugriff (Admin)",
+    demoHint: "Demo-Umgebung: öffnet alle Module als Admin, kein Passwort nötig.",
+    or: "oder",
     providerTitle: "Moderne Anmeldeoptionen",
     providerSummary: "Weitere Anmeldemethoden",
     providerIntro: "Im Demo-Modus wird Provider-Bereitschaft gezeigt; live braucht es Vertrag, OAuth-Keys und Admin-Freigabe.",
@@ -154,6 +163,9 @@ const pageCopy = {
     authNote: "Ключи аутентификации ожидаются. В авторизованной среде будет доступен вход по e-mail/паролю.",
     authError: "Вход не удался. Проверьте e-mail и пароль.",
     accessError: "Ролевой профиль не открылся. Попробуйте еще раз.",
+    demoButton: "Запустить демо — полный доступ (админ)",
+    demoHint: "Демо-среда: открывает все модули как администратор, без пароля.",
+    or: "или",
     providerTitle: "Современные варианты входа",
     providerSummary: "Другие способы входа",
     providerIntro: "Демо показывает готовность провайдеров; для live нужны договор, OAuth-ключи и одобрение администратора.",
@@ -391,6 +403,31 @@ export default function LoginPage() {
                     {supabaseConfigured ? t.authReady : t.authNote}
                   </p>
                 </div>
+
+                {accessProfilesEnabled && (
+                  <div className="mb-6">
+                    <button
+                      type="button"
+                      data-testid="demo-full-access"
+                      onClick={() => signInAs("admin")}
+                      disabled={!accessProfileStatusLoaded || activeRole === "admin"}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-base font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {activeRole === "admin" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShieldCheck className="h-4 w-4" />
+                      )}
+                      {t.demoButton}
+                    </button>
+                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{t.demoHint}</p>
+                    <div className="my-5 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                      <span className="h-px flex-1 bg-border" />
+                      {t.or}
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                  </div>
+                )}
 
                 <details className="mb-6 rounded-2xl border border-border bg-muted/25 p-3">
                   <summary className="flex cursor-pointer list-none flex-col items-start gap-3 rounded-xl px-1 py-1 text-left sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">

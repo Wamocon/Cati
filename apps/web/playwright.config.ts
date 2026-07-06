@@ -34,9 +34,19 @@ export default defineConfig({
   ],
   webServer: {
     command: nextServerCommand,
+    // E2E runs against a deterministic environment on purpose: the built-in AI
+    // fallback (no live gateway) and local seed data (no live Supabase) keep
+    // assertions on AI answers and intake references stable and repeatable.
+    // The real cloud + AI wiring in apps/web/.env.local is for dev/demo, not the
+    // test suite; these blanks override any values loaded from .env.local.
     env: {
       ENABLE_ACCESS_PROFILES: "true",
       NEXT_PUBLIC_ENABLE_ACCESS_PROFILES: "true",
+      AI_API_URL: "",
+      AI_API_KEY: "",
+      NEXT_PUBLIC_SUPABASE_URL: "",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "",
+      SUPABASE_SERVICE_ROLE_KEY: "",
     },
     url: readinessURL,
     reuseExistingServer,

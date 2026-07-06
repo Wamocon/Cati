@@ -7,6 +7,7 @@ import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { PeopleDirectoryLive } from "@/components/people-directory-live"
 import { StatusBadge } from "@/components/status-badge"
+import { TenantAccessPanel } from "@/components/tenant-access-panel"
 import {
   formatTry,
   getResidentSummary,
@@ -257,6 +258,8 @@ export default function UsersPage() {
       </div>
 
       <PeopleDirectoryLive />
+
+      <TenantAccessPanel />
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>

@@ -10,6 +10,7 @@ import { HowItWorks } from "../sections/how-it-works"
 import { PlatformWorkflow } from "../sections/platform-workflow"
 import { CTA } from "../sections/cta"
 import { Footer } from "../sections/footer"
+import { SiteConcierge } from "@/components/site-concierge"
 
 export default function HomePage() {
   return (
@@ -31,6 +32,10 @@ export default function HomePage() {
         </main>
       </div>
       <Footer />
+      {/* Promotional landing AI concierge: helps prospects register and feeds
+          their questions back to the internal 1Çatı assistant as interest
+          analytics (data-blind on the public side by construction). */}
+      <SiteConcierge page="home" />
     </>
   )
 }

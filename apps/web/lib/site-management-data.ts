@@ -3135,6 +3135,26 @@ export const roleCoverage: RoleCoverage[] = [
   { role: "Kiracı", users: 184, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
 ]
 
+export interface TenantAccessGrant {
+  id: string
+  tenantName: string
+  unit: string
+  ownerName: string
+  startOffsetDays: number
+  endOffsetDays: number
+  scope: string[]
+  inviteCode: string
+}
+
+// Owner-sponsored, time-boxed tenant access grants (New Level Premium model).
+// Demo seed for the tenant time-access panel in the Users dashboard.
+export const tenantAccessGrants: TenantAccessGrant[] = [
+  { id: "grant-1", tenantName: "Ivan Petrov", unit: "B3 / 12", ownerName: "Ahmet Yılmaz", startOffsetDays: -20, endOffsetDays: 70, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-8F3A2C" },
+  { id: "grant-2", tenantName: "Sofia Novak", unit: "A1 / 5", ownerName: "Elena Kaya", startOffsetDays: -85, endOffsetDays: 6, scope: ["tickets", "calendar", "communications"], inviteCode: "NLP-INV-11B7D9" },
+  { id: "grant-3", tenantName: "Mehmet Demir", unit: "C2 / 8", ownerName: "Ahmet Yılmaz", startOffsetDays: -120, endOffsetDays: -3, scope: ["tickets", "documents"], inviteCode: "NLP-INV-77E1A0" },
+  { id: "grant-4", tenantName: "Anna Ivanova", unit: "B1 / 3", ownerName: "Deniz Aksoy", startOffsetDays: -10, endOffsetDays: 20, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-3C9F45" },
+]
+
 export const statusLabels: Record<FlatStatus, string> = {
   occupied: "Dolu",
   vacant: "Boş",

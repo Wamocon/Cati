@@ -9,19 +9,26 @@ test.describe("Site concierge (WhatsApp + public AI assistant)", () => {
     collectConsoleIssues(page, issues)
   })
 
-  test("concierge launcher expands to WhatsApp + AI on the NLP page", async ({
+  test("concierge launcher expands to WhatsApp + AI on home and NLP pages", async ({
     page,
   }) => {
-    // The concierge is mounted on the New Level Premium landing page.
-    await page.goto("/tr/new-level-premium")
-    const nlp = page.getByTestId("site-concierge")
-    await expect(nlp).toBeVisible()
+    // The promotional landing concierge is mounted on both the home page and
+    // the New Level Premium landing page.
+    await page.goto("/tr")
+    const home = page.getByTestId("site-concierge")
+    await expect(home).toBeVisible()
     // Speed-dial: WhatsApp + AI actions are revealed after tapping the launcher.
-    await nlp.getByTestId("concierge-toggle").click()
-    await expect(nlp.getByTestId("concierge-whatsapp")).toHaveAttribute(
+    await home.getByTestId("concierge-toggle").click()
+    await expect(home.getByTestId("concierge-whatsapp")).toHaveAttribute(
       "href",
       /wa\.me\/\d+\?text=/
     )
+    await expect(home.getByTestId("concierge-ai-open")).toBeVisible()
+
+    await page.goto("/tr/new-level-premium")
+    const nlp = page.getByTestId("site-concierge")
+    await expect(nlp).toBeVisible()
+    await nlp.getByTestId("concierge-toggle").click()
     await expect(nlp.getByTestId("concierge-ai-open")).toBeVisible()
     expect(issues).toEqual([])
   })
