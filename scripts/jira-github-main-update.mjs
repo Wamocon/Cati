@@ -17,7 +17,19 @@ async function loadEnv() {
 const env = await loadEnv()
 const baseUrl = env.JIRA_BASE_URL?.replace(/\/$/, "")
 if (!baseUrl || !env.JIRA_EMAIL || !env.JIRA_API_TOKEN) {
-  throw new Error("Missing Jira credentials for GitHub-to-Jira update.")
+  console.log(
+    JSON.stringify(
+      {
+        skipped: true,
+        reason: "Missing Jira credentials for GitHub-to-Jira update.",
+        updated: [],
+        count: 0,
+      },
+      null,
+      2
+    )
+  )
+  process.exit(0)
 }
 
 const jiraAuth = `Basic ${Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_TOKEN}`).toString("base64")}`
