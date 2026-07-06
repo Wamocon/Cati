@@ -13,26 +13,7 @@ function shouldUseSecureCookie(request: Request) {
 }
 
 export async function GET() {
-  // Temporary deploy/config diagnostic (booleans + commit SHA only, no secret
-  // values) to confirm which commit is live on Vercel and whether the access-
-  // profile flags are exactly "true" in the runtime. Remove after verification.
-  return NextResponse.json({
-    enabled: isAccessProfileEnabled(),
-    diag: {
-      commit: (process.env.VERCEL_GIT_COMMIT_SHA ?? "local").slice(0, 7),
-      vercelEnv: process.env.VERCEL_ENV ?? null,
-      nodeEnv: process.env.NODE_ENV ?? null,
-      productionDeployment:
-        process.env.VERCEL_ENV === "production" ||
-        process.env.CATI_ENV === "production",
-      remoteDeployment: Boolean(
-        process.env.VERCEL_ENV || process.env.VERCEL_URL
-      ),
-      enableAccessProfiles: process.env.ENABLE_ACCESS_PROFILES === "true",
-      allowRemoteAccessProfiles:
-        process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true",
-    },
-  })
+  return NextResponse.json({ enabled: isAccessProfileEnabled() })
 }
 
 export async function POST(request: Request) {
