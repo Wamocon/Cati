@@ -28,6 +28,49 @@ test.describe("Functional tests - public AI concierge", () => {
     expect(payload.responseMs).toBeGreaterThanOrEqual(0)
   })
 
+  test("public chat answers in the detected visitor message language", async ({
+    request,
+  }) => {
+    const cases = [
+      {
+        message: "Что такое 1Çatı?",
+        expectedLanguage: "ru",
+        replyPattern: /операционная система/i,
+      },
+      {
+        message: "Was ist 1Çatı?",
+        expectedLanguage: "de",
+        replyPattern: /Betriebssystem/i,
+      },
+      {
+        message: "1Çatı nedir?",
+        expectedLanguage: "tr",
+        replyPattern: /işletim sistemidir/i,
+      },
+      {
+        message: "What is 1Çatı?",
+        expectedLanguage: "en",
+        replyPattern: /operating system/i,
+      },
+    ]
+
+    for (const item of cases) {
+      const response = await request.post("/api/ai/public-chat", {
+        data: {
+          message: item.message,
+          locale: "en",
+          page: "e2e-public-ai",
+        },
+      })
+
+      expect(response.status()).toBe(200)
+      const payload = await response.json()
+      expect(payload.language).toBe(item.expectedLanguage)
+      expect(payload.topic).toBe("what-is")
+      expect(payload.reply).toMatch(item.replyPattern)
+    }
+  })
+
   test("public chat routes unsupported questions to a human instead of guessing", async ({ request }) => {
     const response = await request.post("/api/ai/public-chat", {
       data: {
@@ -90,13 +133,14 @@ test.describe("Functional tests - public AI concierge", () => {
     await panel.getByTestId("public-ai-feedback-positive").last().click()
     await expect(panel.getByText("Feedback logged").last()).toBeVisible()
 
-    await panel.locator("input").fill("How much does it cost?")
+    await panel.locator("input").fill("Сколько стоит 1Çatı?")
     await panel.locator('button[type="submit"]').click()
 
     await expect(panel.getByTestId("public-ai-handoff").last()).toBeVisible()
     await expect(panel.getByTestId("public-ai-handoff").last()).toContainText(
-      "Continue on WhatsApp"
+      "Продолжить в WhatsApp"
     )
+    await expect(panel.getByText("Помогло?").last()).toBeVisible()
     await expect(panel.getByTestId("public-ai-sources")).toHaveCount(0)
     await expect(
       panel.getByText(/public-knowledge|local-ai|confidence|outcome|responseMs|sourceIds/i)

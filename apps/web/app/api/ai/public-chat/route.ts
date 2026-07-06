@@ -3,6 +3,7 @@ import {
   answerPublicAiQuestion,
   getPublicAiSystemPrompt,
   resolvePublicAiLocale,
+  resolvePublicAiResponseLocale,
 } from "@/lib/public-ai-knowledge"
 import {
   logPublicAiEscalation,
@@ -32,7 +33,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Message is too long" }, { status: 413 })
   }
 
-  const locale = resolvePublicAiLocale(typeof body.locale === "string" ? body.locale : "tr")
+  const requestedLocale = resolvePublicAiLocale(
+    typeof body.locale === "string" ? body.locale : "tr"
+  )
+  const locale = resolvePublicAiResponseLocale(message, requestedLocale)
   const page = typeof body.page === "string" ? body.page.slice(0, 120) : null
 
   const deterministic = answerPublicAiQuestion(message, locale)
@@ -105,6 +109,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     reply,
+    language: locale,
     source,
     topic: deterministic.topic,
     confidence: deterministic.confidence,

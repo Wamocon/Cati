@@ -134,6 +134,7 @@ The existing stack is a good foundation for the web/PWA product. The missing par
 - AI recommendations must include source data for internal audit and evaluation.
 - AI should be evaluated through a test set.
 - AI must respect role permissions and data boundaries.
+- AI should answer in the visitor's detected message language when clear, with page locale used only as fallback.
 - Public, anonymous AI must stay data-blind: it may answer from curated product knowledge only and must not load operational records.
 - Public, anonymous AI must keep source, confidence, outcome and timing metadata internal; the visitor UI should show only a clear answer, human handoff when needed and simple feedback controls.
 - Public, anonymous AI must capture CSAT/escalation signals without storing raw anonymous questions.

@@ -141,6 +141,7 @@ interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  language?: LocaleKey
   topic?: string
   outcome?: string
   source?: "public-knowledge" | "local-ai"
@@ -186,7 +187,6 @@ function WhatsAppIcon({ className }: { className?: string }) {
 export function SiteConcierge({ page }: { page: string }) {
   const locale = resolveLocale(useLocale())
   const t = copy[locale] as (typeof copy)["tr"]
-  const support = supportCopy[locale]
 
   const whatsappNumber =
     process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "900000000000"
@@ -197,7 +197,7 @@ export function SiteConcierge({ page }: { page: string }) {
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
-    { id: "welcome", role: "assistant", content: t.welcome },
+    { id: "welcome", role: "assistant", content: t.welcome, language: locale },
   ])
   const scrollRef = useRef<HTMLDivElement>(null)
   const idRef = useRef(0)
@@ -233,10 +233,13 @@ export function SiteConcierge({ page }: { page: string }) {
       })
       const data = (await response.json()) as Record<string, unknown>
       if (response.ok && typeof data.reply === "string" && data.reply.trim()) {
+        const responseLanguage =
+          typeof data.language === "string" ? resolveLocale(data.language) : locale
         assistantMessage = {
           id: "",
           role: "assistant",
           content: data.reply,
+          language: responseLanguage,
           topic: typeof data.topic === "string" ? data.topic : undefined,
           outcome: typeof data.outcome === "string" ? data.outcome : undefined,
           source:
@@ -285,13 +288,17 @@ export function SiteConcierge({ page }: { page: string }) {
           responseMs: message.responseMs,
           sourceIds: message.sources?.map((item) => item.id) ?? [],
           chatReference: message.eventReference,
-          locale,
+          locale: message.language ?? locale,
           page,
         }),
       })
     } catch {
       // feedback is best-effort; the local UI state still records the tap
     }
+  }
+
+  function getMessageSupport(message: Message) {
+    return supportCopy[message.language ?? locale]
   }
 
   return (
@@ -447,28 +454,32 @@ export function SiteConcierge({ page }: { page: string }) {
                         data-testid="public-ai-handoff"
                         className="mt-2 rounded-xl border border-primary/20 bg-primary/10 p-2 text-[11px] leading-snug text-muted-foreground"
                       >
-                        <p>{support.handoffIntro}</p>
+                        <p>{getMessageSupport(msg).handoffIntro}</p>
                         <a
                           href={whatsappHref}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="mt-1 inline-flex items-center gap-1.5 font-semibold text-primary underline-offset-2 hover:underline"
-                          title={msg.escalationReason ?? support.handoff}
+                          title={msg.escalationReason ?? getMessageSupport(msg).handoff}
                         >
                           <WhatsAppIcon className="h-3.5 w-3.5" />
-                          {support.handoff}
+                          {getMessageSupport(msg).handoff}
                         </a>
                       </div>
                     )}
                     {msg.role === "assistant" && msg.id !== "welcome" && (
                       <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                        <span>{msg.feedback ? support.feedbackThanks : support.helpful}</span>
+                        <span>
+                          {msg.feedback
+                            ? getMessageSupport(msg).feedbackThanks
+                            : getMessageSupport(msg).helpful}
+                        </span>
                         <button
                           type="button"
                           onClick={() => sendFeedback(msg, "positive")}
                           disabled={Boolean(msg.feedback)}
-                          aria-label={support.yes}
-                          title={support.yes}
+                          aria-label={getMessageSupport(msg).yes}
+                          title={getMessageSupport(msg).yes}
                           data-testid="public-ai-feedback-positive"
                           className={cn(
                             "rounded-full p-1 transition hover:bg-background",
@@ -482,8 +493,8 @@ export function SiteConcierge({ page }: { page: string }) {
                           type="button"
                           onClick={() => sendFeedback(msg, "negative")}
                           disabled={Boolean(msg.feedback)}
-                          aria-label={support.no}
-                          title={support.no}
+                          aria-label={getMessageSupport(msg).no}
+                          title={getMessageSupport(msg).no}
                           data-testid="public-ai-feedback-negative"
                           className={cn(
                             "rounded-full p-1 transition hover:bg-background",

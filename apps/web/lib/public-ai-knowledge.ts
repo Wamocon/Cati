@@ -62,59 +62,106 @@ export function resolvePublicAiLocale(value: string | null | undefined): PublicA
     : "tr"
 }
 
+function messageWithoutBrandToken(message: string): string {
+  return message
+    .replace(/1\s*[ÇçCc]at[ıiIİ]/g, " ")
+    .replace(/\b[ÇçCc]at[ıiIİ]\b/g, " ")
+}
+
+export function detectPublicAiLocaleFromMessage(
+  message: string
+): PublicAiLocale | null {
+  const text = messageWithoutBrandToken(message)
+
+  if (/[А-Яа-яЁё]/.test(text)) return "ru"
+
+  if (
+    /[äöüßÄÖÜ]|\b(was|wie|warum|vorteil|nutzen|unterschied|registrier|anmeld|mieter|eigentümer|kosten|preis|datenschutz|sicherheit|konto|zugang|deutsch|gebühr|schulden|saldo|wohnt)\b/i.test(
+      text
+    )
+  ) {
+    return "de"
+  }
+
+  if (
+    /[çğıöşüÇĞİÖŞÜ]|\b(nedir|nasıl|nasil|neden|kayıt|kayit|kaydol|malik|kiracı|kiraci|aidat|borç|borc|güvenli|guvenli|fiyat|ücret|ucret|şikayet|sikayet|başvur|basvur|daire|oturuyor|türkçe|turkce)\b/i.test(
+      text
+    )
+  ) {
+    return "tr"
+  }
+
+  if (
+    /\b(what|how|why|who|owner|tenant|register|registration|benefit|advantage|price|cost|security|privacy|data|payment|service|demo|language|report|issue|help|safe|does|is|are)\b/i.test(
+      text
+    )
+  ) {
+    return "en"
+  }
+
+  return null
+}
+
+export function resolvePublicAiResponseLocale(
+  message: string,
+  fallbackLocale: string | null | undefined
+): PublicAiLocale {
+  return detectPublicAiLocaleFromMessage(message) ?? resolvePublicAiLocale(fallbackLocale)
+}
+
 // Order matters: the private-data guard wins over everything else.
 const topicMatchers: Array<[PublicAiTopic, RegExp]> = [
   [
     "private-data",
-    /\b(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)\b/i,
+    /(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)/i,
   ],
   [
     "registration",
-    /\b(kayıt|kaydol|üye|erişim tale|başvur|register|sign ?up|apply|access request|registrier|anmeld|zugang beantrag|регистрац|зарегистрир|заявк|доступ получ)/i,
+    /(kayıt|kaydol|üye|erişim tale|başvur|register|sign ?up|apply|access request|registrier|anmeld|zugang beantrag|регистрац|зарегистрир|заявк|доступ получ)/i,
   ],
   [
     "tenant-access",
-    /\b(kiracı|davet kodu|süreli erişim|tenant|invite code|time-?boxed|mieter|einladungscode|zeitzugang|арендатор|код приглашени|временн\w* доступ)/i,
+    /(kiracı|davet kodu|süreli erişim|tenant|invite code|time-?boxed|mieter|einladungscode|zeitzugang|арендатор|код приглашени|временн[а-яё]* доступ)/i,
   ],
   [
     "reporting",
-    /\b(bildirim|sorun bildir|arıza|şikayet|report|issue|complaint|qr|meldung|melden|störung|beschwerde|сообщить|жалоб|неисправност|проблем)/i,
+    /(bildirim|sorun bildir|arıza|şikayet|report|issue|complaint|qr|meldung|melden|störung|beschwerde|сообщить|жалоб|неисправност|проблем)/i,
   ],
   [
     "security-kvkk",
-    /\b(kvkk|kbs|kimlik|güvenli|gizlilik|veri koruma|security|privacy|identity|gdpr|data protection|sicherheit|datenschutz|ausweis|identität|безопасност|конфиденциальн|персональн\w* данн|удостоверени)/i,
+    /(kvkk|kbs|kimlik|güvenli|gizlilik|veri koruma|security|privacy|identity|gdpr|data protection|sicherheit|datenschutz|ausweis|identität|безопасност|конфиденциальн|персональн[а-яё]* данн|удостоверени)/i,
   ],
   [
     "finance-features",
-    /\b(aidat|ödeme|depozito|fatura|finans|muhasebe|dues|payment|deposit|invoice|finance|accounting|beitrag|zahlung|kaution|rechnung|finanz|buchhaltung|взнос|платеж|платёж|депозит|счет|счёт|финанс|бухгалтер)/i,
+    /(aidat|ödeme|depozito|fatura|finans|muhasebe|dues|payment|deposit|invoice|finance|accounting|beitrag|zahlung|kaution|rechnung|finanz|buchhaltung|взнос|платеж|платёж|депозит|счет|счёт|финанс|бухгалтер)/i,
   ],
   [
     "service-features",
-    /\b(servis|temizlik|bakım|onarım|talep|sla|service|cleaning|maintenance|repair|request|reinigung|wartung|reparatur|anfrage|сервис|уборк|обслуживани|ремонт|заявк)/i,
+    /(servis|temizlik|bakım|onarım|talep|sla|service|cleaning|maintenance|repair|request|reinigung|wartung|reparatur|anfrage|сервис|уборк|обслуживани|ремонт|заявк)/i,
   ],
   [
     "languages",
-    /\b(dil|dili|türkçe|rusça|language|turkish|russian|sprache|deutsch|türkisch|russisch|язык|языках|турецк|русск)/i,
+    /(dil|dili|türkçe|rusça|language|turkish|russian|sprache|deutsch|türkisch|russisch|язык|языках|турецк|русск)/i,
   ],
   [
     "project-info",
-    /\b(new level|avsallar|daire sayısı|blok|havuz|plaj|otel|olanak|amenit|units|blocks|pool|beach|hotel|wohnung|einheiten|strand|ausstattung|квартир|блок|бассейн|пляж|отел|удобств)/i,
+    /(new level|avsallar|daire sayısı|blok|havuz|plaj|otel|olanak|amenit|units|blocks|pool|beach|hotel|wohnung|einheiten|strand|ausstattung|квартир|блок|бассейн|пляж|отел|удобств)/i,
   ],
   [
     "pricing",
-    /\b(fiyat|ücret|maliyet|ne kadar|price|cost|how much|fee|preis|kosten|was kostet|gebühr|цена|стоимост|сколько стоит|тариф)/i,
+    /(fiyat|ücret|maliyet|ne kadar|price|cost|how much|fee|preis|kosten|was kostet|gebühr|цена|стоимост|сколько стоит|тариф)/i,
   ],
   [
     "demo",
-    /\b(demo|deneme|test|canlı|try|live demo|ausprobier|попробовать|демо)/i,
+    /(demo|deneme|test|canlı|try|live demo|ausprobier|попробовать|демо)/i,
   ],
   [
     "advantages",
-    /\b(neden|avantaj|fayda|fark|why|advantage|benefit|difference|warum|vorteil|nutzen|unterschied|почему|преимуществ|польза|отличи)/i,
+    /(neden|avantaj|fayda|fark|why|advantage|benefit|difference|warum|vorteil|nutzen|unterschied|почему|преимуществ|польза|отличи)/i,
   ],
   [
     "what-is",
-    /\b(nedir|ne işe|nasıl çalışır|what is|how does|was ist|wie funktioniert|что такое|как работает)/i,
+    /(nedir|ne işe|nasıl çalışır|what is|how does|was ist|wie funktioniert|что такое|как работает)/i,
   ],
 ]
 
