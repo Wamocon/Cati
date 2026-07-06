@@ -3450,6 +3450,36 @@ export interface PublicAiInterestInput {
   question: string
   answeredBy: "public-knowledge" | "local-ai"
   page?: string | null
+  outcome?: string | null
+  confidence?: number | null
+  shouldEscalate?: boolean
+  responseMs?: number | null
+  sourceIds?: string[]
+}
+
+export interface PublicAiEscalationInput {
+  topic: string
+  language?: string | null
+  answeredBy: "public-knowledge" | "local-ai"
+  page?: string | null
+  outcome?: string | null
+  reason?: string | null
+  confidence?: number | null
+  responseMs?: number | null
+  sourceIds?: string[]
+}
+
+export interface PublicAiFeedbackInput {
+  rating: "positive" | "negative"
+  topic?: string | null
+  language?: string | null
+  answeredBy?: "public-knowledge" | "local-ai" | null
+  page?: string | null
+  outcome?: string | null
+  confidence?: number | null
+  responseMs?: number | null
+  sourceIds?: string[]
+  chatReference?: string | null
 }
 
 function publicIntakeReference(prefix: string): string {
@@ -3561,6 +3591,11 @@ export async function logPublicAiInterest(
     language: input.language ?? null,
     questionLength: input.question.length,
     answeredBy: input.answeredBy,
+    outcome: input.outcome ?? null,
+    confidence: input.confidence ?? null,
+    shouldEscalate: input.shouldEscalate === true,
+    responseMs: input.responseMs ?? null,
+    sourceIds: input.sourceIds ?? [],
     page: input.page ?? null,
     channel: "landing-concierge",
   }
@@ -3570,5 +3605,57 @@ export async function logPublicAiInterest(
     `AI interest - ${input.topic}`,
     metadata,
     "NLP-AIQ"
+  )
+}
+
+export async function logPublicAiEscalation(
+  input: PublicAiEscalationInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    kind: "ai_escalation",
+    topic: input.topic,
+    language: input.language ?? null,
+    answeredBy: input.answeredBy,
+    outcome: input.outcome ?? null,
+    reason: input.reason ?? null,
+    confidence: input.confidence ?? null,
+    responseMs: input.responseMs ?? null,
+    sourceIds: input.sourceIds ?? [],
+    page: input.page ?? null,
+    channel: "landing-concierge",
+  }
+
+  return submitPublicIntake(
+    "public.ai_escalation",
+    `AI escalation - ${input.topic}`,
+    metadata,
+    "NLP-AIE"
+  )
+}
+
+export async function logPublicAiFeedback(
+  input: PublicAiFeedbackInput
+): Promise<PublicIntakeResult> {
+  const metadata: Record<string, unknown> = {
+    kind: "ai_feedback",
+    rating: input.rating,
+    resolved: input.rating === "positive",
+    topic: input.topic ?? null,
+    language: input.language ?? null,
+    answeredBy: input.answeredBy ?? null,
+    outcome: input.outcome ?? null,
+    confidence: input.confidence ?? null,
+    responseMs: input.responseMs ?? null,
+    sourceIds: input.sourceIds ?? [],
+    chatReference: input.chatReference ?? null,
+    page: input.page ?? null,
+    channel: "landing-concierge",
+  }
+
+  return submitPublicIntake(
+    "public.ai_feedback",
+    `AI feedback - ${input.rating}`,
+    metadata,
+    "NLP-AIF"
   )
 }

@@ -37,7 +37,9 @@ BEGIN
     'registration.request.tenant',
     'registration.request.staff',
     'public.report',
-    'public.ai_question'
+    'public.ai_question',
+    'public.ai_escalation',
+    'public.ai_feedback'
   ) THEN
     RAISE EXCEPTION 'Unsupported public intake action type: %', v_action_type;
   END IF;

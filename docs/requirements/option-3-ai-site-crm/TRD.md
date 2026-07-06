@@ -43,7 +43,7 @@ Native mobile scope: Excluded from launch scope unless later approved
 
 This TRD defines the target technical architecture and implementation controls. It must be read together with `docs/PROJECT-HANDBOOK.md` for current implementation status.
 
-As of 6 July 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, queued public intake APIs for owner/tenant/staff requests and public reports, a data-blind public product concierge, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, abuse/rate-limit controls, UAT and launch handover remain required.
+As of 6 July 2026, the repository has a real local Supabase foundation, RBAC/RLS-oriented schema work, operational APIs, queued public intake APIs for owner/tenant/staff requests and public reports, a data-blind source-cited public product concierge with escalation and feedback logging, seeded local data, fuzzy/search support, dashboard realtime publication and polling fallback. It is not yet a production customer deployment; Supabase cloud setup, production data migration, final RLS/security review, provider integrations, abuse/rate-limit controls, UAT and launch handover remain required.
 
 ## 1. Technical Executive Summary
 
@@ -135,6 +135,7 @@ The existing stack is a good foundation for the web/PWA product. The missing par
 - AI should be evaluated through a test set.
 - AI must respect role permissions and data boundaries.
 - Public, anonymous AI must stay data-blind: it may answer from curated product knowledge only and must not load operational records.
+- Public, anonymous AI must cite its source sections, expose confidence/outcome metadata, recommend human handoff when uncertain and capture CSAT/escalation signals without storing raw anonymous questions.
 
 ---
 
@@ -1555,6 +1556,7 @@ Technical deliverables:
 - Recommendation queue.
 - Approval workflow.
 - Evaluation suite.
+- Public support metrics: first response latency, answer outcome, escalation rate, source coverage and CSAT/resolution feedback.
 
 Engineering outputs:
 
@@ -1567,6 +1569,7 @@ Definition of done:
 
 - AI cannot perform restricted actions directly.
 - AI output is logged and source-linked.
+- Public AI unsupported/private-data questions recommend handoff and produce measurable escalation events.
 
 ## Phase 15: QA, Security, Performance, UAT, Training And Launch
 
@@ -1721,6 +1724,7 @@ Track:
 - Ticket SLA breach count.
 - AI recommendation volume.
 - AI approval rate.
+- Public AI first response latency, outcome mix, source coverage, escalation rate and CSAT/resolution feedback.
 
 ### 23.3 Alerts
 
@@ -1823,6 +1827,8 @@ Likely sources:
 - AI must not return data beyond user's role.
 - AI recommendations must show confidence/source.
 - AI hallucination reports should be captured for evaluation.
+- Public AI must escalate low-confidence or unsupported questions instead of answering from outside the knowledge base.
+- Public AI feedback and escalation logs must be reviewed and fed back into the customer-facing knowledge base.
 - AI output in Turkish must use professional tone.
 - AI should not provide legal/accounting final advice; it can recommend human review.
 

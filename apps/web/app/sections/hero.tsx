@@ -77,7 +77,7 @@ export function Hero() {
           alt="New Level Premium Avsallar resort residence and shared facilities"
           fill
           sizes="100vw"
-          preload
+          loading="eager"
           className="object-cover"
         />
       </div>

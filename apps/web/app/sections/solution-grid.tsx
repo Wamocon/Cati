@@ -550,7 +550,7 @@ export function SolutionGrid() {
                         src={chapter.image}
                         alt={chapter.alt}
                         fill
-                        sizes="(max-width: 1024px) 100vw, 1px"
+                        sizes="(max-width: 640px) calc(100vw - 2rem), (max-width: 1024px) 720px, 1px"
                         className="object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#071b18]/70 to-transparent" />

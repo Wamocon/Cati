@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot, MessageCircle, Send, Sparkles, User, X } from "lucide-react"
+import { Bot, MessageCircle, Send, Sparkles, ThumbsDown, ThumbsUp, User, X } from "lucide-react"
 import { publicAiSuggestions } from "@/lib/public-ai-knowledge"
 import { cn } from "@/lib/utils"
 
@@ -86,10 +86,93 @@ const copy = {
   },
 } satisfies Record<LocaleKey, unknown>
 
+const supportCopy: Record<
+  LocaleKey,
+  {
+    sources: string
+    handoff: string
+    helpful: string
+    yes: string
+    no: string
+    feedbackThanks: string
+  }
+> = {
+  tr: {
+    sources: "Kaynak",
+    handoff: "WhatsApp ile bir kişiye aktar",
+    helpful: "Yardımcı oldu mu?",
+    yes: "Evet",
+    no: "Hayır",
+    feedbackThanks: "Geri bildirim alındı",
+  },
+  en: {
+    sources: "Source",
+    handoff: "Hand off to a person on WhatsApp",
+    helpful: "Helpful?",
+    yes: "Yes",
+    no: "No",
+    feedbackThanks: "Feedback logged",
+  },
+  de: {
+    sources: "Quelle",
+    handoff: "Per WhatsApp an eine Person übergeben",
+    helpful: "Hilfreich?",
+    yes: "Ja",
+    no: "Nein",
+    feedbackThanks: "Feedback erfasst",
+  },
+  ru: {
+    sources: "Источник",
+    handoff: "Передать человеку в WhatsApp",
+    helpful: "Помогло?",
+    yes: "Да",
+    no: "Нет",
+    feedbackThanks: "Отзыв зафиксирован",
+  },
+}
+
+interface PublicAiSource {
+  id: string
+  title: string
+  section: string
+}
+
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  topic?: string
+  outcome?: string
+  source?: "public-knowledge" | "local-ai"
+  confidence?: number
+  responseMs?: number
+  shouldEscalate?: boolean
+  escalationReason?: string | null
+  sources?: PublicAiSource[]
+  eventReference?: string | null
+  feedback?: "positive" | "negative"
+}
+
+function normalizeSources(value: unknown): PublicAiSource[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null
+      const record = item as Record<string, unknown>
+      if (
+        typeof record.id !== "string" ||
+        typeof record.title !== "string" ||
+        typeof record.section !== "string"
+      ) {
+        return null
+      }
+      return {
+        id: record.id,
+        title: record.title,
+        section: record.section,
+      }
+    })
+    .filter((item): item is PublicAiSource => item !== null)
 }
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -103,6 +186,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 export function SiteConcierge({ page }: { page: string }) {
   const locale = resolveLocale(useLocale())
   const t = copy[locale] as (typeof copy)["tr"]
+  const support = supportCopy[locale]
 
   const whatsappNumber =
     process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "900000000000"
@@ -136,16 +220,38 @@ export function SiteConcierge({ page }: { page: string }) {
     setInput("")
     setTyping(true)
 
-    let reply = t.error
+    let assistantMessage: Message = {
+      id: "",
+      role: "assistant",
+      content: t.error,
+    }
     try {
       const response = await fetch("/api/ai/public-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: trimmed, locale, page }),
       })
-      const data = (await response.json()) as { reply?: unknown }
+      const data = (await response.json()) as Record<string, unknown>
       if (response.ok && typeof data.reply === "string" && data.reply.trim()) {
-        reply = data.reply
+        assistantMessage = {
+          id: "",
+          role: "assistant",
+          content: data.reply,
+          topic: typeof data.topic === "string" ? data.topic : undefined,
+          outcome: typeof data.outcome === "string" ? data.outcome : undefined,
+          source:
+            data.source === "local-ai" || data.source === "public-knowledge"
+              ? data.source
+              : undefined,
+          confidence: typeof data.confidence === "number" ? data.confidence : undefined,
+          responseMs: typeof data.responseMs === "number" ? data.responseMs : undefined,
+          shouldEscalate: data.shouldEscalate === true,
+          escalationReason:
+            typeof data.escalationReason === "string" ? data.escalationReason : null,
+          sources: normalizeSources(data.sources),
+          eventReference:
+            typeof data.eventReference === "string" ? data.eventReference : null,
+        }
       }
     } catch {
       // keep error copy
@@ -153,9 +259,39 @@ export function SiteConcierge({ page }: { page: string }) {
     idRef.current += 1
     setMessages((prev) => [
       ...prev,
-      { id: `a-${idRef.current}`, role: "assistant", content: reply },
+      { ...assistantMessage, id: `a-${idRef.current}` },
     ])
     setTyping(false)
+  }
+
+  async function sendFeedback(message: Message, rating: "positive" | "negative") {
+    if (message.role !== "assistant" || message.feedback) return
+    setMessages((prev) =>
+      prev.map((item) =>
+        item.id === message.id ? { ...item, feedback: rating } : item
+      )
+    )
+
+    try {
+      await fetch("/api/ai/public-chat/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating,
+          topic: message.topic,
+          outcome: message.outcome,
+          source: message.source,
+          confidence: message.confidence,
+          responseMs: message.responseMs,
+          sourceIds: message.sources?.map((item) => item.id) ?? [],
+          chatReference: message.eventReference,
+          locale,
+          page,
+        }),
+      })
+    } catch {
+      // feedback is best-effort; the local UI state still records the tap
+    }
   }
 
   return (
@@ -305,7 +441,72 @@ export function SiteConcierge({ page }: { page: string }) {
                         : "border border-border bg-muted/50 text-foreground"
                     )}
                   >
-                    {msg.content}
+                    <p>{msg.content}</p>
+                    {msg.role === "assistant" &&
+                      ((msg.sources && msg.sources.length > 0) || msg.shouldEscalate) && (
+                        <div className="mt-2 border-t border-border/70 pt-2 text-[10px] leading-snug text-muted-foreground">
+                          {msg.sources && msg.sources.length > 0 && (
+                            <div data-testid="public-ai-sources">
+                              <span className="font-semibold text-foreground/80">
+                                {support.sources}:
+                              </span>{" "}
+                              {msg.sources.map((source, index) => (
+                                <span key={source.id}>
+                                  {index > 0 ? " · " : ""}
+                                  <span title={source.section}>{source.title}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {msg.shouldEscalate && (
+                            <a
+                              href={whatsappHref}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              data-testid="public-ai-handoff"
+                              className="mt-1 inline-flex text-primary underline-offset-2 hover:underline"
+                              title={msg.escalationReason ?? support.handoff}
+                            >
+                              {support.handoff}
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    {msg.role === "assistant" && msg.id !== "welcome" && (
+                      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <span>{msg.feedback ? support.feedbackThanks : support.helpful}</span>
+                        <button
+                          type="button"
+                          onClick={() => sendFeedback(msg, "positive")}
+                          disabled={Boolean(msg.feedback)}
+                          aria-label={support.yes}
+                          title={support.yes}
+                          data-testid="public-ai-feedback-positive"
+                          className={cn(
+                            "rounded-full p-1 transition hover:bg-background",
+                            msg.feedback === "positive" && "text-primary",
+                            msg.feedback && "cursor-default"
+                          )}
+                        >
+                          <ThumbsUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => sendFeedback(msg, "negative")}
+                          disabled={Boolean(msg.feedback)}
+                          aria-label={support.no}
+                          title={support.no}
+                          data-testid="public-ai-feedback-negative"
+                          className={cn(
+                            "rounded-full p-1 transition hover:bg-background",
+                            msg.feedback === "negative" && "text-primary",
+                            msg.feedback && "cursor-default"
+                          )}
+                        >
+                          <ThumbsDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
