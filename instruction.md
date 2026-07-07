@@ -1,8 +1,9 @@
 # instruction.md — Arbeits- und Zustandsleitfaden für 1Çatı (für KI-Coding-Agenten)
 
 > Zweck: Diese Datei ist der **Wiedereinstiegspunkt für zukünftige Phasen**. Beim Weiterarbeiten zuerst diese Datei lesen, dann `CLAUDE.md` (tiefe technische Referenz) und `docs/PROJECT-HANDBOOK.md` (Phasenwahrheit).
-> Zuletzt aktualisiert: 06.07.2026 · Branch: `waleri-dev` (= `main`, siehe Deploy-Workflow) · Vertraulich.
+> Zuletzt aktualisiert: 07.07.2026 · Branch: `waleri-dev` (= `main`, siehe Deploy-Workflow) · Vertraulich.
 > Reihenfolge bei Widersprüchen: aktueller **Code** > `docs/PROJECT-HANDBOOK.md` > `CLAUDE.md` > diese Datei.
+> Neu seit 07.07.2026: vollständige **Code-Tiefenanalyse** (14 Bereiche) mit korrigierter Phasenwahrheit (§10), neue **Kundendokumente** (Anforderungsdokument v2 + Kundenversion, Benutzerhandbuch v2 + Kundenversion) und **PowerPoint-Präsentationen** (lang + Pitch) inkl. Design-/Render-Pipeline (§9).
 
 ---
 
@@ -15,7 +16,7 @@
 - **AI-Gateway** (OpenAI-kompatibel, „sokrates") ist live: interne CATI-KI (`/api/ai/chat`) und öffentliche Landing-KI (`/api/ai/public-chat`) liefern `source: "local-ai"`.
 - **Vercel-Produktion** `https://cati-blond.vercel.app` deployt automatisch von `main`. Ein-Klick-Demo, echte Cloud-Daten und beide KIs laufen dort verifiziert.
 
-**Phasen:** 1–9 als Fundament fertig; New-Level-Premium-Modul umgesetzt; 10–15 (Booking/Move-in, Kommunikation, Mobile-PWA, Integrationen, KI-Premium-Layer, Launch-Hardening) sind der weitere Weg. Details: `docs/PROJECT-HANDBOOK.md` §3.1 und `docs/requirements/option-3-ai-site-crm/Anforderungsdokument-1Cati.md`.
+**Phasen (korrigiert durch die Tiefenanalyse vom 07.07.2026, siehe §10):** 1–9 als Fundament fertig (mit einzelnen dokumentierten Lücken); New-Level-Premium-Modul umgesetzt; **10–14 sind NICHT „nicht begonnen", sondern „Foundation mit getrennten Schichten"** — für jede Phase existieren bereits UI + API + DB-Schema, sind aber überwiegend nicht miteinander verdrahtet (UI liest statische Arrays statt der dafür angelegten Supabase-Tabellen). Details und Belege: §10 dieser Datei, `docs/requirements/option-3-ai-site-crm/Anforderungsdokument-1Cati-v2.md`, `docs/PROJECT-HANDBOOK.md` §3.1.
 
 ---
 
@@ -31,7 +32,7 @@ NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_K
 AI_API_URL, AI_API_KEY, AI_CHAT_COMPLETIONS_PATH,
 AI_MODEL_FAST, AI_MODEL_REASONING, AI_MODEL_GERMAN_COPY, AI_MODEL_PRO
 DOCUMENT_STORAGE_MODE=supabase, SUPABASE_DOCUMENT_BUCKET=cati-documents
-ENABLE_ACCESS_PROFILES, CATI_ALLOW_REMOTE_ACCESS_PROFILES   # siehe Demo-Modell §4
+ENABLE_ACCESS_PROFILES, CATI_ALLOW_REMOTE_ACCESS_PROFILES   # siehe Demo-Modell §3
 ```
 Migrationen (`supabase/migrations/0000…0013`) entsprechen dem Cloud-Schema (in sync). Schema-Änderungen immer als neue nummerierte Migration + RLS in derselben PR.
 
@@ -103,11 +104,68 @@ Reihenfolge und Akzeptanzkriterien: `docs/requirements/option-3-ai-site-crm/Impl
 - **Phase 14:** KI-Premium-Layer (grounded Assistant → Predictive Risk/Briefings → Advanced Analytics), Aktions-Automatisierung bleibt provider-/legal-gated.
 - **Phase 15:** QA, Security/RLS-Review, Performance, UAT mit echten Daten, Training, Launch/Hypercare.
 
+**Priorisierte Quick-Wins vor Neuentwicklung (aus §10):** Der größte sichtbare Fortschritt für den geringsten Aufwand ist **reine Verdrahtung** — bereits fertige, getestete Backends an bereits gebaute UIs anschließen (Daire-Matrix-Hauptansicht, Finanzübersicht-Kopf, Reports/Compliance/Settings/Booking/Communications an ihre eigenen, ungenutzten API-Routen). Erst danach die echten funktionalen Lücken schließen (Reservierung anlegen, Finanzbuchung erfassen, Medien-Upload, Admin-Triage für NLP-Registrierungen).
+
 Offene, nicht durch Code lösbare Entscheidungen (Kunde/Legal/Vendor): `docs/PROJECT-HANDBOOK.md` §6 (Zahlungsanbieter, Zugangssystem, KBS-Rechtsfreigabe, Datenretention, Bankabgleich, native App vs. PWA, historische Migration, Produktions-UAT).
 
 ---
 
-## 9. Schnellreferenz
+## 9. Kundendokumente & Präsentationen (Design-/Render-Pipeline)
+
+In dieser Session entstanden **kundenfertige Deliverables** und die Werkzeuge, um sie neu zu erzeugen. Alle liegen unter `docs/requirements/option-3-ai-site-crm/` bzw. `docs/user-handbook/`.
+
+**Deliverables:**
+- **Interne, code-verifizierte Fassung (mit Statusdetails):** `Anforderungsdokument-1Cati-v2.md` (+ `.docx`, auch in `apps/web/public/`) und `docs/user-handbook/1Cati-Benutzerhandbuch-v2.md` (+ `.docx`). Diese enthalten Reifegrad-Legende, Zeile-für-Zeile-Abgleich der Original-Kundenanforderung und die §10-Befunde. **Nicht für den Kunden** (enthalten Statusfeinheiten).
+- **Kundenversionen (ohne interne Infos, im 1CATI-CI):** `1Cati-Anforderungsdokument-Kundenversion.html` + `.pdf` und `docs/user-handbook/1Cati-Benutzerhandbuch-Kundenversion.html` + `.pdf`. Standalone (kein „Fortführungs"-Bezug), alle Kapitel, keine Code-/Migrations-/Interna. HTML ist die editierbare Quelle → PDF via Chromium.
+- **Präsentationen (1CATI-CI, Echtbilder, Ataberk-Co-Branding):** `1Cati-Anforderungsdokument-Praesentation.pptx` (lang, 33 Folien) und `…-Praesentation-Pitch.pptx` (Pitch, 12 Folien).
+
+**Original-Kundenanforderung** (Referenz für Abgleiche): `docs/requirements/CRM Kundenanforderungen Premıum de-DE.docx` (Original-Spezifikation des Kunden).
+
+**CI / Marken-Vorgaben** (aus `apps/web/app/globals.css`): Primär-Petrol `#066B63`, Tief-Petrol `#044F49`, Gold-Akzent `#B9822B`/`#E2B75D`, Ink `#101820`, BG `#F7F9F8`; Schrift **„Aptos", "Segoe UI"**. Motive: Aurora-Radials (Petrol/Gold), Verlaufslinie Petrol→Gold, Gebäude-Silhouette (aus `components/building-illustration.tsx`). 1CATI-Logo aus `components/cati-logo.tsx` (Haus-Mark).
+
+**Ataberk-Logo:** von `https://ataberkestate.com/themes/custom/kibmak2/images/logo.svg` (= ataberkhomes.com, identisch) — „ATABERK REAL ESTATE", Blau `#2E7EC4` + Weiß. Weiß-Anteil braucht dunklen/Petrol-Hintergrund → in den Decks als Co-Brand-Badge auf einem Tief-Petrol-Chip mit Goldrand oben rechts auf jeder Folie. WAMOCON bleibt Fußzeile, 1CATI oben links.
+
+**Echtbilder New Level Premium:** `docs/requirements/option-3-ai-site-crm/Foto New Level Premium/` (Gesamt = Luftaufnahme/Cover, oben = Draufsicht, Seite = Meerblick/Abschluss). Cover/Abschluss = Foto + Petrol-Verlaufsüberzug (Composite via Chromium), plus eigene „Referenzobjekt"-Folie mit oben+Seite.
+
+**Render-Werkzeuge (Windows, verifiziert):**
+- **HTML → PDF:** Headless-Chromium via `@playwright/test` (in `apps/web` installiert). Ein-Datei-Skript nach `apps/web/.render-pdf.mjs` legen (dort löst ESM `@playwright/test` auf), `page.pdf({format:"A4", printBackground:true, preferCSSPageSize:true})`. Nach Gebrauch löschen.
+- **HTML → PNG (Assets/Composites):** analog `apps/web/.render-png.mjs`, `page.screenshot({omitBackground})`, `deviceScaleFactor:2`.
+- **PPTX bauen:** `python-pptx` (1.0.2 vorhanden). Helper-Muster im Session-Scratchpad (`build_pptx.py`/`build_pitch.py`): `slide()`, `header()`, `ataberk_badge()`, `add_table()` mit Status-Pillen, `cards_2x2()`, `kpi_row()`, `callout()`, `footer()`. Vollflächen-Hintergründe als **JPG q88** einbetten (nicht PNG) → Deck 24 MB → 1,5 MB.
+- **PPTX → PDF (zur Sicht-Prüfung):** PowerPoint-COM via PowerShell (`New-Object -ComObject PowerPoint.Application; $pres.SaveAs($pdf, 32)`; 32 = ppSaveAsPDF). Danach mit PyMuPDF (`fitz`) einzelne Seiten rastern und ansehen.
+- **DOCX aus Markdown:** `python scripts/build-docx-from-md.py <md> --output <docx> --title "…"`.
+- **Wichtig bei python-pptx-Strings:** deutsche Anführungszeichen „…" im Python-`"…"`-String terminieren ihn — Guillemets »…« verwenden.
+
+**Governance:** `docs/README.md`, `docs/PROJECT-HANDBOOK.md` und `docs/requirements/option-3-ai-site-crm/README.md` verweisen bereits auf v1/v2. Bei Doku-Änderungen dort und in `AGENTS.md`/`CLAUDE.md` nachziehen. Regel bleibt: keine generierten QA-Artefakte im Repo; Markdown ist die editierbare Quelle, PDF/DOCX/PPTX sind Exporte.
+
+---
+
+## 10. Ergebnisse der Code-Tiefenanalyse (07.07.2026) — korrigierte Phasenwahrheit
+
+14 unabhängige Bereichs-Audits gegen den echten Code (Migrationen 0000–0013, alle API-Routen, alle Dashboard-Seiten). Kernbefunde für die Weiterarbeit:
+
+**Wiederkehrendes Muster („Foundation mit getrennten Schichten"):** Für Phase 10–14 existieren UI + API + DB-Tabellen, aber sie sind meist **nicht verbunden** — die Dashboard-Seiten importieren statische Arrays aus `lib/site-management-data.ts` statt ihre eigenen, bereits gebauten API-Routen zu fetchen; die per Migration 0007/0008 angelegten Tabellen (15 Stück, u. a. `reservation_availability_blocks`, `booking_readiness`, `turnover_work_items`, `message_threads`, `notification_rules`, `document_packets`, `integration_providers`, `ai_recommendations`) werden von keiner Codezeile gelesen/geschrieben. Einzige durchgängig echte Live-Schreibfunktion überall: `logClientAction` (Audit-Trail via RPC `log_client_action`).
+
+**Echte funktionale Lücken (kein Schreibpfad vorhanden):**
+- **Keine Reservierung/Buchung anlegen** (`/dashboard/calendar` zeigt 10 feste Demo-Buchungen; kein Formular/keine API) — von der Kundenanforderung explizit gefordert (Abschnitt 8/12.2). Auffälligste Lücke.
+- **Keine Finanzbuchung erfassen** — `finance_ledger_entries` hat keinen Insert/Update im gesamten `apps/web`; das „Ledger" ist reiner Lese-/Reporting-Layer (Immutability-Trigger ist real). Automatische Kautions-/Schuldenverrechnung fehlt ebenfalls.
+- **Kein Foto-/Video-Upload** für Service-Nachweise — Tabelle `media_reports` (Migration 0006) existiert mit RLS, aber keine UI/API; UI zeigt nur einen Zähler.
+- **Kein Admin-Triage-Rückweg** für NLP-Registrierungen/Meldungen — Einreichung landet in `client_action_requests`, aber `materializeApprovedTicketRequest()` gibt für Nicht-Ticket-Typen `null` zurück (keine Profil-/Ticket-Materialisierung); keine filternde Dashboard-Ansicht.
+- **Owner/Tenant-Scoping ist Demo-statisch:** hartkodierte Unit-Sets in `lib/role-scoped-views.ts` (z. B. `"A-001","A-054"`), nicht aus echten `unit_residents`-Beziehungen. Vor produktivem Mandanten-Scoping ersetzen. Teilweise sicherheitsrelevant (Offline-Sync-Freigabe nutzt es).
+- **Toter Code:** `components/sync-badge.tsx` und `hooks/use-seed-data.ts` (+ `lib/seed-data.ts`, ein zweites, unverdrahtetes Lead/Deal-Modell) — nirgends importiert. `/dashboard/leads` zeigt trotz Namens keine echte Lead-Pipeline, sondern `residents` in CRM-Aufmachung.
+- **PWA teilweise live:** Manifest (`app/manifest.ts`) + Service-Worker (`public/sw.js`) funktionieren bereits; Offline-Schreibsync und Push sind **nicht** umgesetzt.
+- **Dokumenten-Upload** ist der am weitesten entwickelte Phase-11-Teil (echter Supabase-Storage-Pfad, Migration 0009), aber ohne `DOCUMENT_STORAGE_MODE=supabase` + Service-Role-Key im „Alles verwerfen"-Modus (meldet dennoch Erfolg).
+
+**Doku-Korrekturen (bei nächster Pflege umsetzen):**
+- `CLAUDE.md` §4 listet nur Migrationen 0000–0006 — real existieren **14** (bis `00000000000013_profile_company_context.sql`). Nachtragen.
+- `Anforderungsdokument-1Cati.md` (v1) F-05/F-12 zitieren „Migration 0007" für Ledger-Immutability bzw. Security-Hardening — falsch: Immutability liegt in **0003**, Hardening in **0010/0011/0013**. In v2 bereits korrigiert.
+- `CLAUDE.md` §3.5 (Locale-Switcher „manuelle URL-Konstruktion") und §3.7 (`sync-badge.tsx` „aktiv genutzt") stimmen nicht mit dem Code überein.
+- **RBAC/RLS-Latenz:** `lib/rbac.ts` gibt `accountant` (Level 60) `finance:create/update/approve`, die generische RLS verlangt aber Level ≥ 70 → vor der ersten echten Buchhaltungs-Schreibfunktion angleichen (sonst 403 in Produktion).
+
+Vollständige Detailtiefe je Funktion: `Anforderungsdokument-1Cati-v2.md` Kap. 7 (mit Datei-/Zeilenbelegen) und Kap. 9 (Abgleich Kundenanforderung).
+
+---
+
+## 11. Schnellreferenz
 
 - Lokal starten: `cd apps/web && npm.cmd run dev -- -p 3000` → `http://localhost:3000/tr`
 - Live-Produktion: `https://cati-blond.vercel.app` (Push auf `main` deployt)

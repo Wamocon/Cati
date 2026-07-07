@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>1Çatı — Anforderungs- und Leistungsdokument</title>
+<style>
+  :root {
+    --teal: #066B63;
+    --teal-deep: #044F49;
+    --teal-bright: #09877C;
+    --gold: #B9822B;
+    --gold-soft: #E2B75D;
+    --ink: #101820;
+    --slate: #33413D;
+    --muted: #64716D;
+    --bg: #F7F9F8;
+    --card: #FFFFFF;
+    --border: #DAE3E0;
+    --secondary: #EAF1EF;
+    --font: "Aptos", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+
+  @page {
+    size: A4;
+    margin: 20mm 16mm 18mm 16mm;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  body {
+    font-family: var(--font);
+    color: var(--slate);
+    background: var(--bg);
+    margin: 0;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle brand decoration repeated on every printed page */
+  .page-decor {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 92% 6%, color-mix(in srgb, var(--teal) 7%, transparent) 0%, transparent 26%),
+      radial-gradient(circle at 6% 96%, color-mix(in srgb, var(--gold) 6%, transparent) 0%, transparent 24%);
+  }
+  .page-decor svg {
+    position: absolute;
+    right: -10mm;
+    bottom: -6mm;
+    width: 92mm;
+    opacity: 0.05;
+  }
+
+  h1, h2, h3, h4 { font-family: var(--font); color: var(--ink); line-height: 1.2; }
+
+  p { margin: 0 0 9pt; }
+
+  a { color: var(--teal); text-decoration: none; }
+
+  strong { color: var(--ink); }
+
+  /* ---------- COVER ---------- */
+  .cover {
+    position: relative;
+    height: 257mm;
+    margin: -20mm -16mm 0 -16mm;
+    padding: 30mm 22mm;
+    color: #EAF6F3;
+    background:
+      radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--gold) 34%, transparent) 0%, transparent 42%),
+      radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--teal-bright) 46%, transparent) 0%, transparent 46%),
+      linear-gradient(150deg, #032f2b 0%, var(--teal-deep) 42%, var(--teal) 100%);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    break-after: page;
+  }
+  .cover-silhouette {
+    position: absolute;
+    right: -14mm;
+    bottom: -8mm;
+    width: 150mm;
+    opacity: 0.14;
+  }
+  .cover-noise {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.04; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .cover-brand { display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; }
+  .cover-brand .name { font-size: 20pt; font-weight: 800; letter-spacing: -0.01em; color: #fff; }
+  .cover-brand .by { font-size: 9pt; color: #B9DBD4; margin-top: 2px; }
+  .cover-mid { margin-top: auto; margin-bottom: auto; position: relative; z-index: 2; }
+  .cover-kicker {
+    display: inline-block;
+    font-size: 9pt; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold-soft);
+    border: 1px solid color-mix(in srgb, var(--gold-soft) 55%, transparent);
+    border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+  }
+  .cover h1 {
+    color: #fff; font-size: 34pt; font-weight: 800; letter-spacing: -0.02em;
+    margin: 0 0 14px; max-width: 150mm; line-height: 1.08;
+  }
+  .cover .lead { font-size: 12.5pt; color: #CDE7E1; max-width: 135mm; line-height: 1.5; }
+  .cover-meta {
+    position: relative; z-index: 2;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 0;
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 14px; overflow: hidden;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(6px);
+  }
+  .cover-meta div { padding: 11px 16px; border-right: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .cover-meta div:nth-child(2n) { border-right: none; }
+  .cover-meta div:nth-last-child(-n+2) { border-bottom: none; }
+  .cover-meta .k { font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase; color: #9FCFC6; }
+  .cover-meta .v { font-size: 10.5pt; color: #fff; font-weight: 600; margin-top: 2px; }
+  .cover-conf {
+    position: relative; z-index: 2; margin-top: 14px;
+    font-size: 8.5pt; color: #A9D2CB; letter-spacing: 0.03em;
+  }
+
+  /* ---------- CHAPTERS ---------- */
+  .chapter { break-before: page; }
+  .chapter:first-of-type { break-before: auto; }
+
+  .kicker {
+    display: inline-block; font-size: 8.5pt; font-weight: 800; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--gold);
+  }
+  h2 {
+    font-size: 19pt; font-weight: 800; letter-spacing: -0.015em; color: var(--teal-deep);
+    margin: 3px 0 4px;
+  }
+  h2 + .rule, .kicker + h2 + .rule { margin-bottom: 14px; }
+  .rule {
+    height: 3px; width: 54px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%);
+    margin: 6px 0 16px;
+  }
+  h3 {
+    font-size: 12.5pt; font-weight: 750; color: var(--teal);
+    margin: 18px 0 6px;
+  }
+  h4 { font-size: 10.5pt; font-weight: 700; color: var(--ink); margin: 12px 0 4px; }
+
+  .lead-para { font-size: 11.5pt; color: var(--slate); margin-bottom: 14px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.3pt; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th {
+    background: var(--teal); color: #fff; text-align: left; font-weight: 700;
+    padding: 7px 10px; font-size: 8.8pt; letter-spacing: 0.02em;
+    border: 1px solid var(--teal);
+  }
+  th:first-child { border-top-left-radius: 8px; }
+  th:last-child { border-top-right-radius: 8px; }
+  td { padding: 7px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--slate); }
+  tbody tr:nth-child(2n) td { background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+
+  /* Status pills */
+  .pill {
+    display: inline-block; font-size: 8pt; font-weight: 700; letter-spacing: 0.02em;
+    padding: 2.5px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .pill-full { background: color-mix(in srgb, var(--teal) 15%, #fff); color: var(--teal-deep); border: 1px solid color-mix(in srgb, var(--teal) 35%, #fff); }
+  .pill-live { background: color-mix(in srgb, var(--teal-bright) 18%, #fff); color: var(--teal-deep); border: 1px solid color-mix(in srgb, var(--teal-bright) 40%, #fff); }
+  .pill-part { background: color-mix(in srgb, var(--gold) 16%, #fff); color: #7a5410; border: 1px solid color-mix(in srgb, var(--gold) 38%, #fff); }
+  .pill-prep { background: color-mix(in srgb, var(--muted) 14%, #fff); color: #4b5652; border: 1px solid color-mix(in srgb, var(--muted) 32%, #fff); }
+
+  /* Cards / callouts */
+  .note {
+    background: color-mix(in srgb, var(--secondary) 60%, #fff);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--gold);
+    border-radius: 10px; padding: 12px 15px; margin: 12px 0 16px;
+    font-size: 9.8pt; break-inside: avoid;
+  }
+  .note strong { color: var(--teal-deep); }
+
+  .cardgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 16px; }
+  .fcard {
+    border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px;
+    background: var(--card); break-inside: avoid;
+    box-shadow: 0 1px 2px rgba(16,24,32,0.03);
+  }
+  .fcard .ic { font-size: 15pt; margin-bottom: 4px; }
+  .fcard h4 { margin: 0 0 3px; font-size: 10.5pt; color: var(--teal-deep); }
+  .fcard p { font-size: 9pt; color: var(--muted); margin: 0 0 8px; }
+  .fcard .foot { margin-top: auto; }
+
+  ul, ol { margin: 4px 0 12px; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+
+  .kpirow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 14px 0 18px; }
+  .kpi { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; background: var(--card); break-inside: avoid; }
+  .kpi .num { font-size: 20pt; font-weight: 800; color: var(--teal); letter-spacing: -0.02em; line-height: 1; }
+  .kpi .num .u { font-size: 11pt; color: var(--gold); }
+  .kpi .lbl { font-size: 8.2pt; color: var(--muted); margin-top: 5px; line-height: 1.3; }
+
+  .toc { columns: 2; column-gap: 26px; font-size: 10pt; }
+  .toc div { break-inside: avoid; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dotted var(--border); }
+  .toc .n { color: var(--gold); font-weight: 800; margin-right: 8px; }
+  .toc .t { color: var(--ink); font-weight: 600; }
+
+  .footer-tag {
+    margin-top: 26px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 8.5pt; color: var(--muted); text-align: center;
+  }
+  .legend { font-size: 8.5pt; color: var(--muted); margin: 6px 0 14px; }
+  .legend .pill { margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="page-decor">
+  <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#066B63" stroke-width="2">
+      <rect x="40" y="70" width="60" height="150" rx="6"/>
+      <rect x="110" y="110" width="42" height="110" rx="5"/>
+      <rect x="10" y="130" width="26" height="90" rx="4"/>
+      <path d="M40 70 L70 40 L100 70"/>
+      <g stroke-width="1.4">
+        <line x1="52" y1="92" x2="88" y2="92"/><line x1="52" y1="116" x2="88" y2="116"/>
+        <line x1="52" y1="140" x2="88" y2="140"/><line x1="52" y1="164" x2="88" y2="164"/>
+        <line x1="120" y1="128" x2="142" y2="128"/><line x1="120" y1="150" x2="142" y2="150"/>
+        <line x1="120" y1="172" x2="142" y2="172"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <div class="cover-noise"></div>
+  <svg class="cover-silhouette" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <g fill="#ffffff">
+      <rect x="120" y="40" width="150" height="250" rx="10"/>
+      <rect x="270" y="120" width="80" height="170" rx="8"/>
+      <rect x="60" y="150" width="60" height="140" rx="7"/>
+      <path d="M130 40 L195 8 L260 40 Z"/>
+    </g>
+    <g fill="#032f2b" opacity="0.5">
+      <rect x="140" y="70" width="22" height="30" rx="3"/><rect x="172" y="70" width="22" height="30" rx="3"/><rect x="204" y="70" width="22" height="30" rx="3"/><rect x="236" y="70" width="22" height="30" rx="3"/>
+      <rect x="140" y="115" width="22" height="30" rx="3"/><rect x="172" y="115" width="22" height="30" rx="3"/><rect x="204" y="115" width="22" height="30" rx="3"/><rect x="236" y="115" width="22" height="30" rx="3"/>
+      <rect x="140" y="160" width="22" height="30" rx="3"/><rect x="172" y="160" width="22" height="30" rx="3"/><rect x="204" y="160" width="22" height="30" rx="3"/><rect x="236" y="160" width="22" height="30" rx="3"/>
+      <rect x="140" y="205" width="22" height="30" rx="3"/><rect x="172" y="205" width="22" height="30" rx="3"/><rect x="204" y="205" width="22" height="30" rx="3"/><rect x="236" y="205" width="22" height="30" rx="3"/>
+    </g>
+  </svg>
+
+  <div class="cover-brand">
+    <svg viewBox="0 0 128 128" width="52" height="52" aria-label="1Çatı">
+      <rect width="128" height="128" rx="28" fill="#ffffff"/>
+      <path d="M24 65 64 28l40 37v39a8 8 0 0 1-8 8H32a8 8 0 0 1-8-8Z" fill="#066B63"/>
+      <path d="M48 112V72h32v40" fill="#B9822B"/>
+      <path d="M43 51h42" stroke="#066B63" stroke-width="8" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="name">1Çatı</div>
+      <div class="by">Property-Management- &amp; Real-Estate-ERP · umgesetzt durch WAMOCON GmbH</div>
+    </div>
+  </div>
+
+  <div class="cover-mid">
+    <span class="cover-kicker">Anforderungs- &amp; Leistungsdokument</span>
+    <h1>Ein Dach für Ihren gesamten Immobilienbetrieb</h1>
+    <p class="lead">Die zentrale, mehrsprachige Plattform für New Level Premium — Portfolio, Eigentümer &amp; Mieter, Finanzen, Service, Reservierung, Dokumente, Kommunikation und Berichte in einem System. Dieses Dokument beschreibt den gelieferten Funktionsumfang, den Abgleich mit Ihren Anforderungen und die nächsten Schritte.</p>
+  </div>
+
+  <div class="cover-meta">
+    <div><div class="k">Auftraggeber</div><div class="v">Ataberk Estate, Türkei</div></div>
+    <div><div class="k">Referenzobjekt</div><div class="v">New Level Premium, Avsallar/Alanya</div></div>
+    <div><div class="k">Umsetzung</div><div class="v">WAMOCON GmbH</div></div>
+    <div><div class="k">Plattform</div><div class="v">1Çatı ERP · Demonstrationsstand</div></div>
+    <div><div class="k">Dokument</div><div class="v">Kundenversion</div></div>
+    <div><div class="k">Datum</div><div class="v">07. Juli 2026</div></div>
+  </div>
+  <div class="cover-conf">Vertraulich — ausschließlich für Ataberk Estate bestimmt.</div>
+</section>
+
+<!-- ============ INHALT ============ -->
+<section class="chapter">
+  <span class="kicker">Überblick</span>
+  <h2>Inhalt</h2>
+  <div class="rule"></div>
+  <div class="toc">
+    <div><span class="n">01</span><span class="t">Management Summary</span></div>
+    <div><span class="n">02</span><span class="t">Marktumfeld &amp; Zeitpunkt</span></div>
+    <div><span class="n">03</span><span class="t">Wettbewerb &amp; Positionierung</span></div>
+    <div><span class="n">04</span><span class="t">Zielgruppe</span></div>
+    <div><span class="n">05</span><span class="t">Nutzen für Ataberk Estate</span></div>
+    <div><span class="n">06</span><span class="t">Funktionsumfang — was 1Çatı liefert</span></div>
+    <div><span class="n">07</span><span class="t">Abgleich Ihrer Anforderungen</span></div>
+    <div><span class="n">08</span><span class="t">Die Demonstration — Zweck &amp; Umfang</span></div>
+    <div><span class="n">09</span><span class="t">Nächste Schritte</span></div>
+    <div><span class="n">10</span><span class="t">Umsetzungsplan &amp; Fahrplan</span></div>
+    <div><span class="n">11</span><span class="t">Chancen &amp; Voraussetzungen</span></div>
+  </div>
+
+  <div class="note">
+    <strong>Wie dieses Dokument zu lesen ist.</strong> 1Çatı liegt aktuell als vollständig bedienbare <em>Demonstrationsumgebung</em> vor. Jede Funktion in Kapitel 6 und 7 ist mit einem Status gekennzeichnet, damit klar ist, was heute bereits nutzbar ist und was für den Produktivbetrieb noch freigeschaltet werden muss. Diese Transparenz ist bewusst gewählt: Sie sehen den echten Stand, nicht ein geschöntes Bild.
+  </div>
+  <div class="legend">
+    <span class="pill pill-live">Live</span> dauerhaft nutzbar &nbsp;·&nbsp;
+    <span class="pill pill-full">Verfügbar</span> in der Demonstration voll bedienbar &nbsp;·&nbsp;
+    <span class="pill pill-part">Teilweise</span> Ansicht vorhanden, Erfassung/Vollzug folgt &nbsp;·&nbsp;
+    <span class="pill pill-prep">In Vorbereitung</span> für die nächste Ausbaustufe
+  </div>
+</section>
+
+<!-- ============ 01 SUMMARY ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 01</span>
+  <h2>Management Summary</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">1Çatı („Ein Dach") ist eine webbasierte Property-Management- und Real-Estate-ERP-Plattform, die den gesamten Immobilienbetrieb von Ataberk Estate an einem Ort bündelt — entwickelt für das Referenzobjekt New Level Premium in Avsallar/Alanya mit 769 Wohneinheiten. Die bisherige Koordination über Excel-Listen, WhatsApp und Vor-Ort-Absprachen wird durch ein rollenbasiertes, viersprachiges Betriebssystem (Türkisch, Englisch, Deutsch, Russisch) für Eigentümer, Mieter, Personal, Buchhaltung und Geschäftsführung abgelöst.</p>
+
+  <div class="kpirow">
+    <div class="kpi"><div class="num">769</div><div class="lbl">Wohneinheiten im Referenzobjekt</div></div>
+    <div class="kpi"><div class="num">4</div><div class="lbl">Sprachen (TR · EN · DE · RU)</div></div>
+    <div class="kpi"><div class="num">6</div><div class="lbl">Rollen mit fein abgestuften Rechten</div></div>
+    <div class="kpi"><div class="num">13</div><div class="lbl">Arbeitsbereiche im Portal</div></div>
+  </div>
+
+  <h3>Was heute vorliegt</h3>
+  <p>Die Plattform ist als durchgängig bedienbare Demonstrationsumgebung fertiggestellt. Sie deckt das komplette Betriebsfundament ab: Zugang &amp; Rollen, Portfolio- und Wohnungsverwaltung, Finanzen &amp; Beiträge, Service &amp; Aufgaben, Reservierung, Dokumente, Kommunikation, Berichte und ein Live-Dashboard. Ergänzend wurde ein eigener öffentlicher Bereich für New Level Premium geschaffen — mit kontofreier Registrierung, Meldekanal, QR-Poster für den Vor-Ort-Einsatz und einem KI-Assistenten, der Interessenten begleitet.</p>
+
+  <h3>Was das für Ataberk Estate bedeutet</h3>
+  <p>Sie können den vollständigen Funktionsumfang heute erleben, durchklicken und bewerten — in allen Rollen und allen vier Sprachen. Der Schritt vom Demonstrationsstand zum produktiven Livebetrieb erfordert einige klar benannte Freigaben (echte Kundendaten, Zahlungs-/Bank-Anbindung, rechtliche Bestätigungen, Abnahmetest) — diese sind in Kapitel 9 und 11 transparent aufgeführt und liegen naturgemäß bei Ihnen bzw. den jeweiligen Fachpartnern.</p>
+
+  <div class="note">
+    <strong>Der Leitgedanke von 1Çatı.</strong> Sensible Vorgänge — Zahlungen, Zugangssperren, Rückerstattungen — werden vom System nie eigenmächtig ausgeführt. Sie werden vorbereitet, dokumentiert und einem berechtigten Menschen zur Freigabe vorgelegt. So bleibt jede finanzielle und sicherheitsrelevante Entscheidung nachvollziehbar in menschlicher Hand. Das ist bewusst so gebaut und ein zentrales Vertrauensmerkmal der Plattform.
+  </div>
+</section>
+
+<!-- ============ 02 MARKT ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 02</span>
+  <h2>Marktumfeld &amp; Zeitpunkt</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">Zwei gegenläufige Marktbewegungen begründen, warum die Weiterentwicklung von 1Çatı gerade jetzt strategisch sinnvoll ist.</p>
+
+  <h3>Der Auslandsimmobilienmarkt wird kleiner — aber Alanya bleibt führend</h3>
+  <p>Der für Ataberk Estate zentrale Auslandsimmobilienmarkt schrumpft weiter: Landesweit wurden 2025 nur noch rund 21.500 Wohnungen an Ausländer verkauft — der niedrigste Wert seit neun Jahren. Bei russischen Käufern, historisch die größte Gruppe, ging die Zahl in Alanya von 6.640 (2022) auf 1.662 Einheiten (2025) zurück. Zugleich bleibt Alanya seit vier Jahren in Folge der von russischen Käufern meistgewählte Landkreis der gesamten Türkei.</p>
+  <p><strong>Die strategische Folge:</strong> In einem schrumpfenden Markt entscheidet operative Exzellenz und digitales Vertrauen stärker über Kundenbindung und Weiterempfehlung als in einem wachsenden Markt. Wer bestehende Eigentümer und Mieter mit spürbar besserer Verwaltung, Transparenz und Self-Service bindet, gewinnt relativ an Boden.</p>
+
+  <div class="kpirow">
+    <div class="kpi"><div class="num">−9,4<span class="u">%</span></div><div class="lbl">Ausländerverkäufe Türkei 2025 ggü. Vorjahr</div></div>
+    <div class="kpi"><div class="num">4</div><div class="lbl">Jahre in Folge: Alanya Nr. 1 bei russischen Käufern</div></div>
+    <div class="kpi"><div class="num">88,6<span class="u">%</span></div><div class="lbl">WhatsApp-Nutzung in der Türkei</div></div>
+    <div class="kpi"><div class="num">34<span class="u">%</span></div><div class="lbl">KI-Nutzung unter Property-Managern (von 21% in einem Jahr)</div></div>
+  </div>
+
+  <h3>KI wird zum Wettbewerbsstandard</h3>
+  <p>Parallel beschleunigt sich der Wettbewerb um KI-gestützte Differenzierung. Die aktive KI-Nutzung unter Property-Managern stieg innerhalb eines Jahres von 21 % auf 34 %. Führende internationale Anbieter haben KI-Assistenten nachgerüstet — durchweg mit dem Prinzip, dass sensible Entscheidungen stets menschlicher Prüfung bedürfen. Genau dieses Prinzip ist in 1Çatı bereits von Grund auf verankert.</p>
+
+  <h3>Digitale Erreichbarkeit der Zielgruppe</h3>
+  <p>Die internationale Eigentümer- und Mieterschaft ist digital hervorragend erreichbar: In der Türkei nutzen 88,6 % der Bevölkerung WhatsApp, die Internetnutzung liegt bei über 90 %. Das trägt 1Çatıs Ansatz einer installierbaren, mehrsprachigen Web-App, die auf jedem Gerät ohne App-Store-Hürde läuft.</p>
+</section>
+
+<!-- ============ 03 WETTBEWERB ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 03</span>
+  <h2>Wettbewerb &amp; Positionierung</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">Der türkische Markt bietet etablierte Site-Management-Lösungen. Keine davon vereint jedoch die vier Stärken, in die 1Çatı stößt.</p>
+
+  <table>
+    <thead><tr><th style="width:26%">Anbieter</th><th>Profil</th><th style="width:30%">Chance für 1Çatı</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Apsiyon</strong></td><td>Stärkste lokale Referenz, breite Suite, zwei WhatsApp-KI-Assistenten seit 2024.</td><td>Keine buchhalterisch belastbare Finanz-Tiefe; 1Çatı setzt strikte menschliche Freigaben über alle sensiblen KI-Aktionen.</td></tr>
+      <tr><td><strong>Senyonet / Yönetimcell</strong></td><td>Solide Verwaltungsmodule, Facility-Fokus bzw. Einfachheit als Verkaufsargument.</td><td>Keine dokumentierten KI-Funktionen — Raum für 1Çatıs tiefere Rechte-Struktur und Nachvollziehbarkeit.</td></tr>
+      <tr><td><strong>Aidatım / Siteplus</strong></td><td>Software-plus-Service-Hybrid bzw. Facility-Dienstleister.</td><td>Kein durchgängiges Self-Service-Portal im 1Çatı-Sinne.</td></tr>
+      <tr><td><strong>Neue KI-native Anbieter</strong> (Çardak, Odyosi)</td><td>Junge türkische Wettbewerber mit KI-Fokus auf Vorbuchhaltung und Risikoanalyse.</td><td>Frühwarnsignal — bestätigt die Nachfrage nach genau den Funktionen der 1Çatı-Roadmap.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Die Marktlücke, die 1Çatı besetzt</h3>
+  <p>Kein recherchierter türkischer oder internationaler Anbieter vereint in einem Produkt: <strong>(a)</strong> eine buchhalterisch belastbare Finanzführung, <strong>(b)</strong> ein strukturiertes Service-Desk mit SLA-Eskalation, <strong>(c)</strong> einen öffentlichen, kontofreien Registrierungs- und Meldekanal für ein konkretes Neubauprojekt und <strong>(d)</strong> eine KI-Schicht, die sensible Aktionen grundsätzlich nur empfiehlt statt selbst auszuführen. Genau diese Kombination — nicht ein einzelnes Feature — ist die Positionierung von 1Çatı.</p>
+</section>
+
+<!-- ============ 04 ZIELGRUPPE ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 04</span>
+  <h2>Zielgruppe</h2>
+  <div class="rule"></div>
+
+  <div class="cardgrid">
+    <div class="fcard">
+      <div class="ic">🌍</div>
+      <h4>Internationale Eigentümer &amp; Käufer</h4>
+      <p>Vor allem aus Deutschland, Russland, der Ukraine und dem Iran, die eine Wohnung besitzen oder kaufen, sich aber nicht dauerhaft vor Ort aufhalten und einen digitalen, mehrsprachigen Einblick in Zahlungsstand, Service und Dokumente benötigen.</p>
+    </div>
+    <div class="fcard">
+      <div class="ic">🔑</div>
+      <h4>Mieter</h4>
+      <p>Erhalten über ein eigentümer-gesponsertes Zeitzugangsmodell einen berechtigten, zeitlich begrenzten Zugriff auf ihre Einheit — mit klar abgegrenzten Rechten.</p>
+    </div>
+    <div class="fcard">
+      <div class="ic">🏢</div>
+      <h4>Internes Betriebsteam</h4>
+      <p>Sechs Rollen bei Ataberk Estate: Verwaltung, Standortverantwortliche, Buchhaltung, Außendienst/Technik, Sicherheit sowie Support/Einführung — jede mit exakt den Rechten, die ihre Arbeit erfordert.</p>
+    </div>
+    <div class="fcard">
+      <div class="ic">🤝</div>
+      <h4>Dienstleister &amp; Interessenten</h4>
+      <p>Dienstleister werden über das Service-Desk eingebunden; Kaufinteressenten und Gäste können den öffentlichen Bereich ohne Konto nutzen (Registrierung, Meldung).</p>
+    </div>
+  </div>
+
+  <p>Bewusst <strong>nicht</strong> adressiert wird der anonyme Immobilien-Massenmarkt außerhalb konkreter Referenzobjekte sowie jeder vollautomatisierte Zahlungs- oder Zugangsbetrieb ohne menschliche Freigabe — Letzteres bleibt ausgeschlossen, solange die entsprechenden rechtlichen und kaufmännischen Freigaben nicht vorliegen.</p>
+</section>
+
+<!-- ============ 05 NUTZEN ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 05</span>
+  <h2>Nutzen für Ataberk Estate</h2>
+  <div class="rule"></div>
+
+  <div class="cardgrid">
+    <div class="fcard"><h4>Eine Quelle der Wahrheit</h4><p>Eine zentrale, rollenbasierte Datengrundlage für bis zu 769 Einheiten ersetzt verstreute Excel-Listen und WhatsApp-Verläufe. Vertrieb, Portfolio, Finanzen und Service arbeiten auf demselben Datensatz.</p></div>
+    <div class="fcard"><h4>Nachvollziehbarkeit</h4><p>Jeder sensible Vorgang — Freigabe, Zahlungslogik, Zugangsentscheidung, Dokumentprüfung — wird mit Nutzer, Rolle, Zeitpunkt und Grund protokolliert. Das schafft Vertrauen bei Eigentümern und Prüfern.</p></div>
+    <div class="fcard"><h4>Niedrigere Einstiegshürde</h4><p>Der öffentliche New-Level-Premium-Bereich senkt die Hürde für internationale Eigentümer und Mieter durch einen verifizierten, mehrsprachigen Registrierungs-Zugang — ohne dass ein Systemkonto Voraussetzung für die erste Kontaktaufnahme ist.</p></div>
+    <div class="fcard"><h4>Entlastung durch KI</h4><p>Die KI-Schicht entlastet Management und Buchhaltung bei Routineabfragen und Priorisierung — ohne dass Finanz- oder Zugangsentscheidungen aus der Hand gegeben werden.</p></div>
+  </div>
+
+  <div class="note"><strong>Strategischer Zusatznutzen.</strong> Die Plattform ist so aufgebaut, dass sie auf weitere Standorte und Objekte übertragbar ist — eine tragfähige Grundlage, wenn Ataberk Estate den digitalen Betrieb über New Level Premium hinaus ausdehnen möchte.</div>
+</section>
+
+<!-- ============ 06 FUNKTIONSUMFANG ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 06</span>
+  <h2>Funktionsumfang — was 1Çatı liefert</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Der folgende Überblick zeigt alle entwickelten Funktionsbereiche mit ihrem aktuellen Status. „Verfügbar" bedeutet in der Demonstrationsumgebung voll bedienbar; „Teilweise" bedeutet, dass die Ansicht steht und die aktive Erfassung/der Vollzug für die Produktivversion folgt.</p>
+
+  <div class="legend">
+    <span class="pill pill-live">Live</span>
+    <span class="pill pill-full">Verfügbar</span>
+    <span class="pill pill-part">Teilweise</span>
+    <span class="pill pill-prep">In Vorbereitung</span>
+  </div>
+
+  <h3>Zugang, Rollen &amp; Sicherheit</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Rollenbasierter Zugang</td><td>Sechs Rollen mit fein abgestuften Rechten; jede Rolle sieht ausschließlich die für ihre Arbeit vorgesehenen Bereiche und Aktionen.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Zweifache Zugriffsprüfung</td><td>Rechte werden sowohl in der Anwendung als auch in der Datenbank durchgesetzt — nicht nur oberflächlich ausgeblendet.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Lückenlose Protokollierung</td><td>Sensible Aktionen werden mit Nutzer, Rolle, Zeit, Grund und Status revisionssicher festgehalten.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Ein-Klick-Demo-Zugang</td><td>Passwortfreier Präsentationszugang mit voller Sicht — für Vorführungen und Schulungen; in der Produktivumgebung standardmäßig gesperrt.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Portfolio- &amp; Wohnungsverwaltung</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Wohnungs-Matrix (Daire Matrix)</td><td>Zentrale Übersicht aller Einheiten mit Block, Nummer, Eigentümer, Bewohner, Preis, Schuldstatus, Dokumenten, Service- und Zugangsstatus — durchsuchbar und filterbar.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Portfolio-Struktur</td><td>Vollständiges Modell Standort → Block → Etage → Wohnung, mit dem realen 769-Einheiten-Datensatz von New Level Premium.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Verkaufs- &amp; Preisstatus</td><td>Verkaufsstatus, Listenpreis und Preisquelle je Einheit — auf Basis der tatsächlichen Preisliste des Objekts.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Datenimport &amp; -prüfung</td><td>Prüfung und Qualitätsanzeige beim Datenimport (Zeilen, Warnungen, Freigabe).</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Finanzen &amp; Beiträge</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Konten &amp; Saldenübersicht</td><td>Offene Salden, überfällige Beträge, Beitrags- und Zahlungsstatus je Einheit und Person, mit Schuldenalterung.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Unveränderliche Buchungen</td><td>Einmal gebuchte Finanzeinträge können nicht mehr verändert werden — eine zentrale buchhalterische Sicherheit.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Zahlungs- &amp; Kautionskontrolle</td><td>Kontrollzentrum für Zahlungspläne, Kautionsentscheidungen und Bankabgleich.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Schuldner-Restriktionen</td><td>Erkennung und Empfehlung von Einschränkungen bei offenen Schulden — mit verpflichtender menschlicher Freigabe.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Neue Buchung erfassen</td><td>Aktives Anlegen neuer Zahlungen/Buchungen im System.</td><td><span class="pill pill-prep">In Vorbereitung</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Service, Aufgaben &amp; Außendienst</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Service-Katalog</td><td>Leistungen mit Preis, Bearbeitungszeit (SLA), Schuldenpolitik und zuständigem Team (Reinigung, Wartung, Transfer u. a.).</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Service-Tickets &amp; SLA</td><td>Ticket-Übersicht nach Priorität, Status, SLA und Verantwortlichem; Neuanlage läuft über eine Freigabe-Warteschlange.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Feld-/Aufgabenboard</td><td>Außendienstaufgaben mit Zeitfenster, Checkliste und Fertigstellungsgrad.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Foto-/Videonachweis</td><td>Hochladen von Bild-/Videonachweisen zu Serviceaufträgen durch den Außendienst.</td><td><span class="pill pill-prep">In Vorbereitung</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Reservierung &amp; Vermietung</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Belegungs- &amp; Buchungsübersicht</td><td>Buchungen mit Check-in/-out, Kaution, Zugang und Reinigungsstatus in einer Übersicht.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Einzugs-Bereitschaft &amp; Übergabe</td><td>Bereitschafts-Board (Identität, Zahlung, Reinigung, Zugang, Begrüßung) und Checkout-/Übergabeaufgaben.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Neue Reservierung anlegen</td><td>Erstellen einer neuen Buchung im System.</td><td><span class="pill pill-prep">In Vorbereitung</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Kommunikation &amp; Dokumente</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Nachrichten-Postfach</td><td>Rollenbasierte Übersicht der Konversationen über alle Kanäle (WhatsApp, Portal, E-Mail, SMS), mit Vorlagen-Bibliothek in vier Sprachen.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Dokumenten-Vault</td><td>Dokumente je Einheit/Person/Kategorie mit Status, Aufbewahrungsregel und Berechtigungsprüfung (u. a. TAPU, KYC, Verträge).</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Sicherer Dokumenten-Upload</td><td>Upload mit Typ-/Größenprüfung und Prüfsumme; produktive Speicherung nach Freigabe aktivierbar.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+      <tr><td>Live-Versand (SMS/E-Mail/Push)</td><td>Tatsächlicher Nachrichtenversand über externe Anbieter.</td><td><span class="pill pill-prep">In Vorbereitung</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Berichte, Dashboard &amp; Compliance</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Live-Dashboard</td><td>Kennzahlen zu Einheiten, offenen Schulden, Tickets und Reservierungen mit automatischer Aktualisierung (für Verwaltung/Verantwortliche).</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Berichtszentrum</td><td>Management-, Finanz-, Service- und Zugangsberichte mit Diagrammen und Export-Freigabe.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Zugang &amp; Compliance</td><td>Übersicht eingeschränkter Einheiten, Zugangszonen und Käufer-Eignungs-Vorprüfung für den Vertrieb.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>New Level Premium — öffentlicher Bereich</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Öffentliche Landingpage</td><td>Mehrsprachige Projektseite, aufgebaut nach bewährter Marketing-Methodik, die Interessenten zur Registrierung führt.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Kontofreie Registrierung</td><td>Bewerbung als Eigentümer, Mieter oder Mitarbeiter ohne Konto; interne Rollen sind sicher ausgeschlossen.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Öffentlicher Meldekanal</td><td>Jede Person kann ohne Konto ein Anliegen melden (Reinigung, Technik, Sicherheit u. a.) — ausschließlich einreichend, keine Rückgabe interner Daten.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>QR-Poster vor Ort</td><td>Druckfertiges Poster mit QR-Code, das direkt zum Meldeformular führt — für Eingänge, Aufzüge, Gemeinschaftsflächen.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Mieter-Zeitzugang</td><td>Eigentümer-gesponserte, zeitlich begrenzte Zugangseinladungen für Mieter mit definiertem Umfang.</td><td><span class="pill pill-part">Teilweise</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>KI-Assistenten</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Interner Betriebsassistent</td><td>Rollenabhängiger Assistent im Portal für Zusammenfassungen, Prioritäten und Textentwürfe — führt nie eigenmächtig sensible Aktionen aus.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Öffentlicher Concierge</td><td>Assistent auf der Landingpage, der Interessenten begleitet und zur Registrierung führt; hat bewusst keinen Zugriff auf interne Daten.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+      <tr><td>Verbindung beider Assistenten</td><td>Der öffentliche Concierge liefert anonymisierte Themen der Interessentenfragen an das interne System zurück, damit die Beratung stetig besser wird.</td><td><span class="pill pill-full">Verfügbar</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Plattform-Grundlagen</h3>
+  <table>
+    <thead><tr><th style="width:34%">Funktion</th><th>Beschreibung</th><th style="width:16%">Status</th></tr></thead>
+    <tbody>
+      <tr><td>Mehrsprachigkeit</td><td>Vollständig in Türkisch, Englisch, Deutsch und Russisch — inhaltlich wie in der Oberfläche.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Installierbare Web-App (PWA)</td><td>Auf jedem Gerät ohne App-Store installierbar; Grundgerüst arbeitet auch bei schwacher Verbindung.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Hell-/Dunkel-Modus &amp; CI-Design</td><td>Durchgängiges Markendesign in Ihren Farben, mit Hell-/Dunkel-Umschaltung im Portal.</td><td><span class="pill pill-live">Live</span></td></tr>
+      <tr><td>Offline-Arbeitsbereich &amp; Push</td><td>Offline-Warteschlange für den Außendienst; produktive Offline-Synchronisation und Push-Benachrichtigungen.</td><td><span class="pill pill-prep">In Vorbereitung</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 07 ABGLEICH ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 07</span>
+  <h2>Abgleich Ihrer Anforderungen</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Diese Tabelle stellt jeden Punkt Ihrer ursprünglichen Anforderungsspezifikation dem heutigen Stand gegenüber. <strong>Vollständig</strong> = im Demonstrationsstand vollständig nutzbar; <strong>Teilweise</strong> = Ansicht/Grundlage vorhanden, Erfassung oder Vollzug folgt; <strong>In Vorbereitung</strong> = für die nächste Ausbaustufe eingeplant.</p>
+
+  <table>
+    <thead><tr><th style="width:40%">Ihre Anforderung</th><th style="width:16%">Status</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr><td>Zentrale Plattform für 769 Wohnungen</td><td><span class="pill pill-full">Vollständig</span></td><td>Mit realem Referenzdatensatz umgesetzt.</td></tr>
+      <tr><td>Kern: Standort → Block → Wohnung, Beziehungen</td><td><span class="pill pill-full">Vollständig</span></td><td>Vollständiges Datenmodell mit Rechte- und Datensicherheit.</td></tr>
+      <tr><td>Finanzmodul (Konten, Salden, Abrechnung, Inkasso, Kaution)</td><td><span class="pill pill-part">Teilweise</span></td><td>Konten &amp; Salden vollständig; aktive Erfassung/automatische Verrechnung in Vorbereitung.</td></tr>
+      <tr><td>Operations (Aufgaben, Dienste, Personal)</td><td><span class="pill pill-part">Teilweise</span></td><td>Aufgaben &amp; Dienste verfügbar; Lagerverwaltung war optional nach MVP.</td></tr>
+      <tr><td>Benutzeroberflächen: Web-Panel &amp; Mobile App</td><td><span class="pill pill-part">Teilweise</span></td><td>Web-Panel vollständig; mobil als installierbare Web-App (PWA) statt nativer App.</td></tr>
+      <tr><td>Sechs Benutzerrollen mit spezifischen Rechten</td><td><span class="pill pill-full">Vollständig</span></td><td>Umgesetzt und feiner abgestuft als gefordert.</td></tr>
+      <tr><td>Stammdaten: Wohnung, Nutzer, Konto, Transaktion, Dienst, Aufgabe, Buchung, Kaution</td><td><span class="pill pill-full">Vollständig</span></td><td>Alle Datenmodelle vorhanden und in der Oberfläche sichtbar.</td></tr>
+      <tr><td>Finanzregeln (Dienst bei Schuld ablehnen, Miete verrechnen, Kaution sperren/erstatten)</td><td><span class="pill pill-part">Teilweise</span></td><td>Erkennung &amp; Empfehlung mit Freigabe vorhanden; automatischer Vollzug in Vorbereitung.</td></tr>
+      <tr><td>Einschränkungen bei Schulden (Buchung/Karte/Dienst sperren)</td><td><span class="pill pill-part">Teilweise</span></td><td>Empfehlung vorhanden; tatsächliche Ausführung nach rechtlicher Freigabe.</td></tr>
+      <tr><td>Dienstverwaltung: Katalog &amp; Ablauf</td><td><span class="pill pill-part">Teilweise</span></td><td>Katalog vollständig; durchgängiger Bestellablauf in Vorbereitung.</td></tr>
+      <tr><td>Aufgabenverwaltung (Erstellen, Zuweisung, SLA, Foto-/Videobericht)</td><td><span class="pill pill-part">Teilweise</span></td><td>Erstellen &amp; SLA verfügbar; Foto-/Videobericht in Vorbereitung.</td></tr>
+      <tr><td>Vermietung &amp; Reservierung (Kalender, Buchung erstellen, Zahlungskontrolle, Auto-Aufgaben)</td><td><span class="pill pill-part">Teilweise</span></td><td>Übersicht &amp; Boards verfügbar; Buchung erstellen in Vorbereitung.</td></tr>
+      <tr><td>Kommunikation (Chat, Team-Chat, Push/E-Mail/SMS)</td><td><span class="pill pill-part">Teilweise</span></td><td>Vollständige Oberfläche &amp; Vorlagen; Live-Versand nach Anbieter-Freigabe.</td></tr>
+      <tr><td>Mobile App (Login, Guthaben, Zahlung, Chat, Dokumente)</td><td><span class="pill pill-part">Teilweise</span></td><td>Als installierbare Web-App über den Browser abgedeckt; Push in Vorbereitung.</td></tr>
+      <tr><td>Integrationen (Zahlung/Banken, Identität, Zugang, Kameras)</td><td><span class="pill pill-part">Teilweise</span></td><td>Vollständige Anbieter-Übersicht vorbereitet; Live-Anbindung nach Vertrags-/Anbieterwahl.</td></tr>
+      <tr><td>Pflichtszenarien (Serviceauftrag, Einzug, Auszug, Zahlungsverzug)</td><td><span class="pill pill-part">Teilweise</span></td><td>Erkennungs-, Freigabe- und Protokoll-Logik vorhanden; automatischer Vollzug in Vorbereitung.</td></tr>
+      <tr><td>Berichterstattung (Finanzen, Schulden, Dienste, Personal, Cashflow)</td><td><span class="pill pill-part">Teilweise</span></td><td>Finanz-/Schuld-/Serviceberichte verfügbar; Personal-Report &amp; täglicher Cashflow als Ausbau.</td></tr>
+      <tr><td>Dashboard (Einnahmen, Ausgaben, Schulden, Aufgaben, KPI)</td><td><span class="pill pill-part">Teilweise</span></td><td>Schulden/Aufgaben/KPI live-fähig; Einnahmen-/Ausgaben-Kennzahlen im Ausbau.</td></tr>
+      <tr><td>Systemanforderungen (API-first, Rollen, Protokollierung, Skalierbarkeit)</td><td><span class="pill pill-full">Vollständig</span></td><td>Rollen, Datensicherheit und Protokollierung produktionsnah umgesetzt.</td></tr>
+      <tr><td>MVP (Kern, Finanzen, Dienste + Aufgaben, einfache Mobile App)</td><td><span class="pill pill-part">Teilweise</span></td><td>Alle MVP-Bausteine vorhanden; einzelne Erfassungsfunktionen im Ausbau.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note">
+    <strong>Das durchgängige Muster — und warum es kein Mangel ist.</strong> Bei den als „Teilweise" markierten Punkten ist durchweg dasselbe Prinzip am Werk: <em>Anzeige und Empfehlung sind vorhanden, der automatische Vollzug</em> (Buchung, Sperrung, Versand, Verrechnung) <em>folgt bewusst erst nach Freigabe.</em> Das ist keine zufällige Lücke, sondern die konsequente Umsetzung des Grundprinzips „das System bereitet vor, ein Mensch entscheidet". Für den Produktivbetrieb werden diese Vollzugsschritte gezielt und kontrolliert freigeschaltet.
+  </div>
+</section>
+
+<!-- ============ 08 DEMO ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 08</span>
+  <h2>Die Demonstration — Zweck &amp; Umfang</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">Der aktuelle Stand ist eine vollständig bedienbare Demonstrationsumgebung. Sie ist dafür gedacht, den kompletten Funktionsumfang erlebbar zu machen — für Ihre Bewertung, für Stakeholder-Präsentationen und für erste Reaktionen Ihres Teams.</p>
+
+  <h3>Was die Demonstration zeigt</h3>
+  <ul>
+    <li>Den vollständigen Funktionsumfang aus Kapitel 6 — in allen sechs Rollen und allen vier Sprachen durchklickbar.</li>
+    <li>Realistische Beispieldaten auf Basis des echten New-Level-Premium-Portfolios (769 Einheiten, Preisliste, Blockstruktur).</li>
+    <li>Den öffentlichen Bereich mit Registrierung, Meldekanal und QR-Poster — ohne Login erreichbar.</li>
+    <li>Beide KI-Assistenten in Aktion.</li>
+    <li>Einen passwortfreien Ein-Klick-Zugang für schnelle Vorführungen.</li>
+  </ul>
+
+  <h3>Was die Demonstration bewusst noch nicht tut</h3>
+  <p>Zum Schutz aller Beteiligten führt die Demonstration keine echten, unwiderruflichen Vorgänge aus:</p>
+  <ul>
+    <li>Es werden keine echten Zahlungen gebucht und keine Konten belastet.</li>
+    <li>Es werden keine Zugänge real gesperrt oder freigeschaltet.</li>
+    <li>Es werden keine Nachrichten tatsächlich an Kunden versendet.</li>
+    <li>Es werden keine Meldungen an Behörden übermittelt.</li>
+    <li>Die KI trifft keine autonomen Entscheidungen — sie empfiehlt und legt zur Freigabe vor.</li>
+  </ul>
+
+  <div class="note"><strong>Wichtig für jede Präsentation.</strong> In einer Vorführung wirkt jeder Bereich gleich überzeugend — eine vollständig gestaltete Seite sieht identisch aus, unabhängig davon, ob dahinter bereits echte Live-Daten oder Beispieldaten stehen. Deshalb ist der Statusausweis in Kapitel 6 und 7 so wichtig: Er stellt sicher, dass Erwartungen auf dem tatsächlichen Stand aufsetzen. Für den Übergang in den Livebetrieb sind die in Kapitel 9 genannten Schritte erforderlich.</div>
+</section>
+
+<!-- ============ 09 NÄCHSTE SCHRITTE ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 09</span>
+  <h2>Nächste Schritte</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Die folgenden Schritte führen von der Demonstration zum produktiven Betrieb. Sie sind nach Wirkung und Abhängigkeit geordnet.</p>
+
+  <h3>Schritt 1 — Schnelle, sichtbare Fortschritte (ohne externe Abhängigkeit)</h3>
+  <p>Mehrere Auswertungs- und Übersichtsseiten (u. a. Wohnungs-Matrix, Finanzübersicht, Berichte) an die bereits vorhandene Live-Datenanbindung anschließen. Die technische Grundlage dafür ist bereits fertig — es geht um die Verbindung, nicht um Neuentwicklung. Ergebnis: spürbar mehr echte Live-Daten im Portal bei geringem Aufwand.</p>
+
+  <h3>Schritt 2 — Kernfunktionen für den Alltagsbetrieb fertigstellen</h3>
+  <ul>
+    <li><strong>Reservierung/Buchung anlegen</strong> — die von Ihnen angeforderte Kernfunktion für die Vermietung.</li>
+    <li><strong>Finanzbuchung erfassen</strong> — aktives Anlegen von Zahlungen/Buchungen, geschützt durch die bereits vorhandene Unveränderlichkeits-Sicherung.</li>
+    <li><strong>Foto-/Videonachweis</strong> für Serviceaufträge durch den Außendienst.</li>
+    <li><strong>Bearbeitungs-Übersicht</strong> für eingehende Registrierungen und Meldungen aus dem öffentlichen Bereich, inklusive Freigabe und Umwandlung in ein Konto bzw. Ticket.</li>
+  </ul>
+
+  <h3>Schritt 3 — Freigaben &amp; Entscheidungen Ihrerseits (parallel anstoßen)</h3>
+  <p>Diese Punkte sind nicht durch Entwicklungsgeschwindigkeit steuerbar und sollten frühzeitig parallel gestartet werden:</p>
+  <table>
+    <thead><tr><th style="width:42%">Thema</th><th>Erforderliche Entscheidung/Freigabe</th></tr></thead>
+    <tbody>
+      <tr><td>Produktive Datenbank &amp; Hosting</td><td>Freigabe von Umgebung, Region, Backup-Regel und Budget für den Produktivbetrieb.</td></tr>
+      <tr><td>Zahlungs- &amp; Bankanbindung</td><td>Anbieterwahl bzw. Bestätigung eines Bank-/Überweisungs-Workflows.</td></tr>
+      <tr><td>Kommunikationskanäle</td><td>Auswahl der Anbieter für SMS, E-Mail und Push; WhatsApp-Business-Verifizierung (Vorlauf 1–6 Wochen).</td></tr>
+      <tr><td>Zugangssystem</td><td>Vor-Ort-Bestandsaufnahme der Hardware und Festlegung der rechtlichen Grenzen für Zugangsaktionen.</td></tr>
+      <tr><td>Identitätsprüfung</td><td>Auswahl eines Prüfdienstes für die Verifizierung bei Owner-/Tenant-Registrierung.</td></tr>
+      <tr><td>Rechtliche Bestätigungen</td><td>Fachliche Freigabe zu Schuldner-Restriktionen, Kautionen und Meldepflichten durch die zuständigen Berater.</td></tr>
+      <tr><td>Abnahmetest (UAT)</td><td>Gemeinsamer Test mit echten Daten und formale Abnahme vor dem Livegang.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><strong>Empfehlung zur Reihenfolge.</strong> Schritt 1 liefert den größten sichtbaren Fortschritt bei geringstem Aufwand. Die Reservierungs-Erfassung (Schritt 2) sollte vorgezogen werden, da sie die einzige explizit von Ihnen geforderte Kernfunktion ist, die aktuell noch aussteht. Die Punkte aus Schritt 3 sollten unabhängig vom Entwicklungsfortschritt parallel angestoßen werden, da einige davon längere Vorlaufzeiten haben.</div>
+</section>
+
+<!-- ============ 10 UMSETZUNGSPLAN ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 10</span>
+  <h2>Umsetzungsplan &amp; Fahrplan</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">1Çatı wird auf einem modernen, bewährten Technologie-Fundament entwickelt (Stand Juli 2026). Jede Ausbaustufe gilt erst als abgeschlossen, wenn dokumentierte Abnahmekriterien erfüllt und die Qualität nachgewiesen ist.</p>
+
+  <table>
+    <thead><tr><th style="width:34%">Ausbaustufe</th><th>Inhalt</th><th style="width:20%">Stand</th></tr></thead>
+    <tbody>
+      <tr><td>Fundament (Betrieb, Finanzen, Service)</td><td>Zugang &amp; Rollen, Portfolio, Nutzerverwaltung, Finanzen, Zahlungs-/Schuldnerkontrollen, Service-Katalog, Aufgaben/SLA.</td><td><span class="pill pill-full">Fertiggestellt (Demo)</span></td></tr>
+      <tr><td>New Level Premium — öffentlicher Bereich</td><td>Landingpage, Registrierung, Meldekanal, Identitätsprüfung, Zeitzugang, öffentlicher Concierge.</td><td><span class="pill pill-full">Fertiggestellt (Demo)</span></td></tr>
+      <tr><td>Reservierung, Kommunikation &amp; Dokumente</td><td>Buchung/Move-in/Checkout, Nachrichten &amp; Vorlagen, Dokumentenverwaltung.</td><td><span class="pill pill-part">Demo verfügbar, Ausbau</span></td></tr>
+      <tr><td>Mobile &amp; installierbare Nutzung</td><td>Installierbare Web-App bereits nutzbar; Offline-Synchronisation und Push im Ausbau.</td><td><span class="pill pill-part">Teilweise live</span></td></tr>
+      <tr><td>Externe Integrationen</td><td>Zahlungs-, Bank-, Kommunikations- und Zugangsanbindung.</td><td><span class="pill pill-prep">Vorbereitet, Anbieterwahl offen</span></td></tr>
+      <tr><td>KI-Premium-Ebene</td><td>Erweiterte Analysen, Prognosen und Berichtsentwürfe.</td><td><span class="pill pill-prep">Vorschau vorhanden</span></td></tr>
+      <tr><td>Abnahme &amp; Launch</td><td>Sicherheitsprüfung, Abnahmetest mit echten Daten, Schulung, Produktivstart.</td><td><span class="pill pill-prep">Geplant</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Realistische Einordnung</h3>
+  <p>Der aktuelle Stand ist ein funktionsfähiges, mit realistischen Daten lauffähiges Gesamtsystem für Ihre Bewertung, Präsentationen und erste Rückmeldungen — noch kein produktiv freigegebenes Endprodukt. Insbesondere Zahlungsabwicklung, Zugangskontrolle, Behördenmeldung und jede Form von KI-Automatisierung starten bewusst mit menschlicher Freigabe bzw. reinem Empfehlungscharakter und werden erst nach den in Kapitel 9 genannten Entscheidungen produktiv geschaltet.</p>
+</section>
+
+<!-- ============ 11 CHANCEN ============ -->
+<section class="chapter">
+  <span class="kicker">Kapitel 11</span>
+  <h2>Chancen &amp; Voraussetzungen</h2>
+  <div class="rule"></div>
+
+  <h3>Chancen</h3>
+  <div class="cardgrid">
+    <div class="fcard"><h4>Alleinstellung am türkischen Markt</h4><p>Die Kombination aus belastbarer Finanzführung, strukturiertem Service-Desk und kontrollierter KI hat am türkischen Markt kein direktes Gegenstück.</p></div>
+    <div class="fcard"><h4>Rückenwind durch KI-Akzeptanz</h4><p>Die schnell steigende KI-Akzeptanz in der Branche trifft auf ein bereits verankertes, vertrauensbildendes „Mensch entscheidet"-Prinzip.</p></div>
+    <div class="fcard"><h4>Wert in einem engeren Markt</h4><p>Ein schrumpfender Markt erhöht den relativen Wert operativer Exzellenz gegenüber Bestandskunden — genau darauf zielt 1Çatı.</p></div>
+    <div class="fcard"><h4>Übertragbares Muster</h4><p>Der öffentliche Registrierungs- und Meldekanal ist ein wiederverwendbares Muster für weitere Bauprojekte und Standorte.</p></div>
+  </div>
+
+  <h3>Voraussetzungen für den Produktivbetrieb</h3>
+  <p>Damit aus der Demonstration ein produktiver Betrieb wird, sind einige Entscheidungen erforderlich, die naturgemäß bei Ataberk Estate bzw. den jeweiligen Fachpartnern liegen — sie sind in Kapitel 9, Schritt 3 im Detail aufgeführt. Zusammengefasst: produktive Datenumgebung, Zahlungs-/Bankweg, Kommunikationsanbieter, Zugangssystem, Identitätsprüfung, rechtliche Bestätigungen und ein gemeinsamer Abnahmetest. Keiner dieser Punkte stellt ein technisches Risiko dar — es sind klar benannte, planbare Freigaben.</p>
+
+  <div class="note"><strong>Fazit.</strong> 1Çatı liefert heute ein vollständig erlebbares, in Ihrem Markendesign gestaltetes Betriebssystem für den gesamten Immobilienbetrieb von New Level Premium. Der Weg zum Livebetrieb ist klar, überschaubar und ohne verdeckte Überraschungen — jede offene Frage ist in diesem Dokument benannt.</p></div>
+
+  <div class="footer-tag">
+    1Çatı — Property-Management- &amp; Real-Estate-ERP · umgesetzt durch WAMOCON GmbH für Ataberk Estate · Vertraulich · 07. Juli 2026
+  </div>
+</section>
+
+</body>
+</html>
