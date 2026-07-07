@@ -3,7 +3,6 @@
 import { BriefcaseBusiness, LogOut, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { useUser } from "@/components/user-provider"
 import { useRouter } from "@/app/navigation"
 import { clientProfile } from "@/lib/client-context"
@@ -55,7 +54,6 @@ export function DashboardTopbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <ThemeToggle />
           <LocaleSwitcher compact className="hidden min-[360px]:flex" />
           <details className="group relative">
             <summary
