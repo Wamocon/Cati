@@ -24,6 +24,7 @@ import {
   formatTryShort,
   type SiteSummary,
 } from "@/lib/site-management-data"
+import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import { cn } from "@/lib/utils"
 
 type SnapshotSource = "supabase" | "local-seed" | undefined
@@ -340,6 +341,35 @@ function formatGeneratedAt(value: string | undefined, locale: SimulationLocale) 
   }).format(date)
 }
 
+function localizeStreamMessage(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  const localized = localizeDashboardTextPart(value, locale)
+  if (localized !== value) return localized
+  if (locale !== "tr") return value
+
+  return value
+    .replace(/^AI interest - what-is/i, "AI talep sinyali")
+    .replace(/^AI interest/i, "AI talep sinyali")
+    .replace(/\bwhats\b/i, "WhatsApp")
+    .replace(/\baccess update\b/i, "erişim güncelleme")
+    .replace(/\bCamera incident lookup request\b/i, "kamera olay inceleme talebi")
+    .replace(/\bDeposit hold\b/i, "depozito bekletme")
+    .replace(/\bcheckout\b/i, "çıkış")
+    .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
+    .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
+    .replace(/\bservice_ticket\b/gi, "servis talebi")
+    .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+}
+
+function localizeTicketActor(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  if (locale !== "tr") return value
+  return value
+    .replace(/\bwaiting_approval\b/gi, "Onay bekliyor")
+    .replace(/\btriage\b/gi, "Ön inceleme")
+    .replace(/\bassigned\b/gi, "Atandı")
+    .replace(/\bin_progress\b/gi, "İşlemde")
+    .replace(/\bopen\b/gi, "Açık")
+}
+
 function blockRisk(block: BlockOverview, totalDebtTry: number) {
   const debtScore = Math.round((block.debtTry / Math.max(totalDebtTry, 1)) * 100)
   return Math.min(100, debtScore + block.blocked * 5 + block.maintenance * 3)
@@ -356,7 +386,9 @@ export function LiveErpSimulation({
   source,
   summary,
 }: LiveErpSimulationProps) {
-  const locale = resolveSimulationLocale(useLocale())
+  const rawLocale = useLocale()
+  const locale = resolveSimulationLocale(rawLocale)
+  const dashboardLocale = resolveDashboardLocale(rawLocale)
   const copy = simulationCopy[locale]
   const prefersReducedMotion = useReducedMotion()
   const visibleBlocks = useMemo(() => blocks.slice(0, 8), [blocks])
@@ -368,19 +400,25 @@ export function LiveErpSimulation({
     const localizedActivityItems = activityItems.slice(0, 3).map((event) => ({
       ...event,
       actor: copy.events[event.id as keyof typeof copy.events]?.actor ?? event.actor,
-      message: copy.events[event.id as keyof typeof copy.events]?.message ?? event.message,
-      type: copy.events[event.id as keyof typeof copy.events]?.type ?? event.type,
+      message: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.message ?? event.message,
+        dashboardLocale
+      ),
+      type: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.type ?? event.type,
+        dashboardLocale
+      ),
     }))
     const ticketEvents = criticalTickets.slice(0, 3).map((ticket) => ({
       href: "/dashboard/tickets",
       id: `ticket-${ticket.id}`,
-      message: `${ticket.label}: ${ticket.title}`,
+      message: `${ticket.label}: ${localizeStreamMessage(ticket.title, dashboardLocale)}`,
       type: `${ticket.slaHoursRemaining}h SLA`,
-      actor: ticket.assignee,
+      actor: localizeTicketActor(ticket.assignee, dashboardLocale),
     }))
 
     return [...localizedActivityItems, ...ticketEvents].slice(0, 5)
-  }, [activityItems, copy, criticalTickets])
+  }, [activityItems, copy, criticalTickets, dashboardLocale])
 
   useEffect(() => {
     if (visibleBlocks.length <= 1) return

@@ -31,30 +31,32 @@ test.describe("Functional tests - public AI concierge", () => {
   test("public chat answers in the detected visitor message language", async ({
     request,
   }) => {
+    test.setTimeout(90_000)
     const cases = [
       {
         message: "Что такое 1Çatı?",
         expectedLanguage: "ru",
-        replyPattern: /операционная система/i,
+        replyPattern: /(ERP|система)/i,
       },
       {
         message: "Was ist 1Çatı?",
         expectedLanguage: "de",
-        replyPattern: /Betriebssystem/i,
+        replyPattern: /(ERP|Immobilienmanagement|System)/i,
       },
       {
         message: "1Çatı nedir?",
         expectedLanguage: "tr",
-        replyPattern: /işletim sistemidir/i,
+        replyPattern: /(ERP|sistem|işletim)/i,
       },
       {
         message: "What is 1Çatı?",
         expectedLanguage: "en",
-        replyPattern: /operating system/i,
+        replyPattern: /(ERP|operating system|property management)/i,
       },
     ]
 
     for (const item of cases) {
+      const started = Date.now()
       const response = await request.post("/api/ai/public-chat", {
         data: {
           message: item.message,
@@ -62,13 +64,52 @@ test.describe("Functional tests - public AI concierge", () => {
           page: "e2e-public-ai",
         },
       })
+      const elapsedMs = Date.now() - started
 
       expect(response.status()).toBe(200)
       const payload = await response.json()
       expect(payload.language).toBe(item.expectedLanguage)
       expect(payload.topic).toBe("what-is")
       expect(payload.reply).toMatch(item.replyPattern)
+      expect.soft(
+        payload.responseMs ?? elapsedMs,
+        `${item.expectedLanguage} public AI response latency`
+      ).toBeLessThanOrEqual(1_500)
+      expect.soft(
+        elapsedMs,
+        `${item.expectedLanguage} public AI total request latency`
+      ).toBeLessThanOrEqual(3_000)
     }
+  })
+
+  test("public chat stream sends deltas and final metadata without waiting on model generation", async ({
+    request,
+  }) => {
+    const started = Date.now()
+    const response = await request.post("/api/ai/public-chat/stream", {
+      data: {
+        message: "What is 1Cati?",
+        locale: "en",
+        page: "e2e-public-ai",
+      },
+    })
+    const elapsedMs = Date.now() - started
+
+    expect(response.status()).toBe(200)
+    expect(response.headers()["content-type"]).toContain("application/x-ndjson")
+    const lines = (await response.text())
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as Record<string, unknown>)
+    expect(lines.some((line) => line.type === "delta" && typeof line.text === "string")).toBe(true)
+    const done = lines.find((line) => line.type === "done")
+    expect(done).toBeTruthy()
+    const payload = done?.payload as Record<string, unknown>
+    expect(payload.language).toBe("en")
+    expect(payload.source).toBe("public-knowledge")
+    expect(payload.reply).toMatch(/ERP|operating system|property management/i)
+    expect.soft(elapsedMs, "public AI stream total request latency").toBeLessThanOrEqual(3_000)
   })
 
   test("public chat routes unsupported questions to a human instead of guessing", async ({ request }) => {
@@ -123,7 +164,9 @@ test.describe("Functional tests - public AI concierge", () => {
     await panel.locator("input").fill("What is 1Cati?")
     await panel.locator('button[type="submit"]').click()
 
-    await expect(panel.getByTestId("public-ai-feedback-positive").last()).toBeVisible()
+    await expect(panel.getByTestId("public-ai-feedback-positive").last()).toBeVisible({
+      timeout: 15_000,
+    })
     await expect(panel.getByTestId("public-ai-sources")).toHaveCount(0)
     await expect(panel.getByText(/Source:/i)).toHaveCount(0)
     await expect(

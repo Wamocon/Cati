@@ -196,6 +196,25 @@ const workflowApprovalCopy = {
   },
 } as const
 
+const workflowDisplayCopy = {
+  tr: {
+    aiDraft: "AI servis taslağı",
+    approvalRequest: "Servis onay talebi",
+  },
+  en: {
+    aiDraft: "AI service draft",
+    approvalRequest: "Service approval request",
+  },
+  de: {
+    aiDraft: "KI-Serviceentwurf",
+    approvalRequest: "Service-Freigabeanfrage",
+  },
+  ru: {
+    aiDraft: "AI-черновик заявки",
+    approvalRequest: "Запрос на согласование сервиса",
+  },
+} as const
+
 const SERVICE_OPERATIONS_REALTIME_TABLES = [
   "service_catalog",
   "service_orders",
@@ -300,6 +319,28 @@ export default function TicketsPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
   const t = (value: string) => localizeDashboardTextPart(value, locale)
+  const workflowDisplay = workflowDisplayCopy[locale]
+  const displayWorkflowTitle = (item: WorkflowRequestView) => {
+    const localized = t(item.title)
+    if (localized !== item.title) return localized
+
+    const freeformPrompt =
+      item.title.length > 72 ||
+      /[\u0400-\u04FF]/.test(item.title) ||
+      item.actionType.includes("ticket.create")
+
+    if (item.origin === "ai" || freeformPrompt) {
+      const base = item.actionType.includes("ticket.create")
+        ? workflowDisplay.aiDraft
+        : workflowDisplay.approvalRequest
+      const showExternalId =
+        item.entityExternalId &&
+        !/^(ai-ticket-draft|ticket-request|NLP-OPS)/i.test(item.entityExternalId)
+      return showExternalId ? `${base} - ${item.entityExternalId}` : base
+    }
+
+    return localized
+  }
   const [queueData, setQueueData] = useState<ServiceTicketQueueData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const [localWorkflowRequests, setLocalWorkflowRequests] = useState<WorkflowRequestView[]>([])
@@ -689,7 +730,7 @@ export default function TicketsPage() {
                               {t(item.riskLevel)}
                             </StatusBadge>
                           </div>
-                          <h3 className="mt-2 truncate text-sm font-black text-foreground">{t(item.title)}</h3>
+                          <h3 className="mt-2 truncate text-sm font-black text-foreground">{displayWorkflowTitle(item)}</h3>
                           <p className="mt-1 text-xs text-muted-foreground">
                             {approvalCopy.origin}: {t(item.origin)} · {approvalCopy.mode}: {t(item.executionMode)}
                           </p>
@@ -947,7 +988,7 @@ export default function TicketsPage() {
                         <StatusBadge variant="danger">{t("Finans blokeli")}</StatusBadge>
                       )}
                     </div>
-                    <h3 className="mt-2 text-sm font-bold text-foreground">{ticket.title}</h3>
+                    <h3 className="mt-2 text-sm font-bold text-foreground">{t(ticket.title)}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {ticket.flatNumber} - {ticket.category}
                       {!clientView && ` - ${ticket.assignee}`}
@@ -1048,7 +1089,7 @@ export default function TicketsPage() {
             columns={[
           { key: "id", header: t("Talep"), sortable: true, render: (ticket) => ticket.id },
           { key: "flat", header: t("Daire"), sortable: true, render: (ticket) => ticket.flatNumber },
-          { key: "title", header: t("Konu"), render: (ticket) => ticket.title },
+          { key: "title", header: t("Konu"), render: (ticket) => t(ticket.title) },
           {
             key: "priority",
             header: t("Öncelik"),

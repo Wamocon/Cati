@@ -154,6 +154,20 @@ interface Message {
   feedback?: "positive" | "negative"
 }
 
+type AssistantDraft = Omit<Message, "id">
+
+interface CachedAssistantMessage {
+  expiresAt: number
+  message: AssistantDraft
+}
+
+const WIDGET_RESPONSE_CACHE_TTL_MS = 5 * 60 * 1000
+const WIDGET_RESPONSE_CACHE_MAX = 40
+
+function currentTimeMs() {
+  return new Date().getTime()
+}
+
 function normalizeSources(value: unknown): PublicAiSource[] {
   if (!Array.isArray(value)) return []
   return value
@@ -174,6 +188,57 @@ function normalizeSources(value: unknown): PublicAiSource[] {
       }
     })
     .filter((item): item is PublicAiSource => item !== null)
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null
+  return value as Record<string, unknown>
+}
+
+function assistantMessageFromPayload(
+  data: Record<string, unknown>,
+  fallbackLocale: LocaleKey,
+  fallbackCopy: string
+): AssistantDraft {
+  const responseLanguage =
+    typeof data.language === "string" ? resolveLocale(data.language) : fallbackLocale
+
+  return {
+    role: "assistant",
+    content:
+      typeof data.reply === "string" && data.reply.trim()
+        ? data.reply
+        : fallbackCopy,
+    language: responseLanguage,
+    topic: typeof data.topic === "string" ? data.topic : undefined,
+    outcome: typeof data.outcome === "string" ? data.outcome : undefined,
+    source:
+      data.source === "local-ai" || data.source === "public-knowledge"
+        ? data.source
+        : undefined,
+    confidence: typeof data.confidence === "number" ? data.confidence : undefined,
+    responseMs: typeof data.responseMs === "number" ? data.responseMs : undefined,
+    shouldEscalate: data.shouldEscalate === true,
+    escalationReason:
+      typeof data.escalationReason === "string" ? data.escalationReason : null,
+    sources: normalizeSources(data.sources),
+    eventReference:
+      typeof data.eventReference === "string" ? data.eventReference : null,
+  }
+}
+
+function cacheKeyForPublicAi(text: string, locale: LocaleKey, page: string) {
+  return `${locale}:${page}:${text.toLocaleLowerCase("tr").replace(/\s+/g, " ")}`
+}
+
+function cachedAssistantDraft(message: AssistantDraft): AssistantDraft {
+  return {
+    ...message,
+    sources: message.sources ? [...message.sources] : undefined,
+    eventReference: null,
+    feedback: undefined,
+    responseMs: 0,
+  }
 }
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -201,6 +266,7 @@ export function SiteConcierge({ page }: { page: string }) {
   ])
   const scrollRef = useRef<HTMLDivElement>(null)
   const idRef = useRef(0)
+  const responseCacheRef = useRef<Map<string, CachedAssistantMessage>>(new Map())
   const suggestions = publicAiSuggestions[locale]
 
   useEffect(() => {
@@ -218,53 +284,156 @@ export function SiteConcierge({ page }: { page: string }) {
       { id: `u-${idRef.current}`, role: "user", content: trimmed },
     ])
     setInput("")
+
+    const cacheKey = cacheKeyForPublicAi(trimmed, locale, page)
+    const cached = responseCacheRef.current.get(cacheKey)
+    if (cached && cached.expiresAt > currentTimeMs()) {
+      idRef.current += 1
+      setMessages((prev) => [
+        ...prev,
+        {
+          ...cachedAssistantDraft(cached.message),
+          id: `a-${idRef.current}`,
+        },
+      ])
+      return
+    }
+    if (cached) responseCacheRef.current.delete(cacheKey)
+
     setTyping(true)
 
-    let assistantMessage: Message = {
-      id: "",
+    let assistantId: string | null = null
+    let finalMessage: AssistantDraft | null = null
+    const errorMessage: AssistantDraft = {
       role: "assistant",
       content: t.error,
     }
-    try {
+
+    const appendAssistant = (message: AssistantDraft) => {
+      idRef.current += 1
+      assistantId = `a-${idRef.current}`
+      setMessages((prev) => [...prev, { ...message, id: assistantId as string }])
+    }
+
+    const patchAssistant = (patch: Partial<Message>) => {
+      if (!assistantId) return
+      setMessages((prev) =>
+        prev.map((item) =>
+          item.id === assistantId ? { ...item, ...patch } : item
+        )
+      )
+    }
+
+    const fetchJsonMessage = async () => {
       const response = await fetch("/api/ai/public-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: trimmed, locale, page }),
       })
       const data = (await response.json()) as Record<string, unknown>
-      if (response.ok && typeof data.reply === "string" && data.reply.trim()) {
-        const responseLanguage =
-          typeof data.language === "string" ? resolveLocale(data.language) : locale
-        assistantMessage = {
-          id: "",
-          role: "assistant",
-          content: data.reply,
-          language: responseLanguage,
-          topic: typeof data.topic === "string" ? data.topic : undefined,
-          outcome: typeof data.outcome === "string" ? data.outcome : undefined,
-          source:
-            data.source === "local-ai" || data.source === "public-knowledge"
-              ? data.source
-              : undefined,
-          confidence: typeof data.confidence === "number" ? data.confidence : undefined,
-          responseMs: typeof data.responseMs === "number" ? data.responseMs : undefined,
-          shouldEscalate: data.shouldEscalate === true,
-          escalationReason:
-            typeof data.escalationReason === "string" ? data.escalationReason : null,
-          sources: normalizeSources(data.sources),
-          eventReference:
-            typeof data.eventReference === "string" ? data.eventReference : null,
+      if (!response.ok) return errorMessage
+      return assistantMessageFromPayload(data, locale, t.error)
+    }
+
+    try {
+      const response = await fetch("/api/ai/public-chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: trimmed, locale, page }),
+      })
+
+      if (!response.ok || !response.body) {
+        finalMessage = await fetchJsonMessage()
+        appendAssistant(finalMessage)
+        return
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ""
+      let streamedContent = ""
+
+      const processLine = (line: string) => {
+        if (!line.trim()) return
+        let event: { type?: unknown; text?: unknown; payload?: unknown }
+        try {
+          event = JSON.parse(line) as {
+            type?: unknown
+            text?: unknown
+            payload?: unknown
+          }
+        } catch {
+          return
+        }
+
+        if (event.type === "delta" && typeof event.text === "string") {
+          streamedContent += event.text
+          if (!assistantId) {
+            appendAssistant({
+              role: "assistant",
+              content: streamedContent,
+              language: locale,
+            })
+          } else {
+            patchAssistant({ content: streamedContent })
+          }
+        }
+
+        const payload = asRecord(event.payload)
+        if (event.type === "done" && payload) {
+          finalMessage = assistantMessageFromPayload(payload, locale, t.error)
+          if (!assistantId) {
+            appendAssistant(finalMessage)
+          } else {
+            patchAssistant(finalMessage)
+          }
         }
       }
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() ?? ""
+        lines.forEach(processLine)
+      }
+      if (buffer.trim()) processLine(buffer)
+
+      if (!finalMessage && streamedContent) {
+        finalMessage = {
+          role: "assistant",
+          content: streamedContent,
+          language: locale,
+        }
+      }
+      if (!assistantId) {
+        appendAssistant(finalMessage ?? errorMessage)
+      }
     } catch {
-      // keep error copy
+      try {
+        finalMessage = await fetchJsonMessage()
+      } catch {
+        finalMessage = errorMessage
+      }
+      if (assistantId) {
+        patchAssistant(finalMessage)
+      } else {
+        appendAssistant(finalMessage)
+      }
+    } finally {
+      if (finalMessage && finalMessage.content !== t.error) {
+        responseCacheRef.current.set(cacheKey, {
+          expiresAt: currentTimeMs() + WIDGET_RESPONSE_CACHE_TTL_MS,
+          message: cachedAssistantDraft(finalMessage),
+        })
+        if (responseCacheRef.current.size > WIDGET_RESPONSE_CACHE_MAX) {
+          const oldestKey = responseCacheRef.current.keys().next().value
+          if (oldestKey) responseCacheRef.current.delete(oldestKey)
+        }
+      }
+      setTyping(false)
     }
-    idRef.current += 1
-    setMessages((prev) => [
-      ...prev,
-      { ...assistantMessage, id: `a-${idRef.current}` },
-    ])
-    setTyping(false)
   }
 
   async function sendFeedback(message: Message, rating: "positive" | "negative") {

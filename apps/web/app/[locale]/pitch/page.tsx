@@ -39,6 +39,16 @@ const demoCopy = {
       { label: "aylık bakım ücreti", value: "€5" },
       { label: "demo dili", value: "4" },
     ],
+    consoleSignals: {
+      riskTitle: "AI risk sinyali",
+      riskSubtitle: "Saatlik ticket yoğunluğu",
+      approvalTitle: "Onay kuyruğu",
+      queueItems: [
+        ["68", "AI ticket önceliklendirme"],
+        ["29", "finans erişim kontrolü"],
+        ["12", "SLA istisnası"],
+      ],
+    },
     offerEyebrow: "Müşteri teklifi",
     offerTitle: "Sıfır geliştirme maliyeti. Net aylık bakım modeli.",
     offerBody:
@@ -118,6 +128,16 @@ const demoCopy = {
       { label: "monthly maintenance fee", value: "€5" },
       { label: "demo languages", value: "4" },
     ],
+    consoleSignals: {
+      riskTitle: "AI risk signal",
+      riskSubtitle: "Ticket volume by hour",
+      approvalTitle: "Approval queue",
+      queueItems: [
+        ["68", "AI ticket triage"],
+        ["29", "finance access check"],
+        ["12", "SLA exceptions"],
+      ],
+    },
     offerEyebrow: "Customer offer",
     offerTitle: "Zero development cost. Simple monthly maintenance model.",
     offerBody:
@@ -197,6 +217,16 @@ const demoCopy = {
       { label: "monatliche Wartungsgebühr", value: "€5" },
       { label: "Demo-Sprachen", value: "4" },
     ],
+    consoleSignals: {
+      riskTitle: "KI-Risikosignal",
+      riskSubtitle: "Ticketvolumen pro Stunde",
+      approvalTitle: "Freigabewarteschlange",
+      queueItems: [
+        ["68", "KI-Ticket-Triage"],
+        ["29", "Finanz- und Zugangskontrolle"],
+        ["12", "SLA-Ausnahmen"],
+      ],
+    },
     offerEyebrow: "Kundenangebot",
     offerTitle: "Keine Entwicklungskosten. Einfaches monatliches Wartungsmodell.",
     offerBody:
@@ -276,6 +306,16 @@ const demoCopy = {
       { label: "ежемесячный сервис", value: "€5" },
       { label: "языка демо", value: "4" },
     ],
+    consoleSignals: {
+      riskTitle: "AI-сигнал риска",
+      riskSubtitle: "Объем заявок по часам",
+      approvalTitle: "Очередь согласований",
+      queueItems: [
+        ["68", "AI-триаж заявок"],
+        ["29", "проверка финансов и доступа"],
+        ["12", "исключения SLA"],
+      ],
+    },
     offerEyebrow: "Предложение клиенту",
     offerTitle: "Нулевая стоимость разработки. Простая ежемесячная модель обслуживания.",
     offerBody:
@@ -415,8 +455,8 @@ function DemoConsole({ copy }: { copy: DemoCopy }) {
           <div className="rounded-lg border border-border bg-background p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-black text-foreground">AI risk signal</div>
-                <div className="mt-1 text-xs text-muted-foreground">Ticket volume by hour</div>
+                <div className="text-sm font-black text-foreground">{copy.consoleSignals.riskTitle}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{copy.consoleSignals.riskSubtitle}</div>
               </div>
               <Bot className="h-5 w-5 text-primary" />
             </div>
@@ -432,13 +472,9 @@ function DemoConsole({ copy }: { copy: DemoCopy }) {
           </div>
 
           <div className="rounded-lg border border-border bg-background p-4">
-            <div className="text-sm font-black text-foreground">Approval queue</div>
+            <div className="text-sm font-black text-foreground">{copy.consoleSignals.approvalTitle}</div>
             <div className="mt-4 space-y-3">
-              {[
-                ["68", "AI ticket triage"],
-                ["29", "finance access check"],
-                ["12", "SLA exceptions"],
-              ].map(([value, label]) => (
+              {copy.consoleSignals.queueItems.map(([value, label]) => (
                 <div key={label} className="flex items-center justify-between gap-3 rounded-md bg-muted/55 px-3 py-2">
                   <span className="text-xs font-bold text-muted-foreground">{label}</span>
                   <span className="text-base font-black text-foreground">{value}</span>

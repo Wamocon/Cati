@@ -48,6 +48,7 @@ import {
   type DashboardHomeCopy,
   type WorkloadKind,
 } from "@/lib/dashboard-home-copy"
+import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import type {
   DashboardSnapshot,
   Phase4SiteData,
@@ -1026,7 +1027,7 @@ function mapLiveCriticalTickets(snapshot: DashboardSnapshot | null) {
     return {
       id: ticketNo,
       assignee: asString(record.assignee, asString(record.status, "CRM")),
-      label: unitLabel || serviceTicketUnitByTicketNo.get(ticketNo) || ticketNo || "Ticket",
+      label: unitLabel || serviceTicketUnitByTicketNo.get(ticketNo) || "Servis kaydı",
       slaHoursRemaining: hoursRemaining,
       title: asString(record.title, "Operational ticket"),
     }
@@ -1076,7 +1077,8 @@ function mapLiveActivities(snapshot: DashboardSnapshot | null) {
 
 export default function DashboardHomePage() {
   const user = useUser()
-  const locale = resolveDashboardHomeLocale(useLocale())
+  const rawLocale = useLocale()
+  const locale = resolveDashboardHomeLocale(rawLocale)
   const copy = dashboardHomeCopy[locale]
   const roleT = useTranslations("roles")
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
@@ -1098,6 +1100,30 @@ function OperationsDashboard({
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
+  const dashboardLocale = resolveDashboardLocale(useLocale())
+  const tRecord = (value: string) => localizeDashboardTextPart(value, dashboardLocale)
+  const tActivityMessage = (value: string) => {
+    const localized = tRecord(value)
+    if (localized !== value) return localized
+    if (dashboardLocale !== "tr") return value
+
+    return value
+      .replace(/^AI interest - what-is/i, "AI talep sinyali")
+      .replace(/^AI interest/i, "AI talep sinyali")
+      .replace(/\bwhats\b/i, "WhatsApp")
+      .replace(/\baccess update\b/i, "erişim güncelleme")
+      .replace(/\bCamera incident lookup request\b/i, "kamera olay arama talebi")
+      .replace(/\bDeposit hold\b/i, "depozito bekletme")
+      .replace(/\bcheckout\b/i, "çıkış")
+      .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
+      .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
+      .replace(/\bservice_ticket\b/gi, "servis talebi")
+      .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+  }
+  const tActivityType = (value: string) =>
+    tActivityMessage(value.replaceAll("_", " ")).toLocaleLowerCase(
+      dashboardLocale === "tr" ? "tr-TR" : dashboardLocale
+    )
   const {
     snapshot,
     phase4,
@@ -1538,7 +1564,7 @@ function OperationsDashboard({
               >
                 <CommandLink
                   href={activity.href}
-                  ariaLabel={activity.message}
+                  ariaLabel={tActivityMessage(activity.message)}
                   role={user.role}
                 >
                   {({ allowed }) => (
@@ -1550,9 +1576,9 @@ function OperationsDashboard({
                     >
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">{activity.message}</p>
+                        <p className="text-sm text-foreground">{tActivityMessage(activity.message)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {activity.actor} - {activity.type}
+                          {activity.actor} - {tActivityType(activity.type)}
                         </p>
                       </div>
                       <DrilldownCue allowed={allowed} />
@@ -1569,7 +1595,7 @@ function OperationsDashboard({
           <div className="space-y-3">
             {criticalTickets.map((ticket) => (
               <CommandLink
-                key={`ticket-${ticket.label}`}
+                key={`ticket-${ticket.id}`}
                 href="/dashboard/tickets"
                 ariaLabel={ticket.label}
                 role={user.role}
@@ -1579,7 +1605,7 @@ function OperationsDashboard({
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
                   <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
                 </div>
-                <p className="mt-2 text-sm text-foreground">{ticket.title}</p>
+                <p className="mt-2 text-sm text-foreground">{tRecord(ticket.title)}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
               </div>
               </CommandLink>

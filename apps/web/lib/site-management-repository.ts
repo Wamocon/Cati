@@ -1551,6 +1551,114 @@ function buildWorkforceTasksFromTickets(tickets: ServiceTicket[]): WorkforceTask
   })
 }
 
+const serviceFieldTeamFallback = [
+  "Teknik",
+  "Kat hizmetleri",
+  "Guvenlik",
+  "Operasyon",
+  "Rezervasyon",
+  "Sakin destek",
+]
+
+function serviceFieldTeamFromText(value: string, index: number): string {
+  const text = catalogCategoryKey(value)
+
+  if (
+    text.includes("temiz") ||
+    text.includes("clean") ||
+    text.includes("housekeep")
+  ) {
+    return "Kat hizmetleri"
+  }
+  if (
+    text.includes("guven") ||
+    text.includes("security") ||
+    text.includes("access") ||
+    text.includes("erisim") ||
+    text.includes("kamera") ||
+    text.includes("kapi")
+  ) {
+    return "Guvenlik"
+  }
+  if (
+    text.includes("hasar") ||
+    text.includes("damage") ||
+    text.includes("deposit") ||
+    text.includes("depozito") ||
+    text.includes("inspection")
+  ) {
+    return "Operasyon"
+  }
+  if (
+    text.includes("rezerv") ||
+    text.includes("booking") ||
+    text.includes("transfer") ||
+    text.includes("guest") ||
+    text.includes("misafir")
+  ) {
+    return "Rezervasyon"
+  }
+  if (
+    text.includes("tesisat") ||
+    text.includes("klima") ||
+    text.includes("sensor") ||
+    text.includes("yangin") ||
+    text.includes("havuz") ||
+    text.includes("pool") ||
+    text.includes("maintenance") ||
+    text.includes("plumb") ||
+    text.includes("electric") ||
+    text.includes("asansor") ||
+    text.includes("teknik")
+  ) {
+    return "Teknik"
+  }
+  if (
+    text.includes("finance") ||
+    text.includes("tahsilat") ||
+    text.includes("sakin") ||
+    text.includes("owner") ||
+    text.includes("tenant")
+  ) {
+    return "Sakin destek"
+  }
+
+  return serviceFieldTeamFallback[index % serviceFieldTeamFallback.length]
+}
+
+function ensureWorkforceTeamCoverage(
+  tasks: WorkforceTaskRecord[],
+  tickets: ServiceTicket[],
+  orders: ServiceOrderRecord[]
+): WorkforceTaskRecord[] {
+  const currentTeams = new Set(tasks.map((task) => task.team).filter(Boolean))
+  if (tasks.length < 2 || currentTeams.size >= 2) return tasks
+
+  const ticketById = new Map(tickets.map((ticket) => [ticket.id, ticket]))
+  const orderByTicketId = new Map(orders.map((order) => [order.ticketId, order]))
+
+  return tasks.map((task, index) => {
+    const ticket = ticketById.get(task.ticketId)
+    const order = orderByTicketId.get(task.ticketId)
+    const context = [
+      ticket?.category,
+      ticket?.title,
+      order?.catalogItemName,
+      task.title,
+    ]
+      .filter(Boolean)
+      .join(" ")
+    const team = serviceFieldTeamFromText(context, index)
+    const checklist = defaultChecklistByTeam[team] ?? task.checklist
+
+    return {
+      ...task,
+      team,
+      checklist: checklist.length > 0 ? checklist : task.checklist,
+    }
+  })
+}
+
 function mapCatalogCategory(value: string): ServiceCatalogItem["category"] {
   if (value === "cleaning") return "cleaning"
   if (value === "transfer") return "transfer"
@@ -3152,10 +3260,11 @@ export async function getServiceTicketQueueData({
         ? derivedOrders
         : normalizeServiceOrderRows(orderResponse.data)
     const derivedTasks = buildWorkforceTasksFromTickets(tickets)
-    const tasks =
+    const rawTasks =
       taskResponse.error || !Array.isArray(taskResponse.data) || taskResponse.data.length === 0
         ? derivedTasks
         : normalizeWorkforceTaskRows(taskResponse.data)
+    const tasks = ensureWorkforceTeamCoverage(rawTasks, tickets, orders)
     const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
     return {

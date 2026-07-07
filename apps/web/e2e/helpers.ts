@@ -48,13 +48,22 @@ export function collectConsoleIssues(page: Page, issues: string[]) {
         text.includes("middleware-to-proxy") ||
         text.includes("React does not recognize") ||
         text.includes("Extra attributes from the server") ||
-        text.includes("A tree hydrated but some attributes")
+        text.includes("A tree hydrated but some attributes") ||
+        (text.includes("WebSocket connection") &&
+          text.includes("closed before the connection is established"))
       ) {
         return
       }
       issues.push(`[error] ${text}`)
     }
-    if (type === "warning" && text.toLowerCase().includes("failed")) {
+    if (
+      type === "warning" &&
+      text.toLowerCase().includes("failed") &&
+      !(
+        text.includes("WebSocket connection") &&
+        text.includes("closed before the connection is established")
+      )
+    ) {
       issues.push(`[warning] ${text}`)
     }
   })
