@@ -1899,12 +1899,48 @@ export function resolveDashboardLocale(locale: string): DashboardLocale {
   return locale === "tr" || locale === "de" || locale === "ru" ? locale : "en"
 }
 
+const normalizedTables = new Map<DashboardLocale, Map<string, string>>()
+
+function normalizeDashboardLookupKey(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+}
+
+function getNormalizedTable(locale: DashboardLocale) {
+  const cached = normalizedTables.get(locale)
+  if (cached) return cached
+
+  const normalized = new Map<string, string>()
+  for (const [source, translated] of Object.entries(tables[locale])) {
+    const key = normalizeDashboardLookupKey(source)
+    if (!normalized.has(key)) normalized.set(key, translated)
+  }
+
+  normalizedTables.set(locale, normalized)
+  return normalized
+}
+
 export function localizeDashboardText(
   value: string | null | undefined,
   locale: DashboardLocale
 ) {
   if (!value) return value ?? ""
-  return tables[locale][value] ?? value
+  return (
+    tables[locale][value] ??
+    tables[locale][value.trim()] ??
+    getNormalizedTable(locale).get(normalizeDashboardLookupKey(value)) ??
+    value
+  )
 }
 
 export function localizeDashboardTextPart(

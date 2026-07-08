@@ -314,17 +314,17 @@ export function NewLevelImmersion() {
   }, [stages])
 
   return (
-    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8]">
+    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8] text-[#061a17]">
       <div className="container pt-8 pb-12 md:pt-10 md:pb-16">
         <ScrollReveal className="max-w-4xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-primary uppercase shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase shadow-sm">
             <Landmark className="h-3.5 w-3.5" />
             {t.eyebrow}
           </span>
-          <h2 className="mt-5 max-w-3xl text-3xl leading-tight font-black text-foreground md:text-5xl">
+          <h2 className="mt-5 max-w-3xl text-3xl leading-tight font-black text-[#061a17] md:text-5xl">
             {t.title}
           </h2>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-muted-foreground md:text-lg">
+          <p className="mt-5 max-w-3xl text-base leading-8 text-slate-700 md:text-lg">
             {t.intro}
           </p>
         </ScrollReveal>
@@ -349,6 +349,9 @@ export function NewLevelImmersion() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,16,14,0.82)_0%,rgba(3,16,14,0.48)_42%,rgba(3,16,14,0.14)_100%)]" />
+                {stage.src.includes("resort-exterior") ? (
+                  <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-72 bg-gradient-to-tl from-[#061a17] via-[#061a17]/75 to-transparent" />
+                ) : null}
               </div>
             ))}
           </div>
@@ -426,7 +429,6 @@ export function NewLevelImmersion() {
 
             <div className="hidden justify-end xl:flex">
               <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
-                <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   const isActive = activeStage === index

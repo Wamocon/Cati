@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from "next-intl"
 import { motion } from "framer-motion"
 import {
-  ArrowRight,
   Bell,
   CircleDollarSign,
   FileCheck,
@@ -126,7 +125,6 @@ export function ComplianceFeatures() {
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       {index === 0 ? <FileCheck className="h-5 w-5" /> : index === 1 ? <ShieldCheck className="h-5 w-5" /> : <QrCode className="h-5 w-5" />}
                     </span>
-                    {index < 2 && <ArrowRight className="hidden h-4 w-4 text-muted-foreground sm:block" />}
                   </div>
                   <p className="text-sm font-black text-card-foreground">{title}</p>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p>

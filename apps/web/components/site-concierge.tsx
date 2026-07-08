@@ -692,12 +692,12 @@ export function SiteConcierge({ page }: { page: string }) {
               )}
             </div>
 
-            <div className="flex gap-2 overflow-x-auto border-b border-border bg-muted/30 px-4 py-2">
+            <div className="flex max-h-28 flex-wrap gap-2 overflow-y-auto border-b border-border bg-muted/30 px-4 py-2">
               {suggestions.map((s) => (
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
-                  className="whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                  className="min-h-7 max-w-full rounded-full border border-border bg-card px-3 py-1 text-left text-[11px] font-medium leading-snug text-foreground transition-colors hover:border-primary hover:text-primary"
                 >
                   {s}
                 </button>

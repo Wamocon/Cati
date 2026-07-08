@@ -36,6 +36,7 @@ export type AiLanguage = "tr" | "en" | "de" | "ru"
 
 export function detectAiLanguage(prompt: string): AiLanguage {
   const lower = prompt.toLocaleLowerCase("tr-TR")
+  if (/\b(der|die|das|des|den|dem|und|oder|bitte|danke|bericht|analysiere|analyse|gesundheit|gesamt|gesamten|portfolio|portfolios|einheit|einheiten|zahlung|schulden|buchung|zugang|heute|warum|serviceticket|serviceanfrage|stoerung|reparatur|wohnung|dringend|defekt)\b/i.test(lower)) return "de"
   if (/[а-яё]/i.test(prompt)) return "ru"
   if (/\b(und|oder|bitte|danke|bericht|zahlung|schulden|buchung|zugang|heute|warum|serviceticket|serviceanfrage|störung|stoerung|reparatur|wohnung|dringend|defekt)\b/i.test(lower)) return "de"
   if (/\b(the|and|or|please|report|payment|debt|booking|access|today|summary|image|photo|integration)\b/i.test(lower)) return "en"

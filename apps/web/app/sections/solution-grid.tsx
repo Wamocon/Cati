@@ -244,10 +244,10 @@ const copy = {
     eyebrow: "Operationales Flipbook",
     title: "Vertrieb, Standortbetrieb, Finanzen und Service treffen sich im ERP-Datensatz",
     subtitle:
-      "Nicht als Kartenliste, sondern als Betriebsmodell: Personen, Einheiten, Service, Finanzen, Dokumente und Rollenentscheidungen laufen als verbundene Ablaufe.",
-    primaryCta: "Arbeitsbereich offnen",
+      "Nicht als Kartenliste, sondern als Betriebsmodell: Personen, Einheiten, Service, Finanzen, Dokumente und Rollenentscheidungen laufen als verbundene Abläufe.",
+    primaryCta: "Arbeitsbereich öffnen",
     secondaryCta: "Standortmodell ansehen",
-    scrollHint: "Scrollen, um den Produktfluss zu offnen",
+    scrollHint: "Scrollen, um den Produktfluss zu öffnen",
     liveLabel: "Ein Systemdatensatz",
     chapters: [
       {
@@ -340,11 +340,39 @@ const copy = {
 
 const fallbackChapters = copy.en.chapters
 
+const workflowLabels = {
+  tr: {
+    workspace: "Bağlantılı çalışma alanı",
+    record: "Operasyonel kayıt",
+    body:
+      "Kişiler, daireler, finans, servis, belgeler ve AI özetleri her ekibi tek çizgiye zorlamadan bağlı kalır.",
+  },
+  en: {
+    workspace: "Connected workspace",
+    record: "Operational record",
+    body:
+      "People, units, finance, service, documents and AI summaries stay connected without forcing every team into one linear path.",
+  },
+  de: {
+    workspace: "Vernetzter Arbeitsbereich",
+    record: "Betriebsvorgang",
+    body:
+      "Personen, Einheiten, Finanzen, Service, Dokumente und KI-Zusammenfassungen bleiben verbunden, ohne jedes Team in einen linearen Ablauf zu zwingen.",
+  },
+  ru: {
+    workspace: "Связанное рабочее пространство",
+    record: "Операционная запись",
+    body:
+      "Люди, юниты, финансы, сервис, документы и AI-сводки остаются связанными без принудительного линейного процесса для всех команд.",
+  },
+} satisfies Record<LocaleKey, { workspace: string; record: string; body: string }>
+
 const chapterIcons = [MessageSquareText, Building2, Smartphone, CircleDollarSign, ShieldCheck]
 
 export function SolutionGrid() {
   const locale = useLocale()
   const localized = copy[(locale as LocaleKey) in copy ? (locale as LocaleKey) : "tr"]
+  const labels = workflowLabels[(locale as LocaleKey) in workflowLabels ? (locale as LocaleKey) : "tr"]
   const chapters = useMemo(
     () => (localized.chapters.length > 0 ? localized.chapters : fallbackChapters),
     [localized.chapters]
@@ -492,6 +520,9 @@ export function SolutionGrid() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,10,0.94)_0%,rgba(2,12,10,0.72)_42%,rgba(2,12,10,0.46)_100%)]" />
+                {chapter.image.includes("resort-exterior") ? (
+                  <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-72 bg-gradient-to-tl from-[#061613] via-[#061613]/75 to-transparent" />
+                ) : null}
               </div>
             ))}
           </div>
@@ -509,7 +540,7 @@ export function SolutionGrid() {
                 {localized.scrollHint}
               </h3>
               <p className="mt-5 text-sm leading-7 text-white/68 sm:text-base">
-                People, units, finance, service, documents and AI summaries stay connected without forcing every team into one linear path.
+                {labels.body}
               </p>
               <div className="mt-7 flex flex-col items-start gap-3 sm:flex-row lg:flex-col">
                 <Link
@@ -554,6 +585,9 @@ export function SolutionGrid() {
                         className="object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#071b18]/70 to-transparent" />
+                      {chapter.image.includes("resort-exterior") ? (
+                        <div className="pointer-events-none absolute right-0 bottom-0 h-24 w-44 bg-gradient-to-tl from-[#071b18] via-[#071b18]/75 to-transparent" />
+                      ) : null}
                     </div>
 
                     <div className="grid min-h-full gap-4 lg:grid-rows-[auto_1fr_auto]">
@@ -567,12 +601,12 @@ export function SolutionGrid() {
                               0{index + 1} / {chapter.label}
                             </p>
                             <p className="mt-1 text-xs font-semibold text-white/50">
-                              Connected workspace
+                              {labels.workspace}
                             </p>
                           </div>
                         </div>
                         <span className="rounded-full border border-emerald-200/20 bg-emerald-200/12 px-3 py-1 text-xs font-black text-emerald-100">
-                          Operational record
+                          {labels.record}
                         </span>
                       </div>
 

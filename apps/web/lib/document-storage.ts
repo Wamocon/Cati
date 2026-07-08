@@ -62,11 +62,16 @@ export function getDocumentStorageMode(): DocumentStorageMode {
   const isProduction = process.env.VERCEL_ENV === "production" || process.env.CATI_ENV === "production"
 
   if (explicitMode === "supabase") {
-    if (!isSupabaseConfigured() || !process.env.SUPABASE_SERVICE_ROLE_KEY || !DOCUMENT_UPLOAD_BUCKET) {
+    const liveStorageReady = isSupabaseConfigured() && process.env.SUPABASE_SERVICE_ROLE_KEY && DOCUMENT_UPLOAD_BUCKET
+    if (liveStorageReady) {
+      return "supabase-storage"
+    }
+
+    if (isProduction) {
       throw new Error("Live document storage is configured but credentials are incomplete.")
     }
 
-    return "supabase-storage"
+    return "demo-object-store"
   }
 
   if (isProduction) {

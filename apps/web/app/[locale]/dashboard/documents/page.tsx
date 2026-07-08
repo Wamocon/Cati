@@ -109,13 +109,31 @@ function summarizeDocuments(documents: DocumentVaultRecord[]) {
   }
 }
 
+function formatUploadSize(sizeBytes: unknown) {
+  if (typeof sizeBytes !== "number" || !Number.isFinite(sizeBytes) || sizeBytes <= 0) return "-"
+  if (sizeBytes >= 1024 * 1024) return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+  if (sizeBytes >= 1024) return `${Math.ceil(sizeBytes / 1024)} KB`
+  return `${sizeBytes} B`
+}
+
+function uploadString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : ""
+}
+
+function uploadCategory(value: unknown): DocumentVaultRecord["category"] {
+  const category = uploadString(value)
+  return uploadCategories.includes(category as DocumentVaultRecord["category"])
+    ? (category as DocumentVaultRecord["category"])
+    : "Uyum"
+}
+
 function DocumentUploadPanel({
   role,
   onUploaded,
   t,
 }: {
   role: Role
-  onUploaded: () => void
+  onUploaded: (document: DocumentVaultRecord) => void
   t: (value: string) => string
 }) {
   const [state, setState] = useState<UploadState>("idle")
@@ -140,14 +158,31 @@ function DocumentUploadPanel({
         throw new Error(payload.error || "Upload failed.")
       }
 
+      const upload = payload.upload && typeof payload.upload === "object"
+        ? (payload.upload as Record<string, unknown>)
+        : {}
+      const title = uploadString(upload.title) || uploadString(formData.get("title"))
+      const originalFilename = uploadString(upload.originalFilename) || fileName || t("Document")
+      const flatNumber = uploadString(formData.get("flatNumber")) || "-"
+
       setState("success")
       setMessage(
-        `${payload.upload?.originalFilename ?? t("Document")} ${t("saved for review")} (${payload.storageMode}).`
+        `${originalFilename} ${t("saved for review")} (${payload.storageMode}).`
       )
       form.reset()
       setFileName("")
       window.dispatchEvent(new CustomEvent("site-management:changed"))
-      onUploaded()
+      onUploaded({
+        id: uploadString(upload.id) || `UPLOAD-${Date.now()}`,
+        flatNumber,
+        ownerName: "İnceleme ekibi",
+        name: title || originalFilename,
+        category: uploadCategory(upload.category || formData.get("category")),
+        status: "pending",
+        size: formatUploadSize(upload.sizeBytes),
+        updatedAt: new Date().toISOString().slice(0, 10),
+        retentionRule: `OCR / insan onayı gerekli: ${originalFilename}`,
+      })
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : t("Yükleme başarısız."))
@@ -269,9 +304,20 @@ export default function DocumentsPage() {
   const fieldView = isFieldRole(user.role)
   const restrictedView = clientView || fieldView
   const canUpload = hasPermission(user.role, "documents", "create")
-  const visibleDocuments = visibleDocumentsForRole(user.role, documentVault)
+  const [pendingUploads, setPendingUploads] = useState<DocumentVaultRecord[]>([])
+  const baseVisibleDocuments = visibleDocumentsForRole(user.role, documentVault)
+  const visibleDocuments = pendingUploads.length > 0
+    ? [...pendingUploads, ...baseVisibleDocuments]
+    : baseVisibleDocuments
   const visiblePackets = visibleDocumentPacketsForRole(user.role, documentPackets)
-  const summary = restrictedView ? summarizeDocuments(visibleDocuments) : getDocumentSummary()
+  const baseSummary = restrictedView ? summarizeDocuments(baseVisibleDocuments) : getDocumentSummary()
+  const summary = pendingUploads.length > 0
+    ? {
+        ...baseSummary,
+        total: baseSummary.total + pendingUploads.length,
+        pending: baseSummary.pending + pendingUploads.length,
+      }
+    : baseSummary
   const packetSummary = getDocumentPacketSummary()
   const purchaseSummary = getPurchaseChecklistSummary()
   const localizeRetentionRule = (rule: string) => {
@@ -282,8 +328,18 @@ export default function DocumentsPage() {
     if (rule.startsWith(ocrPrefix)) return `${t("OCR / insan onayı gerekli")}: ${rule.slice(ocrPrefix.length)}`
     return t(rule)
   }
+  const localizeDocumentOwner = (ownerName: string) => {
+    if (ownerName !== "İnceleme ekibi") return ownerName
+    return {
+      tr: "İnceleme ekibi",
+      en: "Review team",
+      de: "Prüfungsteam",
+      ru: "Команда проверки",
+    }[locale]
+  }
   const localizedVisibleDocuments = visibleDocuments.map((document) => ({
     ...document,
+    ownerName: localizeDocumentOwner(document.ownerName),
     category: t(document.category),
     retentionRule: localizeRetentionRule(document.retentionRule),
   }))
@@ -340,7 +396,16 @@ export default function DocumentsPage() {
       </div>
 
       {canUpload ? (
-        <DocumentUploadPanel role={user.role} t={t} onUploaded={() => undefined} />
+        <DocumentUploadPanel
+          role={user.role}
+          t={t}
+          onUploaded={(document) =>
+            setPendingUploads((current) => [
+              document,
+              ...current.filter((item) => item.id !== document.id),
+            ])
+          }
+        />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

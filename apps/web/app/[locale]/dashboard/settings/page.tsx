@@ -17,6 +17,7 @@ import {
   type IntegrationProviderRecord,
   type PlatformControl,
 } from "@/lib/site-management-data"
+import { localizeBusinessCopy } from "@/lib/business-copy"
 
 const settingsCopy = {
   tr: {
@@ -235,7 +236,9 @@ function booleanBadge(value: boolean, copy: (typeof settingsCopy)[keyof typeof s
 }
 
 export default function SettingsPage() {
-  const copy = settingsCopy[resolveSettingsLocale(useLocale())]
+  const rawLocale = useLocale()
+  const copy = settingsCopy[resolveSettingsLocale(rawLocale)]
+  const localizeValue = (value: string) => localizeBusinessCopy(value, rawLocale)
   const summary = getPlatformControlSummary()
   const integrationSummary = getIntegrationSummary()
 
@@ -317,12 +320,14 @@ export default function SettingsPage() {
               <div key={control.id} className="rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{control.area} - {control.owner}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{control.title}</h3>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {localizeValue(control.area)} - {localizeValue(control.owner)}
+                    </p>
+                    <h3 className="mt-1 text-sm font-black text-foreground">{localizeValue(control.title)}</h3>
                   </div>
                   <StatusBadge variant={controlVariant(control.status)}>{controlLabel(control.status, copy)}</StatusBadge>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{control.detail}</p>
+                <p className="mt-3 text-xs text-muted-foreground">{localizeValue(control.detail)}</p>
               </div>
             ))}
           </div>
@@ -376,7 +381,7 @@ export default function SettingsPage() {
             <div key={provider.id} className="rounded-xl border border-border bg-muted/30 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">{provider.category}</p>
+                  <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeValue(provider.category)}</p>
                   <h3 className="mt-1 text-sm font-black text-foreground">{provider.provider}</h3>
                 </div>
                 <PlugZap className="h-4 w-4 shrink-0 text-primary" />
@@ -385,7 +390,7 @@ export default function SettingsPage() {
                 <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge>
                 <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{provider.riskLevel}</StatusBadge>
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">{provider.idealNow}</p>
+              <p className="mt-3 text-xs text-muted-foreground">{localizeValue(provider.idealNow)}</p>
             </div>
           ))}
         </div>
@@ -397,7 +402,7 @@ export default function SettingsPage() {
           searchValue={(role) => role.role}
           pageSize={10}
           columns={[
-            { key: "role", header: copy.headers.role, sortable: true, render: (role) => role.role },
+            { key: "role", header: copy.headers.role, sortable: true, render: (role) => localizeValue(role.role) },
             { key: "users", header: copy.headers.users, sortable: true, sortValue: (role) => role.users, render: (role) => role.users },
             { key: "finance", header: copy.headers.financeApproval, render: (role) => booleanBadge(role.canApproveFinance, copy) },
             { key: "access", header: copy.headers.accessRestriction, render: (role) => booleanBadge(role.canRestrictAccess, copy) },
@@ -412,10 +417,10 @@ export default function SettingsPage() {
           pageSize={10}
           columns={[
             { key: "id", header: copy.headers.audit, sortable: true, render: (event) => event.id },
-            { key: "actor", header: copy.headers.actor, render: (event) => event.actor },
-            { key: "module", header: copy.headers.module, sortable: true, render: (event) => event.module },
+            { key: "actor", header: copy.headers.actor, render: (event) => localizeValue(event.actor) },
+            { key: "module", header: copy.headers.module, sortable: true, render: (event) => localizeValue(event.module) },
             { key: "risk", header: copy.headers.risk, render: (event) => <StatusBadge variant={riskVariant(event.risk)}>{riskLabel(event.risk, copy)}</StatusBadge> },
-            { key: "action", header: copy.headers.action, render: (event) => event.action },
+            { key: "action", header: copy.headers.action, render: (event) => localizeValue(event.action) },
           ]}
         />
       </div>
@@ -428,12 +433,12 @@ export default function SettingsPage() {
         pageSize={10}
         columns={[
           { key: "id", header: "ID", sortable: true, render: (provider) => provider.id },
-          { key: "category", header: copy.headers.service, sortable: true, render: (provider) => provider.category },
+          { key: "category", header: copy.headers.service, sortable: true, render: (provider) => localizeValue(provider.category) },
           { key: "provider", header: copy.headers.provider, render: (provider) => provider.provider },
           { key: "status", header: copy.headers.status, render: (provider) => <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge> },
           { key: "risk", header: copy.headers.risk, render: (provider) => <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{copy.risk[provider.riskLevel]}</StatusBadge> },
-          { key: "required", header: copy.headers.required, render: (provider) => provider.requiredFromClient },
-          { key: "fallback", header: copy.headers.fallback, render: (provider) => provider.fallback },
+          { key: "required", header: copy.headers.required, render: (provider) => localizeValue(provider.requiredFromClient) },
+          { key: "fallback", header: copy.headers.fallback, render: (provider) => localizeValue(provider.fallback) },
         ]}
       />
 

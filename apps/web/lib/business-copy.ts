@@ -22,6 +22,37 @@ const dictionaries: Record<DashboardLocale, Record<string, string>> = {
   ru: ruCopy,
 }
 
+const normalizedDictionaries = new Map<DashboardLocale, Map<string, string>>()
+
+function normalizeLookupKey(value: string) {
+  return value
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+}
+
+function getNormalizedDictionary(locale: DashboardLocale) {
+  const cached = normalizedDictionaries.get(locale)
+  if (cached) return cached
+
+  const normalized = new Map<string, string>()
+  for (const [source, translated] of Object.entries(dictionaries[locale])) {
+    const key = normalizeLookupKey(source)
+    if (!normalized.has(key)) normalized.set(key, translated)
+  }
+
+  normalizedDictionaries.set(locale, normalized)
+  return normalized
+}
+
 export function localizeBusinessCopy(
   text: string | null | undefined,
   locale: string
@@ -30,7 +61,12 @@ export function localizeBusinessCopy(
   const resolved = resolveDashboardLocale(locale)
   // tr is the canonical source language: Turkish source strings pass through
   // unchanged; only the English seed enum/status values in trCopy are mapped.
-  return dictionaries[resolved][text] ?? text
+  return (
+    dictionaries[resolved][text] ??
+    dictionaries[resolved][text.trim()] ??
+    getNormalizedDictionary(resolved).get(normalizeLookupKey(text)) ??
+    text
+  )
 }
 
 export { resolveDashboardLocale, interpolate }

@@ -411,7 +411,7 @@ export function Phase4LiveOperations() {
           ]}
         />
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
             <div className="flex items-center gap-2">
               <FileWarning className="h-4 w-4 text-amber-600" />
@@ -419,14 +419,14 @@ export function Phase4LiveOperations() {
             </div>
             <div className="mt-3 space-y-2">
               {(data?.importFindings ?? []).slice(0, 4).map((finding) => (
-                <div key={finding.id} className="rounded-lg border border-border/60 bg-background/70 p-2">
+                <div key={finding.id} className="min-w-0 rounded-lg border border-border/60 bg-background/70 p-2">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-xs font-bold text-foreground">{finding.area}</p>
+                    <p className="min-w-0 break-words text-xs font-bold text-foreground">{finding.area}</p>
                     <StatusBadge variant={badgeVariant(finding.severity)}>
                       {finding.severity}
                     </StatusBadge>
                   </div>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
                       {finding.affectedRows} {copy.common.rows}: {finding.message}
                   </p>
                 </div>
@@ -439,11 +439,11 @@ export function Phase4LiveOperations() {
             <div className="mt-3 space-y-2">
               {latestActions.length > 0 ? (
                 latestActions.map((action) => (
-                  <div key={String(action.id)} className="rounded-lg bg-background/70 p-2">
-                    <p className="text-xs font-bold text-foreground">
+                  <div key={String(action.id)} className="min-w-0 rounded-lg bg-background/70 p-2">
+                    <p className="break-words text-xs font-bold text-foreground">
                       {String(action.action_type ?? "action")}
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 break-words text-xs text-muted-foreground">
                       {String(action.title ?? action.entity_external_id ?? copy.live.auditFallback)}
                     </p>
                   </div>

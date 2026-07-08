@@ -138,7 +138,7 @@ export function AiAssistant() {
     setInput("")
     setTyping(true)
 
-    let response = generateAiResponse(text, user.role)
+    let response = generateAiResponse(text, user.role, locale)
     try {
       const result = await fetch("/api/ai/chat", {
         method: "POST",
@@ -168,7 +168,7 @@ export function AiAssistant() {
         }
       }
     } catch {
-      response = generateAiResponse(text, user.role)
+      response = generateAiResponse(text, user.role, locale)
     }
     messageIdRef.current += 1
     const assistantMsg: Message = {
@@ -289,12 +289,12 @@ export function AiAssistant() {
             </div>
 
             {/* Suggestions */}
-            <div className="flex gap-2 overflow-x-auto border-b border-border bg-muted/30 px-4 py-2">
+            <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto border-b border-border bg-muted/30 px-4 py-2">
               {suggestions.slice(0, 4).map((s) => (
                 <button
                   key={s.id}
                   onClick={() => sendMessage(s.prompt)}
-                  className="whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                  className="min-h-7 max-w-full rounded-full border border-border bg-card px-3 py-1 text-left text-[11px] font-medium leading-snug text-foreground transition-colors hover:border-primary hover:text-primary"
                 >
                   {s.label}
                 </button>
