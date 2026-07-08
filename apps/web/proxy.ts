@@ -38,6 +38,11 @@ function accessProfilesEnabledForRequest() {
     process.env.VERCEL_ENV === "production" ||
     process.env.CATI_ENV === "production"
   const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
+  const localDevelopment =
+    process.env.NODE_ENV !== "production" &&
+    !process.env.VERCEL_ENV &&
+    !process.env.VERCEL_URL &&
+    process.env.CATI_ENV !== "production"
   const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
   const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
 
@@ -45,6 +50,8 @@ function accessProfilesEnabledForRequest() {
   // CATI_ALLOW_REMOTE_ACCESS_PROFILES=true is the explicit, documented approval
   // that lets access profiles run on remote/production; without it, remote and
   // production deployments stay locked to real authentication.
+  if (localDevelopment) return true
+
   return (!productionDeployment || remoteQaAllowed) && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
 }
 
