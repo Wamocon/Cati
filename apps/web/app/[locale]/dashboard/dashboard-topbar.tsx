@@ -19,6 +19,7 @@ export function DashboardTopbar() {
   const roleDef = roleDefinitions.find((role) => role.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const userDisplayName = localizeOperationalValue(user.full_name ?? user.email, locale)
 
   async function logout() {
@@ -45,7 +46,7 @@ export function DashboardTopbar() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-foreground">
-              {clientProfile.activePortfolio}
+              {portfolioDisplayName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
               {clientProfile.activeLocation} · {roleLabel}
@@ -82,15 +83,6 @@ export function DashboardTopbar() {
               </button>
             </div>
           </details>
-          <button
-            type="button"
-            aria-label={t("logout")}
-            onClick={logout}
-            className="hidden h-10 w-10 items-center justify-center gap-2 rounded-full border border-border bg-card text-xs font-bold text-foreground shadow-sm transition hover:bg-muted sm:inline-flex md:w-auto md:px-3"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden md:inline">{t("logout")}</span>
-          </button>
         </div>
       </div>
     </header>

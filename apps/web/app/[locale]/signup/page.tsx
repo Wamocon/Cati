@@ -42,7 +42,7 @@ const copy = {
       yandex: "Yandex ID",
       magic: "E-posta magic link",
     },
-    imageAlt: "New Level Premium mobilyalı iç mekan ve malik-kiracı onboarding bağlamı",
+    imageAlt: "Yeni Seviye Premium mobilyalı iç mekan ve malik-kiracı onboarding bağlamı",
     success: "Talep alındı. E-posta doğrulaması ve yönetici onayı tamamlandığında erişim açılır.",
     authMissing: "Auth anahtarları bu ortamda kapalı. Talep için info@ataberkestate.com adresine yazın.",
     error: "Talep gönderilemedi. Bilgileri kontrol edip tekrar deneyin.",
@@ -118,7 +118,7 @@ const copy = {
       yandex: "Yandex ID",
       magic: "E-Mail-Magic-Link",
     },
-    imageAlt: "Möblierter Innenraum von New Level Premium für Eigentümer- und Mieter-Onboarding",
+    imageAlt: "Möblierter Innenraum des Projekts Neues Niveau Premium für Eigentümer- und Mieter-Onboarding",
     success: "Anfrage erhalten. Zugang folgt nach E-Mail-Bestätigung und Administratorfreigabe.",
     authMissing: "Auth-Schlüssel sind in dieser Umgebung deaktiviert. Bitte info@ataberkestate.com kontaktieren.",
     error: "Anfrage konnte nicht gesendet werden. Angaben prüfen und erneut versuchen.",
@@ -156,7 +156,7 @@ const copy = {
       yandex: "Yandex ID",
       magic: "Одноразовая ссылка по e-mail",
     },
-    imageAlt: "Меблированный интерьер New Level Premium для подключения владельцев и арендаторов",
+    imageAlt: "Меблированный интерьер «Новый уровень Премиум» для подключения владельцев и арендаторов",
     success: "Запрос получен. Доступ откроется после проверки e-mail и одобрения администратором.",
     authMissing: "Auth-ключи отключены в этой среде. Напишите на info@ataberkestate.com.",
     error: "Запрос не отправлен. Проверьте данные и попробуйте снова.",
@@ -179,6 +179,13 @@ const identityLogos = {
   magic: MagicLinkLogo,
 }
 
+const projectNameByLocale = {
+  tr: "Yeni Seviye Premium",
+  en: "New Level Premium",
+  de: "Neues Niveau Premium",
+  ru: "Новый уровень Премиум",
+} as const
+
 export default function SignupPage() {
   const locale = useLocale()
   const t = copy[(locale as keyof typeof copy) in copy ? (locale as keyof typeof copy) : "en"]
@@ -190,7 +197,10 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [company, setCompany] = useState("New Level Premium")
+  const projectLocale = locale as keyof typeof projectNameByLocale
+  const initialCompany =
+    projectNameByLocale[projectLocale in projectNameByLocale ? projectLocale : "en"]
+  const [company, setCompany] = useState<string>(initialCompany)
   const [role, setRole] = useState<Role>("owner")
   const [identityProvider, setIdentityProvider] = useState<(typeof identityOptions)[number]["key"]>("magic")
   const [pending, setPending] = useState(false)

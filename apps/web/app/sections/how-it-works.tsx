@@ -36,7 +36,7 @@ const copy = {
       "Sistem tek bir dogruluk kaynagi kurar; satis, site yonetimi, finans, servis, rezervasyon ve raporlama kendi akisinda calisir.",
     center: "Ortak ERP kaydi",
     centerKicker: "Proje merkezi",
-    centerProject: "New Level Premium",
+    centerProject: "Yeni Seviye Premium",
     centerStats: [
       ["769", "daire"],
       ["7", "blok"],
@@ -140,7 +140,7 @@ const copy = {
       "Die Plattform schafft eine gemeinsame Wahrheit, während Vertrieb, Standortbetrieb, Finanzen, Service, Buchung und Reporting ihre eigenen Abläufe behalten.",
     center: "Gemeinsamer ERP-Datensatz",
     centerKicker: "Projektkern",
-    centerProject: "New Level Premium",
+    centerProject: "Neues Niveau Premium",
     centerStats: [
       ["769", "Einheiten"],
       ["7", "Blöcke"],
@@ -192,7 +192,7 @@ const copy = {
       "Sales, site management, finance, service, booking and reporting remain connected without becoming one forced linear process.",
     center: "Shared ERP record",
     centerKicker: "Project core",
-    centerProject: "New Level Premium",
+    centerProject: "Новый уровень Премиум",
     centerStats: [
       ["769", "units"],
       ["7", "blocks"],

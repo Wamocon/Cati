@@ -251,7 +251,7 @@ export function FinanceLiveLedger() {
               className="grid gap-3 rounded-lg border border-border/70 bg-background/70 p-3 sm:grid-cols-[1fr_auto_auto]"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-foreground">{entryLabel(entry)}</p>
+                <p className="truncate text-sm font-bold text-foreground">{t(entryLabel(entry))}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {entry.entryType} / {entry.period ?? "-"} / {t("vade")} {shortDate(entry.dueDate, intlLocale)}
                 </p>
@@ -260,7 +260,7 @@ export function FinanceLiveLedger() {
                 {formatCents(entry.amountCents, entry.currency, intlLocale)}
               </p>
               <StatusBadge variant={statusVariant(entry.status)}>
-                {statusLabel(entry.status)}
+                {t(statusLabel(entry.status))}
               </StatusBadge>
             </div>
           ))}
@@ -281,19 +281,19 @@ export function FinanceLiveLedger() {
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Onaylı kayıt</p>
+                  <p className="text-xs text-muted-foreground">{t("Onaylı kayıt")}</p>
                   <p className="text-lg font-black">{data?.summary.postedEntries ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Yasal risk</p>
+                  <p className="text-xs text-muted-foreground">{t("Yasal risk")}</p>
                   <p className="text-lg font-black">{data?.summary.legalAccounts ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Kısıtlı</p>
+                  <p className="text-xs text-muted-foreground">{t("Kısıtlı")}</p>
                   <p className="text-lg font-black">{data?.summary.restrictedUnits ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-background/80 p-3">
-                  <p className="text-xs text-muted-foreground">Denetim</p>
+                  <p className="text-xs text-muted-foreground">{t("Denetim")}</p>
                   <p className="text-lg font-black">{data?.recentActions.length ?? 0}</p>
                 </div>
               </div>

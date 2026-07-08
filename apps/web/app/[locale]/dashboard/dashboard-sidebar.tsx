@@ -6,7 +6,6 @@ import {
   Users,
   TicketCheck,
   CalendarDays,
-  LogOut,
   FileCheck,
   CircleDollarSign,
   FileText,
@@ -20,14 +19,13 @@ import {
   MessageSquareText,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
-import { Link, usePathname, useRouter } from "@/app/navigation"
+import { Link, usePathname } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
-import { createClient } from "@/lib/supabase/client"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 interface MenuItem {
@@ -64,28 +62,13 @@ export function DashboardSidebar() {
   const locale = resolveDashboardLocale(useLocale())
   const t = useTranslations("dashboard")
   const roleT = useTranslations("roles")
-  const router = useRouter()
   const pathname = usePathname()
 
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const userDisplayName = localizeOperationalValue(user.full_name ?? user.email, locale)
-
-  async function logout() {
-    try {
-      if (
-        process.env.NEXT_PUBLIC_SUPABASE_URL &&
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-      ) {
-        await createClient().auth.signOut()
-      }
-      await fetch("/api/access-profile", { method: "DELETE" })
-    } catch {
-      // ignore
-    }
-    router.replace("/login")
-  }
 
   const filteredMenu = menu.filter((item) => hasPermission(user.role, item.resource, "view"))
   const mobileMenuId = "dashboard-mobile-sidebar"
@@ -140,7 +123,7 @@ export function DashboardSidebar() {
             <div className="mb-3">
               <p className="text-[10px] font-semibold uppercase text-muted-foreground">{t("activePortfolio")}</p>
               <p className="mt-1 truncate text-sm font-black text-card-foreground">
-                {clientProfile.activePortfolio}
+                {portfolioDisplayName}
               </p>
               <p className="truncate text-xs text-muted-foreground">{clientProfile.activeLocation}</p>
             </div>
@@ -182,16 +165,6 @@ export function DashboardSidebar() {
               )
             })}
           </nav>
-
-          <div className="mt-4 shrink-0 space-y-2 border-t border-sidebar-border pt-3">
-            <button
-              onClick={logout}
-              className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              {t("logout")}
-            </button>
-          </div>
         </div>
       </aside>
     </>

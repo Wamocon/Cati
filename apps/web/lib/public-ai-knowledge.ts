@@ -177,7 +177,7 @@ type TopicCopy = Record<PublicAiTopic, string>
 const answers: Record<PublicAiLocale, TopicCopy> = {
   tr: {
     "what-is":
-      "1Çatı, Ataberk Estate'in New Level Premium gibi büyük konut sitelerini yönettiği işletim sistemidir. Finans, servis, belge, rezervasyon ve erişim kararları tek kayıtta buluşur; malik, kiracı, personel ve yönetim aynı sistemde, her rol yalnızca kendi kapsamını görerek çalışır.",
+      "1Çatı, Ataberk Estate'in Yeni Seviye Premium gibi büyük konut sitelerini yönettiği işletim sistemidir. Finans, servis, belge, rezervasyon ve erişim kararları tek kayıtta buluşur; malik, kiracı, personel ve yönetim aynı sistemde, her rol yalnızca kendi kapsamını görerek çalışır.",
     advantages:
       "Fark şurada: satış vaadi günlük operasyona bağlanır. Bakiyenizi telefon etmeden görürsünüz, servis talepleriniz kanıtla kapanır, belgeleriniz doğrulanabilir durumda tek yerde durur ve her erişim kararının gerekçesi vardır. Dört dilde aynı derinlik, her işlem kayıtlı ve izlenebilir.",
     registration:
@@ -195,7 +195,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     languages:
       "1Çatı dört dilde çalışır: Türkçe, İngilizce, Almanca ve Rusça — hepsi aynı derinlikte. Uluslararası malik tabanı için tasarlandı; siz hangi dilde rahatsanız sistemi o dilde kullanırsınız.",
     "project-info":
-      "New Level Premium, Avsallar'da 52.000 m² proje alanı üzerinde 7 blok ve 769 daireden oluşur; plaja 900 metre mesafede, 5 yıldızlı otel altyapısı ve 22 sosyal olanak sunar. 1Çatı bu sitenin tamamını tek işletim modelinde yönetir.",
+      "Yeni Seviye Premium, Avsallar'da 52.000 m² proje alanı üzerinde 7 blok ve 769 daireden oluşur; plaja 900 metre mesafede, 5 yıldızlı otel altyapısı ve 22 sosyal olanak sunar. 1Çatı bu sitenin tamamını tek işletim modelinde yönetir.",
     pricing:
       "Fiyat ve sözleşme koşulları daireye ve pakete göre değişir; bu yüzden en doğru bilgiyi satış ekibi verir. WhatsApp butonundan doğrudan yönetime ulaşabilir ya da kayıt formundan bilgilerinizi bırakabilirsiniz, ekip sizi arar.",
     demo:
@@ -203,7 +203,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "private-data":
       "Bu asistan yalnızca 1Çatı'yı tanıtır; kişisel, finansal veya daireye özel verilere erişimi yoktur ve bunları paylaşamaz. Kendi verilerinizi görmek için kayıt olup erişim aldıktan sonra sisteme girin; acil bir konu için WhatsApp üzerinden yönetime ulaşın.",
     general:
-      "Size 1Çatı'yı anlatmak için buradayım: sistemin ne olduğu, avantajları, kayıt, kiracı erişimi, bildirim kanalı, güvenlik ve New Level Premium hakkında sorabilirsiniz. Kişisel verilere erişimim yok; bu tür konular için kayıt olun ya da WhatsApp'tan yönetime yazın.",
+      "Size 1Çatı'yı anlatmak için buradayım: sistemin ne olduğu, avantajları, kayıt, kiracı erişimi, bildirim kanalı, güvenlik ve Yeni Seviye Premium hakkında sorabilirsiniz. Kişisel verilere erişimim yok; bu tür konular için kayıt olun ya da WhatsApp'tan yönetime yazın.",
   },
   en: {
     "what-is":
@@ -237,7 +237,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
   },
   de: {
     "what-is":
-      "1Çatı ist das Betriebssystem, mit dem Ataberk Estate große Wohnanlagen wie New Level Premium führt. Finanzen, Service, Dokumente, Reservierungen und Zutrittsentscheidungen treffen sich in einem Datensatz; Eigentümer, Mieter, Personal und Verwaltung arbeiten im selben System, jede Rolle sieht nur ihren eigenen Bereich.",
+      "1Çatı ist das Betriebssystem, mit dem Ataberk Estate große Wohnanlagen wie Neues Niveau Premium führt. Finanzen, Service, Dokumente, Reservierungen und Zutrittsentscheidungen treffen sich in einem Datensatz; Eigentümer, Mieter, Personal und Verwaltung arbeiten im selben System, jede Rolle sieht nur ihren eigenen Bereich.",
     advantages:
       "Der Unterschied: Das Verkaufsversprechen ist mit dem täglichen Betrieb verdrahtet. Sie sehen Ihren Saldo ohne Anruf, Serviceanfragen schließen mit Nachweis, Ihre Dokumente liegen verifiziert an einem Ort, und jede Zutrittsentscheidung hat eine Begründung. Vier Sprachen in gleicher Tiefe, jede Aktion protokolliert und nachvollziehbar.",
     registration:
@@ -255,7 +255,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     languages:
       "1Çatı arbeitet in vier Sprachen: Türkisch, Englisch, Deutsch und Russisch, jeweils gleich tief. Es wurde für eine internationale Eigentümerbasis gebaut; Sie nutzen das System in der Sprache, in der Sie sich wohlfühlen.",
     "project-info":
-      "New Level Premium in Avsallar umfasst 52.000 m² Projektfläche mit 7 Blöcken und 769 Einheiten, 900 Meter vom Strand, mit 5-Sterne-Hotelinfrastruktur und 22 Annehmlichkeiten. 1Çatı führt die gesamte Anlage in einem Betriebsmodell.",
+      "Neues Niveau Premium in Avsallar umfasst 52.000 m² Projektfläche mit 7 Blöcken und 769 Einheiten, 900 Meter vom Strand, mit 5-Sterne-Hotelinfrastruktur und 22 Annehmlichkeiten. 1Çatı führt die gesamte Anlage in einem Betriebsmodell.",
     pricing:
       "Preise und Vertragskonditionen hängen von Einheit und Paket ab; die genaue Auskunft gibt das Vertriebsteam. Erreichen Sie die Verwaltung direkt über den WhatsApp-Button oder hinterlassen Sie Ihre Daten im Registrierungsformular, das Team meldet sich.",
     demo:
@@ -263,11 +263,11 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "private-data":
       "Dieser Assistent erklärt nur 1Çatı; er hat keinen Zugriff auf persönliche, finanzielle oder einheitsbezogene Daten und kann sie nicht weitergeben. Ihre eigenen Daten sehen Sie nach Registrierung und Freischaltung im System; bei dringenden Anliegen erreichen Sie die Verwaltung per WhatsApp.",
     general:
-      "Ich bin hier, um Ihnen 1Çatı zu erklären: was das System ist, seine Vorteile, Registrierung, Mieterzugang, Meldekanal, Sicherheit und New Level Premium. Auf persönliche Daten habe ich keinen Zugriff; dafür registrieren Sie sich bitte oder schreiben der Verwaltung auf WhatsApp.",
+      "Ich bin hier, um Ihnen 1Çatı zu erklären: was das System ist, seine Vorteile, Registrierung, Mieterzugang, Meldekanal, Sicherheit und Neues Niveau Premium. Auf persönliche Daten habe ich keinen Zugriff; dafür registrieren Sie sich bitte oder schreiben der Verwaltung auf WhatsApp.",
   },
   ru: {
     "what-is":
-      "1Çatı — операционная система, с помощью которой Ataberk Estate управляет крупными комплексами вроде New Level Premium. Финансы, сервис, документы, бронирования и решения о доступе встречаются в одной записи; собственники, арендаторы, персонал и управление работают в одной системе, и каждая роль видит только свою зону.",
+      "1Çatı — операционная система, с помощью которой Ataberk Estate управляет крупными комплексами вроде «Новый уровень Премиум». Финансы, сервис, документы, бронирования и решения о доступе встречаются в одной записи; собственники, арендаторы, персонал и управление работают в одной системе, и каждая роль видит только свою зону.",
     advantages:
       "Отличие в том, что обещание продаж связано с ежедневной работой. Вы видите свой баланс без звонков, заявки закрываются с подтверждением, документы лежат проверенными в одном месте, а у каждого решения о доступе есть причина. Четыре языка с одинаковой глубиной, каждое действие фиксируется и отслеживается.",
     registration:
@@ -285,7 +285,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     languages:
       "1Çatı работает на четырёх языках: турецком, английском, немецком и русском, с одинаковой глубиной. Система создана для международной базы собственников; пользуйтесь ею на том языке, который вам удобен.",
     "project-info":
-      "New Level Premium в Авсалларе занимает 52 000 м², включает 7 блоков и 769 квартир, находится в 900 метрах от пляжа, с инфраструктурой отеля 5* и 22 удобствами. 1Çatı ведёт весь комплекс в одной операционной модели.",
+      "«Новый уровень Премиум» в Авсалларе занимает 52 000 м², включает 7 блоков и 769 квартир, находится в 900 метрах от пляжа, с инфраструктурой отеля 5* и 22 удобствами. 1Çatı ведёт весь комплекс в одной операционной модели.",
     pricing:
       "Цены и условия договора зависят от квартиры и пакета, точную информацию даёт отдел продаж. Свяжитесь с управлением напрямую через кнопку WhatsApp или оставьте данные в форме регистрации, и команда вам перезвонит.",
     demo:
@@ -293,7 +293,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "private-data":
       "Этот ассистент только рассказывает о 1Çatı; у него нет доступа к личным, финансовым или квартирным данным, и он не может ими делиться. Свои данные вы увидите после регистрации и открытия доступа; по срочным вопросам напишите управлению в WhatsApp.",
     general:
-      "Я здесь, чтобы рассказать о 1Çatı: что это за система, её преимущества, регистрация, доступ арендатора, канал сообщений, безопасность и New Level Premium. Доступа к личным данным у меня нет; для этого зарегистрируйтесь или напишите управлению в WhatsApp.",
+      "Я здесь, чтобы рассказать о 1Çatı: что это за система, её преимущества, регистрация, доступ арендатора, канал сообщений, безопасность и «Новый уровень Премиум». Доступа к личным данным у меня нет; для этого зарегистрируйтесь или напишите управлению в WhatsApp.",
   },
 }
 

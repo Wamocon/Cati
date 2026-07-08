@@ -19,7 +19,7 @@ const copy = {
   tr: {
     whatsappLabel: "WhatsApp ile site yönetimine yazın",
     whatsappMessage:
-      "Merhaba, New Level Premium / 1Çatı hakkında bilgi almak istiyorum.",
+      "Merhaba, Yeni Seviye Premium / 1Çatı hakkında bilgi almak istiyorum.",
     menuLabel: "İletişim ve yardım",
     waShort: "WhatsApp",
     aiShort: "1Çatı asistanı",
@@ -27,7 +27,7 @@ const copy = {
     title: "1Çatı Asistanı",
     subtitle: "Ürün soruları için buradayım, kişisel veriye erişimim yok",
     welcome:
-      "Merhaba! 1Çatı'nın ne olduğunu, avantajlarını, kaydı ve New Level Premium'u sorabilirsiniz. Kişisel veya daireye özel verilere erişimim yok.",
+      "Merhaba! 1Çatı'nın ne olduğunu, avantajlarını, kaydı ve Yeni Seviye Premium'u sorabilirsiniz. Kişisel veya daireye özel verilere erişimim yok.",
     placeholder: "1Çatı hakkında sorun...",
     send: "Gönder",
     close: "Kapat",
@@ -53,7 +53,7 @@ const copy = {
   de: {
     whatsappLabel: "Hausverwaltung per WhatsApp erreichen",
     whatsappMessage:
-      "Hallo, ich möchte mehr über New Level Premium / 1Çatı erfahren.",
+      "Hallo, ich möchte mehr über Neues Niveau Premium / 1Çatı erfahren.",
     menuLabel: "Kontakt & Hilfe",
     waShort: "WhatsApp",
     aiShort: "1Çatı-Assistent",
@@ -61,7 +61,7 @@ const copy = {
     title: "1Çatı-Assistent",
     subtitle: "Für Produktfragen da, kein Zugriff auf persönliche Daten",
     welcome:
-      "Hallo! Fragen Sie mich, was 1Çatı ist, welche Vorteile es hat, wie die Registrierung läuft oder zu New Level Premium. Auf persönliche oder Einheitsdaten habe ich keinen Zugriff.",
+      "Hallo! Fragen Sie mich, was 1Çatı ist, welche Vorteile es hat, wie die Registrierung läuft oder zum Projekt Neues Niveau Premium. Auf persönliche oder Einheitsdaten habe ich keinen Zugriff.",
     placeholder: "Zu 1Çatı fragen...",
     send: "Senden",
     close: "Schließen",
@@ -70,7 +70,7 @@ const copy = {
   ru: {
     whatsappLabel: "Написать управлению в WhatsApp",
     whatsappMessage:
-      "Здравствуйте, хочу узнать больше о New Level Premium / 1Çatı.",
+      "Здравствуйте, хочу узнать больше о проекте «Новый уровень Премиум» / 1Çatı.",
     menuLabel: "Связь и помощь",
     waShort: "WhatsApp",
     aiShort: "Ассистент 1Çatı",
@@ -78,7 +78,7 @@ const copy = {
     title: "Ассистент 1Çatı",
     subtitle: "Отвечаю на вопросы о продукте, без доступа к личным данным",
     welcome:
-      "Здравствуйте! Спросите меня, что такое 1Çatı, о его преимуществах, регистрации или New Level Premium. Доступа к личным данным и данным квартир у меня нет.",
+      "Здравствуйте! Спросите меня, что такое 1Çatı, о его преимуществах, регистрации или о проекте «Новый уровень Премиум». Доступа к личным данным и данным квартир у меня нет.",
     placeholder: "Спросите о 1Çatı...",
     send: "Отправить",
     close: "Закрыть",
@@ -565,21 +565,21 @@ export function SiteConcierge({ page }: { page: string }) {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
             data-testid="concierge-panel"
-            className="fixed right-4 bottom-4 z-50 flex w-[min(420px,92vw)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl print:hidden sm:right-6 sm:bottom-6"
+            className="fixed right-4 bottom-4 z-50 flex w-[min(420px,92vw)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl print:hidden sm:right-6 sm:bottom-6"
           >
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-emerald-500/10 px-4 py-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]">
                   <Bot className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{t.title}</p>
-                  <p className="text-[10px] text-muted-foreground">{t.subtitle}</p>
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-bold leading-tight text-foreground [overflow-wrap:anywhere]">{t.title}</p>
+                  <p className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">{t.subtitle}</p>
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
                 aria-label={t.close}
               >
                 <X className="h-4 w-4" />
@@ -591,7 +591,7 @@ export function SiteConcierge({ page }: { page: string }) {
                 <div
                   key={msg.id}
                   className={cn(
-                    "flex max-w-[85%] gap-2",
+                    "flex min-w-0 max-w-[85%] gap-2",
                     msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                   )}
                 >
@@ -611,7 +611,7 @@ export function SiteConcierge({ page }: { page: string }) {
                   </div>
                   <div
                     className={cn(
-                      "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+                      "min-w-0 rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words [overflow-wrap:anywhere]",
                       msg.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "border border-border bg-muted/50 text-foreground"
@@ -697,7 +697,7 @@ export function SiteConcierge({ page }: { page: string }) {
                 <button
                   key={s}
                   onClick={() => sendMessage(s)}
-                  className="min-h-7 max-w-full rounded-full border border-border bg-card px-3 py-1 text-left text-[11px] font-medium leading-snug text-foreground transition-colors hover:border-primary hover:text-primary"
+                  className="min-h-8 min-w-0 max-w-full flex-1 basis-[calc(50%-0.25rem)] rounded-full border border-border bg-card px-3 py-1.5 text-center text-[11px] font-medium leading-snug text-foreground transition-colors break-words hover:border-primary hover:text-primary [overflow-wrap:anywhere] sm:flex-none sm:basis-auto"
                 >
                   {s}
                 </button>
@@ -716,7 +716,7 @@ export function SiteConcierge({ page }: { page: string }) {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t.placeholder}
                 maxLength={600}
-                className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
+                className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <a
                 href={whatsappHref}

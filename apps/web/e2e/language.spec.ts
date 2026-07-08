@@ -41,6 +41,12 @@ async function expectNoTurkishLeakage(page: import("@playwright/test").Page) {
     "Sakin kaydı bekliyor",
     "Malik kaydı bekliyor",
     "Kaynak bekliyor",
+    "Borç blokeli",
+    "BORÇ BLOKELI",
+    "Hazirlik",
+    "Servis katalogu ve siparis kapisi",
+    "Siparis kontrolu",
+    "blokeli",
   ]
 
   for (const phrase of blockedPhrases) {
@@ -71,8 +77,8 @@ test.describe("Language access", () => {
 
   test("dashboard exposes locale switching after sign-in", async ({ page }, testInfo) => {
     await page.goto("/tr/login")
-    await page.getByText("QA rol profillerini aç").click()
-    await page.getByRole("button", { name: /Yönetim|Sorumlu/ }).first().click()
+    await page.getByTestId("demo-full-access").click()
+    await page.getByTestId("demo-role-option-manager").click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
 
     const switcher = page.getByTestId("locale-switcher").first()
@@ -101,6 +107,8 @@ test.describe("Language access", () => {
   })
 
   test("focused dashboard workspaces, users and settings do not leak Turkish shell copy", async ({ page }) => {
+    test.setTimeout(90_000)
+
     await signInAs(page, "tenant")
     await page.goto("/en/dashboard")
     await expect(page.getByRole("heading", { name: "Tenant Workspace" })).toBeVisible()
@@ -141,6 +149,15 @@ test.describe("Language access", () => {
 
     await page.goto("/en/dashboard/communications")
     await expect(page.getByRole("heading", { name: "Communication Center" })).toBeVisible()
+    await expectNoTurkishLeakage(page)
+
+    await page.goto("/de/dashboard/tickets")
+    await expect(page.getByRole("heading", { name: "Serviceanfragen" })).toBeVisible()
+    await expect(page.locator("body")).toContainText("Finanzsperre")
+    await expect(page.locator("body")).toContainText("Bereitschaft")
+    await expect(page.locator("body")).toContainText("Servicekatalog und Auftragsportal")
+    await expect(page.locator("body")).toContainText("Auftragskontrolle")
+    await expect(page.locator("body")).toContainText(/\d+\s+gesperrt/)
     await expectNoTurkishLeakage(page)
   })
 })

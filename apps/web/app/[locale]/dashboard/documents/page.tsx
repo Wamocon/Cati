@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { useLocale } from "next-intl"
 import {
   Download,
@@ -293,6 +293,133 @@ function DocumentUploadPanel({
         </div>
       </form>
     </Card3D>
+  )
+}
+
+type DocumentAvailabilityState = "checking" | "available" | "missing"
+type DocumentFileActionRecord = Pick<
+  DocumentVaultRecord,
+  "id" | "flatNumber" | "name" | "status" | "storagePath" | "sourcePath"
+> & {
+  category: string
+}
+
+function DocumentFileActions({
+  document,
+  role,
+  t,
+}: {
+  document: DocumentFileActionRecord
+  role: Role
+  t: (value: string) => string
+}) {
+  const hasCandidateFile =
+    document.status === "verified" &&
+    Boolean(document.storagePath || document.sourcePath)
+  const [availability, setAvailability] = useState<DocumentAvailabilityState>(
+    hasCandidateFile ? "checking" : "missing"
+  )
+  const fileUrl = `/api/site-management/documents/${encodeURIComponent(document.id)}/file`
+  const unavailableLabel =
+    availability === "checking"
+      ? t("Dosya kontrol ediliyor")
+      : t("Dosya henüz bağlı değil")
+
+  useEffect(() => {
+    if (!hasCandidateFile) {
+      return undefined
+    }
+
+    const controller = new AbortController()
+
+    async function checkAvailability() {
+      try {
+        const response = await fetch(`${fileUrl}?mode=availability`, {
+          signal: controller.signal,
+        })
+        const payload = (await response.json().catch(() => ({}))) as {
+          available?: unknown
+        }
+
+        if (!controller.signal.aborted) {
+          setAvailability(response.ok && payload.available === true ? "available" : "missing")
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setAvailability("missing")
+        }
+      }
+    }
+
+    void checkAvailability()
+
+    return () => controller.abort()
+  }, [fileUrl, hasCandidateFile])
+
+  if (availability !== "available") {
+    return (
+      <span title={unavailableLabel}>
+        <DashboardActionMenu
+          compact
+          label={t("Belge aksiyonlari")}
+          ariaLabel={`${document.id} ${unavailableLabel}`}
+          items={[
+            {
+              key: "missing-file",
+              label: unavailableLabel,
+              actionType: "document.file.unavailable",
+              disabled: true,
+            },
+          ]}
+        />
+      </span>
+    )
+  }
+
+  return (
+    <DashboardActionMenu
+      compact
+      label={t("Belge aksiyonlari")}
+      ariaLabel={`${document.id} ${t("Belge aksiyonlari")}`}
+      items={[
+        {
+          key: "view",
+          label: t("Belgeyi goruntule"),
+          icon: <Eye />,
+          href: fileUrl,
+          target: "_blank",
+          actionType: "document.view.requested",
+          ariaLabel: t("Belgeyi goruntule"),
+          entityTable: "documents",
+          entityExternalId: document.id,
+          title: document.name,
+          metadata: {
+            flatNumber: document.flatNumber,
+            category: document.category,
+            role,
+            fileAvailable: true,
+          },
+        },
+        {
+          key: "download",
+          label: t("Belgeyi indir"),
+          icon: <Download />,
+          href: `${fileUrl}?disposition=attachment`,
+          download: true,
+          actionType: "document.download.requested",
+          ariaLabel: t("Belgeyi indir"),
+          entityTable: "documents",
+          entityExternalId: document.id,
+          title: document.name,
+          metadata: {
+            flatNumber: document.flatNumber,
+            category: document.category,
+            role,
+            fileAvailable: true,
+          },
+        },
+      ]}
+    />
   )
 }
 
@@ -655,43 +782,7 @@ export default function DocumentsPage() {
             headerClassName: "text-center",
             cellClassName: "text-center",
             render: (document) => (
-              <DashboardActionMenu
-                compact
-                label={t("Belge aksiyonlari")}
-                ariaLabel={`${document.id} ${t("Belge aksiyonlari")}`}
-                items={[
-                  {
-                    key: "view",
-                    label: t("Belgeyi goruntule"),
-                    icon: <Eye />,
-                    actionType: "document.view.requested",
-                    ariaLabel: t("Belgeyi goruntule"),
-                    entityTable: "documents",
-                    entityExternalId: document.id,
-                    title: document.name,
-                    metadata: {
-                      flatNumber: document.flatNumber,
-                      category: document.category,
-                      role: user.role,
-                    },
-                  },
-                  {
-                    key: "download",
-                    label: t("Belgeyi indir"),
-                    icon: <Download />,
-                    actionType: "document.download.requested",
-                    ariaLabel: t("Belgeyi indir"),
-                    entityTable: "documents",
-                    entityExternalId: document.id,
-                    title: document.name,
-                    metadata: {
-                      flatNumber: document.flatNumber,
-                      category: document.category,
-                      role: user.role,
-                    },
-                  },
-                ]}
-              />
+              <DocumentFileActions document={document} role={user.role} t={t} />
             ),
           },
         ]}

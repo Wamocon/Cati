@@ -190,6 +190,7 @@ test.describe("New Level Premium landing page", () => {
   }, testInfo) => {
     await page.goto("/tr/login")
     await page.getByTestId("demo-full-access").click()
+    await page.getByTestId("demo-role-option-admin").click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
 
     await page.goto("/tr/dashboard/users")
