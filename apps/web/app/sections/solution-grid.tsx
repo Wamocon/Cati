@@ -665,7 +665,6 @@ export function SolutionGrid() {
 
             <div className="hidden lg:block">
               <div className="relative rounded-[1.75rem] border border-white/14 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl">
-                <div className="absolute bottom-7 left-9 top-7 w-px bg-white/14" />
                 <div className="space-y-3">
                   {chapters.map((chapter, index) => {
                     const Icon = chapter.icon

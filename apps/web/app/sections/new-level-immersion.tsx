@@ -224,6 +224,8 @@ export function NewLevelImmersion() {
   const rootRef = useRef<HTMLElement>(null)
   const layerRefs = useRef<Array<HTMLDivElement | null>>([])
   const cardRefs = useRef<Array<HTMLDivElement | null>>([])
+  const activeStageRef = useRef(0)
+  const stageTransitionRef = useRef<((stageIndex: number) => void) | null>(null)
   const [activeStage, setActiveStage] = useState(0)
 
   const stages = useMemo(
@@ -254,16 +256,18 @@ export function NewLevelImmersion() {
 
       const layers = layerRefs.current.filter(Boolean)
       const cards = cardRefs.current.filter(Boolean)
+      const initialIndex = Math.min(activeStageRef.current, stages.length - 1)
       gsap.set(layers, { autoAlpha: 0, scale: 1.08 })
-      gsap.set(layers[0], { autoAlpha: 1, scale: 1 })
+      gsap.set(layers[initialIndex], { autoAlpha: 1, scale: 1 })
       gsap.set(cards, { autoAlpha: 0, y: 28 })
-      gsap.set(cards[0], { autoAlpha: 1, y: 0 })
+      gsap.set(cards[initialIndex], { autoAlpha: 1, y: 0 })
 
-      let activeIndex = 0
+      let activeIndex = initialIndex
       const showStage = (nextIndex: number) => {
         if (nextIndex === activeIndex) return
         const previousIndex = activeIndex
         activeIndex = nextIndex
+        activeStageRef.current = nextIndex
         setActiveStage(nextIndex)
 
         gsap.to(layers[previousIndex], {
@@ -291,6 +295,8 @@ export function NewLevelImmersion() {
         )
       }
 
+      stageTransitionRef.current = showStage
+
       const trigger = ScrollTrigger.create({
         trigger: root,
         start: "top top",
@@ -306,12 +312,41 @@ export function NewLevelImmersion() {
       })
 
       cleanup = () => {
+        stageTransitionRef.current = null
         trigger.kill()
       }
     })().catch(() => undefined)
 
     return () => cleanup?.()
   }, [stages])
+
+  const jumpToStage = (stageIndex: number) => {
+    const nextIndex = Math.max(0, Math.min(stages.length - 1, stageIndex))
+    const transitionStage = stageTransitionRef.current
+
+    if (transitionStage) {
+      transitionStage(nextIndex)
+    } else {
+      activeStageRef.current = nextIndex
+      setActiveStage(nextIndex)
+    }
+
+    const root = rootRef.current
+    if (!root) return
+
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
+    if (!desktop) return
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const scrollable = Math.max(0, root.offsetHeight - window.innerHeight)
+    const segmentProgress = (nextIndex + 0.5) / stages.length
+    const sectionTop = root.getBoundingClientRect().top + window.scrollY
+
+    window.scrollTo({
+      top: sectionTop + scrollable * segmentProgress,
+      behavior: reduced ? "auto" : "smooth",
+    })
+  }
 
   return (
     <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8]">
@@ -339,7 +374,10 @@ export function NewLevelImmersion() {
                 ref={(node) => {
                   layerRefs.current[index] = node
                 }}
-                className={cn("absolute inset-0", index > 0 && "opacity-0")}
+                className={cn(
+                  "absolute inset-0 transition-opacity duration-300",
+                  index === activeStage ? "opacity-100" : "opacity-0"
+                )}
               >
                 <Image
                   src={stage.src}
@@ -373,8 +411,10 @@ export function NewLevelImmersion() {
                         cardRefs.current[index] = node
                       }}
                       className={cn(
-                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:xl:absolute motion-safe:xl:mb-0 xl:p-8",
-                        index === 0 && "opacity-100"
+                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-opacity duration-300 xl:absolute xl:mb-0 xl:p-8",
+                        index === activeStage
+                          ? "xl:opacity-100"
+                          : "xl:pointer-events-none xl:opacity-0"
                       )}
                     >
                       <div className="flex items-center gap-3 text-sm font-black tracking-[0.18em] text-emerald-100 uppercase">
@@ -426,19 +466,21 @@ export function NewLevelImmersion() {
 
             <div className="hidden justify-end xl:flex">
               <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
-                <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   const isActive = activeStage === index
                   return (
-                    <div
+                    <button
                       key={stage.label}
+                      type="button"
+                      onClick={() => jumpToStage(index)}
                       aria-current={isActive ? "step" : undefined}
+                      aria-label={`${index + 1}. ${stage.label}`}
                       className={cn(
-                        "relative z-20 flex items-center gap-3 rounded-2xl border-b border-white/10 px-3 py-5 transition last:border-0",
+                        "relative z-20 flex w-full cursor-pointer items-center gap-3 rounded-2xl border-b border-white/10 px-3 py-5 text-left transition last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200",
                         isActive
                           ? "bg-white/14 text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/18"
-                          : "text-white/58"
+                          : "text-white/58 hover:bg-white/10 hover:text-white"
                       )}
                     >
                       <span
@@ -462,7 +504,7 @@ export function NewLevelImmersion() {
                         </div>
                         <div className="text-sm font-bold">{stage.label}</div>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>

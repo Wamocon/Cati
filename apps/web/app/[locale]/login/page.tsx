@@ -31,15 +31,14 @@ const pageCopy = {
     authNote: "Kimlik doğrulama anahtarları bekleniyor. Yetkili ortamda e-posta/şifre ile giriş açılır.",
     authError: "Giriş başarısız. E-posta ve şifreyi kontrol edin.",
     accessError: "Rol profili açılamadı. Tekrar deneyin.",
-    demoButton: "Demo başlat — tam yetkili erişim",
-    demoHint: "Demo ortamı: yönetici olarak tüm modüller şifresiz açılır.",
+    demoButton: "Demo başlat",
+    demoHint: "Demo ortamı: Demo başlat'a tıklayın, rol seçin ve ilgili modülleri şifresiz açın.",
     or: "veya",
     providerTitle: "Modern giriş seçenekleri",
     providerSummary: "Diğer giriş yöntemleri",
     providerIntro: "Demo modunda hazırlık gösterilir; canlı bağlantı için sözleşme, OAuth anahtarı ve yönetici onayı gerekir.",
     providerReady: "hazırlık modunda",
     providerDetailsTitle: "Giriş yöntemi hazırlığı",
-    profilesSummary: "QA rol profillerini aç",
     openAllProfiles: "Tüm rolleri ayrı sayfada gör",
     close: "Kapat",
     googleNotice: "Google girişi üretim için hazırlanabilir. Canlıya almak için Google OAuth istemcisi ve Supabase provider ayarı gerekir.",
@@ -75,15 +74,14 @@ const pageCopy = {
     authNote: "Authentication keys are pending. Email/password access opens in an authorized environment.",
     authError: "Sign-in failed. Check email and password.",
     accessError: "Role profile could not be opened. Try again.",
-    demoButton: "Start demo — full admin access",
-    demoHint: "Demo environment: opens every module as admin, no password needed.",
+    demoButton: "Start demo",
+    demoHint: "Demo environment: click Start demo, choose a role, and open the matching modules without a password.",
     or: "or",
     providerTitle: "Modern sign-in options",
     providerSummary: "Other sign-in methods",
     providerIntro: "Demo mode shows provider readiness; live connection needs contract, OAuth keys and administrator approval.",
     providerReady: "provider-ready",
     providerDetailsTitle: "Sign-in method readiness",
-    profilesSummary: "Open QA role profiles",
     openAllProfiles: "View all roles on a separate page",
     close: "Close",
     googleNotice: "Google sign-in can be activated for production after Google OAuth client and Supabase provider configuration.",
@@ -119,15 +117,14 @@ const pageCopy = {
     authNote: "Authentifizierungsschlüssel fehlen. E-Mail/Passwort wird in autorisierter Umgebung aktiviert.",
     authError: "Anmeldung fehlgeschlagen. E-Mail und Passwort prüfen.",
     accessError: "Rollenprofil konnte nicht geöffnet werden. Erneut versuchen.",
-    demoButton: "Demo starten — Vollzugriff (Admin)",
-    demoHint: "Demo-Umgebung: öffnet alle Module als Admin, kein Passwort nötig.",
+    demoButton: "Demo starten",
+    demoHint: "Demo-Umgebung: Demo starten anklicken, Rolle wählen und passende Module ohne Passwort öffnen.",
     or: "oder",
     providerTitle: "Moderne Anmeldeoptionen",
     providerSummary: "Weitere Anmeldemethoden",
     providerIntro: "Im Demo-Modus wird Provider-Bereitschaft gezeigt; live braucht es Vertrag, OAuth-Keys und Admin-Freigabe.",
     providerReady: "Provider-ready",
     providerDetailsTitle: "Bereitschaft der Anmeldemethode",
-    profilesSummary: "QA-Rollenprofile öffnen",
     openAllProfiles: "Alle Rollen auf eigener Seite anzeigen",
     close: "Schließen",
     googleNotice: "Google Login kann für Produktion aktiviert werden, sobald Google OAuth Client und Supabase Provider konfiguriert sind.",
@@ -163,15 +160,14 @@ const pageCopy = {
     authNote: "Ключи аутентификации ожидаются. В авторизованной среде будет доступен вход по e-mail/паролю.",
     authError: "Вход не удался. Проверьте e-mail и пароль.",
     accessError: "Ролевой профиль не открылся. Попробуйте еще раз.",
-    demoButton: "Запустить демо — полный доступ (админ)",
-    demoHint: "Демо-среда: открывает все модули как администратор, без пароля.",
+    demoButton: "Запустить демо",
+    demoHint: "Демо-среда: нажмите запуск демо, выберите роль и откройте нужные модули без пароля.",
     or: "или",
     providerTitle: "Современные варианты входа",
     providerSummary: "Другие способы входа",
     providerIntro: "Демо показывает готовность провайдеров; для live нужны договор, OAuth-ключи и одобрение администратора.",
     providerReady: "готово к подключению",
     providerDetailsTitle: "Готовность способа входа",
-    profilesSummary: "Открыть QA-роли",
     openAllProfiles: "Показать все роли на отдельной странице",
     close: "Закрыть",
     googleNotice: "Вход через Google можно включить после настройки Google OAuth Client и Supabase provider.",
@@ -244,6 +240,7 @@ export default function LoginPage() {
   const [authPending, setAuthPending] = useState(false)
   const [accessProfilesEnabled, setAccessProfilesEnabled] = useState(false)
   const [accessProfileStatusLoaded, setAccessProfileStatusLoaded] = useState(false)
+  const [demoRolesOpen, setDemoRolesOpen] = useState(false)
   const [activeRole, setActiveRole] = useState<Role | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [providerNotice, setProviderNotice] = useState<{
@@ -419,49 +416,51 @@ export default function LoginPage() {
                   <button
                     type="button"
                     data-testid="demo-full-access"
-                    onClick={() => signInAs("admin")}
-                    disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === "admin"}
+                    aria-expanded={demoRolesOpen}
+                    aria-controls="demo-role-menu"
+                    onClick={() => setDemoRolesOpen((open) => !open)}
+                    disabled={!accessProfileStatusLoaded}
                     className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-base font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {activeRole === "admin" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ShieldCheck className="h-4 w-4" />
-                    )}
+                    <ShieldCheck className="h-4 w-4" />
                     {t.demoButton}
+                    <ChevronDown className="h-4 w-4" />
                   </button>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">
                     {accessProfilesEnabled ? t.demoHint : t.locked}
                   </p>
-                  <details className="mt-4 rounded-xl border border-border bg-background p-3">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-card-foreground [&::-webkit-details-marker]:hidden">
-                      {t.profilesSummary}
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </summary>
-                    <div className="mt-3 grid gap-2 border-t border-border pt-3 sm:grid-cols-2">
-                      {roles.map((role) => {
-                        const roleText = roleCopy(role, roleT)
-                        return (
-                          <button
-                            key={role}
-                            type="button"
-                            onClick={() => signInAs(role)}
-                            disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === role}
-                            title={!accessProfilesEnabled ? t.locked : roleText.description}
-                            className="group flex min-h-16 items-start gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-55"
-                          >
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                              {activeRole === role ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-sm font-black text-card-foreground">{roleText.label}</span>
-                              <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">{roleText.description}</span>
-                            </span>
-                          </button>
-                        )
-                      })}
+                  {demoRolesOpen && (
+                    <div
+                      id="demo-role-menu"
+                      data-testid="demo-role-menu"
+                      className="mt-4 rounded-2xl border border-border bg-background p-3"
+                    >
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {roles.map((role) => {
+                          const roleText = roleCopy(role, roleT)
+                          return (
+                            <button
+                              key={role}
+                              type="button"
+                              data-testid={`demo-role-option-${role}`}
+                              onClick={() => signInAs(role)}
+                              disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === role}
+                              title={!accessProfilesEnabled ? t.locked : roleText.description}
+                              className="group flex min-h-16 items-start gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-55"
+                            >
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                {activeRole === role ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-black text-card-foreground">{roleText.label}</span>
+                                <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">{roleText.description}</span>
+                              </span>
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </details>
+                  )}
                 </section>
 
                 <form className="grid gap-4" onSubmit={handlePasswordSignIn}>

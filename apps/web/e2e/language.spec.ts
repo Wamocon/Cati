@@ -71,8 +71,8 @@ test.describe("Language access", () => {
 
   test("dashboard exposes locale switching after sign-in", async ({ page }, testInfo) => {
     await page.goto("/tr/login")
-    await page.getByText("QA rol profillerini aç").click()
-    await page.getByRole("button", { name: /Yönetim|Sorumlu/ }).first().click()
+    await page.getByTestId("demo-full-access").click()
+    await page.getByTestId("demo-role-option-manager").click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
 
     const switcher = page.getByTestId("locale-switcher").first()

@@ -39,8 +39,8 @@ test.describe("Login page", () => {
     page,
   }, testInfo) => {
     await page.goto("/tr/login")
-    await page.getByText("QA rol profillerini aç").click()
-    await page.getByRole("button", { name: /Personel/ }).click()
+    await page.getByTestId("demo-full-access").click()
+    await page.getByTestId("demo-role-option-staff").click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
     await expect(page.locator("main")).toContainText(/Servis Talepleri|ERP Operasyon Merkezi/)
     await screenshot(page, testInfo, "04-login-access-profile")
