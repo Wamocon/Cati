@@ -851,7 +851,7 @@ export default function TicketsPage() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-bold text-card-foreground">{t("Siparis kontrolu")}</h2>
             <StatusBadge variant={blockedOrders > 0 ? "danger" : "success"}>
-              {blockedOrders} blokeli
+              {blockedOrders} {t("blokeli")}
             </StatusBadge>
           </div>
           <div className="space-y-3">
