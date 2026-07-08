@@ -7,6 +7,7 @@ export interface UserProfile {
   email?: string
   full_name?: string | null
   role: Role
+  company_id?: string | null
   phone?: string | null
   language?: string | null
   office_id?: string | null
@@ -35,6 +36,7 @@ async function getAccessProfile(): Promise<UserProfile> {
     email: "access@cati.local",
     full_name: "Operasyon Kullanıcısı",
     role,
+    company_id: null,
     phone: null,
     language: "ru",
     office_id: null,
@@ -100,6 +102,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
         id: user.id,
         email: user.email,
         role: "tenant",
+        company_id: null,
       }
     }
 
@@ -110,6 +113,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       email: user.email,
       full_name: profile?.full_name,
       role,
+      company_id: profile?.company_id,
       phone: profile?.phone,
       language: profile?.language,
       office_id: profile?.office_id,

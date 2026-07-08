@@ -394,7 +394,7 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-1 items-center px-5 py-8 sm:px-8">
-            <div className="mx-auto grid w-full max-w-5xl gap-6 2xl:grid-cols-[minmax(420px,0.95fr)_minmax(320px,0.75fr)]">
+            <div className="mx-auto w-full max-w-2xl">
               <div className="rounded-3xl border border-border bg-card p-5 shadow-2xl shadow-black/[0.06] sm:p-7">
                 <div className="mb-7">
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-primary">{t.eyebrow}</p>
@@ -404,69 +404,68 @@ export default function LoginPage() {
                   </p>
                 </div>
 
-                {accessProfilesEnabled && (
-                  <div className="mb-6">
-                    <button
-                      type="button"
-                      data-testid="demo-full-access"
-                      onClick={() => signInAs("admin")}
-                      disabled={!accessProfileStatusLoaded || activeRole === "admin"}
-                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-base font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {activeRole === "admin" ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <ShieldCheck className="h-4 w-4" />
-                      )}
-                      {t.demoButton}
-                    </button>
-                    <p className="mt-2 text-xs leading-5 text-muted-foreground">{t.demoHint}</p>
-                    <div className="my-5 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
-                      <span className="h-px flex-1 bg-border" />
-                      {t.or}
-                      <span className="h-px flex-1 bg-border" />
+                <section className="mb-6 rounded-2xl border border-primary/15 bg-primary/[0.04] p-3 sm:p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <ShieldCheck className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black text-card-foreground">{t.roleTitle}</h3>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        {accessProfilesEnabled ? t.roleIntro : t.locked}
+                      </p>
                     </div>
                   </div>
-                )}
-
-                <details className="mb-6 rounded-2xl border border-border bg-muted/25 p-3">
-                  <summary className="flex cursor-pointer list-none flex-col items-start gap-3 rounded-xl px-1 py-1 text-left sm:flex-row sm:items-center sm:justify-between [&::-webkit-details-marker]:hidden">
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-black text-card-foreground">{t.providerSummary}</span>
-                      <span className="mt-1 block line-clamp-2 text-xs leading-5 text-muted-foreground">{t.providerIntro}</span>
-                    </span>
-                    <span className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
-                      <span className="inline-flex rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-primary">
-                        {t.providerReady}
-                      </span>
+                  <button
+                    type="button"
+                    data-testid="demo-full-access"
+                    onClick={() => signInAs("admin")}
+                    disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === "admin"}
+                    className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-base font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {activeRole === "admin" ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ShieldCheck className="h-4 w-4" />
+                    )}
+                    {t.demoButton}
+                  </button>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                    {accessProfilesEnabled ? t.demoHint : t.locked}
+                  </p>
+                  <details className="mt-4 rounded-xl border border-border bg-background p-3">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-card-foreground [&::-webkit-details-marker]:hidden">
+                      {t.profilesSummary}
                       <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    </span>
-                  </summary>
-                  <div className="mt-3 grid gap-2 border-t border-border pt-3">
-                    {providerOptions.map((provider) => {
-                      const Logo = providerLogos[provider.key]
-                      return (
-                        <button
-                          key={provider.key}
-                          type="button"
-                          onClick={() => void handleProvider(provider)}
-                          className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.04]"
-                        >
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-white text-primary shadow-sm">
-                            <Logo className={provider.key === "magic" ? "text-primary" : undefined} />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-black text-card-foreground">{t.providerLabels[provider.key]}</span>
-                            <span className="block truncate text-xs text-muted-foreground">{t.providerDetails[provider.key]}</span>
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </details>
+                    </summary>
+                    <div className="mt-3 grid gap-2 border-t border-border pt-3 sm:grid-cols-2">
+                      {roles.map((role) => {
+                        const roleText = roleCopy(role, roleT)
+                        return (
+                          <button
+                            key={role}
+                            type="button"
+                            onClick={() => signInAs(role)}
+                            disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === role}
+                            title={!accessProfilesEnabled ? t.locked : roleText.description}
+                            className="group flex min-h-16 items-start gap-3 rounded-xl border border-border bg-card p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-55"
+                          >
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                              {activeRole === role ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-sm font-black text-card-foreground">{roleText.label}</span>
+                              <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">{roleText.description}</span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </details>
+                </section>
 
-                <form className="space-y-4" onSubmit={handlePasswordSignIn}>
-                  <div className="space-y-2">
+                <form className="grid gap-4" onSubmit={handlePasswordSignIn}>
+                  <div className="grid gap-2">
                     <label htmlFor="email" className="text-sm font-bold text-card-foreground">
                       {t.email}
                     </label>
@@ -482,7 +481,7 @@ export default function LoginPage() {
                       className="h-12 w-full rounded-xl border border-border bg-background px-4 text-base text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                   </div>
-                  <div className="space-y-2">
+                  <div className="grid gap-2">
                     <label htmlFor="password" className="text-sm font-bold text-card-foreground">
                       {t.password}
                     </label>
@@ -514,61 +513,64 @@ export default function LoginPage() {
                     {authPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}
                     {t.submit}
                   </button>
-
-                  <Link
-                    href={signupHref}
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-5 text-base font-black text-foreground transition hover:bg-muted sm:hidden"
-                  >
-                    {t.request}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
                 </form>
-              </div>
 
-              <aside className="rounded-3xl border border-border bg-card p-5 shadow-xl shadow-black/[0.04] sm:p-6">
-                <div className="mb-4">
-                  <h2 className="text-lg font-black text-card-foreground">{t.roleTitle}</h2>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                    {accessProfilesEnabled ? t.roleIntro : t.locked}
-                  </p>
+                <div className="my-6 flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" />
+                  {t.or}
+                  <span className="h-px flex-1 bg-border" />
                 </div>
-                <Link
-                  href="/login/profiles"
-                  className="mb-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-black text-foreground transition hover:bg-muted"
-                >
-                  {t.openAllProfiles}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <details className="rounded-2xl border border-border bg-background p-3">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-black text-card-foreground [&::-webkit-details-marker]:hidden">
-                    {t.profilesSummary}
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  </summary>
-                  <div className="mt-3 grid gap-2 border-t border-border pt-3">
-                    {roles.map((role) => {
-                      const roleText = roleCopy(role, roleT)
+
+                <section className="rounded-2xl border border-border bg-muted/25 p-3 sm:p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black text-card-foreground">{t.providerSummary}</h3>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{t.providerIntro}</p>
+                    </div>
+                    <span className="inline-flex w-fit shrink-0 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[11px] font-black uppercase tracking-[0.1em] text-primary">
+                      {t.providerReady}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-2">
+                    {providerOptions.map((provider) => {
+                      const Logo = providerLogos[provider.key]
                       return (
                         <button
-                          key={role}
+                          key={provider.key}
                           type="button"
-                          onClick={() => signInAs(role)}
-                          disabled={!accessProfilesEnabled || !accessProfileStatusLoaded || activeRole === role}
-                          title={!accessProfilesEnabled ? t.locked : roleText.description}
-                          className="group flex min-h-16 items-start gap-3 rounded-2xl border border-border bg-card p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-55"
+                          onClick={() => void handleProvider(provider)}
+                          className="flex min-h-14 items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/35 hover:bg-primary/[0.04]"
                         >
-                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                            {activeRole === role ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-white text-primary shadow-sm">
+                            <Logo className={provider.key === "magic" ? "text-primary" : undefined} />
                           </span>
                           <span className="min-w-0">
-                            <span className="block text-sm font-black text-card-foreground">{roleText.label}</span>
-                            <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">{roleText.description}</span>
+                            <span className="block text-sm font-black leading-tight text-card-foreground">{t.providerLabels[provider.key]}</span>
+                            <span className="line-clamp-2 text-xs leading-5 text-muted-foreground">{t.providerDetails[provider.key]}</span>
                           </span>
                         </button>
                       )
                     })}
                   </div>
-                </details>
-              </aside>
+                </section>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <Link
+                    href="/login/profiles"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-center text-sm font-black text-foreground transition hover:bg-muted"
+                  >
+                    {t.openAllProfiles}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={signupHref}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-center text-sm font-black text-foreground transition hover:bg-muted"
+                  >
+                    {t.request}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </section>

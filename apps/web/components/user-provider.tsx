@@ -8,6 +8,7 @@ export interface UserContextValue {
   email?: string
   full_name?: string | null
   role: Role
+  company_id?: string | null
   phone?: string | null
   language?: string | null
   office_id?: string | null

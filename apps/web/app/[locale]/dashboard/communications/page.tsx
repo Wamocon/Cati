@@ -455,6 +455,68 @@ const communicationStatusCopy = {
   },
 } as const
 
+const communicationThreadStatusCopy = {
+  tr: {
+    needs_reply: "Cevap gerekli",
+    in_progress: "Devam ediyor",
+    ready: "Hazır",
+    blocked: "Engelli",
+  },
+  en: {
+    needs_reply: "Reply needed",
+    in_progress: "In progress",
+    ready: "Ready",
+    blocked: "Blocked",
+  },
+  de: {
+    needs_reply: "Antwort nötig",
+    in_progress: "In Bearbeitung",
+    ready: "Bereit",
+    blocked: "Blockiert",
+  },
+  ru: {
+    needs_reply: "Нужен ответ",
+    in_progress: "В работе",
+    ready: "Готово",
+    blocked: "Заблокировано",
+  },
+} as const
+
+const lifecycleStageCopy = {
+  tr: {
+    booking_confirmed: "Rezervasyon",
+    pre_arrival: "Varış öncesi",
+    arrival_day: "Varış",
+    in_stay: "Konaklama içi",
+    checkout: "Çıkış",
+    post_stay_feedback: "Geri bildirim",
+  },
+  en: {
+    booking_confirmed: "Booking",
+    pre_arrival: "Pre-arrival",
+    arrival_day: "Arrival",
+    in_stay: "In-stay",
+    checkout: "Checkout",
+    post_stay_feedback: "Feedback",
+  },
+  de: {
+    booking_confirmed: "Buchung",
+    pre_arrival: "Voranreise",
+    arrival_day: "Anreise",
+    in_stay: "Während des Aufenthalts",
+    checkout: "Checkout",
+    post_stay_feedback: "Feedback",
+  },
+  ru: {
+    booking_confirmed: "Бронирование",
+    pre_arrival: "До прибытия",
+    arrival_day: "Прибытие",
+    in_stay: "Во время проживания",
+    checkout: "Выезд",
+    post_stay_feedback: "Отзыв",
+  },
+} as const
+
 function resolveCommunicationsLocale(locale: string): keyof typeof communicationsCopy {
   return locale in communicationsCopy ? (locale as keyof typeof communicationsCopy) : "tr"
 }
@@ -472,11 +534,8 @@ function statusVariant(status: CommunicationThreadRecord["status"]) {
   return "success"
 }
 
-function statusLabel(status: CommunicationThreadRecord["status"]) {
-  if (status === "needs_reply") return "Reply needed"
-  if (status === "in_progress") return "In progress"
-  if (status === "blocked") return "Blocked"
-  return "Ready"
+function statusLabel(status: CommunicationThreadRecord["status"], locale: keyof typeof communicationsCopy) {
+  return communicationThreadStatusCopy[locale][status]
 }
 
 function priorityVariant(priority: CommunicationThreadRecord["priority"]) {
@@ -535,13 +594,8 @@ function lifecycleVariant(status: GuestLifecycleEventRecord["status"]) {
   return "neutral"
 }
 
-function lifecycleStageLabel(stage: GuestLifecycleEventRecord["stage"]) {
-  if (stage === "booking_confirmed") return "Booking"
-  if (stage === "pre_arrival") return "Pre-arrival"
-  if (stage === "arrival_day") return "Arrival"
-  if (stage === "in_stay") return "In-stay"
-  if (stage === "checkout") return "Checkout"
-  return "Feedback"
+function lifecycleStageLabel(stage: GuestLifecycleEventRecord["stage"], locale: keyof typeof communicationsCopy) {
+  return lifecycleStageCopy[locale][stage]
 }
 
 function lifecycleToneVariant(tone: GuestLifecycleEventRecord["tone"]) {
@@ -665,7 +719,7 @@ export default function CommunicationsPage() {
                 key: "stage",
                 header: "Moment",
                 sortable: true,
-                render: (item) => lifecycleStageLabel(item.stage),
+                render: (item) => lifecycleStageLabel(item.stage, locale),
               },
               { key: "channel", header: "Channel", sortable: true, render: (item) => item.channel },
               {
@@ -818,7 +872,7 @@ export default function CommunicationsPage() {
                 key: "status",
                 header: "Status",
                 render: (item) => (
-                  <StatusBadge variant={statusVariant(item.status)}>{statusLabel(item.status)}</StatusBadge>
+                  <StatusBadge variant={statusVariant(item.status)}>{statusLabel(item.status, locale)}</StatusBadge>
                 ),
               },
               { key: "language", header: "Lang", sortable: true, render: (item) => item.language.toUpperCase() },

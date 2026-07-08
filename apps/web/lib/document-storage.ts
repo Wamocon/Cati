@@ -7,6 +7,17 @@ import { documentVault, type DocumentVaultRecord } from "@/lib/site-management-d
 export const DOCUMENT_UPLOAD_CONTRACT_VERSION = "phase-11-document-upload-storage.v1"
 export const DOCUMENT_UPLOAD_BUCKET = process.env.SUPABASE_DOCUMENT_BUCKET || "cati-documents"
 export const MAX_DOCUMENT_UPLOAD_BYTES = 25 * 1024 * 1024
+const DEFAULT_DOCUMENT_COMPANY_ID = "11111111-1111-4111-8111-111111111111"
+const DEFAULT_DOCUMENT_SITE_ID = "33333333-3333-4333-8333-333333333333"
+const DEFAULT_DOCUMENT_COMPANY = {
+  id: DEFAULT_DOCUMENT_COMPANY_ID,
+  name: "Ataberk Estate",
+  slug: "ataberk-estate",
+  status: "active",
+  primary_locale: "tr",
+  timezone: "Europe/Istanbul",
+  currency: "TRY",
+}
 
 export type DocumentStorageMode = "supabase-storage" | "demo-object-store"
 export type DocumentReviewStatus = "pending_review" | "approved" | "rejected"
@@ -305,9 +316,92 @@ async function resolveDefaultCompanyId(
   if (!serviceClient) return null
 
   const defaultCompanyResponse = await serviceClient.rpc("default_company_id")
-  return typeof defaultCompanyResponse.data === "string"
-    ? defaultCompanyResponse.data
-    : null
+  if (typeof defaultCompanyResponse.data === "string") {
+    return defaultCompanyResponse.data
+  }
+
+  const companyResponse = await serviceClient
+    .from("companies")
+    .select("id")
+    .eq("slug", DEFAULT_DOCUMENT_COMPANY.slug)
+    .maybeSingle()
+  const companyRow = companyResponse.data as { id?: string | null } | null
+  if (companyRow?.id) {
+    return companyRow.id
+  }
+
+  const insertResponse = await serviceClient
+    .from("companies")
+    .insert(DEFAULT_DOCUMENT_COMPANY)
+    .select("id")
+    .single()
+  const insertedRow = insertResponse.data as { id?: string | null } | null
+  if (insertedRow?.id) {
+    return insertedRow.id
+  }
+
+  const retryResponse = await serviceClient
+    .from("companies")
+    .select("id")
+    .eq("slug", DEFAULT_DOCUMENT_COMPANY.slug)
+    .maybeSingle()
+  const retryRow = retryResponse.data as { id?: string | null } | null
+  return retryRow?.id ?? null
+}
+
+async function resolveDefaultSiteId(
+  serviceClient: ReturnType<typeof createServiceRoleClient>,
+  companyId: string | null
+) {
+  if (!serviceClient || !companyId) return null
+
+  const siteResponse = await serviceClient
+    .from("sites")
+    .select("id")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  const siteRow = siteResponse.data as { id?: string | null } | null
+  if (siteRow?.id) {
+    return siteRow.id
+  }
+
+  const upsertResponse = await serviceClient
+    .from("sites")
+    .upsert(
+      {
+        id: DEFAULT_DOCUMENT_SITE_ID,
+        company_id: companyId,
+        name: "New Level Premium Avsallar",
+        code: "NLP-AVS",
+        city: "Alanya",
+        district: "Avsallar",
+        address: "Avsallar, Alanya, Antalya",
+        status: "active",
+        total_units: 769,
+      },
+      { onConflict: "company_id,code" }
+    )
+    .select("id")
+    .single()
+
+  const upsertRow = upsertResponse.data as { id?: string | null } | null
+  return upsertRow?.id ?? null
+}
+
+async function backfillProfileCompanyId(
+  serviceClient: ReturnType<typeof createServiceRoleClient>,
+  profileId: string,
+  companyId: string
+) {
+  if (!serviceClient) return
+
+  await serviceClient
+    .from("profiles")
+    .update({ company_id: companyId })
+    .eq("id", profileId)
+    .is("company_id", null)
 }
 
 async function resolveStorageContext(
@@ -323,9 +417,9 @@ async function resolveStorageContext(
     return { companyId: null, siteId: null, companySegment: "demo-company" }
   }
 
-  let companyId: string | null = null
+  let companyId: string | null = isUuid(profile.company_id) ? profile.company_id! : null
 
-  if (isUuid(profile.id)) {
+  if (!companyId && isUuid(profile.id)) {
     const profileResponse = await serviceClient
       .from("profiles")
       .select("company_id")
@@ -337,24 +431,16 @@ async function resolveStorageContext(
 
   if (!companyId) {
     companyId = await resolveDefaultCompanyId(serviceClient)
+    if (companyId && isUuid(profile.id)) {
+      await backfillProfileCompanyId(serviceClient, profile.id, companyId)
+    }
   }
 
   if (!companyId && storageMode === "supabase-storage") {
     throw new Error("Live document storage requires a company context. Add a default company or link the profile to a company.")
   }
 
-  let siteId: string | null = null
-  if (companyId) {
-    const siteResponse = await serviceClient
-      .from("sites")
-      .select("id")
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    const siteRow = siteResponse.data as { id?: string | null } | null
-    siteId = siteRow?.id ?? null
-  }
+  const siteId = await resolveDefaultSiteId(serviceClient, companyId)
 
   return { companyId, siteId, companySegment: companySegment(companyId) }
 }

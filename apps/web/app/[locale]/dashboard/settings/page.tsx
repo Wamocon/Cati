@@ -189,6 +189,164 @@ const settingsCopy = {
   },
 } as const
 
+type PlatformControlDisplayCopy = {
+  area: string
+  owner: string
+  title: string
+  detail: string
+}
+
+const platformControlDisplayCopy = {
+  tr: {
+    "CTL-AUTH-01": {
+      area: "Kimlik",
+      owner: "Platform",
+      title: "Rol profili ve oturum kontrolü",
+      detail:
+        "Yerel çalışma ortamında yetki profili kullanılabilir; üretim ortamında doğrulanmış kullanıcı profili önceliklidir.",
+    },
+    "CTL-RBAC-01": {
+      area: "RBAC",
+      owner: "Güvenlik",
+      title: "Rol bazlı menü ve yetki matrisi",
+      detail:
+        "Her rol için görüntüleme, oluşturma, onay, dışa aktarma ve yönetim hakları açık tanımlanır.",
+    },
+    "CTL-AUD-01": {
+      area: "Denetim",
+      owner: "Uyum",
+      title: "Finans, erişim ve AI karar izi",
+      detail:
+        "Hassas kararlar aktör, modül, sebep, risk ve zaman bilgisiyle izlenebilir şekilde modellenir.",
+    },
+    "CTL-DATA-01": {
+      area: "Veri",
+      owner: "Veri",
+      title: "Şirket/site izolasyon hazırlığı",
+      detail:
+        "Veri modeli şirket, site ve rol bağlamını güvenli erişim politikalarına hazırlayacak şekilde tasarlanmıştır.",
+    },
+    "CTL-AI-01": {
+      area: "AI",
+      owner: "AI yönetişimi",
+      title: "AI aksiyonlarında insan onayı",
+      detail:
+        "AI finans, erişim veya hassas verilerde doğrudan işlem yapmaz; öneri ve onay kuyruğu üretir.",
+    },
+  },
+  en: {
+    "CTL-AUTH-01": {
+      area: "Auth",
+      owner: "Platform",
+      title: "Role profile and session control",
+      detail:
+        "Access profiles can be used in local QA; verified user profiles take priority in production.",
+    },
+    "CTL-RBAC-01": {
+      area: "RBAC",
+      owner: "Security",
+      title: "Role-based menu and permission matrix",
+      detail:
+        "View, create, approve, export and management rights are defined clearly for every role.",
+    },
+    "CTL-AUD-01": {
+      area: "Audit",
+      owner: "Compliance",
+      title: "Finance, access and AI decision trail",
+      detail:
+        "Sensitive decisions are modeled with actor, module, reason, risk and timestamp for traceability.",
+    },
+    "CTL-DATA-01": {
+      area: "Data",
+      owner: "Data",
+      title: "Company/site isolation readiness",
+      detail:
+        "The data model is prepared for secure access policies across company, site and role context.",
+    },
+    "CTL-AI-01": {
+      area: "AI",
+      owner: "AI governance",
+      title: "Human approval for AI actions",
+      detail:
+        "AI does not directly act on finance, access or sensitive data; it creates recommendations and approval queues.",
+    },
+  },
+  de: {
+    "CTL-AUTH-01": {
+      area: "Auth",
+      owner: "Plattform",
+      title: "Rollenprofil- und Sitzungskontrolle",
+      detail:
+        "In lokalen QA-Umgebungen können Zugriffsprofile genutzt werden; in Produktion haben verifizierte Benutzerprofile Vorrang.",
+    },
+    "CTL-RBAC-01": {
+      area: "RBAC",
+      owner: "Sicherheit",
+      title: "Rollenbasiertes Menü und Berechtigungsmatrix",
+      detail:
+        "Ansichts-, Erstellungs-, Freigabe-, Export- und Verwaltungsrechte sind für jede Rolle klar definiert.",
+    },
+    "CTL-AUD-01": {
+      area: "Audit",
+      owner: "Compliance",
+      title: "Finanz-, Zugangs- und KI-Entscheidungsspur",
+      detail:
+        "Sensible Entscheidungen werden mit Akteur, Modul, Grund, Risiko und Zeitpunkt nachvollziehbar modelliert.",
+    },
+    "CTL-DATA-01": {
+      area: "Daten",
+      owner: "Daten",
+      title: "Vorbereitung der Unternehmens-/Standortisolierung",
+      detail:
+        "Das Datenmodell ist auf sichere Zugriffsrichtlinien nach Unternehmen, Standort und Rolle vorbereitet.",
+    },
+    "CTL-AI-01": {
+      area: "KI",
+      owner: "KI-Governance",
+      title: "Menschliche Freigabe für KI-Aktionen",
+      detail:
+        "KI führt keine direkten Aktionen in Finanzen, Zugang oder sensiblen Daten aus; sie erstellt Empfehlungen und Freigabewarteschlangen.",
+    },
+  },
+  ru: {
+    "CTL-AUTH-01": {
+      area: "Auth",
+      owner: "Платформа",
+      title: "Контроль профиля роли и сессии",
+      detail:
+        "В локальной QA-среде можно использовать профили доступа; в production приоритет имеют подтвержденные профили пользователей.",
+    },
+    "CTL-RBAC-01": {
+      area: "RBAC",
+      owner: "Безопасность",
+      title: "Ролевое меню и матрица прав",
+      detail:
+        "Права просмотра, создания, одобрения, экспорта и управления четко определены для каждой роли.",
+    },
+    "CTL-AUD-01": {
+      area: "Аудит",
+      owner: "Compliance",
+      title: "След решений по финансам, доступу и AI",
+      detail:
+        "Чувствительные решения моделируются с участником, модулем, причиной, риском и временем для прослеживаемости.",
+    },
+    "CTL-DATA-01": {
+      area: "Данные",
+      owner: "Данные",
+      title: "Готовность изоляции компании/объекта",
+      detail:
+        "Модель данных подготовлена для безопасных политик доступа по контексту компании, объекта и роли.",
+    },
+    "CTL-AI-01": {
+      area: "AI",
+      owner: "AI governance",
+      title: "Одобрение человеком для AI-действий",
+      detail:
+        "AI не выполняет прямые действия с финансами, доступом или чувствительными данными; он создает рекомендации и очереди одобрения.",
+    },
+  },
+} satisfies Record<keyof typeof settingsCopy, Record<string, PlatformControlDisplayCopy>>
+
 function resolveSettingsLocale(locale: string): keyof typeof settingsCopy {
   return locale === "tr" || locale === "de" || locale === "ru" ? locale : "en"
 }
@@ -201,6 +359,16 @@ function controlVariant(status: PlatformControl["status"]) {
 
 function controlLabel(status: PlatformControl["status"], copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
   return copy.controlStatus[status]
+}
+
+function controlDisplay(control: PlatformControl, locale: keyof typeof settingsCopy) {
+  const localizedControls: Record<string, PlatformControlDisplayCopy> = platformControlDisplayCopy[locale]
+  return localizedControls[control.id] ?? {
+    area: control.area,
+    owner: control.owner,
+    title: control.title,
+    detail: control.detail,
+  }
 }
 
 function riskVariant(risk: AuditEvent["risk"]) {
@@ -235,7 +403,8 @@ function booleanBadge(value: boolean, copy: (typeof settingsCopy)[keyof typeof s
 }
 
 export default function SettingsPage() {
-  const copy = settingsCopy[resolveSettingsLocale(useLocale())]
+  const locale = resolveSettingsLocale(useLocale())
+  const copy = settingsCopy[locale]
   const summary = getPlatformControlSummary()
   const integrationSummary = getIntegrationSummary()
 
@@ -313,18 +482,21 @@ export default function SettingsPage() {
             <p className="mt-1 text-xs text-muted-foreground">{copy.controlsBody}</p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            {platformControls.map((control) => (
-              <div key={control.id} className="rounded-xl border border-border bg-muted/30 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{control.area} - {control.owner}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{control.title}</h3>
+            {platformControls.map((control) => {
+              const display = controlDisplay(control, locale)
+              return (
+                <div key={control.id} className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">{display.area} - {display.owner}</p>
+                      <h3 className="mt-1 text-sm font-black text-foreground">{display.title}</h3>
+                    </div>
+                    <StatusBadge variant={controlVariant(control.status)}>{controlLabel(control.status, copy)}</StatusBadge>
                   </div>
-                  <StatusBadge variant={controlVariant(control.status)}>{controlLabel(control.status, copy)}</StatusBadge>
+                  <p className="mt-3 text-xs text-muted-foreground">{display.detail}</p>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{control.detail}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </Card3D>
 
