@@ -34,6 +34,7 @@ import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
+import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { createClient } from "@/lib/supabase/client"
 import type { ServiceTicketQueueData } from "@/lib/site-management-repository"
 import {
@@ -320,6 +321,7 @@ export default function TicketsPage() {
   const locale = resolveDashboardLocale(useLocale())
   const t = (value: string) => localizeDashboardTextPart(value, locale)
   const workflowDisplay = workflowDisplayCopy[locale]
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const displayWorkflowTitle = (item: WorkflowRequestView) => {
     const localized = t(item.title)
     if (localized !== item.title) return localized
@@ -526,10 +528,10 @@ export default function TicketsPage() {
   }
 
   const managerIntro = {
-    tr: `${clientProfile.activePortfolio} ve diğer Ataberk portföyleri için teknik servis, ödeme doğrulama, fotoğraf/video kanıtı ve SLA takibi aynı iş kuyruğunda yönetilir.`,
-    en: `${clientProfile.activePortfolio} and other Ataberk portfolios manage technical service, payment verification, photo/video evidence and SLA follow-up in one work queue.`,
-    de: `${clientProfile.activePortfolio} und weitere Ataberk-Portfolios steuern technischen Service, Zahlungsprüfung, Foto-/Videonachweise und SLA-Nachverfolgung in einer Arbeitswarteschlange.`,
-    ru: `${clientProfile.activePortfolio} и другие портфели Ataberk ведут технический сервис, проверку оплат, фото/видео-доказательства и SLA-контроль в одной очереди.`,
+    tr: `${portfolioDisplayName} ve diğer Ataberk portföyleri için teknik servis, ödeme doğrulama, fotoğraf/video kanıtı ve SLA takibi aynı iş kuyruğunda yönetilir.`,
+    en: `${portfolioDisplayName} and other Ataberk portfolios manage technical service, payment verification, photo/video evidence and SLA follow-up in one work queue.`,
+    de: `${portfolioDisplayName} und weitere Ataberk-Portfolios steuern technischen Service, Zahlungsprüfung, Foto-/Videonachweise und SLA-Nachverfolgung in einer Arbeitswarteschlange.`,
+    ru: `${portfolioDisplayName} и другие портфели Ataberk ведут технический сервис, проверку оплат, фото/видео-доказательства и SLA-контроль в одной очереди.`,
   }[locale]
 
   const pageIntro = clientView

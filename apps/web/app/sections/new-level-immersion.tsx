@@ -21,13 +21,13 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 
 const copy = {
   tr: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Yeni Seviye Premium / Avsallar",
     title: "Projeyi yukarıdan, binadan, daireden ve ERP akışından okuyun",
     intro:
-      "1Çatı, New Level Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
+      "1Çatı, Yeni Seviye Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
     ctaPrimary: "Daire matrisini aç",
     ctaSecondary: "Platform akışını incele",
-    liveLabel: "New Level Premium kontrol gorunumu",
+    liveLabel: "Yeni Seviye Premium kontrol gorunumu",
     metrics: [
       ["52k m2", "proje alani"],
       ["900 m", "plaj mesafesi"],
@@ -103,13 +103,13 @@ const copy = {
     ],
   },
   de: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Neues Niveau Premium / Avsallar",
     title: "Vom Lageplan über das Gebäude bis zum ERP-Ablauf",
     intro:
-      "1Çatı behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
+      "1Çatı behandelt Neues Niveau Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
     ctaPrimary: "Wohnungsmatrix öffnen",
     ctaSecondary: "Plattformablauf prüfen",
-    liveLabel: "New Level Premium Kontrollansicht",
+    liveLabel: "Neues Niveau Premium Kontrollansicht",
     metrics: [
       ["52k m2", "Projektflache"],
       ["900 m", "zum Strand"],
@@ -144,13 +144,13 @@ const copy = {
     ],
   },
   ru: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Новый уровень Премиум / Авсаллар",
     title: "От генплана и здания до квартиры и ERP-процесса",
     intro:
-      "1Çatı рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
+      "1Çatı рассматривает «Новый уровень Премиум» как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
     ctaPrimary: "Открыть матрицу квартир",
     ctaSecondary: "Посмотреть платформу",
-    liveLabel: "New Level Premium control view",
+    liveLabel: "Контрольный вид «Новый уровень Премиум»",
     metrics: [
       ["52k m2", "site area"],
       ["900 m", "to beach"],

@@ -220,6 +220,7 @@ function UnitActionsMenu({
 export default function ListingsPage() {
   const locale = resolveDashboardLocale(useLocale())
   const copy = unitMatrixCopy[locale]
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const summary = getSummary()
   const importSummary = getImportSummary()
   const blocks = getBlockOverview()
@@ -307,7 +308,7 @@ export default function ListingsPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {interpolate(copy.page.subtitle, {
             location: clientProfile.activeLocation,
-            portfolio: clientProfile.activePortfolio,
+            portfolio: portfolioDisplayName,
           })}
         </p>
       </div>
@@ -316,7 +317,7 @@ export default function ListingsPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">{copy.page.projectScope}</p>
-            <h2 className="mt-2 text-xl font-black text-card-foreground">{clientProfile.activePortfolio}</h2>
+            <h2 className="mt-2 text-xl font-black text-card-foreground">{portfolioDisplayName}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {copy.page.projectBody}
             </p>
@@ -330,7 +331,7 @@ export default function ListingsPage() {
                 className="rounded-xl border border-border/70 bg-muted/40 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
                 entityTable="units"
                 entityExternalId={pillar.title}
-                metadata={{ detail: pillar.detail, portfolio: clientProfile.activePortfolio }}
+                metadata={{ detail: pillar.detail, portfolio: portfolioDisplayName }}
                 successLabel={copy.actions.detailOpen}
                 title={pillar.title}
               >
@@ -635,42 +636,46 @@ export default function ListingsPage() {
             ))}
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {importBatches.map((batch) => (
-              <DashboardActionButton
-                key={batch.id}
-                actionType="import.batch.view"
-                ariaLabel={`${batch.id} ${copy.import.batchTitle}`}
-                className="rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"
-                entityExternalId={batch.id}
-                entityTable="import_batches"
-                metadata={{
-                  rejectedRows: batch.rejectedRows,
-                  source: batch.source,
-                  status: batch.status,
-                  totalRows: batch.totalRows,
-                  validRows: batch.validRows,
-                  warningRows: batch.warningRows,
-                }}
-                successLabel={copy.import.batchOpened}
-                title={`${batch.id} ${copy.import.batchTitle}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{batch.source}</h3>
+            {importBatches.map((batch) => {
+              const batchSourceLabel = localizeOperationalValue(batch.source, locale)
+
+              return (
+                <DashboardActionButton
+                  key={batch.id}
+                  actionType="import.batch.view"
+                  ariaLabel={`${batchSourceLabel} ${copy.import.batchTitle}`}
+                  className="rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"
+                  entityExternalId={batch.id}
+                  entityTable="import_batches"
+                  metadata={{
+                    rejectedRows: batch.rejectedRows,
+                    source: batch.source,
+                    status: batch.status,
+                    totalRows: batch.totalRows,
+                    validRows: batch.validRows,
+                    warningRows: batch.warningRows,
+                  }}
+                  successLabel={copy.import.batchOpened}
+                  title={`${batchSourceLabel} ${copy.import.batchTitle}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
+                      <h3 className="mt-1 text-sm font-black text-foreground">{batchSourceLabel}</h3>
+                    </div>
+                    <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
                   </div>
-                  <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {interpolate(copy.import.rowsSummary, {
-                    rejected: batch.rejectedRows,
-                    total: batch.totalRows,
-                    valid: batch.validRows,
-                    warning: batch.warningRows,
-                  })}
-                </p>
-              </DashboardActionButton>
-            ))}
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {interpolate(copy.import.rowsSummary, {
+                      rejected: batch.rejectedRows,
+                      total: batch.totalRows,
+                      valid: batch.validRows,
+                      warning: batch.warningRows,
+                    })}
+                  </p>
+                </DashboardActionButton>
+              )
+            })}
           </div>
         </Card3D>
 

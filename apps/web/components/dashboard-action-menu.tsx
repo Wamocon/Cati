@@ -30,6 +30,9 @@ export interface DashboardActionMenuItem {
   ariaLabel?: string
   description?: string
   icon?: ReactNode
+  href?: string
+  target?: string
+  download?: boolean | string
   entityTable?: string
   entityId?: string
   entityExternalId?: string
@@ -226,6 +229,30 @@ export function DashboardActionMenu({
     }
   }
 
+  function logLinkedAction(item: DashboardActionMenuItem) {
+    onActionStart?.(item)
+    void fetch("/api/site-management/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        actionType: item.actionType,
+        entityTable: item.entityTable,
+        entityId: item.entityId,
+        entityExternalId: item.entityExternalId,
+        title: item.title,
+        metadata: item.metadata,
+      }),
+    })
+      .then((response) => {
+        onActionComplete?.(item, response.ok ? "success" : "error")
+        if (response.ok) {
+          window.dispatchEvent(new CustomEvent("site-management:changed"))
+        }
+      })
+      .catch(() => onActionComplete?.(item, "error"))
+    setOpen(false)
+  }
+
   const menuStyle: CSSProperties = {
     left: position.left,
     right: position.right,
@@ -289,26 +316,13 @@ export function DashboardActionMenu({
               {menuLabel}
             </div>
             <div className="grid gap-1">
-              {enabledItems.map((item) => (
-                <DashboardActionButton
-                  key={item.key}
-                  role="menuitem"
-                  actionType={item.actionType}
-                  ariaLabel={localizeDashboardTextPart(item.ariaLabel ?? item.label, locale)}
-                  entityTable={item.entityTable}
-                  entityId={item.entityId}
-                  entityExternalId={item.entityExternalId}
-                  title={item.title}
-                  metadata={item.metadata}
-                  onActionStart={() => onActionStart?.(item)}
-                  onActionComplete={(state) => {
-                    onActionComplete?.(item, state)
-                    if (state === "success") {
-                      window.setTimeout(() => setOpen(false), 500)
-                    }
-                  }}
-                  className="w-full justify-start rounded-lg border-0 bg-transparent px-3 py-2 text-left text-sm font-bold text-popover-foreground shadow-none hover:bg-muted"
-                >
+              {enabledItems.map((item) => {
+                const itemLabel = localizeDashboardTextPart(item.label, locale)
+                const itemAriaLabel = localizeDashboardTextPart(
+                  item.ariaLabel ?? item.label,
+                  locale
+                )
+                const content = (
                   <span className="flex min-w-0 flex-1 items-start gap-2">
                     {withIconClass(item.icon) ?? (
                       <CheckCircle2
@@ -317,9 +331,7 @@ export function DashboardActionMenu({
                       />
                     )}
                     <span className="min-w-0">
-                      <span className="block truncate">
-                        {localizeDashboardTextPart(item.label, locale)}
-                      </span>
+                      <span className="block truncate">{itemLabel}</span>
                       {item.description && (
                         <span className="mt-0.5 block text-xs font-medium leading-snug text-muted-foreground">
                           {localizeDashboardTextPart(item.description, locale)}
@@ -327,8 +339,50 @@ export function DashboardActionMenu({
                       )}
                     </span>
                   </span>
-                </DashboardActionButton>
-              ))}
+                )
+
+                if (item.href) {
+                  return (
+                    <a
+                      key={item.key}
+                      role="menuitem"
+                      href={item.href}
+                      target={item.target}
+                      rel={item.target === "_blank" ? "noopener noreferrer" : undefined}
+                      download={item.download}
+                      aria-label={itemAriaLabel}
+                      onClick={() => logLinkedAction(item)}
+                      className="flex w-full justify-start rounded-lg border-0 bg-transparent px-3 py-2 text-left text-sm font-bold text-popover-foreground shadow-none transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+                    >
+                      {content}
+                    </a>
+                  )
+                }
+
+                return (
+                  <DashboardActionButton
+                    key={item.key}
+                    role="menuitem"
+                    actionType={item.actionType}
+                    ariaLabel={itemAriaLabel}
+                    entityTable={item.entityTable}
+                    entityId={item.entityId}
+                    entityExternalId={item.entityExternalId}
+                    title={item.title}
+                    metadata={item.metadata}
+                    onActionStart={() => onActionStart?.(item)}
+                    onActionComplete={(state) => {
+                      onActionComplete?.(item, state)
+                      if (state === "success") {
+                        window.setTimeout(() => setOpen(false), 500)
+                      }
+                    }}
+                    className="w-full justify-start rounded-lg border-0 bg-transparent px-3 py-2 text-left text-sm font-bold text-popover-foreground shadow-none hover:bg-muted"
+                  >
+                    {content}
+                  </DashboardActionButton>
+                )
+              })}
             </div>
           </div>,
           portalRoot

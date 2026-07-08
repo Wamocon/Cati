@@ -24,11 +24,12 @@ import {
   Sparkles,
   TicketCheck,
   TrendingUp,
+  Users,
   type LucideIcon,
 } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource, type Role } from "@/lib/rbac"
-import { resourceForDashboardPath } from "@/lib/dashboard-routing"
+import { dashboardRoutes, resourceForDashboardPath } from "@/lib/dashboard-routing"
 import { Card3D } from "@/components/3d-card"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { StatusBadge } from "@/components/status-badge"
@@ -37,7 +38,7 @@ import { PieChart } from "@/components/charts/pie-chart"
 import { GlassCard } from "@/components/glass-card"
 import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
-import { LiveErpSimulation } from "@/components/live-erp-simulation"
+import { LiveErpSimulation, type SimulationQuickAction } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
@@ -388,6 +389,58 @@ const roleSceneConfig: Partial<
     icon: CalendarCheck,
     bars: [64, 71, 57],
   },
+}
+
+const simulationActionIcons = {
+  dashboard: BarChart3,
+  listings: Building2,
+  leads: Users,
+  deals: Users,
+  tickets: TicketCheck,
+  calendar: CalendarCheck,
+  documents: FileText,
+  eids_compliance: ShieldCheck,
+  finance: CreditCard,
+  reports: Brain,
+  users: Users,
+  settings: Network,
+  communications: MessageSquareText,
+  offline_sync: Network,
+} satisfies Record<Resource, LucideIcon>
+
+const simulationActionResourceOrder: Resource[] = [
+  "listings",
+  "tickets",
+  "calendar",
+  "finance",
+  "documents",
+  "reports",
+  "communications",
+  "offline_sync",
+  "users",
+  "settings",
+  "leads",
+  "eids_compliance",
+]
+
+function buildSimulationQuickActions(
+  role: Role,
+  labelForResource: (resource: Resource) => string
+): SimulationQuickAction[] {
+  const routesByResource = new Map(
+    dashboardRoutes.map((route) => [route.resource, route])
+  )
+
+  return simulationActionResourceOrder
+    .map((resource) => routesByResource.get(resource))
+    .filter((route): route is (typeof dashboardRoutes)[number] => Boolean(route))
+    .filter((route) => hasPermission(role, route.resource, "view"))
+    .slice(0, 4)
+    .map((route) => ({
+      href: route.href,
+      icon: simulationActionIcons[route.resource],
+      label: labelForResource(route.resource),
+    }))
 }
 
 function isFocusedRole(role: Role): role is FocusedRole {
@@ -744,10 +797,12 @@ function GlobalOperationsScene({
 
 function RoleFocusedDashboard({
   copy,
+  quickActions,
   role,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
+  quickActions: SimulationQuickAction[]
   role: FocusedRole
   roleLabel: string
 }) {
@@ -776,6 +831,7 @@ function RoleFocusedDashboard({
       <LiveErpSimulation
         blocks={blocks}
         criticalTickets={[]}
+        quickActions={quickActions}
         realtimeState="disabled"
         requestState="success"
         roleLabel={roleLabel}
@@ -1080,23 +1136,43 @@ export default function DashboardHomePage() {
   const rawLocale = useLocale()
   const locale = resolveDashboardHomeLocale(rawLocale)
   const copy = dashboardHomeCopy[locale]
+  const dashboardT = useTranslations("dashboard")
   const roleT = useTranslations("roles")
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabel = roleDef ? roleT(roleDef.labelKey.replace("roles.", "")) : user.role
+  const quickActions = buildSimulationQuickActions(user.role, (resource) =>
+    dashboardT(`menu.${resource}`)
+  )
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
-    return <RoleFocusedDashboard copy={copy} role={user.role} roleLabel={roleLabel} />
+    return (
+      <RoleFocusedDashboard
+        copy={copy}
+        quickActions={quickActions}
+        role={user.role}
+        roleLabel={roleLabel}
+      />
+    )
   }
 
-  return <OperationsDashboard copy={copy} user={user} roleLabel={roleLabel} />
+  return (
+    <OperationsDashboard
+      copy={copy}
+      quickActions={quickActions}
+      user={user}
+      roleLabel={roleLabel}
+    />
+  )
 }
 
 function OperationsDashboard({
   copy,
+  quickActions,
   user,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
+  quickActions: SimulationQuickAction[]
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
@@ -1276,6 +1352,7 @@ function OperationsDashboard({
         blocks={blocks}
         criticalTickets={criticalTickets}
         generatedAt={snapshot?.generatedAt}
+        quickActions={quickActions}
         realtimeState={realtimeState}
         requestState={requestState}
         roleLabel={roleLabel}

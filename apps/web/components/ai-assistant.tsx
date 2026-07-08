@@ -189,6 +189,7 @@ export function AiAssistant() {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setOpen(true)}
+        data-testid="ai-assistant-open"
         className={cn(
           "fixed right-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex h-11 w-11 items-center justify-center rounded-full shadow-2xl shadow-primary/30 ring-1 ring-white/20 sm:right-6 sm:bottom-6 sm:h-14 sm:w-14",
           "bg-gradient-to-br from-primary via-teal-500 to-emerald-400 text-primary-foreground",
@@ -206,25 +207,26 @@ export function AiAssistant() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="premium-surface fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex max-h-[calc(100svh-1.5rem)] flex-col overflow-hidden rounded-xl shadow-2xl sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[min(440px,92vw)]"
+            data-testid="ai-assistant-panel"
+            className="premium-surface fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-50 flex max-h-[calc(100svh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl shadow-2xl sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[min(440px,92vw)]"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-amber-500/10 px-4 py-3">
-              <div className="flex items-center gap-2.5">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-primary via-teal-500 to-amber-400 text-primary-foreground shadow-lg shadow-primary/[0.18]">
                   <Bot className="h-5 w-5" />
                   <span className="absolute right-1 bottom-1 h-2 w-2 rounded-full border border-white/80 bg-emerald-300" />
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{copy.title}</p>
-                  <p className="text-[10px] text-muted-foreground">
+                <div className="min-w-0">
+                  <p className="break-words text-sm font-bold leading-tight text-foreground [overflow-wrap:anywhere]">{copy.title}</p>
+                  <p className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">
                     {t("subtitle")}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
                 aria-label={t("close")}
               >
                 <X className="h-4 w-4" />
@@ -232,13 +234,13 @@ export function AiAssistant() {
             </div>
 
             <div className="flex flex-wrap gap-2 border-b border-border/70 bg-muted/20 px-4 py-2">
-              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-[10px] font-bold text-muted-foreground">
+              <span className="inline-flex min-w-0 max-w-full flex-1 basis-full items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-[10px] font-bold text-muted-foreground sm:basis-auto">
                 <Languages className="h-3 w-3 text-primary" />
-                {copy.sameLanguage}
+                <span className="min-w-0 break-words [overflow-wrap:anywhere]">{copy.sameLanguage}</span>
               </span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-[10px] font-bold text-muted-foreground">
+              <span className="inline-flex min-w-0 max-w-full flex-1 basis-full items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-[10px] font-bold text-muted-foreground sm:basis-auto">
                 <ShieldCheck className="h-3 w-3 text-primary" />
-                {copy.humanActions}
+                <span className="min-w-0 break-words [overflow-wrap:anywhere]">{copy.humanActions}</span>
               </span>
             </div>
 
@@ -248,7 +250,7 @@ export function AiAssistant() {
                 <div
                   key={msg.id}
                   className={cn(
-                    "flex max-w-[85%] gap-2",
+                    "flex min-w-0 max-w-[85%] gap-2",
                     msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                   )}
                 >
@@ -264,7 +266,7 @@ export function AiAssistant() {
                   </div>
                   <div
                     className={cn(
-                      "rounded-2xl px-3.5 py-2 text-sm leading-relaxed",
+                      "min-w-0 rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-line [overflow-wrap:anywhere]",
                       msg.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "border border-border bg-muted/50 text-foreground"
@@ -289,12 +291,12 @@ export function AiAssistant() {
             </div>
 
             {/* Suggestions */}
-            <div className="flex gap-2 overflow-x-auto border-b border-border bg-muted/30 px-4 py-2">
+            <div className="flex flex-wrap gap-2 border-b border-border bg-muted/30 px-4 py-2">
               {suggestions.slice(0, 4).map((s) => (
                 <button
                   key={s.id}
                   onClick={() => sendMessage(s.prompt)}
-                  className="whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                  className="min-h-8 min-w-0 max-w-full flex-1 basis-[calc(50%-0.25rem)] rounded-full border border-border bg-card px-3 py-1.5 text-center text-[11px] font-medium leading-snug text-foreground transition-colors break-words hover:border-primary hover:text-primary [overflow-wrap:anywhere] sm:flex-none sm:basis-auto"
                 >
                   {s.label}
                 </button>
@@ -314,7 +316,7 @@ export function AiAssistant() {
                 onChange={(e) => setInput(e.target.value)}
                 aria-label={copy.inputLabel}
                 placeholder={placeholderForRole(user.role, t("placeholder"), copy)}
-                className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
+                className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
               <button
                 type="submit"

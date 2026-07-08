@@ -11,7 +11,7 @@
   "nav": {
     "skipToContent": "Перейти к содержимому",
     "home": "Главная",
-    "newLevel": "New Level",
+    "newLevel": "Новый уровень",
     "catalog": "Модули",
     "about": "О нас",
     "services": "Процессы",
@@ -51,6 +51,8 @@
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212 000+",
     "previewCity": "Аланья",
+    "projectName": "Новый уровень Премиум",
+    "projectSubtitle": "От мастер-плана Авсаллара к рабочей записи",
     "statValues": {
       "activeListings": "212k+",
       "leads": "150",

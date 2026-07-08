@@ -147,11 +147,11 @@ export default function FinancePage() {
             </div>
           </div>
           <BarChart
-            data={cashFlow.map((month) => ({ label: month.label, value: month.collectedTry, color: "var(--primary)" }))}
-            ariaLabel="Tahsilat nakit akışı grafiği"
+            data={cashFlow.map((month) => ({ label: t(month.label), value: month.collectedTry, color: "var(--primary)" }))}
+            ariaLabel={t("Tahsilat nakit akışı grafiği")}
             formatValue={(value) => formatTryShort(value)}
             height={250}
-            totalLabel="Toplam"
+            totalLabel={t("Toplam")}
           />
         </Card3D>
 
@@ -264,7 +264,7 @@ export default function FinancePage() {
           searchValue={(plan) => `${plan.id} ${plan.dealName} ${plan.buyerName} ${plan.unitType} ${plan.approvalBlocker}`}
           columns={[
             { key: "id", header: "Plan", sortable: true, render: (plan) => plan.id },
-            { key: "deal", header: "Deal", render: (plan) => plan.dealName },
+            { key: "deal", header: "Deal", render: (plan) => t(plan.dealName) },
             { key: "buyer", header: "Alıcı", render: (plan) => plan.buyerName },
             { key: "price", header: "Liste", sortable: true, sortValue: (plan) => plan.listPriceEur, render: (plan) => formatEur(plan.listPriceEur) },
             { key: "paid", header: "Ödenen", sortable: true, sortValue: (plan) => plan.paidEur, render: (plan) => formatEur(plan.paidEur) },
@@ -274,8 +274,8 @@ export default function FinancePage() {
                 {formatEur(plan.nextDueEur)} / {shortDate(plan.nextDueAt, locale)}
               </span>
             ) },
-            { key: "status", header: "Durum", render: (plan) => <StatusBadge variant={planVariant(plan.status)}>{planLabel(plan.status)}</StatusBadge> },
-            { key: "blocker", header: "Blokaj", render: (plan) => plan.approvalBlocker },
+            { key: "status", header: "Durum", render: (plan) => <StatusBadge variant={planVariant(plan.status)}>{t(planLabel(plan.status))}</StatusBadge> },
+            { key: "blocker", header: "Blokaj", render: (plan) => t(plan.approvalBlocker) },
           ]}
         />
       </Card3D>
@@ -286,7 +286,7 @@ export default function FinancePage() {
           searchValue={(account) => `${account.flatNumber} ${account.ownerName} ${account.suggestedAction}`}
           columns={[
             { key: "flat", header: "Daire", sortable: true, render: (account) => account.flatNumber },
-            { key: "owner", header: "Malik", render: (account) => account.ownerName },
+            { key: "owner", header: "Malik", render: (account) => t(account.ownerName) },
             {
               key: "balance",
               header: "Borç",
@@ -294,18 +294,18 @@ export default function FinancePage() {
               sortValue: (account) => account.balanceTry,
               render: (account) => <span className="font-semibold">{formatTry(account.balanceTry)}</span>,
             },
-            { key: "aging", header: "Yaş", sortable: true, render: (account) => `${account.agingBucket} gün` },
+            { key: "aging", header: "Yaş", sortable: true, render: (account) => `${account.agingBucket} ${t("gün")}` },
             {
               key: "payment",
               header: "Durum",
-              render: (account) => <StatusBadge variant={paymentVariant(account.paymentStatus)}>{paymentLabels[account.paymentStatus]}</StatusBadge>,
+              render: (account) => <StatusBadge variant={paymentVariant(account.paymentStatus)}>{t(paymentLabels[account.paymentStatus])}</StatusBadge>,
             },
             {
               key: "access",
               header: "Erişim",
-              render: (account) => <StatusBadge variant={accessVariant(account.accessStatus)}>{accessLabels[account.accessStatus]}</StatusBadge>,
+              render: (account) => <StatusBadge variant={accessVariant(account.accessStatus)}>{t(accessLabels[account.accessStatus])}</StatusBadge>,
             },
-            { key: "action", header: "Önerilen aksiyon", render: (account) => account.suggestedAction },
+            { key: "action", header: "Önerilen aksiyon", render: (account) => t(account.suggestedAction) },
           ]}
         />
       </div>

@@ -356,6 +356,9 @@ export interface DocumentVaultRecord {
   size: string
   updatedAt: string
   retentionRule: string
+  storageBucket?: string | null
+  storagePath?: string | null
+  sourcePath?: string | null
 }
 
 export interface CommunicationThreadRecord {
@@ -1718,6 +1721,8 @@ export const documentVault: DocumentVaultRecord[] = newLevelPremiumDataset.docum
     document.status === "active"
       ? `Kaynak: ${document.path}`
       : `OCR / insan onayı gerekli: ${document.path}`,
+  storagePath: document.path.replaceAll("\\", "/"),
+  sourcePath: document.path,
 }))
 
 export const communicationThreads: CommunicationThreadRecord[] = [

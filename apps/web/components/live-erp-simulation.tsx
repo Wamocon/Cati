@@ -14,6 +14,7 @@ import {
   LockKeyhole,
   Radio,
   TicketCheck,
+  type LucideIcon,
 } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { AnimatedCounter } from "@/components/animated-counter"
@@ -45,11 +46,18 @@ interface CriticalTicket {
   title: string
 }
 
+export interface SimulationQuickAction {
+  href: string
+  icon: LucideIcon
+  label: string
+}
+
 interface LiveErpSimulationProps {
   activityItems?: SimulationEvent[]
   blocks: BlockOverview[]
   criticalTickets?: CriticalTicket[]
   generatedAt?: string
+  quickActions?: SimulationQuickAction[]
   realtimeState?: "checking" | "connected" | "disabled" | "error"
   requestState?: "idle" | "loading" | "success" | "error"
   roleLabel: string
@@ -380,6 +388,7 @@ export function LiveErpSimulation({
   blocks,
   criticalTickets = [],
   generatedAt,
+  quickActions,
   realtimeState = "disabled",
   requestState = "idle",
   roleLabel,
@@ -390,6 +399,13 @@ export function LiveErpSimulation({
   const locale = resolveSimulationLocale(rawLocale)
   const dashboardLocale = resolveDashboardLocale(rawLocale)
   const copy = simulationCopy[locale]
+  const actionItems =
+    quickActions?.slice(0, 4) ?? [
+      { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
+      { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
+      { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
+      { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
+    ]
   const prefersReducedMotion = useReducedMotion()
   const visibleBlocks = useMemo(() => blocks.slice(0, 8), [blocks])
   const [activeBlock, setActiveBlock] = useState(visibleBlocks[0]?.block ?? "")
@@ -619,6 +635,7 @@ export function LiveErpSimulation({
                   aria-label={`${copy.block} ${block.block}`}
                   className="absolute bottom-[46%] origin-bottom -translate-x-1/2 focus-visible:outline-none"
                   style={{ left: `${left}%` }}
+                  initial={false}
                   animate={{ y: active ? -10 : 0 }}
                   transition={{ type: "spring", stiffness: 210, damping: 24 }}
                 >
@@ -801,12 +818,7 @@ export function LiveErpSimulation({
       </div>
 
       <div className="relative z-10 mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
-          { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
-          { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
-          { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
-        ].map(({ href, icon: Icon, label }) => (
+        {actionItems.map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
             href={href}

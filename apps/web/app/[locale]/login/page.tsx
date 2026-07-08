@@ -55,8 +55,8 @@ const pageCopy = {
       yandex: "Yandex ID",
       magic: "E-posta magic link",
     },
-    imageAlt: "New Level Premium masterplan ve ERP operasyon bağlamı",
-    proof: ["New Level Premium portföy alanı", "Finans, servis ve belge merkezi", "Malik, kiracı ve ekip erişimi"],
+    imageAlt: "Yeni Seviye Premium masterplan ve ERP operasyon bağlamı",
+    proof: ["Yeni Seviye Premium portföy alanı", "Finans, servis ve belge merkezi", "Malik, kiracı ve ekip erişimi"],
   },
   en: {
     eyebrow: "Secure ERP access",
@@ -143,8 +143,8 @@ const pageCopy = {
       yandex: "Yandex ID",
       magic: "E-Mail-Magic-Link",
     },
-    imageAlt: "New Level Premium Masterplan und ERP-Operationskontext",
-    proof: ["New Level Premium Portfolio", "Finanz-, Service- und Dokumentenbereich", "Eigentümer-, Mieter- und Teamzugang"],
+    imageAlt: "Neues Niveau Premium Masterplan und ERP-Operationskontext",
+    proof: ["Neues Niveau Premium Portfolio", "Finanz-, Service- und Dokumentenbereich", "Eigentümer-, Mieter- und Teamzugang"],
   },
   ru: {
     eyebrow: "Безопасный ERP-доступ",
@@ -187,8 +187,8 @@ const pageCopy = {
       yandex: "Yandex ID",
       magic: "Одноразовая ссылка по e-mail",
     },
-    imageAlt: "Masterplan New Level Premium и контекст ERP-операций",
-    proof: ["Рабочая область New Level Premium", "Финансовый, сервисный и документный центр", "Доступ владельцев, арендаторов и команды"],
+    imageAlt: "Masterplan «Новый уровень Премиум» и контекст ERP-операций",
+    proof: ["Рабочая область «Новый уровень Премиум»", "Финансовый, сервисный и документный центр", "Доступ владельцев, арендаторов и команды"],
   },
 } as const
 

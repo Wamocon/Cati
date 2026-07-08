@@ -20,6 +20,7 @@ import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
+import { localizeDashboardTextPart } from "@/lib/operational-copy"
 import {
   isClientRole,
   isFieldRole,
@@ -102,6 +103,34 @@ const communicationsCopy = {
     templateLibraryTitle: "Çok dilli şablon kütüphanesi",
     templateLibraryDescription: "TR, EN, DE ve RU şablonları değişken bazlı, onay farkında ve sağlayıcı adaptörlerine hazırdır.",
     approvalCountLabel: "onay",
+    templateColumns: {
+      template: "Şablon",
+      title: "Başlık",
+      useCase: "Kullanım alanı",
+      channel: "Kanal",
+      languages: "Diller",
+      approval: "Onay",
+      preview: "Önizleme",
+      action: "Aksiyon",
+    },
+    templateUseCases: {
+      booking_confirmation: "Rezervasyon onayı",
+      pre_arrival: "Varış öncesi",
+      move_in: "Giriş karşılama",
+      in_stay: "Konaklama içi",
+      checkout: "Çıkış",
+      post_stay: "Konaklama sonrası",
+      debt: "Borç takibi",
+      service: "Servis",
+      document: "Belge",
+      announcement: "Duyuru",
+      onboarding: "İlk kullanım",
+    },
+    templateApprovals: {
+      approved: "Onaylandı",
+      needs_review: "İnceleme gerekli",
+      draft: "Taslak",
+    },
     qualityGateTitle: "Role güvenli iletişim kalite kapısı",
     qualityGateDescription: "Mevcut demo sözleşmesi {threads} akış, {rules} aktif kural ve {templates} çok dilli şablon izler.",
     phaseReady: "Faz 11 UAT hazır",
@@ -165,6 +194,34 @@ const communicationsCopy = {
     templateLibraryTitle: "Multilingual template library",
     templateLibraryDescription: "TR, EN, DE and RU templates are variable-based, approval-aware and ready for provider adapters.",
     approvalCountLabel: "approval",
+    templateColumns: {
+      template: "Template",
+      title: "Title",
+      useCase: "Use case",
+      channel: "Channel",
+      languages: "Languages",
+      approval: "Approval",
+      preview: "Preview",
+      action: "Action",
+    },
+    templateUseCases: {
+      booking_confirmation: "Booking confirmation",
+      pre_arrival: "Pre-arrival",
+      move_in: "Move-in",
+      in_stay: "In-stay",
+      checkout: "Checkout",
+      post_stay: "Post-stay",
+      debt: "Debt follow-up",
+      service: "Service",
+      document: "Document",
+      announcement: "Announcement",
+      onboarding: "Onboarding",
+    },
+    templateApprovals: {
+      approved: "Approved",
+      needs_review: "Needs review",
+      draft: "Draft",
+    },
     qualityGateTitle: "Role-safe communication quality gate",
     qualityGateDescription: "Current demo contract tracks {threads} threads, {rules} active rules and {templates} multilingual templates.",
     phaseReady: "Phase 11 ready for UAT",
@@ -228,6 +285,34 @@ const communicationsCopy = {
     templateLibraryTitle: "Mehrsprachige Vorlagenbibliothek",
     templateLibraryDescription: "TR-, EN-, DE- und RU-Vorlagen sind variablenbasiert, freigabebewusst und provider-ready.",
     approvalCountLabel: "Freigabe",
+    templateColumns: {
+      template: "Vorlage",
+      title: "Titel",
+      useCase: "Anwendungsfall",
+      channel: "Kanal",
+      languages: "Sprachen",
+      approval: "Freigabe",
+      preview: "Vorschau",
+      action: "Aktion",
+    },
+    templateUseCases: {
+      booking_confirmation: "Buchungsbestätigung",
+      pre_arrival: "Voranreise",
+      move_in: "Einzug",
+      in_stay: "Während des Aufenthalts",
+      checkout: "Checkout",
+      post_stay: "Nach dem Aufenthalt",
+      debt: "Zahlungsnachverfolgung",
+      service: "Service",
+      document: "Dokument",
+      announcement: "Ankündigung",
+      onboarding: "Onboarding",
+    },
+    templateApprovals: {
+      approved: "Freigegeben",
+      needs_review: "Prüfung nötig",
+      draft: "Entwurf",
+    },
     qualityGateTitle: "Rollensichere Kommunikationsqualitätsprüfung",
     qualityGateDescription: "Der aktuelle Demo-Vertrag verfolgt {threads} Verläufe, {rules} aktive Regeln und {templates} mehrsprachige Vorlagen.",
     phaseReady: "Phase 11 bereit für UAT",
@@ -291,9 +376,82 @@ const communicationsCopy = {
     templateLibraryTitle: "Многоязычная библиотека шаблонов",
     templateLibraryDescription: "Шаблоны TR, EN, DE и RU основаны на переменных, учитывают одобрение и готовы к адаптерам провайдеров.",
     approvalCountLabel: "одобрение",
+    templateColumns: {
+      template: "Шаблон",
+      title: "Название",
+      useCase: "Сценарий",
+      channel: "Канал",
+      languages: "Языки",
+      approval: "Одобрение",
+      preview: "Предпросмотр",
+      action: "Действие",
+    },
+    templateUseCases: {
+      booking_confirmation: "Подтверждение бронирования",
+      pre_arrival: "До прибытия",
+      move_in: "Заезд",
+      in_stay: "Во время проживания",
+      checkout: "Выезд",
+      post_stay: "После проживания",
+      debt: "Напоминание об оплате",
+      service: "Сервис",
+      document: "Документы",
+      announcement: "Объявление",
+      onboarding: "Онбординг",
+    },
+    templateApprovals: {
+      approved: "Одобрено",
+      needs_review: "Требует проверки",
+      draft: "Черновик",
+    },
     qualityGateTitle: "Контроль качества коммуникаций по ролям",
     qualityGateDescription: "Текущий демо-контракт отслеживает {threads} диалогов, {rules} активных правил и {templates} многоязычных шаблонов.",
     phaseReady: "Фаза 11 готова к UAT",
+  },
+} as const
+
+type CommunicationsCopy = (typeof communicationsCopy)[keyof typeof communicationsCopy]
+
+const communicationStatusCopy = {
+  tr: {
+    manual_review: "Manuel inceleme",
+    needs_review: "İnceleme gerekli",
+    queued: "Kuyrukta",
+    sent: "Gönderildi",
+    delivered: "Teslim edildi",
+    failed: "Hatalı",
+    ready: "Hazır",
+    suppressed: "Durduruldu",
+  },
+  en: {
+    manual_review: "Manual review",
+    needs_review: "Needs review",
+    queued: "Queued",
+    sent: "Sent",
+    delivered: "Delivered",
+    failed: "Failed",
+    ready: "Ready",
+    suppressed: "Suppressed",
+  },
+  de: {
+    manual_review: "Manuelle Prüfung",
+    needs_review: "Prüfung nötig",
+    queued: "In Warteschlange",
+    sent: "Gesendet",
+    delivered: "Zugestellt",
+    failed: "Fehlgeschlagen",
+    ready: "Bereit",
+    suppressed: "Unterdrückt",
+  },
+  ru: {
+    manual_review: "Ручная проверка",
+    needs_review: "Требует проверки",
+    queued: "В очереди",
+    sent: "Отправлено",
+    delivered: "Доставлено",
+    failed: "Ошибка",
+    ready: "Готово",
+    suppressed: "Подавлено",
   },
 } as const
 
@@ -345,6 +503,32 @@ function templateVariant(status: MessageTemplateRecord["approvalStatus"]) {
   return "neutral"
 }
 
+function templateUseCaseLabel(useCase: MessageTemplateRecord["useCase"], copy: CommunicationsCopy) {
+  return copy.templateUseCases[useCase] ?? useCase.replaceAll("_", " ")
+}
+
+function templateApprovalLabel(status: MessageTemplateRecord["approvalStatus"], copy: CommunicationsCopy) {
+  return copy.templateApprovals[status]
+}
+
+function communicationValueLabel(
+  value: string,
+  locale: keyof typeof communicationsCopy,
+  copy: CommunicationsCopy
+) {
+  const statusCopy = communicationStatusCopy[locale]
+  if (value in statusCopy) {
+    return statusCopy[value as keyof typeof statusCopy]
+  }
+
+  if (value in copy.templateApprovals) {
+    return copy.templateApprovals[value as MessageTemplateRecord["approvalStatus"]]
+  }
+
+  const localized = localizeDashboardTextPart(value, locale)
+  return localized.includes("_") ? localized.replaceAll("_", " ") : localized
+}
+
 function lifecycleVariant(status: GuestLifecycleEventRecord["status"]) {
   if (status === "sent" || status === "ready") return "success"
   if (status === "queued" || status === "needs_review") return "warning"
@@ -377,7 +561,8 @@ function shortDate(date: string) {
 }
 
 export default function CommunicationsPage() {
-  const copy = communicationsCopy[resolveCommunicationsLocale(useLocale())]
+  const locale = resolveCommunicationsLocale(useLocale())
+  const copy = communicationsCopy[locale]
   const user = useUser()
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
@@ -486,12 +671,20 @@ export default function CommunicationsPage() {
               {
                 key: "tone",
                 header: "Tone",
-                render: (item) => <StatusBadge variant={lifecycleToneVariant(item.tone)}>{item.tone}</StatusBadge>,
+                render: (item) => (
+                  <StatusBadge variant={lifecycleToneVariant(item.tone)}>
+                    {communicationValueLabel(item.tone, locale, copy)}
+                  </StatusBadge>
+                ),
               },
               {
                 key: "status",
                 header: "Status",
-                render: (item) => <StatusBadge variant={lifecycleVariant(item.status)}>{item.status}</StatusBadge>,
+                render: (item) => (
+                  <StatusBadge variant={lifecycleVariant(item.status)}>
+                    {communicationValueLabel(item.status, locale, copy)}
+                  </StatusBadge>
+                ),
               },
               { key: "timing", header: "Timing", render: (item) => item.timing },
               { key: "text", header: "Text", render: (item) => item.body },
@@ -616,7 +809,9 @@ export default function CommunicationsPage() {
                 key: "priority",
                 header: "Priority",
                 render: (item) => (
-                  <StatusBadge variant={priorityVariant(item.priority)}>{item.priority}</StatusBadge>
+                  <StatusBadge variant={priorityVariant(item.priority)}>
+                    {communicationValueLabel(item.priority, locale, copy)}
+                  </StatusBadge>
                 ),
               },
               {
@@ -721,7 +916,11 @@ export default function CommunicationsPage() {
               {
                 key: "status",
                 header: "Durum",
-                render: (item) => <StatusBadge variant={ruleVariant(item.status)}>{item.status}</StatusBadge>,
+                render: (item) => (
+                  <StatusBadge variant={ruleVariant(item.status)}>
+                    {communicationValueLabel(item.status, locale, copy)}
+                  </StatusBadge>
+                ),
               },
               ...(!clientView
                 ? [
@@ -786,7 +985,11 @@ export default function CommunicationsPage() {
               {
                 key: "status",
                 header: "Durum",
-                render: (item) => <StatusBadge variant={deliveryVariant(item.status)}>{item.status}</StatusBadge>,
+                render: (item) => (
+                  <StatusBadge variant={deliveryVariant(item.status)}>
+                    {communicationValueLabel(item.status, locale, copy)}
+                  </StatusBadge>
+                ),
               },
               { key: "mode", header: "Mod", render: (item) => item.providerMode },
               { key: "retry", header: "Tekrar", render: (item) => shortDate(item.nextRetryAt) },
@@ -851,24 +1054,35 @@ export default function CommunicationsPage() {
           searchValue={(item) => `${item.id} ${item.title} ${item.useCase} ${item.owner} ${item.preview} ${item.variables.join(" ")}`}
           pageSize={8}
           columns={[
-            { key: "id", header: "Template", sortable: true, render: (item) => item.id },
-            { key: "title", header: "Title", render: (item) => item.title },
-            { key: "useCase", header: "Use case", sortable: true, render: (item) => item.useCase },
-            { key: "channel", header: "Channel", render: (item) => item.channel },
-            { key: "languages", header: "Languages", render: (item) => item.languages.map((language) => language.toUpperCase()).join(", ") },
+            { key: "id", header: copy.templateColumns.template, sortable: true, render: (item) => item.id },
+            { key: "title", header: copy.templateColumns.title, render: (item) => item.title },
+            {
+              key: "useCase",
+              header: copy.templateColumns.useCase,
+              sortable: true,
+              render: (item) => templateUseCaseLabel(item.useCase, copy),
+            },
+            { key: "channel", header: copy.templateColumns.channel, render: (item) => item.channel },
+            {
+              key: "languages",
+              header: copy.templateColumns.languages,
+              render: (item) => item.languages.map((language) => language.toUpperCase()).join(", "),
+            },
             {
               key: "status",
-              header: "Approval",
+              header: copy.templateColumns.approval,
               render: (item) => (
-                <StatusBadge variant={templateVariant(item.approvalStatus)}>{item.approvalStatus}</StatusBadge>
+                <StatusBadge variant={templateVariant(item.approvalStatus)}>
+                  {templateApprovalLabel(item.approvalStatus, copy)}
+                </StatusBadge>
               ),
             },
-            { key: "preview", header: "Preview", render: (item) => item.preview },
+            { key: "preview", header: copy.templateColumns.preview, render: (item) => item.preview },
             ...(!clientView && !fieldView
               ? [
                   {
                     key: "action",
-                    header: "Action",
+                    header: copy.templateColumns.action,
                     sticky: "right" as const,
                     render: (item: MessageTemplateRecord) => (
                       <DashboardActionMenu
