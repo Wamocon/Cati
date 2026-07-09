@@ -108,29 +108,81 @@ function wantsTicketDraft(message: string) {
   const issueWords = [
     "leak",
     "water",
+    "no water",
     "door",
     "handle",
     "broken",
     "stuck",
     "electric",
+    "power outage",
+    "spark",
+    "gas",
+    "smoke",
+    "fire",
+    "alarm",
+    "elevator",
+    "lift",
+    "sewage",
+    "sewer",
+    "blocked toilet",
+    "toilet overflow",
+    "lockout",
+    "locked out",
+    "gate",
+    "barrier",
+    "spa",
+    "pool",
+    "restaurant",
+    "event",
     "plumbing",
+    "pipe",
+    "burst",
     "su",
+    "su yok",
+    "tesisat",
+    "yangin",
+    "duman",
+    "gaz",
+    "asansor",
+    "asansör",
+    "gider",
+    "gider taşması",
+    "gider tasmasi",
+    "tuvalet",
+    "bariyer",
+    "havuz",
+    "hijyen",
+    "restoran",
+    "etkinlik",
+    "kıvılcım",
+    "kivilcim",
     "kaçak",
     "kacak",
     "kapı",
     "kapi",
+    "kapıda",
+    "kapida",
+    "kilit",
     "kol",
     "bozuk",
     "sıkıştı",
     "sikisti",
     "wasser",
+    "kein wasser",
     "leck",
+    "rohr",
     "tür",
     "tuer",
     "griff",
     "kaputt",
     "klemmt",
     "strom",
+    "rauch",
+    "feuer",
+    "gasgeruch",
+    "aufzug",
+    "abfluss",
+    "zugang",
     "вода",
     "протеч",
     "двер",
@@ -140,10 +192,44 @@ function wantsTicketDraft(message: string) {
     "электр",
   ]
 
+  const urgentWords = [
+    "urgent",
+    "critical",
+    "emergency",
+    "immediate",
+    "trapped",
+    "gas",
+    "smoke",
+    "fire",
+    "spark",
+    "sewage",
+    "lockout",
+    "asansör",
+    "yangın",
+    "kıvılcım",
+    "su kaçağı",
+    "gider taşması",
+    "acil",
+    "kritik",
+    "hemen",
+    "dringend",
+    "sofort",
+    "kritisch",
+    "сроч",
+    "авар",
+    "критич",
+  ]
+  const hasTicketIntent = ticketWords.some((word) => lower.includes(word))
+  const hasCreateIntent = createWords.some((word) => lower.includes(word))
+  const hasIssueSignal = issueWords.some((word) => lower.includes(word))
+  const looksLikeReportedEmergency =
+    Boolean(extractUnitNo(message)) &&
+    hasIssueSignal &&
+    urgentWords.some((word) => lower.includes(word))
+
   return (
-    createWords.some((word) => lower.includes(word)) &&
-    (ticketWords.some((word) => lower.includes(word)) ||
-      issueWords.some((word) => lower.includes(word)))
+    (hasCreateIntent && (hasTicketIntent || hasIssueSignal)) ||
+    looksLikeReportedEmergency
   )
 }
 
@@ -163,16 +249,22 @@ function extractUnitNo(message: string) {
 
 function detectTicketCategory(message: string) {
   const lower = message.toLocaleLowerCase("tr-TR")
-  if (/water|leak|plumb|su|kaçak|kacak|wasser|leck|протеч|вода/.test(lower)) return "plumbing"
-  if (/electric|power|light|elektrik|strom|электр|свет/.test(lower)) return "electrical"
-  if (/door|handle|lock|key|kapı|kapi|kilit|tür|tuer|schloss|двер|замок|ключ|ручк/.test(lower)) return "access-maintenance"
+  if (/gas|smoke|fire|alarm|yangin|yangın|duman|gaz|rauch|feuer|gasgeruch|пожар|дым/.test(lower)) return "life-safety"
+  if (/elevator|lift|asansor|asansör|kabinde|aufzug|лифт/.test(lower)) return "elevator"
+  if (/sewage|sewer|drain overflow|blocked toilet|toilet overflow|gider|tuvalet|kanalizasyon|abfluss|toilette|канал|унитаз/.test(lower)) return "sewer"
+  if (/water|no water|leak|plumb|pipe|burst|su|su yok|tesisat|kaçak|kacak|wasser|kein wasser|leck|rohr|протеч|вода|нет воды|сантех/.test(lower)) return "plumbing"
+  if (/electric|power|light|spark|short circuit|elektrik|kivilcim|kıvılcım|strom|kurzschluss|электр|свет/.test(lower)) return "electrical"
+  if (/lockout|locked out|door|handle|lock|key|access|gate|barrier|qr|card|kapı|kapi|kilit|bariyer|plaka|tür|tuer|schloss|zugang|двер|замок|ключ|ручк/.test(lower)) return "access-maintenance"
+  if (/ac not working|air conditioning|hvac|too hot|klima|sicak|sıcak|iklim|klimaanlage|heiss|жарко|кондиционер/.test(lower)) return "hvac"
+  if (/spa|pool|fitness|hygiene|havuz|ortak alan|hijyen|wellness|schwimmbad|бассейн|спа/.test(lower)) return "amenity-spa-pool"
+  if (/restaurant|food|event|theatre|restoran|yemek|etkinlik|tiyatro|veranstaltung|ресторан|мероприят/.test(lower)) return "amenity-food-event"
   if (/clean|temizlik|reinigung|уборк/.test(lower)) return "cleaning"
   if (/service|servis|wartung|maintenance|bakım|bakim|ремонт|сервис/.test(lower)) return "maintenance"
   return "general"
 }
 
 function detectTicketPriority(message: string) {
-  return /urgent|critical|emergency|acil|kritik|hemen|dringend|sofort|kritisch|сроч|критич|авар/i.test(message)
+  return /urgent|critical|emergency|immediate|trapped|gas|smoke|fire|spark|sewage|lockout|no water|water leak|power outage|elevator|acil|kritik|hemen|yangin|yangın|duman|gaz|asansor|asansör|kivilcim|kıvılcım|gider taşması|su yok|su kacagi|su kaçağı|dringend|sofort|kritisch|kein wasser|wasserleck|сроч|критич|авар|нет воды|протеч/i.test(message)
     ? "urgent"
     : "normal"
 }

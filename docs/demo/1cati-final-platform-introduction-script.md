@@ -73,7 +73,7 @@ The best HeyGen build is not "avatar video". It is "AI host + real product proof
 | 0:40-1:05 | What 1Çatı is | Dashboard | Establish one control center. |
 | 1:05-1:35 | Dashboard | KPIs, risks, phase status | Show management value. |
 | 1:35-2:00 | Unit matrix | Listings / unit detail | Show 769-unit control. |
-| 2:00-2:35 | Tickets | Service orders, staff tasks | Show operational workflow. |
+| 2:00-2:35 | Tickets | Emergency routes, service orders, staff tasks | Show operational workflow and SLA escalation. |
 | 2:35-3:05 | Finance | Ledger, debt, restrictions | Show financial control. |
 | 3:05-3:30 | Roles | Login/RBAC, owner/tenant/staff | Show privacy and simplicity. |
 | 3:30-3:50 | AI layer | Assistant/risk cards | Show AI with guardrails. |
@@ -118,7 +118,7 @@ Bu sadece güzel bir özet ekranı değildir. Günlük karar merkezidir.
 
 Daire matrisi, siteyi gerçek yapısıyla gösterir: blok, kat, daire, malik, kiracı, borç, servis ve belge durumu. Bir daire açıldığında bütün bağlam görünür. Kim sorumlu, hangi ödeme açık, hangi talep devam ediyor, hangi belge eksik, hangi işlem onay bekliyor... Ekip artık bilgi aramak yerine karar verebilir.
 
-Servis tarafında talepler metin, fotoğraf, video veya sesle alınabilir. Talep sınıflandırılır, doğru ekibe yönlendirilir, SLA süresi izlenir ve iş tamamlandığında kanıt sisteme eklenir. Yönetim, sahada ne olduğunu sonradan tahmin etmez; süreç boyunca görür.
+Servis tarafında talepler metin, fotoğraf, video veya sesle alınabilir. Talep sınıflandırılır, doğru ekibe yönlendirilir, SLA süresi izlenir ve iş tamamlandığında kanıt sisteme eklenir. Su kaçağı, gaz kokusu, asansörde kalma, elektrik riski, gider taşması, erişim problemi veya havuz/restoran olayı gibi acil durumlarda sistem ilgili SLA rotasını ve ekip kuyruğunu görünür hale getirir. Bu akış bugün demo olarak gösterilir; canlı entegrasyonlarla bildirimler, vendor takibi ve görev atamaları gerçek operasyona bağlandığında yönetimin manuel takip yükünü azaltır. Yönetim, sahada ne olduğunu sonradan tahmin etmez; süreç boyunca görür.
 
 Finans tarafında aidatlar, ödemeler, borçlar, kısıtlamalar ve onay süreçleri izlenebilir hale gelir. Muhasebe neyin tahsil edildiğini, neyin açık kaldığını ve hangi işlem için onay gerektiğini net olarak görür. Malik ise yalnızca kendi dairesiyle ilgili izinli bilgileri takip eder.
 

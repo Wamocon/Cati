@@ -293,6 +293,31 @@ function orderStatusLabel(
   return localizeDashboardText("İptal", locale)
 }
 
+function emergencyRouteLabel(item: ServiceCatalogItem) {
+  if (item.code === "EMERG-LIFE-SAFETY") return "Gaz, duman, yangın"
+  if (item.code === "MAINT-ELEVATOR") return "Asansör"
+  if (item.code === "MAINT-ELEC") return "Elektrik"
+  if (item.code === "MAINT-SEWER") return "Gider ve kanalizasyon"
+  if (item.code === "MAINT-PLUMB") return "Su ve tesisat"
+  if (item.code === "SEC-LOCKOUT") return "Kapı ve bariyer"
+  if (item.code === "MAINT-HVAC-URGENT") return "Acil klima"
+  if (item.code === "AMENITY-SPA-INCIDENT") return "Spa ve havuz"
+  if (item.code === "AMENITY-FOOD-EVENT-INCIDENT") return "Restoran ve etkinlik"
+  return item.name
+}
+
+function emergencyQueueLabel(item: ServiceCatalogItem) {
+  if (item.code === "EMERG-LIFE-SAFETY") return "Güvenlik + yönetici"
+  if (item.code === "MAINT-ELEVATOR") return "Asansör servisi"
+  if (item.code === "MAINT-ELEC") return "Elektrikçi"
+  if (item.code === "MAINT-SEWER") return "Tesisat vendor"
+  if (item.code === "MAINT-PLUMB") return "Tesisatçı"
+  if (item.code === "SEC-LOCKOUT") return "Güvenlik"
+  if (item.code === "AMENITY-SPA-INCIDENT") return "Sosyal tesis"
+  if (item.code === "AMENITY-FOOD-EVENT-INCIDENT") return "Restoran"
+  return item.team
+}
+
 function taskReadinessVariant(task: WorkforceTaskRecord) {
   if (task.slaHoursRemaining < 0 || task.managerApprovalRequired) return "danger"
   if (task.completionReadiness >= 70) return "success"
@@ -444,6 +469,9 @@ export default function TicketsPage() {
   const media = visibleTickets.reduce((sum, ticket) => sum + ticket.mediaCount, 0)
   const activeCatalog = sourceCatalog.filter((item) => item.active)
   const visibleCatalog = clientView ? activeCatalog.slice(0, 4) : activeCatalog
+  const emergencyCatalog = activeCatalog
+    .filter((item) => item.serviceLevel === "emergency")
+    .slice(0, 9)
   const readyOrders = visibleOrders.filter(
     (order) =>
       order.status === "assigned" ||
@@ -789,6 +817,36 @@ export default function TicketsPage() {
             </StatusBadge>
           }
         >
+          {emergencyCatalog.length > 0 && (
+            <div className="mb-4 rounded-xl border border-rose-500/15 bg-rose-500/5 p-3">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
+                  <h3 className="min-w-0 text-xs font-black text-foreground">
+                    {t("Acil senaryo rotaları")}
+                  </h3>
+                </div>
+                <StatusBadge variant="danger">
+                  {emergencyCatalog.length} {t("rota")}
+                </StatusBadge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {emergencyCatalog.map((item) => (
+                  <div
+                    key={`emergency-${item.code}`}
+                    className="min-w-0 flex-1 basis-36 rounded-lg border border-border bg-background/80 px-3 py-2 sm:basis-44"
+                  >
+                    <p className="truncate text-xs font-black text-foreground">
+                      {t(emergencyRouteLabel(item))}
+                    </p>
+                    <p className="mt-0.5 truncate text-[11px] font-semibold text-muted-foreground">
+                      SLA {item.slaHours} {t("saat")} - {t(emergencyQueueLabel(item))}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="grid gap-3 md:grid-cols-2">
             {visibleCatalog.slice(0, clientView ? 4 : 6).map((item: ServiceCatalogItem) => (
               <div key={item.id} className="rounded-xl border border-border bg-muted/25 p-4">

@@ -4,6 +4,18 @@ Tarih: 8 Temmuz 2026
 Dil: Türkçe  
 Gizlilik: STRICTLY CONFIDENTIAL
 
+## Ek demo odağı: acil senaryo rotaları
+
+Servis ekranında acil senaryo rotaları özellikle gösterilmelidir. Su kaçağı, gaz kokusu, duman alarmı, asansörde kalma, elektrik kıvılcımı, gider taşması, kapıda kalma, havuz hijyen olayı veya restoran etkinlik aksaması geldiğinde sistem bunu normal bir not gibi bırakmaz.
+
+Talep ticket olarak açılır, doğru katalog koduna bağlanır, SLA süresi kısalır, görev ilgili ekibe ya da vendor kuyruğuna atanır ve yönetici onayı görünür kalır.
+
+Örnek anlatım:
+
+`A-104'te su kaçağı veya gaz kokusu gibi acil bir talep geldiğinde 1Çatı bunu otomatik olarak servis kategorisine ayırır. Sistem tesisatçı, güvenlik, elektrikçi, asansör servisi veya sosyal tesis ekibini seçer; SLA saatini gösterir; bildirim ve kanıt akışını oluşturur. AI önerir ve özetler, ama kritik kapanış ve sorumluluk yine yönetici onayında kalır.`
+
+Bu sahne bugün demo ortamında gösterilir: ticket, SLA, ekip kuyruğu ve onay sınırı uçtan uca görünür. Canlı üretim aşamasında SMS/e-posta/WhatsApp bildirimleri, vendor entegrasyonları ve gerçek saha atamaları bağlandığında yönetimin manuel arama, mesaj takip etme ve kimin sorumlu olduğunu sorma yükü belirgin şekilde azalır.
+
 ## Türkçe Sprecherfassung
 
 Servis yönetimi, 1Çatı'nın en önemli günlük kullanım alanlarından biridir.

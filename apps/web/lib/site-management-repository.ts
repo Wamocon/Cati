@@ -147,10 +147,37 @@ export interface MaterializedTicketResult {
   id: string
   ticketNo: string
   source: DataSource
+  serviceOrder?: {
+    id: string
+    orderNo: string
+    catalogCode: string
+    team: string
+    providerQueue: string
+    slaHours: number
+  }
+  workforceTask?: {
+    id: string
+    taskNo: string
+    team: string
+    assignee: string
+    slaHours: number
+  }
+  notification?: {
+    channel: string
+    status: "queued" | "manual_review"
+    recipient: string
+  }
+  humanApprovalBoundary?: {
+    required: boolean
+    approvedByRole: string
+    approvedAt: string
+  }
 }
 
 const localClientActionRequests = new Map<string, ClientActionRequestRecord>()
 const localMaterializedTickets: ServiceTicket[] = []
+const localMaterializedServiceOrders: ServiceOrderRecord[] = []
+const localMaterializedWorkforceTasks: WorkforceTaskRecord[] = []
 let localActionSequence = 0
 
 export interface Phase4Unit {
@@ -1401,31 +1428,296 @@ function catalogCategoryKey(value: string) {
 
 function catalogItemForTicket(ticket: ServiceTicket, index: number) {
   const category = catalogCategoryKey(ticket.category)
-  const matchedCode =
-    category.includes("tesisat") || category.includes("su")
-      ? "MAINT-PLUMB"
-      : category.includes("klima") || category.includes("iklim")
-        ? "MAINT-AC"
-        : category.includes("temiz")
-          ? "CLEAN-STD"
-          : category.includes("depozito") || category.includes("hasar")
-            ? "INSP-DAMAGE"
-            : category.includes("erisim") || category.includes("guven") || category.includes("kamera")
-              ? "SEC-ACCESS"
-              : category.includes("tiyatro") || category.includes("theatre") || category.includes("theater") || category.includes("etkinlik") || category.includes("event")
-                ? "AMENITY-THEATRE"
-                : category.includes("restoran") || category.includes("restaurant") || category.includes("dining")
-                  ? "AMENITY-RESTAURANT"
-                  : category.includes("gezi") || category.includes("tur") || category.includes("excursion") || category.includes("quad") || category.includes("bisiklet") || category.includes("bike") || category.includes("jeep") || category.includes("dag") || category.includes("mountain")
-                    ? "CONCIERGE-EXCURSION"
-                    : category.includes("ortak") || category.includes("havuz") || category.includes("spa") || category.includes("fitness") || category.includes("finans")
-                      ? "AMENITY-SPA"
-                      : null
+  const hasCategory = (...terms: string[]) => terms.some((term) => category.includes(term))
+  let matchedCode: string | null = null
+
+  if (hasCategory("life", "can guven", "gaz", "duman", "yangin", "smoke", "fire")) {
+    matchedCode = "EMERG-LIFE-SAFETY"
+  } else if (hasCategory("asansor", "elevator", "lift")) {
+    matchedCode = "MAINT-ELEVATOR"
+  } else if (hasCategory("elektrik", "electric", "power", "spark")) {
+    matchedCode = "MAINT-ELEC"
+  } else if (hasCategory("gider", "kanalizasyon", "sewer", "sewage", "toilet")) {
+    matchedCode = "MAINT-SEWER"
+  } else if (hasCategory("tesisat", "su", "plumb")) {
+    matchedCode = "MAINT-PLUMB"
+  } else if (hasCategory("hvac", "acil klima")) {
+    matchedCode = "MAINT-HVAC-URGENT"
+  } else if (hasCategory("klima", "iklim")) {
+    matchedCode = "MAINT-AC"
+  } else if (hasCategory("temiz")) {
+    matchedCode = "CLEAN-STD"
+  } else if (hasCategory("depozito", "hasar")) {
+    matchedCode = "INSP-DAMAGE"
+  } else if (hasCategory("lockout", "kapida kal", "acil erisim", "bariyer", "barrier")) {
+    matchedCode = "SEC-LOCKOUT"
+  } else if (hasCategory("erisim", "guven", "kamera")) {
+    matchedCode = "SEC-ACCESS"
+  } else if (hasCategory("restoran olayi", "food", "restaurant incident", "etkinlik olayi")) {
+    matchedCode = "AMENITY-FOOD-EVENT-INCIDENT"
+  } else if (hasCategory("tiyatro", "theatre", "theater", "etkinlik", "event")) {
+    matchedCode = "AMENITY-THEATRE"
+  } else if (hasCategory("restoran", "restaurant", "dining")) {
+    matchedCode = "AMENITY-RESTAURANT"
+  } else if (
+    hasCategory(
+      "gezi",
+      "tur",
+      "excursion",
+      "quad",
+      "bisiklet",
+      "bike",
+      "jeep",
+      "dag",
+      "mountain"
+    )
+  ) {
+    matchedCode = "CONCIERGE-EXCURSION"
+  } else if (hasCategory("havuz incident", "pool", "hijyen", "hygiene")) {
+    matchedCode = "AMENITY-SPA-INCIDENT"
+  } else if (hasCategory("ortak", "havuz", "spa", "fitness", "finans")) {
+    matchedCode = "AMENITY-SPA"
+  }
 
   return (
     serviceCatalogItems.find((item) => item.code === matchedCode) ??
     serviceCatalogItems[index % serviceCatalogItems.length]
   )
+}
+
+type EmergencyScenarioCode =
+  | "life_safety"
+  | "electrical"
+  | "elevator"
+  | "plumbing"
+  | "sewer"
+  | "hvac"
+  | "access_security"
+  | "amenity_spa_pool"
+  | "amenity_food_event"
+  | "general_service"
+
+interface EmergencyScenarioDefinition {
+  code: EmergencyScenarioCode
+  catalogCode: string
+  label: string
+  triggerTerms: string[]
+  routeSlot: string
+  checklist: string[]
+  notificationChannel: "Portal" | "Push" | "SMS"
+  managerApprovalRequired: boolean
+}
+
+const emergencyScenarios: EmergencyScenarioDefinition[] = [
+  {
+    code: "life_safety",
+    catalogCode: "EMERG-LIFE-SAFETY",
+    label: "Life-safety / gas / smoke",
+    triggerTerms: ["gas", "smoke", "fire", "alarm", "yangin", "duman", "gaz", "can guven", "rauch", "feuer", "gasgeruch", "пожар", "дым", "газ"],
+    routeSlot: "Immediate / 1h safety SLA",
+    checklist: ["Confirm life-safety risk and affected area", "Notify security and manager duty line", "Block unsafe access if needed", "Record authority/vendor handoff", "Upload incident closure proof"],
+    notificationChannel: "Push",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "elevator",
+    catalogCode: "MAINT-ELEVATOR",
+    label: "Elevator / trapped resident",
+    triggerTerms: ["elevator", "lift", "asansor", "asansör", "stuck in lift", "kabinde", "aufzug", "лифт"],
+    routeSlot: "Immediate / 1h elevator SLA",
+    checklist: ["Confirm whether anyone is trapped", "Notify security desk and elevator vendor", "Mark elevator out of service", "Log vendor arrival and action", "Upload restart or closure proof"],
+    notificationChannel: "Push",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "electrical",
+    catalogCode: "MAINT-ELEC",
+    label: "Electrical outage / sparking",
+    triggerTerms: ["electric", "power", "outage", "spark", "short circuit", "pano", "kivilcim", "kıvılcım", "elektrik", "strom", "kurzschluss", "искра", "электр", "свет"],
+    routeSlot: "Immediate / 2h electrical SLA",
+    checklist: ["Confirm outage scope and safety risk", "Check panel/common-area impact", "Assign electrician or technical lead", "Upload before/after proof", "Confirm power restored"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "sewer",
+    catalogCode: "MAINT-SEWER",
+    label: "Sewage / drain overflow",
+    triggerTerms: ["sewage", "sewer", "drain overflow", "blocked toilet", "toilet overflow", "gider tas", "gider tikan", "tuvalet", "kanalizasyon", "abfluss", "toilette", "канал", "унитаз"],
+    routeSlot: "Immediate / 3h hygiene SLA",
+    checklist: ["Confirm hygiene risk and water shutoff need", "Assign plumbing vendor queue", "Protect affected unit/common area", "Upload cleanup and repair proof", "Request resident confirmation"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "plumbing",
+    catalogCode: "MAINT-PLUMB",
+    label: "Water leak / no water",
+    triggerTerms: ["plumbing", "water leak", "no water", "leak", "pipe", "burst", "su kacagi", "su kaçağı", "su yok", "tesisat", "wasser", "leck", "kein wasser", "rohr", "вод", "протеч", "сантех"],
+    routeSlot: "Immediate / 4h SLA",
+    checklist: ["Confirm water leak or no-water scope", "Secure the affected area before repair", "Upload before photo/video evidence", "Record plumber action and material use", "Upload closure proof and resident confirmation"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "access_security",
+    catalogCode: "SEC-LOCKOUT",
+    label: "Access / lockout / gate",
+    triggerTerms: ["lockout", "locked out", "access", "key", "door lock", "gate", "barrier", "qr", "card", "kapida kal", "kapıda kal", "kapi acilm", "bariyer", "plaka", "zugang", "tuer", "schloss", "доступ", "замок", "ключ"],
+    routeSlot: "Immediate / 2h access SLA",
+    checklist: ["Verify identity and unit authority", "Notify security desk", "Check card/QR/gate log", "Restore access or issue temporary handoff", "Record audit note and proof"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "hvac",
+    catalogCode: "MAINT-HVAC-URGENT",
+    label: "Urgent AC / comfort risk",
+    triggerTerms: ["ac not working", "air conditioning", "hvac", "too hot", "klima", "sicak", "sıcak", "iklim", "klimaanlage", "heiss", "жарко", "кондиционер"],
+    routeSlot: "Same day / 8h comfort SLA",
+    checklist: ["Confirm guest/resident comfort risk", "Check AC power and drainage symptoms", "Assign technical AC queue", "Upload service proof", "Confirm cooling restored"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "amenity_spa_pool",
+    catalogCode: "AMENITY-SPA-INCIDENT",
+    label: "Spa / pool / shared-area incident",
+    triggerTerms: ["spa incident", "pool", "fitness", "hygiene", "slip", "havuz", "ortak alan", "hijyen", "kayma", "wellness", "schwimmbad", "бассейн", "спа"],
+    routeSlot: "Immediate / 2h amenity SLA",
+    checklist: ["Confirm guest safety and area status", "Notify amenity owner and manager", "Pause capacity if needed", "Upload incident proof", "Publish resident/guest update"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+  {
+    code: "amenity_food_event",
+    catalogCode: "AMENITY-FOOD-EVENT-INCIDENT",
+    label: "Restaurant / event incident",
+    triggerTerms: ["restaurant", "food", "event", "theatre", "crowd", "reservation conflict", "restoran", "yemek", "etkinlik", "tiyatro", "kalabalik", "veranstaltung", "ресторан", "мероприят"],
+    routeSlot: "Immediate / 2h guest SLA",
+    checklist: ["Confirm guest impact and service owner", "Check booking/capacity context", "Notify restaurant or event queue", "Record resolution or compensation note", "Close with manager review"],
+    notificationChannel: "Portal",
+    managerApprovalRequired: true,
+  },
+]
+
+function detectEmergencyScenario(value: string): EmergencyScenarioDefinition | null {
+  const text = catalogCategoryKey(value)
+  return (
+    emergencyScenarios.find((scenario) =>
+      scenario.triggerTerms.some((term) => text.includes(catalogCategoryKey(term)))
+    ) ?? null
+  )
+}
+
+function textLooksLikeEmergencyPlumbing(value: string) {
+  const text = catalogCategoryKey(value)
+  return (
+    text.includes("plumbing") ||
+    text.includes("water leak") ||
+    text.includes("no water") ||
+    text.includes("leak") ||
+    text.includes("su kacagi") ||
+    text.includes("su yok") ||
+    text.includes("tesisat") ||
+    text.includes("gider") ||
+    text.includes("wasser") ||
+    text.includes("leck") ||
+    text.includes("kein wasser") ||
+    /вод|протеч|сантех/i.test(value)
+  )
+}
+
+function serviceCatalogItemForAction(
+  proposedPayload: Record<string, unknown>,
+  fallbackIndex = 0
+) {
+  const actionText = [
+    asString(proposedPayload.category),
+    asString(proposedPayload.title),
+    asString(proposedPayload.description),
+  ].join(" ")
+  const emergencyScenario = detectEmergencyScenario(actionText)
+
+  if (emergencyScenario) {
+    return (
+      serviceCatalogItems.find((item) => item.code === emergencyScenario.catalogCode) ??
+      serviceCatalogItems[fallbackIndex % serviceCatalogItems.length]
+    )
+  }
+
+  if (textLooksLikeEmergencyPlumbing(actionText)) {
+    return (
+      serviceCatalogItems.find((item) => item.code === "MAINT-PLUMB") ??
+      serviceCatalogItems[fallbackIndex % serviceCatalogItems.length]
+    )
+  }
+
+  return catalogItemForTicket(
+    {
+      id: "action-preview",
+      flatId: "",
+      flatNumber: asNullableString(proposedPayload.unitNo) ?? "Unassigned",
+      title: asString(proposedPayload.title, "Approved service ticket"),
+      category: asString(proposedPayload.category, "general"),
+      priority: ticketPriorityForView(proposedPayload.priority),
+      status: "open",
+      assignee: "Operations queue",
+      requester: "Approved workflow",
+      openedAt: new Date().toISOString(),
+      dueAt: "",
+      slaHoursRemaining: 0,
+      debtBlocked: false,
+      paymentVerified: true,
+      mediaCount: 0,
+      estimatedCostTry: 0,
+    },
+    fallbackIndex
+  )
+}
+
+function emergencyProviderQueue(catalogItem: ServiceCatalogItem) {
+  const scenario = emergencyScenarios.find((item) => item.catalogCode === catalogItem.code)
+  if (scenario?.code === "life_safety") return "Guvenlik / duty manager queue"
+  if (scenario?.code === "elevator") return "Teknik / elevator vendor queue"
+  if (scenario?.code === "electrical") return "Teknik / electrician queue"
+  if (scenario?.code === "sewer") return "Teknik / plumbing vendor queue"
+  if (catalogItem.code === "MAINT-PLUMB") return "Teknik / plumber vendor queue"
+  if (scenario?.code === "access_security") return "Guvenlik / access desk queue"
+  if (scenario?.code === "amenity_spa_pool") return "Sakin destek / amenity duty queue"
+  if (scenario?.code === "amenity_food_event") return "Restoran / event duty queue"
+  if (catalogItem.providerType === "vendor") return `${catalogItem.team} / vendor queue`
+  if (catalogItem.providerType === "mixed") return `${catalogItem.team} / mixed provider queue`
+  return `${catalogItem.team} queue`
+}
+
+function emergencyScenarioForCatalog(catalogItem: ServiceCatalogItem) {
+  return (
+    emergencyScenarios.find((scenario) => scenario.catalogCode === catalogItem.code) ?? {
+      code: "general_service" as const,
+      catalogCode: catalogItem.code,
+      label: `${catalogItem.team} service`,
+      triggerTerms: [],
+      routeSlot:
+        catalogItem.serviceLevel === "emergency"
+          ? `Immediate / ${catalogItem.slaHours}h SLA`
+          : "Next available",
+      checklist:
+        defaultChecklistByTeam[catalogItem.team] ??
+        ["Verify request", "Add field note", "Upload media proof", "Request closure approval"],
+      notificationChannel: "Portal" as const,
+      managerApprovalRequired: catalogItem.serviceLevel === "emergency",
+    }
+  )
+}
+
+function serviceOrderPaymentDecisionForCatalog(
+  catalogItem: ServiceCatalogItem
+): ServiceOrderRecord["paymentDecision"] {
+  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
+  if (catalogItem.debtPolicy === "allow") return "debit_to_account"
+  if (catalogItem.debtPolicy === "block_until_clear") return "collect_before_dispatch"
+  return "collect_before_dispatch"
 }
 
 function servicePaymentDecisionForTicket(
@@ -1501,6 +1793,8 @@ const defaultChecklistByTeam: Record<string, string[]> = {
   Operasyon: ["Mark damage area", "Record deposit impact", "Request manager approval", "Publish closure report"],
   Rezervasyon: ["Confirm arrival time", "Assign provider", "Notify guest", "Confirm completion"],
   "Sakin destek": ["Verify scope", "Check slot availability", "Send notification", "Collect feedback"],
+  Restoran: ["Confirm guest impact", "Check capacity and booking", "Notify venue lead", "Record resolution note"],
+  "Sosyal tesis": ["Secure shared area", "Check capacity or hygiene risk", "Notify facility lead", "Publish resident update"],
 }
 
 function taskCompletionReadiness(ticket: ServiceTicket) {
@@ -1564,6 +1858,8 @@ const serviceFieldTeamFallback = [
   "Operasyon",
   "Rezervasyon",
   "Sakin destek",
+  "Restoran",
+  "Sosyal tesis",
 ]
 
 function serviceFieldTeamFromText(value: string, index: number): string {
@@ -1603,6 +1899,15 @@ function serviceFieldTeamFromText(value: string, index: number): string {
     text.includes("misafir")
   ) {
     return "Rezervasyon"
+  }
+  if (
+    text.includes("restoran") ||
+    text.includes("restaurant") ||
+    text.includes("event") ||
+    text.includes("etkinlik") ||
+    text.includes("tiyatro")
+  ) {
+    return "Restoran"
   }
   if (
     text.includes("tesisat") ||
@@ -1820,6 +2125,7 @@ function normalizeWorkforceTaskRows(rows: unknown): WorkforceTaskRecord[] {
     const ticket = relatedRecord(record.service_tickets)
     const unit = relatedRecord(record.units)
     const staff = relatedRecord(record.staff_members)
+    const metadata = asRecord(record.metadata)
     const rawChecklist = Array.isArray(record.checklist) ? record.checklist : []
     const status = mapTicketStatus(asString(record.status, "open"))
     const dueAt = asNullableString(record.sla_due_at)
@@ -1830,7 +2136,7 @@ function normalizeWorkforceTaskRows(rows: unknown): WorkforceTaskRecord[] {
       flatNumber: asString(unit.unit_no, "Unassigned"),
       title: asString(record.title, "Workforce task"),
       team: asString(record.team, "Operations"),
-      assignee: asString(staff.name, "Operations queue"),
+      assignee: asString(staff.name, asString(metadata.assigneeLabel, "Operations queue")),
       status,
       priority: mapTicketPriority(asString(record.priority, "medium")),
       slaHoursRemaining: slaHoursRemaining(dueAt),
@@ -1999,8 +2305,8 @@ function localSeedServiceTicketQueueData(limit = 24, warning?: string): ServiceT
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
   const tickets = [...localMaterializedTickets, ...serviceTickets].slice(0, safeLimit)
   const catalog = serviceCatalogItems
-  const orders = serviceOrders.slice(0, safeLimit)
-  const tasks = workforceTasks.slice(0, safeLimit)
+  const orders = [...localMaterializedServiceOrders, ...serviceOrders].slice(0, safeLimit)
+  const tasks = [...localMaterializedWorkforceTasks, ...workforceTasks].slice(0, safeLimit)
   const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
   return {
@@ -2774,12 +3080,22 @@ function ticketPriorityForView(value: unknown): ServiceTicket["priority"] {
   return mapTicketPriority(ticketPriorityForDb(value))
 }
 
-function ticketDueAt(priority: string) {
-  const hours = priority === "urgent" ? 4 : priority === "high" ? 12 : 48
+function workforcePriorityForDb(priority: string) {
+  if (priority === "urgent" || priority === "high" || priority === "low") return priority
+  return "medium"
+}
+
+function ticketDueAt(priority: string, serviceSlaHours?: number) {
+  const priorityHours = priority === "urgent" ? 4 : priority === "high" ? 12 : 48
+  const hours = serviceSlaHours ? Math.min(priorityHours, serviceSlaHours) : priorityHours
   return new Date(Date.now() + hours * 3_600_000).toISOString()
 }
 
-function localMaterializeTicket(action: ClientActionRequestRecord): MaterializedTicketResult {
+function localMaterializeTicket(
+  action: ClientActionRequestRecord,
+  decidedByRole = "manager",
+  decidedAt = new Date().toISOString()
+): MaterializedTicketResult {
   const existingTicketId = asNullableString(asRecord(action.metadata.workflow).materializedTicketId)
   const existingTicket = existingTicketId
     ? localMaterializedTickets.find((ticket) => ticket.id === existingTicketId)
@@ -2795,9 +3111,15 @@ function localMaterializeTicket(action: ClientActionRequestRecord): Materialized
 
   const proposedPayload = actionProposedPayload(action)
   const priority = ticketPriorityForDb(proposedPayload.priority)
-  const dueAt = ticketDueAt(priority)
+  const catalogItem = serviceCatalogItemForAction(proposedPayload)
+  const emergencyScenario = emergencyScenarioForCatalog(catalogItem)
+  const providerQueue = emergencyProviderQueue(catalogItem)
+  const dueAt = ticketDueAt(priority, catalogItem.slaHours)
   const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}-${localMaterializedTickets.length + 1}`
   const unitNo = asNullableString(proposedPayload.unitNo) ?? action.entityExternalId ?? "Unassigned"
+  const paymentDecision = serviceOrderPaymentDecisionForCatalog(catalogItem)
+  const orderNo = `ORD-${ticketNo.replace(/^REQ-/, "")}`
+  const taskNo = `TASK-${ticketNo.replace(/^REQ-/, "")}`
 
   localMaterializedTickets.unshift({
     id: ticketNo,
@@ -2806,22 +3128,88 @@ function localMaterializeTicket(action: ClientActionRequestRecord): Materialized
     title: ticketTitleFromAction(action),
     category: asString(proposedPayload.category, "general"),
     priority: ticketPriorityForView(priority),
-    status: "open",
-    assignee: "Operations queue",
+    status: "assigned",
+    assignee: providerQueue,
     requester: "Approved workflow",
     openedAt: new Date().toISOString(),
     dueAt,
     slaHoursRemaining: slaHoursRemaining(dueAt),
     debtBlocked: false,
     paymentVerified: true,
+    mediaCount: 1,
+    estimatedCostTry: catalogItem.basePriceTry,
+  })
+
+  localMaterializedServiceOrders.unshift({
+    id: orderNo,
+    orderNo,
+    catalogItemId: catalogItem.id,
+    catalogItemName: catalogItem.name,
+    ticketId: ticketNo,
+    flatNumber: unitNo,
+    requester: "Approved workflow",
+    status: "task_created",
+    debtCheckStatus: "clear",
+    paymentDecision,
+    quotedPriceTry: catalogItem.basePriceTry,
+    currency: "TRY",
+    slaHours: catalogItem.slaHours,
+    assignedTeam: catalogItem.team,
+    taskCreated: true,
+    requestedForAt: dueAt,
+    createdAt: decidedAt,
+    nextAction: `${emergencyScenario.label} routed to ${providerQueue}. SLA ${catalogItem.slaHours}h; media proof and manager closure review required.`,
+  })
+
+  localMaterializedWorkforceTasks.unshift({
+    id: taskNo,
+    ticketId: ticketNo,
+    flatNumber: unitNo,
+    title: `${catalogItem.name} - ${unitNo}`,
+    team: catalogItem.team,
+    assignee: providerQueue,
+    status: "assigned",
+    priority: ticketPriorityForView(priority),
+    slaHoursRemaining: slaHoursRemaining(dueAt),
+    routeSlot: emergencyScenario.routeSlot,
+    checklist: emergencyScenario.checklist,
+    requiresMedia: true,
     mediaCount: 0,
-    estimatedCostTry: 0,
+    managerApprovalRequired: emergencyScenario.managerApprovalRequired,
+    lastUpdateAt: decidedAt,
+    fieldNote: `Human approval completed by ${decidedByRole}; ${providerQueue} notified in demo mode.`,
+    completionReadiness: 18,
   })
 
   return {
     id: ticketNo,
     ticketNo,
     source: "local-seed",
+    serviceOrder: {
+      id: orderNo,
+      orderNo,
+      catalogCode: catalogItem.code,
+      team: catalogItem.team,
+      providerQueue,
+      slaHours: catalogItem.slaHours,
+    },
+    workforceTask: {
+      id: taskNo,
+      taskNo,
+      team: catalogItem.team,
+      assignee: providerQueue,
+      slaHours: catalogItem.slaHours,
+    },
+    notification: {
+      channel: emergencyScenario.notificationChannel,
+      status: "queued",
+      recipient: providerQueue,
+    },
+    humanApprovalBoundary: {
+      required: true,
+      approvedByRole: decidedByRole,
+      approvedAt: decidedAt,
+    },
   }
 }
 
@@ -3253,7 +3641,7 @@ export async function getServiceTicketQueueData({
       supabase
         .from("workforce_tasks")
         .select(
-          "id, task_no, title, team, status, priority, sla_due_at, route_slot, checklist, requires_media, media_count, manager_approval_required, completion_readiness, field_note, created_at, updated_at, service_tickets(id, ticket_no), units(id, unit_no), staff_members(id, name)"
+          "id, task_no, title, team, status, priority, sla_due_at, route_slot, checklist, requires_media, media_count, manager_approval_required, completion_readiness, field_note, metadata, created_at, updated_at, service_tickets(id, ticket_no), units(id, unit_no), staff_members(id, name)"
         )
         .order("sla_due_at", { ascending: true, nullsFirst: false })
         .limit(safeLimit),
@@ -3389,14 +3777,18 @@ export async function materializeApprovedTicketRequest({
     }
   }
 
-  if (!isSupabaseConfigured() || !isUuid(request.id) || !request.companyId) {
-    return localMaterializeTicket(request)
-  }
-
   const proposedPayload = actionProposedPayload(request)
   const unitNo = asNullableString(proposedPayload.unitNo)
   const priority = ticketPriorityForDb(proposedPayload.priority)
-  const dueAt = ticketDueAt(priority)
+  const catalogItem = serviceCatalogItemForAction(proposedPayload)
+  const emergencyScenario = emergencyScenarioForCatalog(catalogItem)
+  const providerQueue = emergencyProviderQueue(catalogItem)
+  const dueAt = ticketDueAt(priority, catalogItem.slaHours)
+  const decidedAt = new Date().toISOString()
+
+  if (!isSupabaseConfigured() || !isUuid(request.id) || !request.companyId) {
+    return localMaterializeTicket(request, decidedByRole, decidedAt)
+  }
 
   try {
     const supabase = await createDataClient()
@@ -3429,6 +3821,31 @@ export async function materializeApprovedTicketRequest({
 
     if (!siteId) throw new Error("No site is available for approved ticket materialization.")
 
+    const catalogResponse = await supabase
+      .from("service_catalog")
+      .select("id, code, name, base_price_cents, sla_hours, team, provider_type, service_level, requires_payment, debt_policy")
+      .eq("company_id", request.companyId)
+      .eq("code", catalogItem.code)
+      .maybeSingle()
+
+    if (catalogResponse.error) throw catalogResponse.error
+
+    const catalogRecord = asRecord(catalogResponse.data)
+    const catalogId = asNullableString(catalogRecord.id)
+    const liveCatalogCode = asString(catalogRecord.code, catalogItem.code)
+    const liveCatalogName = asString(catalogRecord.name, catalogItem.name)
+    const liveSlaHours = asNumber(catalogRecord.sla_hours, catalogItem.slaHours)
+    const liveTeam = asString(catalogRecord.team, catalogItem.team)
+    const liveProviderQueue = providerQueue
+    const quotedPriceCents =
+      asNumber(catalogRecord.base_price_cents, catalogItem.basePriceTry * 100)
+    const paymentDecision = serviceOrderPaymentDecisionForCatalog({
+      ...catalogItem,
+      requiresPayment: asBoolean(catalogRecord.requires_payment, catalogItem.requiresPayment),
+      debtPolicy: asString(catalogRecord.debt_policy, catalogItem.debtPolicy) as ServiceCatalogItem["debtPolicy"],
+      basePriceTry: Math.round(quotedPriceCents / 100),
+    })
+
     const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}`
     const { data: ticketData, error: ticketError } = await supabase
       .from("service_tickets")
@@ -3441,9 +3858,9 @@ export async function materializeApprovedTicketRequest({
         description: asNullableString(proposedPayload.description),
         category: asString(proposedPayload.category, "general"),
         priority,
-        status: "open",
+        status: "assigned",
         sla_due_at: dueAt,
-        estimated_cost_cents: 0,
+        estimated_cost_cents: quotedPriceCents,
         requires_finance_approval: false,
         created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
       })
@@ -3453,25 +3870,179 @@ export async function materializeApprovedTicketRequest({
     if (ticketError) throw ticketError
 
     const ticketId = asString(asRecord(ticketData).id, ticketNo)
-    await supabase.from("service_ticket_events").insert({
+    const orderNo = `ORD-${ticketNo.replace(/^REQ-/, "")}`
+    const { data: orderData, error: orderError } = await supabase
+      .from("service_orders")
+      .insert({
+        company_id: request.companyId,
+        site_id: siteId,
+        service_catalog_id: catalogId && isUuid(catalogId) ? catalogId : null,
+        ticket_id: ticketId,
+        unit_id: asNullableString(unit.id),
+        resident_id: null,
+        order_no: orderNo,
+        status: "task_created",
+        debt_check_status: "clear",
+        payment_decision: paymentDecision,
+        quoted_price_cents: quotedPriceCents,
+        currency: "TRY",
+        requested_for_at: dueAt,
+        next_action: `${emergencyScenario.label} routed to ${liveProviderQueue}. SLA ${liveSlaHours}h; media proof and manager closure review required.`,
+        created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
+        approved_by: isUuid(decidedById) ? decidedById : null,
+        approved_at: decidedAt,
+        metadata: {
+          actionRequestId: request.id,
+          catalogCode: liveCatalogCode,
+          assignmentQueue: liveProviderQueue,
+          emergencyScenario: emergencyScenario.code,
+          slaHours: liveSlaHours,
+          humanApprovalBoundary: {
+            required: true,
+            approvedByRole: decidedByRole,
+            approvedAt: decidedAt,
+          },
+          notificationPlaceholder: {
+            channel: emergencyScenario.notificationChannel,
+            status: "queued",
+            recipient: liveProviderQueue,
+          },
+        },
+      })
+      .select("id, order_no")
+      .single()
+
+    if (orderError) throw orderError
+
+    const orderId = asString(asRecord(orderData).id, orderNo)
+    const taskNo = `TASK-${ticketNo.replace(/^REQ-/, "")}`
+    const { data: taskData, error: taskError } = await supabase
+      .from("workforce_tasks")
+      .insert({
+        company_id: request.companyId,
+        site_id: siteId,
+        service_order_id: orderId,
+        ticket_id: ticketId,
+        unit_id: asNullableString(unit.id),
+        assigned_staff_member_id: null,
+        task_no: taskNo,
+        title: `${liveCatalogName} - ${unitNo ?? "Unassigned"}`,
+        team: liveTeam,
+        status: "assigned",
+        priority: workforcePriorityForDb(priority),
+        sla_due_at: dueAt,
+        route_slot: emergencyScenario.routeSlot,
+        checklist: emergencyScenario.checklist,
+        requires_media: true,
+        media_count: 0,
+        manager_approval_required: emergencyScenario.managerApprovalRequired,
+        completion_readiness: 18,
+        field_note: `Human approval completed by ${decidedByRole}; ${liveProviderQueue} notified in demo mode.`,
+        metadata: {
+          actionRequestId: request.id,
+          assigneeLabel: liveProviderQueue,
+          catalogCode: liveCatalogCode,
+          emergencyScenario: emergencyScenario.code,
+          serviceOrderId: orderId,
+          slaHours: liveSlaHours,
+          providerMode: "demo",
+        },
+      })
+      .select("id, task_no")
+      .single()
+
+    if (taskError) throw taskError
+
+    const taskId = asString(asRecord(taskData).id, taskNo)
+    const notificationResult = await supabase
+      .from("notification_deliveries")
+      .upsert(
+        {
+          company_id: request.companyId,
+          site_id: siteId,
+          recipient_ref: liveProviderQueue,
+          channel: emergencyScenario.notificationChannel,
+          status: "queued",
+          related_entity_table: "service_tickets",
+          related_entity_id: ticketId,
+          idempotency_key: `ticket:${ticketId}:${emergencyScenario.code}-dispatch`,
+          attempts: 0,
+          provider_mode: "demo",
+          provider_response: {
+            placeholder: true,
+            message: `${liveCatalogName} assigned to ${liveProviderQueue}`,
+            humanApprovalBoundary: "manager_approved_before_dispatch",
+          },
+        },
+        { onConflict: "company_id,idempotency_key" }
+      )
+      .select("id, status")
+      .maybeSingle()
+
+    const auditResult = await supabase.from("service_ticket_events").insert({
       company_id: request.companyId,
       ticket_id: ticketId,
       event_type: "created_from_approved_request",
-      body: `Approved by ${decidedByRole}`,
+      body: `Approved by ${decidedByRole}; ${liveCatalogCode} order and ${liveTeam} task created.`,
       actor_profile_id: isUuid(decidedById) ? decidedById : null,
       metadata: {
         actionRequestId: request.id,
         actionType: request.actionType,
+        catalogCode: liveCatalogCode,
+        serviceOrderId: orderId,
+        serviceOrderNo: asString(asRecord(orderData).order_no, orderNo),
+        workforceTaskId: taskId,
+        workforceTaskNo: asString(asRecord(taskData).task_no, taskNo),
+        assignmentQueue: liveProviderQueue,
+        slaHours: liveSlaHours,
+        notificationPlaceholder: {
+          channel: emergencyScenario.notificationChannel,
+          status: notificationResult.error ? "manual_review" : "queued",
+          recipient: liveProviderQueue,
+          deliveryId: asNullableString(asRecord(notificationResult.data).id),
+        },
+        humanApprovalBoundary: {
+          required: true,
+          approvedByRole: decidedByRole,
+          approvedAt: decidedAt,
+        },
       },
     })
+
+    if (auditResult.error) throw auditResult.error
 
     return {
       id: ticketId,
       ticketNo: asString(asRecord(ticketData).ticket_no, ticketNo),
       source: "supabase",
+      serviceOrder: {
+        id: orderId,
+        orderNo: asString(asRecord(orderData).order_no, orderNo),
+        catalogCode: liveCatalogCode,
+        team: liveTeam,
+        providerQueue: liveProviderQueue,
+        slaHours: liveSlaHours,
+      },
+      workforceTask: {
+        id: taskId,
+        taskNo: asString(asRecord(taskData).task_no, taskNo),
+        team: liveTeam,
+        assignee: liveProviderQueue,
+        slaHours: liveSlaHours,
+      },
+      notification: {
+        channel: emergencyScenario.notificationChannel,
+        status: notificationResult.error ? "manual_review" : "queued",
+        recipient: liveProviderQueue,
+      },
+      humanApprovalBoundary: {
+        required: true,
+        approvedByRole: decidedByRole,
+        approvedAt: decidedAt,
+      },
     }
   } catch (error) {
-    if (canUseLocalSeedFallback()) return localMaterializeTicket(request)
+    if (canUseLocalSeedFallback()) return localMaterializeTicket(request, decidedByRole, decidedAt)
     throw error
   }
 }

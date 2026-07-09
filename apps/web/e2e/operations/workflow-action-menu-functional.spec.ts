@@ -131,16 +131,16 @@ test.describe("Workflow actions and compact action menus", () => {
     ).toBe(true)
   })
 
-  test("approved ticket create request appears in the ticket queue", async ({ page }) => {
+  test("approved emergency plumbing request creates ticket, order and workforce task", async ({ page }) => {
     await setAccessRole(page, "manager")
-    const title = `Approved workflow ticket ${Date.now()}`
+    const title = `A-104 water leak / no water / plumbing emergency ${Date.now()}`
     const createResponse = await page.request.post("/api/site-management/tickets", {
       data: {
         title,
-        description: "This request should become a visible ticket after approval.",
+        description: "Resident reports no water and a visible plumbing leak. Route to emergency plumber.",
         priority: "urgent",
-        category: "maintenance",
-        unitNo: "A-011",
+        category: "plumbing",
+        unitNo: "A-104",
       },
     })
 
@@ -159,18 +159,163 @@ test.describe("Workflow actions and compact action menus", () => {
     const decision = await decisionResponse.json()
     expect(decision.workflow.decisionStatus).toBe("approved")
     expect(decision.workflow.materializedTicket?.id).toBeTruthy()
+    expect(decision.workflow.materializedTicket?.serviceOrder?.catalogCode).toBe("MAINT-PLUMB")
+    expect(decision.workflow.materializedTicket?.serviceOrder?.team).toBe("Teknik")
+    expect(decision.workflow.materializedTicket?.serviceOrder?.providerQueue).toBe("Teknik / plumber vendor queue")
+    expect(decision.workflow.materializedTicket?.serviceOrder?.slaHours).toBe(4)
+    expect(decision.workflow.materializedTicket?.workforceTask?.team).toBe("Teknik")
+    expect(decision.workflow.materializedTicket?.workforceTask?.assignee).toBe("Teknik / plumber vendor queue")
+    expect(decision.workflow.materializedTicket?.notification?.status).toBe("queued")
+    expect(decision.workflow.materializedTicket?.humanApprovalBoundary?.required).toBe(true)
 
     const queueResponse = await page.request.get("/api/site-management/tickets?limit=80")
     expect(queueResponse.status()).toBe(200)
     const queue = await queueResponse.json()
-    expect(queue.tickets.some((ticket: { title?: string }) => ticket.title === title)).toBe(true)
+    const ticket = queue.tickets.find((item: { title?: string }) => item.title === title)
+    expect(ticket).toBeTruthy()
+    expect(ticket.priority).toBe("urgent")
+    expect(ticket.flatNumber).toBe("A-104")
+    expect(
+      queue.orders.some(
+        (order: { ticketId?: string; catalogItemName?: string; assignedTeam?: string; slaHours?: number }) =>
+          order.ticketId === ticket.id &&
+          /tesisat|plumb/i.test(order.catalogItemName ?? "") &&
+          order.assignedTeam === "Teknik" &&
+          order.slaHours === 4
+      )
+    ).toBe(true)
+    expect(
+      queue.workforceTasks.some(
+        (task: { ticketId?: string; team?: string; assignee?: string; routeSlot?: string; slaHoursRemaining?: number }) =>
+          task.ticketId === ticket.id &&
+          task.team === "Teknik" &&
+          task.assignee === "Teknik / plumber vendor queue" &&
+          /4h SLA/.test(task.routeSlot ?? "") &&
+          typeof task.slaHoursRemaining === "number"
+      )
+    ).toBe(true)
+  })
+
+  test("approved emergency scenarios route to the right SLA queue", async ({ page }) => {
+    await setAccessRole(page, "manager")
+
+    const cases = [
+      {
+        title: "A-104 gas smell and smoke alarm emergency",
+        description: "Resident reports gas smell and smoke alarm in the corridor. Escalate to duty security and manager.",
+        category: "life-safety",
+        catalogCode: "EMERG-LIFE-SAFETY",
+        team: "Guvenlik",
+        queue: "Guvenlik / duty manager queue",
+        slaHours: 1,
+        channel: "Push",
+      },
+      {
+        title: "A-104 elevator stuck with resident trapped emergency",
+        description: "Lift is stopped between floors and a resident may be trapped inside.",
+        category: "elevator",
+        catalogCode: "MAINT-ELEVATOR",
+        team: "Teknik",
+        queue: "Teknik / elevator vendor queue",
+        slaHours: 1,
+        channel: "Push",
+      },
+      {
+        title: "A-104 power outage and electrical spark emergency",
+        description: "Apartment panel has a spark smell and the unit lost power.",
+        category: "electrical",
+        catalogCode: "MAINT-ELEC",
+        team: "Teknik",
+        queue: "Teknik / electrician queue",
+        slaHours: 2,
+        channel: "Portal",
+      },
+      {
+        title: "A-104 sewage drain overflow emergency",
+        description: "Blocked toilet and sewage overflow creates hygiene risk.",
+        category: "sewer",
+        catalogCode: "MAINT-SEWER",
+        team: "Teknik",
+        queue: "Teknik / plumbing vendor queue",
+        slaHours: 3,
+        channel: "Portal",
+      },
+      {
+        title: "A-104 locked out gate barrier access emergency",
+        description: "Resident is locked out and the vehicle barrier card is not working.",
+        category: "access-maintenance",
+        catalogCode: "SEC-LOCKOUT",
+        team: "Guvenlik",
+        queue: "Guvenlik / access desk queue",
+        slaHours: 2,
+        channel: "Portal",
+      },
+      {
+        title: "A-104 pool hygiene spa incident emergency",
+        description: "Pool hygiene and spa equipment incident needs area owner and manager notification.",
+        category: "amenity-spa-pool",
+        catalogCode: "AMENITY-SPA-INCIDENT",
+        team: "Sakin destek",
+        queue: "Sakin destek / amenity duty queue",
+        slaHours: 2,
+        channel: "Portal",
+      },
+      {
+        title: "A-104 restaurant event crowd incident emergency",
+        description: "Restaurant event crowd and reservation conflict created a guest operations incident.",
+        category: "amenity-food-event",
+        catalogCode: "AMENITY-FOOD-EVENT-INCIDENT",
+        team: "Restoran",
+        queue: "Restoran / event duty queue",
+        slaHours: 2,
+        channel: "Portal",
+      },
+    ] as const
+
+    for (const scenario of cases) {
+      const title = `${scenario.title} ${Date.now()}`
+      const createResponse = await page.request.post("/api/site-management/tickets", {
+        data: {
+          title,
+          description: scenario.description,
+          priority: "urgent",
+          category: scenario.category,
+          unitNo: "A-104",
+        },
+      })
+
+      expect(createResponse.status(), scenario.catalogCode).toBe(202)
+      const created = await createResponse.json()
+
+      const decisionResponse = await page.request.patch("/api/site-management/actions", {
+        data: {
+          id: created.id,
+          status: "approved",
+        },
+      })
+
+      expect(decisionResponse.status(), scenario.catalogCode).toBe(200)
+      const decision = await decisionResponse.json()
+      const materializedTicket = decision.workflow.materializedTicket
+
+      expect(materializedTicket?.serviceOrder?.catalogCode, scenario.catalogCode).toBe(scenario.catalogCode)
+      expect(materializedTicket?.serviceOrder?.team, scenario.catalogCode).toBe(scenario.team)
+      expect(materializedTicket?.serviceOrder?.providerQueue, scenario.catalogCode).toBe(scenario.queue)
+      expect(materializedTicket?.serviceOrder?.slaHours, scenario.catalogCode).toBe(scenario.slaHours)
+      expect(materializedTicket?.workforceTask?.team, scenario.catalogCode).toBe(scenario.team)
+      expect(materializedTicket?.workforceTask?.assignee, scenario.catalogCode).toBe(scenario.queue)
+      expect(materializedTicket?.workforceTask?.slaHours, scenario.catalogCode).toBe(scenario.slaHours)
+      expect(materializedTicket?.notification?.channel, scenario.catalogCode).toBe(scenario.channel)
+      expect(materializedTicket?.notification?.recipient, scenario.catalogCode).toBe(scenario.queue)
+      expect(materializedTicket?.humanApprovalBoundary?.required, scenario.catalogCode).toBe(true)
+    }
   })
 
   test("AI chat can create a draft ticket but keeps human approval required", async ({ page }) => {
     await setAccessRole(page, "manager")
     const response = await page.request.post("/api/ai/chat", {
       data: {
-        message: "Please create an urgent service ticket for unit A-011 because the balcony door is stuck.",
+        message: "A-104 water leak / no water / plumbing emergency",
       },
     })
 
@@ -178,6 +323,26 @@ test.describe("Workflow actions and compact action menus", () => {
     const payload = await response.json()
     expect(payload.ticketDraft?.id).toBeTruthy()
     expect(payload.ticketDraft?.status).toBe("submitted")
+    expect(payload.ticketDraft?.requiresHumanApproval).toBe(true)
+    expect(payload.ticketDraft?.unitNo).toBe("A-104")
+    expect(payload.ticketDraft?.priority).toBe("urgent")
+    expect(payload.ticketDraft?.category).toBe("plumbing")
+  })
+
+  test("AI chat classifies life-safety emergency drafts", async ({ page }) => {
+    await setAccessRole(page, "manager")
+    const response = await page.request.post("/api/ai/chat", {
+      data: {
+        message: "A-104 gas smell and smoke alarm emergency",
+      },
+    })
+
+    expect(response.status()).toBe(200)
+    const payload = await response.json()
+    expect(payload.ticketDraft?.id).toBeTruthy()
+    expect(payload.ticketDraft?.unitNo).toBe("A-104")
+    expect(payload.ticketDraft?.priority).toBe("urgent")
+    expect(payload.ticketDraft?.category).toBe("life-safety")
     expect(payload.ticketDraft?.requiresHumanApproval).toBe(true)
   })
 

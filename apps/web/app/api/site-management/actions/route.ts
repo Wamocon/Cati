@@ -5,6 +5,7 @@ import {
   logClientAction,
   materializeApprovedTicketRequest,
   updateClientActionRequestStatus,
+  type MaterializedTicketResult,
 } from "@/lib/site-management-repository"
 import { getUserProfile } from "@/lib/auth"
 import { hasAnyPermission } from "@/lib/rbac"
@@ -51,7 +52,7 @@ function withDecisionMetadata({
   status: NonNullable<ReturnType<typeof asDecisionStatus>>
   decidedById: string
   decidedByRole: string
-  materializedTicket: { id: string; ticketNo: string; source: string } | null
+  materializedTicket: MaterializedTicketResult | null
 }) {
   const workflow = asRecord(metadata.workflow)
   return {
@@ -68,6 +69,10 @@ function withDecisionMetadata({
             materializedTicketId: materializedTicket.id,
             materializedTicketNo: materializedTicket.ticketNo,
             materializedTicketSource: materializedTicket.source,
+            serviceOrder: materializedTicket.serviceOrder,
+            workforceTask: materializedTicket.workforceTask,
+            notification: materializedTicket.notification,
+            humanApprovalBoundary: materializedTicket.humanApprovalBoundary,
           }
         : {}),
     },

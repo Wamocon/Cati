@@ -35,6 +35,7 @@ const showLabels = process.env.VIDEO_RECORD_SHOW_LABELS === "1" || hasFlag("--sh
 
 const desktop = { width: 1920, height: 1080 }
 const mobileViewport = { width: 390, height: 844 }
+const mobileVideoSource = { width: 430, height: 764 }
 const mobilePortrait = { width: 1080, height: 1920 }
 
 const common = {
@@ -114,13 +115,12 @@ const ceo = {
   ],
   tickets: [
     ["settle", 1500],
-    ["spotlight", "main", "Service catalogue and ticket queue"],
+    ["spotlight", "main", "Emergency routes and ticket queue"],
     ["wait", 8000],
     ["scroll", 0.22, 6000],
-    ["hover", "button[aria-label*='Servis talebi'], button[aria-label*='Service request'], button[aria-label*='Aksiyon'], button[aria-label*='Actions']"],
-    ["click", "button[aria-label*='Servis talebi aksiyonlari'], button[aria-label*='Service request actions'], button[aria-label*='Servis SLA'], button[aria-label*='service SLA']"],
+    ["hover", "main table tbody tr, main article, [data-testid='data-table']"],
     ["wait", 10000],
-    ["spotlight", "main", "SLA, assignment, cost and evidence flow"],
+    ["spotlight", "main", "SLA, assignment, cost, evidence and approval"],
     ["scroll", 0.52, 6000],
     ["tour"],
     ["wait", 10000],
@@ -218,12 +218,87 @@ const chapters = [
     id: "04",
     slug: "training-01-login-rollen-datenschutz",
     title: "Training 01 - login, roles and privacy",
-    targetMinutes: 3,
+    targetMinutes: 5,
     viewport: desktop,
     role: "manager",
     segments: [
-      { route: "/login", label: "Secure access", caption: "Login, local demo profiles and production auth boundary.", steps: [["settle", 1300], ["spotlight", "main", "Login and access profiles"], ["scroll", 0.18, 1300], ["hover", "[data-testid='demo-full-access'], main button"], ["tour"]] },
-      { route: "/dashboard", label: "Role-scoped workspace", caption: "Users see only what their role permits.", steps: [["settle", 1000], ["spotlight", "[data-testid='dashboard-topbar']", "Current role is visible"], ["tour"]] },
+      {
+        route: "/login",
+        fullTimingRoute: "/dashboard",
+        label: "QA demo role switcher",
+        caption: "The local role picker is only for demos and QA; production users receive their assigned role after real authentication.",
+        steps: [
+          ["settle", 1300],
+          ["spotlight", "main", "Secure login and QA profile boundary"],
+          ["click", "[data-testid='demo-full-access']"],
+          ["waitForSelector", "[data-testid='demo-role-menu']"],
+          ["spotlight", "[data-testid='demo-role-menu']", "Six demo roles for RBAC testing"],
+          ["hover", "[data-testid='demo-role-option-admin']"],
+          ["hover", "[data-testid='demo-role-option-manager']"],
+          ["hover", "[data-testid='demo-role-option-accountant']"],
+          ["hover", "[data-testid='demo-role-option-staff']"],
+          ["hover", "[data-testid='demo-role-option-owner']"],
+          ["hover", "[data-testid='demo-role-option-tenant']"],
+          ["click", "[data-testid='demo-role-option-manager']"],
+          ["waitForPath", "/dashboard"],
+          ["spotlight", "[data-testid='dashboard-topbar']", "Manager role is active"],
+          ["spotlight", "aside", "Manager sees operational modules"],
+          ["tour"],
+        ],
+      },
+      {
+        route: "/login?next=/dashboard/finance",
+        fullTimingRoute: "/dashboard/finance",
+        label: "Accounting role",
+        caption: "Accounting enters through the same QA switcher, but lands on finance-focused permissions.",
+        role: "accountant",
+        steps: [
+          ["settle", 900],
+          ["click", "[data-testid='demo-full-access']"],
+          ["waitForSelector", "[data-testid='demo-role-menu']"],
+          ["click", "[data-testid='demo-role-option-accountant']"],
+          ["waitForPath", "/dashboard/finance"],
+          ["spotlight", "[data-testid='dashboard-topbar']", "Accounting role is active"],
+          ["spotlight", "main", "Finance modules are visible"],
+          ["scroll", 0.34, 1800],
+          ["hover", "main table tbody tr, [data-testid='data-table'], main button"],
+        ],
+      },
+      {
+        route: "/login?next=/dashboard/tickets",
+        fullTimingRoute: "/dashboard/tickets",
+        label: "Staff role",
+        caption: "Field staff sees assigned service work and evidence flow, not finance ledgers or administration.",
+        role: "staff",
+        steps: [
+          ["settle", 900],
+          ["click", "[data-testid='demo-full-access']"],
+          ["waitForSelector", "[data-testid='demo-role-menu']"],
+          ["click", "[data-testid='demo-role-option-staff']"],
+          ["waitForPath", "/dashboard/tickets"],
+          ["spotlight", "[data-testid='dashboard-topbar']", "Staff role is active"],
+          ["spotlight", "aside", "Staff sidebar is narrower"],
+          ["spotlight", "main", "Service work is available"],
+          ["scroll", 0.38, 1800],
+        ],
+      },
+      {
+        route: "/login?next=/dashboard",
+        fullTimingRoute: "/dashboard",
+        label: "Owner and tenant boundary",
+        caption: "Owners and tenants are limited to their own unit context, documents, requests and communication.",
+        role: "owner",
+        steps: [
+          ["settle", 900],
+          ["click", "[data-testid='demo-full-access']"],
+          ["waitForSelector", "[data-testid='demo-role-menu']"],
+          ["click", "[data-testid='demo-role-option-owner']"],
+          ["waitForPath", "/dashboard"],
+          ["spotlight", "[data-testid='dashboard-topbar']", "Owner role is active"],
+          ["spotlight", "aside", "Owner access is limited"],
+          ["tour"],
+        ],
+      },
     ],
   },
   {
@@ -264,8 +339,34 @@ const chapters = [
     viewport: desktop,
     role: "manager",
     segments: [
-      { route: "/dashboard/tickets", label: "Service desk", caption: "Service catalogue, SLA, task ownership and evidence.", steps: [["settle", 1200], ["spotlight", "main", "Service queue"], ["scroll", 0.28, 1500], ["hover", "button[aria-label*='Servis talebi'], button[aria-label*='Aksiyon'], button[aria-label*='service']"], ["click", "button[aria-label*='Servis talebi'], button[aria-label*='Aksiyon'], button[aria-label*='service']"], ["wait", 900], ["scroll", 0.66, 1500]] },
-      { route: "/new-level-premium", label: "Premium services", caption: "Spa, restaurant, theatre, tours and mini club are part of the service model.", steps: [["settle", 1300], ["scrollText", "Premium-Services", 1800], ["spotlight", "main", "Premium services in one flow"], ["tour"]] },
+      {
+        route: "/dashboard/tickets",
+        label: "Service desk",
+        caption: "Emergency routes, service catalogue, SLA, task ownership and evidence.",
+        steps: [
+          ["settle", 1200],
+          ["spotlight", "main", "Emergency routes and service queue"],
+          ["scroll", 0.22, 1800],
+          ["spotlight", "main", "Catalogue, SLA and approval signals"],
+          ["hover", "main table tbody tr, main article, [data-testid='data-table']"],
+          ["scroll", 0.52, 1800],
+          ["spotlight", "main", "Field tasks, media proof and SLA"],
+          ["scroll", 0.78, 1800],
+        ],
+      },
+      {
+        route: "/new-level-premium",
+        label: "Premium services",
+        caption: "Spa, restaurant, theatre, tours and mini club are part of the service model.",
+        steps: [
+          ["settle", 1300],
+          ["scrollText", "Premium servisler", 2000],
+          ["spotlight", "main", "Premium services in one flow"],
+          ["hover", "main article, main img"],
+          ["tour"],
+          ["scroll", 0.58, 1700],
+        ],
+      },
     ],
   },
   {
@@ -284,7 +385,24 @@ const chapters = [
     targetMinutes: 6,
     viewport: desktop,
     role: "accountant",
-    segments: [{ route: "/dashboard/finance", label: "Finance controls", caption: "Ledger, dues, payments, deposits, refunds and guarded restrictions.", steps: [["settle", 1200], ["spotlight", "main", "Finance ledger"], ["scroll", 0.28, 1600], ["hover", "button[aria-label*='Finans'], main button"], ["click", "button[aria-label*='Finans defteri'], button[aria-label*='Mutabakat'], main button"], ["wait", 1000], ["scroll", 0.72, 1800]] }],
+    segments: [
+      {
+        route: "/dashboard/finance",
+        label: "Finance controls",
+        caption: "Ledger, dues, payments, deposits, refunds and guarded restrictions.",
+        steps: [
+          ["settle", 1200],
+          ["spotlight", "main", "Finance ledger"],
+          ["scroll", 0.24, 1800],
+          ["spotlight", "main", "Open debt and collection status"],
+          ["click", "a[href='#finance-accounts']"],
+          ["wait", 800],
+          ["hover", "main table tbody tr, [data-testid='data-table']"],
+          ["spotlight", "main", "Payment, deposit and restriction records"],
+          ["scroll", 0.72, 1800],
+        ],
+      },
+    ],
   },
   {
     id: "11",
@@ -342,8 +460,9 @@ const chapters = [
     slug: "training-13-mobile-web-pwa-offline-queue",
     title: "Training 13 - mobile web, PWA and offline queue",
     targetMinutes: 4,
-    viewport: mobileViewport,
+    viewport: mobileVideoSource,
     captureSize: mobilePortrait,
+    upscaleMobileSource: true,
     role: "staff",
     mobile: true,
     segments: [{ route: "/dashboard/offline", label: "Mobile / PWA / offline-safe queue", caption: "Installable web app, safe cache and guarded offline workflow.", steps: [["settle", 1300], ["spotlight", "main", "Mobile-first operations"], ["scroll", 0.3, 1600], ["tap", 196, 620], ["scroll", 0.66, 1600]] }],
@@ -401,6 +520,14 @@ function captureSizeFor(chapter) {
 
 function buildTargetUrl(locale, route) {
   return `${baseUrl}/${locale}${route}`
+}
+
+function routeKey(route) {
+  return route.split("?")[0]
+}
+
+function safeRouteName(route) {
+  return route.replace(/[^a-z0-9_-]+/gi, "_").replace(/^_+|_+$/g, "") || "home"
 }
 
 function isIgnorableConsole(text) {
@@ -743,20 +870,20 @@ function fullTimingStepsForSegment(segment) {
       ["tour"],
     ],
     "/dashboard/tickets": [
-      ["spotlight", "main", "Service catalogue and ticket queue"],
+      ["spotlight", "main", "Emergency routes and ticket queue"],
       ["scroll", 0.22, 2200],
-      ["hover", "button[aria-label*='Servis talebi'], button[aria-label*='Service request'], button[aria-label*='Aksiyon'], button[aria-label*='Actions']"],
-      ["click", "button[aria-label*='Servis talebi aksiyonlari'], button[aria-label*='Service request actions'], button[aria-label*='Servis SLA'], button[aria-label*='service SLA']"],
-      ["wait", 1300],
+      ["hover", "main table tbody tr, main article, [data-testid='data-table']"],
       ["spotlight", "main", "SLA, assignment and evidence flow"],
-      ["scroll", 0.66, 2400],
+      ["scroll", 0.5, 2400],
+      ["spotlight", "main", "Service catalogue and human approval rules"],
+      ["scroll", 0.72, 2400],
       ["tour"],
     ],
     "/dashboard/finance": [
       ["spotlight", "main", "Ledger, balances and open debt"],
       ["scroll", 0.22, 2200],
-      ["hover", "a[href='#finance-accounts'], button[aria-label*='Finans'], button[aria-label*='Finance'], button[aria-label*='Mutabakat'], button[aria-label*='Reconciliation']"],
-      ["click", "a[href='#finance-accounts'], button[aria-label*='Finans defteri aksiyonlari'], button[aria-label*='Finance ledger actions'], button[aria-label*='Mutabakat'], button[aria-label*='Reconciliation']"],
+      ["hover", "a[href='#finance-accounts'], main table tbody tr, [data-testid='data-table']"],
+      ["click", "a[href='#finance-accounts']"],
       ["wait", 1300],
       ["spotlight", "main", "Deposits, payments and restrictions"],
       ["scroll", 0.72, 2400],
@@ -812,14 +939,14 @@ function fullTimingStepsForSegment(segment) {
     ],
     "/new-level-premium": [
       ["spotlight", "main", "Premium public journey"],
-      ["scrollText", "Premium-Services", 2200],
+      ["scrollText", "Premium servisler", 2200],
       ["spotlight", "main", "Spa, restaurant, theatre and tours"],
       ["tour"],
       ["scroll", 0.68, 2400],
     ],
   }
 
-  return byRoute[segment.route] ?? commonReview
+  return byRoute[segment.fullTimingRoute ?? routeKey(segment.route)] ?? commonReview
 }
 
 async function fullTimingCoverage(page, viewport, segment, durationMs) {
@@ -854,8 +981,9 @@ async function fullTimingCoverage(page, viewport, segment, durationMs) {
 
 async function openDashboardAi(page) {
   await clickSelector(page, "button[aria-label*='AI'], button:has-text('AI')")
-  await page.locator("textarea").first().fill("Summarize today's service and finance risks.").catch(() => {})
+  await page.locator("textarea").first().fill("Bugünkü servis, finans ve erişim risklerini özetle.").catch(() => {})
   await clickSelector(page, "button[aria-label*='Send'], button[aria-label*='Gönder'], button:has-text('Send'), button:has-text('Gönder')")
+  await page.waitForTimeout(4500)
 }
 
 async function openPublicAi(page) {
@@ -891,6 +1019,24 @@ async function runStep(page, viewport, step) {
     case "click":
       await clickSelector(page, a)
       break
+    case "waitForSelector":
+      await page.locator(a).first().waitFor({ state: "visible", timeout: b ?? 10_000 })
+      await page.waitForTimeout(450)
+      break
+    case "waitForUrl":
+      await page.waitForURL(a, { timeout: b ?? 15_000 }).catch(() => {})
+      await page.locator("main").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {})
+      await page.waitForTimeout(650)
+      break
+    case "waitForPath":
+      await page.waitForFunction(
+        (expectedPath) => window.location.pathname.endsWith(expectedPath),
+        a,
+        { timeout: b ?? 15_000 }
+      ).catch(() => {})
+      await page.locator("main").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {})
+      await page.waitForTimeout(650)
+      break
     case "tap":
       await moveCursor(page, a, b, 500)
       await pulse(page, a, b)
@@ -911,14 +1057,113 @@ async function runStep(page, viewport, step) {
   }
 }
 
+function serveVideoFile(filePath) {
+  const server = http.createServer((request, response) => {
+    if (request.url !== "/video.webm") {
+      response.writeHead(404)
+      response.end()
+      return
+    }
+
+    const stat = fs.statSync(filePath)
+    response.writeHead(200, {
+      "Content-Type": "video/webm",
+      "Content-Length": stat.size,
+      "Accept-Ranges": "bytes",
+      "Cache-Control": "no-store",
+    })
+    fs.createReadStream(filePath).pipe(response)
+  })
+
+  return new Promise((resolve) => {
+    server.listen(0, "127.0.0.1", () => {
+      resolve({
+        server,
+        url: `http://127.0.0.1:${server.address().port}/video.webm`,
+      })
+    })
+  })
+}
+
+async function upscaleMobileClip(browser, sourcePath, clipPath, captureSize) {
+  const { server, url } = await serveVideoFile(sourcePath)
+  const context = await browser.newContext({
+    viewport: captureSize,
+    recordVideo: { dir: rawDir, size: captureSize },
+  })
+  const page = await context.newPage()
+
+  try {
+    await page.setContent(`
+      <html>
+        <body style="margin:0;background:#f4f7f5;overflow:hidden">
+          <video
+            id="mobile-source"
+            src="${url}"
+            muted
+            playsinline
+            style="display:block;width:${captureSize.width}px;height:${captureSize.height}px;object-fit:fill;background:#f4f7f5"
+          ></video>
+        </body>
+      </html>
+    `)
+    await page.waitForFunction(
+      () => document.querySelector("#mobile-source")?.readyState >= 1,
+      undefined,
+      { timeout: 30_000 },
+    )
+    const duration = await page.evaluate(() => document.querySelector("#mobile-source")?.duration ?? 0)
+    await page.evaluate(
+      () =>
+        new Promise((resolve, reject) => {
+          const video = document.querySelector("#mobile-source")
+          if (!video) {
+            reject(new Error("Mobile source video missing"))
+            return
+          }
+          const timeout = window.setTimeout(
+            () => reject(new Error("Mobile upscale playback timed out")),
+            Math.max(30_000, Math.ceil((video.duration || 0) * 1000) + 30_000),
+          )
+          video.addEventListener(
+            "ended",
+            () => {
+              window.clearTimeout(timeout)
+              resolve()
+            },
+            { once: true },
+          )
+          video.currentTime = 0
+          video.play().catch(reject)
+        }),
+    )
+    if (duration > 0) await page.waitForTimeout(250)
+  } finally {
+    const video = page.video()
+    await context.close()
+    server.close()
+
+    if (video) {
+      const scaledPath = await video.path().catch(() => null)
+      if (scaledPath && fs.existsSync(scaledPath)) {
+        fs.copyFileSync(scaledPath, clipPath)
+        return
+      }
+    }
+  }
+
+  throw new Error("Mobile upscale did not produce a video")
+}
+
 async function recordChapterAttempt(browser, chapter, locale, attempt) {
   const viewport = chapter.viewport
   const captureSize = captureSizeFor(chapter)
+  const recordingSize = chapter.upscaleMobileSource ? viewport : captureSize
   const context = await browser.newContext({
     viewport,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: chapter.deviceScaleFactor ?? 1,
     locale,
-    recordVideo: skipVideo ? undefined : { dir: rawDir, size: captureSize },
+    recordVideo: skipVideo ? undefined : { dir: rawDir, size: recordingSize },
   })
   const page = await context.newPage()
   const issues = []
@@ -954,7 +1199,7 @@ async function recordChapterAttempt(browser, chapter, locale, attempt) {
       await page.waitForTimeout(600)
 
       await page.screenshot({
-        path: path.join(reviewDir, `${chapter.id}-${chapter.slug}-${locale}-attempt-${attempt}-${segment.route.replaceAll("/", "_") || "home"}.png`),
+        path: path.join(reviewDir, `${chapter.id}-${chapter.slug}-${locale}-attempt-${attempt}-${safeRouteName(segment.route)}.png`),
         fullPage: false,
       })
 
@@ -998,7 +1243,11 @@ async function recordChapterAttempt(browser, chapter, locale, attempt) {
       const rawPath = await video.path().catch(() => null)
       if (rawPath && fs.existsSync(rawPath)) {
         const clipPath = path.join(clipsDir, chapterFilename(chapter, locale))
-        fs.copyFileSync(rawPath, clipPath)
+        if (chapter.upscaleMobileSource) {
+          await upscaleMobileClip(browser, rawPath, clipPath, captureSize)
+        } else {
+          fs.copyFileSync(rawPath, clipPath)
+        }
         return { clipPath, issues }
       }
     }

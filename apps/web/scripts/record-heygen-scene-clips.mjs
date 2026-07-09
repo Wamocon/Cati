@@ -48,10 +48,10 @@ const scenes = [
     id: "04-service-sla",
     route: "/dashboard/tickets",
     role: "manager",
-    label: "Servis ve SLA takibi",
-    caption: "Talepler ekip, öncelik, süre ve kanıt akışıyla yönetilir.",
+    label: "Acil servis rotaları",
+    caption: "Demo akışı; canlıda yönetim takibini hızlandıracak model.",
     narration:
-      "Servis tarafında talepler sınıflandırılır, doğru ekibe yönlendirilir, SLA süresi izlenir ve iş kanıtla kapatılır.",
+      "Servis tarafında talepler sınıflandırılır. Su kaçağı, gaz, asansör, elektrik veya havuz olayı doğru SLA ve ekip kuyruğuna yönlendirilir. Bu bugün demo ortamında görünür; canlı entegrasyonlarla bildirim, vendor takibi ve görev ataması yönetimin manuel telefon ve WhatsApp yükünü azaltır.",
     moves: [
       [430, 315, 700],
       [1030, 370, 700],
