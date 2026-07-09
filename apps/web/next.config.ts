@@ -2,6 +2,7 @@ import type { NextConfig } from "next"
 import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n.ts")
+const supabaseProjectOrigin = "https://hczmbaqofxyusellxhyp.supabase.co"
 
 const securityHeaders = [
   {
@@ -12,9 +13,9 @@ const securityHeaders = [
       "object-src 'none'",
       "frame-ancestors 'none'",
       "form-action 'self'",
-      "img-src 'self' data: blob: https://www.ataberkestate.com https://images.unsplash.com",
+      `img-src 'self' data: blob: https://www.ataberkestate.com https://images.unsplash.com ${supabaseProjectOrigin}`,
       "font-src 'self' data:",
-      "media-src 'self' blob:",
+      `media-src 'self' blob: ${supabaseProjectOrigin}`,
       "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://*.supabase.co wss://*.supabase.co",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
@@ -71,6 +72,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "images.unsplash.com",
+      },
+      {
+        protocol: "https",
+        hostname: "hczmbaqofxyusellxhyp.supabase.co",
       },
     ],
   },

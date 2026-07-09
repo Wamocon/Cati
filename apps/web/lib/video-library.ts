@@ -3,8 +3,11 @@ import "server-only"
 import { createServiceRoleClient } from "@/lib/supabase/server"
 
 const VIDEO_LIBRARY_TABLE = "video_library"
+const DEFAULT_SUPABASE_PUBLIC_ORIGIN = "https://hczmbaqofxyusellxhyp.supabase.co"
 export const VIDEO_LIBRARY_BUCKET =
-  process.env.SUPABASE_VIDEO_BUCKET ?? "video-library"
+  process.env.SUPABASE_VIDEO_BUCKET ?? "Demo Videos"
+const VIDEO_LIBRARY_PREFIX =
+  process.env.SUPABASE_VIDEO_PREFIX ?? "tr/heygen-2026-07-09"
 const SIGNED_URL_TTL_SECONDS = 60 * 60
 
 export type VideoLocale = "tr" | "en" | "de" | "ru"
@@ -47,11 +50,13 @@ export interface VideoLibraryPayload {
 
 interface FallbackVideoSeed {
   slug: string
+  sortOrder: number
   title: string
   description: string
   category: string
   durationSeconds: number
-  thumbnailUrl: string
+  videoPath: string
+  thumbnailPath: string
   chapters: VideoChapter[]
 }
 
@@ -65,279 +70,273 @@ interface PendingCaptionTrack {
 
 type ServiceRoleClient = NonNullable<ReturnType<typeof createServiceRoleClient>>
 
-const fallbackImages = [
-  "/new-level-premium/resort-exterior.jpg",
-  "/new-level-premium/masterplan-aerial.jpg",
-  "/new-level-premium/site-progress-2026.jpg",
-  "/new-level-premium/showroom-bedroom.jpg",
-]
+const fallbackPlaceholderImage = "/new-level-premium/resort-exterior.jpg"
+
+function videoPath(slug: string) {
+  return `${VIDEO_LIBRARY_PREFIX}/videos/${slug}.mp4`
+}
+
+function posterPath(slug: string) {
+  return `${VIDEO_LIBRARY_PREFIX}/posters/${slug}.png`
+}
+
+function standardChapters(
+  first: string,
+  second: string,
+  third: string,
+  durationSeconds: number
+): VideoChapter[] {
+  return [
+    { label: first, time: 0 },
+    { label: second, time: Math.max(1, Math.round(durationSeconds * 0.34)) },
+    { label: third, time: Math.max(2, Math.round(durationSeconds * 0.68)) },
+  ]
+}
+
+function publicStorageUrl(path: string | null): string | null {
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ??
+    DEFAULT_SUPABASE_PUBLIC_ORIGIN
+
+  if (!path) return null
+
+  const encodedBucket = encodeURIComponent(VIDEO_LIBRARY_BUCKET)
+  const encodedPath = path
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/")
+
+  return `${supabaseUrl}/storage/v1/object/public/${encodedBucket}/${encodedPath}`
+}
 
 const fallbackVideoSeeds: FallbackVideoSeed[] = [
   {
-    slug: "overview-command-center",
-    title: "ERP operations center",
+    slug: "01-cati-90-saniyede",
+    sortOrder: 1,
+    title: "1Cati 90 Saniyede",
     description:
-      "A complete overview of the 1Cati workspace, navigation, KPIs and live operating flow.",
-    category: "Overview",
-    durationSeconds: 196,
-    thumbnailUrl: fallbackImages[0],
-    chapters: [
-      { label: "Portfolio context", time: 0 },
-      { label: "Live controls", time: 54 },
-      { label: "Next actions", time: 128 },
-    ],
+      "Landing page, business value, demo proof and the operating dashboard in one short management story.",
+    category: "Yonetim ozeti",
+    durationSeconds: 142,
+    videoPath: videoPath("01-cati-90-saniyede"),
+    thumbnailPath: posterPath("01-cati-90-saniyede"),
+    chapters: standardChapters("Acilis", "Deger kaniti", "Operasyon merkezi", 142),
   },
   {
-    slug: "login-roles-rbac",
-    title: "Login, demo roles and RBAC",
+    slug: "02-ceo-yonetim-walkthrough",
+    sortOrder: 2,
+    title: "CEO ve Yonetim Walkthrough",
     description:
-      "Shows access profiles, role selection, permission-aware navigation and protected dashboard entry.",
-    category: "Access",
-    durationSeconds: 174,
-    thumbnailUrl: fallbackImages[1],
-    chapters: [
-      { label: "Login flow", time: 0 },
-      { label: "Role profiles", time: 47 },
-      { label: "Permission check", time: 118 },
-    ],
+      "Executive walkthrough for operations, risks, finance, service, reporting and decision readiness.",
+    category: "Yonetim ozeti",
+    durationSeconds: 428,
+    videoPath: videoPath("02-ceo-yonetim-walkthrough"),
+    thumbnailPath: posterPath("02-ceo-yonetim-walkthrough"),
+    chapters: standardChapters("Yonetim baglami", "Canli panel", "Karar ozeti", 428),
   },
   {
-    slug: "portfolio-dashboard",
-    title: "Portfolio dashboard",
+    slug: "03-egitim-00-izleyici-orientasyonu",
+    sortOrder: 3,
+    title: "Egitim 00 - Izleyici Orientasyonu",
     description:
-      "Explains how units, service risks, finance signals and owner communication connect in one view.",
-    category: "Dashboard",
-    durationSeconds: 211,
-    thumbnailUrl: fallbackImages[2],
-    chapters: [
-      { label: "Portfolio status", time: 0 },
-      { label: "Risk tiles", time: 70 },
-      { label: "Drilldowns", time: 145 },
-    ],
+      "How to follow the training series, what is demo-ready, and how to read the main product areas.",
+    category: "Egitim baslangici",
+    durationSeconds: 230,
+    videoPath: videoPath("03-egitim-00-izleyici-orientasyonu"),
+    thumbnailPath: posterPath("03-egitim-00-izleyici-orientasyonu"),
+    chapters: standardChapters("Seri mantigi", "Demo merkezi", "Sonraki adim", 230),
   },
   {
-    slug: "unit-matrix",
-    title: "Apartment and unit matrix",
+    slug: "04-egitim-01-login-roller-veri-guvenligi",
+    sortOrder: 4,
+    title: "Egitim 01 - Login, Roller ve Veri Guvenligi",
     description:
-      "Walks through blocks, floors, ownership, debt flags, access status and service history.",
-    category: "Operations",
-    durationSeconds: 188,
-    thumbnailUrl: fallbackImages[3],
-    chapters: [
-      { label: "Block selection", time: 0 },
-      { label: "Unit details", time: 52 },
-      { label: "Compliance view", time: 127 },
-    ],
+      "Demo access, role switching, production authentication boundaries and permission-aware navigation.",
+    category: "Egitim baslangici",
+    durationSeconds: 301,
+    videoPath: videoPath("04-egitim-01-login-roller-veri-guvenligi"),
+    thumbnailPath: posterPath("04-egitim-01-login-roller-veri-guvenligi"),
+    chapters: standardChapters("Giris modeli", "Rol profilleri", "Guvenlik siniri", 301),
   },
   {
-    slug: "service-ticket-intake",
-    title: "Service request intake",
+    slug: "05-egitim-02-dashboard-gunluk-yonetim",
+    sortOrder: 5,
+    title: "Egitim 02 - Dashboard ve Gunluk Yonetim",
     description:
-      "Demonstrates request creation, categorization, photos, notes and customer communication.",
-    category: "Service",
-    durationSeconds: 203,
-    thumbnailUrl: fallbackImages[0],
-    chapters: [
-      { label: "New request", time: 0 },
-      { label: "Evidence", time: 58 },
-      { label: "Assignment", time: 139 },
-    ],
+      "Daily dashboard view with KPIs, service status, finance signals and next operating actions.",
+    category: "Operasyon",
+    durationSeconds: 60,
+    videoPath: videoPath("05-egitim-02-dashboard-gunluk-yonetim"),
+    thumbnailPath: posterPath("05-egitim-02-dashboard-gunluk-yonetim"),
+    chapters: standardChapters("Dashboard", "KPI okuma", "Aksiyonlar", 60),
   },
   {
-    slug: "sla-priority-queue",
-    title: "SLA and priority queue",
+    slug: "06-egitim-03-daireler-bloklar-daire-matrisi",
+    sortOrder: 6,
+    title: "Egitim 03 - Daireler, Bloklar ve Daire Matrisi",
     description:
-      "Shows priority rules, blocked orders, service approvals and the operational queue.",
-    category: "Service",
-    durationSeconds: 221,
-    thumbnailUrl: fallbackImages[1],
-    chapters: [
-      { label: "Queue health", time: 0 },
-      { label: "SLA risk", time: 64 },
-      { label: "Manager approval", time: 151 },
-    ],
+      "Blocks, floors, units, owners, residents, debt, access status and service context in one matrix.",
+    category: "Operasyon",
+    durationSeconds: 235,
+    videoPath: videoPath("06-egitim-03-daireler-bloklar-daire-matrisi"),
+    thumbnailPath: posterPath("06-egitim-03-daireler-bloklar-daire-matrisi"),
+    chapters: standardChapters("Bloklar", "Daire matrisi", "Detay baglami", 235),
   },
   {
-    slug: "finance-ledger",
-    title: "Finance ledger",
+    slug: "07-egitim-04-insanlar-malikler-kiracilar-personel",
+    sortOrder: 7,
+    title: "Egitim 04 - Insanlar, Malikler, Kiracilar ve Personel",
     description:
-      "Covers contributions, unit balances, receivables, status badges and audit-ready finance views.",
-    category: "Finance",
-    durationSeconds: 198,
-    thumbnailUrl: fallbackImages[2],
-    chapters: [
-      { label: "Receivables", time: 0 },
-      { label: "Unit balance", time: 61 },
-      { label: "Audit trail", time: 140 },
-    ],
+      "People records for owners, tenants, staff responsibility and role-aware operating context.",
+    category: "Operasyon",
+    durationSeconds: 193,
+    videoPath: videoPath("07-egitim-04-insanlar-malikler-kiracilar-personel"),
+    thumbnailPath: posterPath("07-egitim-04-insanlar-malikler-kiracilar-personel"),
+    chapters: standardChapters("Kisiler", "Rol baglami", "Operasyon kaydi", 193),
   },
   {
-    slug: "payment-controls",
-    title: "Payment controls",
+    slug: "08-egitim-05-servis-ticket-sla-gorevler",
+    sortOrder: 8,
+    title: "Egitim 05 - Servis Ticket, SLA ve Gorevler",
     description:
-      "Explains payment status, exception handling, approvals and finance-team handoff controls.",
-    category: "Finance",
-    durationSeconds: 184,
-    thumbnailUrl: fallbackImages[3],
-    chapters: [
-      { label: "Payment state", time: 0 },
-      { label: "Exceptions", time: 55 },
-      { label: "Approval handoff", time: 124 },
-    ],
+      "Service ticket classification, SLA priority, assignment, evidence and closure workflow.",
+    category: "Operasyon",
+    durationSeconds: 327,
+    videoPath: videoPath("08-egitim-05-servis-ticket-sla-gorevler"),
+    thumbnailPath: posterPath("08-egitim-05-servis-ticket-sla-gorevler"),
+    chapters: standardChapters("Ticket alimi", "SLA ve gorev", "Kanita dayali kapanis", 327),
   },
   {
-    slug: "reservations-calendar",
-    title: "Reservations calendar",
+    slug: "09-egitim-06-takvim-rezervasyon-checkin-checkout",
+    sortOrder: 9,
+    title: "Egitim 06 - Takvim, Rezervasyon, Check-in ve Checkout",
     description:
-      "Shows shared-area bookings, calendar capacity, conflicts and owner or tenant confirmations.",
-    category: "Reservations",
-    durationSeconds: 177,
-    thumbnailUrl: fallbackImages[0],
-    chapters: [
-      { label: "Calendar", time: 0 },
-      { label: "Capacity", time: 48 },
-      { label: "Confirmation", time: 119 },
-    ],
+      "Calendar, reservation, check-in, check-out and field coordination workflow.",
+    category: "Operasyon",
+    durationSeconds: 204,
+    videoPath: videoPath("09-egitim-06-takvim-rezervasyon-checkin-checkout"),
+    thumbnailPath: posterPath("09-egitim-06-takvim-rezervasyon-checkin-checkout"),
+    chapters: standardChapters("Takvim", "Rezervasyon", "Check-in / check-out", 204),
   },
   {
-    slug: "check-in-check-out",
-    title: "Check-in and check-out",
+    slug: "10-egitim-07-finans-odemeler-depozito-kisitlama",
+    sortOrder: 10,
+    title: "Egitim 07 - Finans, Odemeler, Depozito ve Kisitlama",
     description:
-      "Walks through arrival tasks, departure checks, photo proof and deposit or damage review.",
-    category: "Lifecycle",
-    durationSeconds: 216,
-    thumbnailUrl: fallbackImages[1],
-    chapters: [
-      { label: "Arrival", time: 0 },
-      { label: "Inspection", time: 76 },
-      { label: "Closure", time: 159 },
-    ],
+      "Dues, collections, debt status, deposits and human-approved restriction decisions.",
+    category: "Finans",
+    durationSeconds: 287,
+    videoPath: videoPath("10-egitim-07-finans-odemeler-depozito-kisitlama"),
+    thumbnailPath: posterPath("10-egitim-07-finans-odemeler-depozito-kisitlama"),
+    chapters: standardChapters("Finans ozeti", "Odeme ve borc", "Onayli kisitlama", 287),
   },
   {
-    slug: "document-vault",
-    title: "Document vault",
+    slug: "11-egitim-08-belgeler-yukleme-kanit",
+    sortOrder: 11,
+    title: "Egitim 08 - Belgeler, Yukleme ve Kanit",
     description:
-      "Demonstrates secure documents, visibility, categories, upload status and retention-ready records.",
-    category: "Documents",
-    durationSeconds: 190,
-    thumbnailUrl: fallbackImages[2],
-    chapters: [
-      { label: "Folders", time: 0 },
-      { label: "Secure access", time: 51 },
-      { label: "Records", time: 132 },
-    ],
+      "Document upload, evidence tracking, review state and auditable record handling.",
+    category: "Dokuman",
+    durationSeconds: 212,
+    videoPath: videoPath("11-egitim-08-belgeler-yukleme-kanit"),
+    thumbnailPath: posterPath("11-egitim-08-belgeler-yukleme-kanit"),
+    chapters: standardChapters("Belge alani", "Yukleme ve kanit", "Denetim kaydi", 212),
   },
   {
-    slug: "owner-tenant-portal",
-    title: "Owner and tenant portal",
+    slug: "12-egitim-09-iletisim-bildirimler",
+    sortOrder: 12,
+    title: "Egitim 09 - Iletisim ve Bildirimler",
     description:
-      "Shows the lighter portal experience for owners and tenants with services, documents and chat.",
-    category: "Portal",
-    durationSeconds: 205,
-    thumbnailUrl: fallbackImages[3],
-    chapters: [
-      { label: "Portal home", time: 0 },
-      { label: "Requests", time: 63 },
-      { label: "Documents", time: 146 },
-    ],
+      "Owner, tenant, staff and management communication with linked notification context.",
+    category: "Iletisim",
+    durationSeconds: 212,
+    videoPath: videoPath("12-egitim-09-iletisim-bildirimler"),
+    thumbnailPath: posterPath("12-egitim-09-iletisim-bildirimler"),
+    chapters: standardChapters("Iletisim merkezi", "Bildirimler", "Takip baglami", 212),
   },
   {
-    slug: "communication-center",
-    title: "Communication center",
+    slug: "13-egitim-10-erisim-compliance-denetim",
+    sortOrder: 13,
+    title: "Egitim 10 - Erisim, Compliance ve Denetim",
     description:
-      "Covers owner, tenant and team communication, message history and action-linked context.",
-    category: "Communication",
+      "Role-based access, compliance status, audit trail and traceable sensitive operations.",
+    category: "Guvenlik",
+    durationSeconds: 207,
+    videoPath: videoPath("13-egitim-10-erisim-compliance-denetim"),
+    thumbnailPath: posterPath("13-egitim-10-erisim-compliance-denetim"),
+    chapters: standardChapters("Erisim", "Compliance", "Denetim izi", 207),
+  },
+  {
+    slug: "14-egitim-11-raporlar-yonetim-analizleri",
+    sortOrder: 14,
+    title: "Egitim 11 - Raporlar ve Yonetim Analizleri",
+    description:
+      "Management reports, operating analytics and decision preparation screens.",
+    category: "Raporlama",
     durationSeconds: 192,
-    thumbnailUrl: fallbackImages[0],
-    chapters: [
-      { label: "Inbox", time: 0 },
-      { label: "Context", time: 59 },
-      { label: "Follow-up", time: 133 },
-    ],
+    videoPath: videoPath("14-egitim-11-raporlar-yonetim-analizleri"),
+    thumbnailPath: posterPath("14-egitim-11-raporlar-yonetim-analizleri"),
+    chapters: standardChapters("Raporlar", "Analiz", "Yonetim karari", 192),
   },
   {
-    slug: "compliance-access",
-    title: "Compliance and access",
+    slug: "15-egitim-12-yapay-zeka-asistani-sinirlar",
+    sortOrder: 15,
+    title: "Egitim 12 - Yapay Zeka Asistani ve Sinirlar",
     description:
-      "Explains access restrictions, compliance status, legal flags and traceable operations.",
-    category: "Compliance",
-    durationSeconds: 208,
-    thumbnailUrl: fallbackImages[1],
-    chapters: [
-      { label: "Access state", time: 0 },
-      { label: "Legal flags", time: 67 },
-      { label: "Traceability", time: 150 },
-    ],
-  },
-  {
-    slug: "offline-pwa",
-    title: "Offline and mobile work",
-    description:
-      "Shows how field teams can keep working with mobile-friendly screens and offline-ready flows.",
-    category: "Mobile",
-    durationSeconds: 181,
-    thumbnailUrl: fallbackImages[2],
-    chapters: [
-      { label: "Field task", time: 0 },
-      { label: "Offline state", time: 54 },
-      { label: "Sync result", time: 124 },
-    ],
-  },
-  {
-    slug: "reports-ai",
-    title: "Reports and AI assistance",
-    description:
-      "Demonstrates report preparation, summaries, AI recommendations and human approval boundaries.",
+      "AI assistant summaries, recommendations, human approval limits and guardrailed usage.",
     category: "AI",
-    durationSeconds: 234,
-    thumbnailUrl: fallbackImages[3],
-    chapters: [
-      { label: "Report view", time: 0 },
-      { label: "AI summary", time: 82 },
-      { label: "Human decision", time: 169 },
-    ],
+    durationSeconds: 281,
+    videoPath: videoPath("15-egitim-12-yapay-zeka-asistani-sinirlar"),
+    thumbnailPath: posterPath("15-egitim-12-yapay-zeka-asistani-sinirlar"),
+    chapters: standardChapters("AI baglami", "Oneri ve ozet", "Insan onayi", 281),
   },
   {
-    slug: "public-ai-concierge",
-    title: "Public AI concierge",
+    slug: "16-egitim-13-mobile-web-pwa-offline-queue",
+    sortOrder: 16,
+    title: "Egitim 13 - Mobile Web, PWA ve Offline Queue",
     description:
-      "Explains the public assistant, lead capture, safe answers and handoff into the CRM flow.",
-    category: "AI",
-    durationSeconds: 173,
-    thumbnailUrl: fallbackImages[0],
-    chapters: [
-      { label: "Visitor question", time: 0 },
-      { label: "Safe answer", time: 52 },
-      { label: "Lead handoff", time: 118 },
-    ],
+      "Mobile web, field usage, offline queue, retry model and visible sync state.",
+    category: "Mobil",
+    durationSeconds: 207,
+    videoPath: videoPath("16-egitim-13-mobile-web-pwa-offline-queue"),
+    thumbnailPath: posterPath("16-egitim-13-mobile-web-pwa-offline-queue"),
+    chapters: standardChapters("Mobil kullanim", "Offline kuyruk", "Senkronizasyon", 207),
   },
   {
-    slug: "integrations-readiness",
-    title: "Integration readiness",
+    slug: "17-egitim-14-ayarlar-entegrasyonlar",
+    sortOrder: 17,
+    title: "Egitim 14 - Ayarlar ve Entegrasyonlar",
     description:
-      "Shows provider-ready placeholders for OAuth, payment, email, SMS, access and document storage.",
-    category: "Integrations",
-    durationSeconds: 201,
-    thumbnailUrl: fallbackImages[1],
-    chapters: [
-      { label: "Provider status", time: 0 },
-      { label: "Contract keys", time: 58 },
-      { label: "Activation path", time: 142 },
-    ],
+      "Provider-dependent settings, API keys, production approval and integration readiness.",
+    category: "Entegrasyon",
+    durationSeconds: 213,
+    videoPath: videoPath("17-egitim-14-ayarlar-entegrasyonlar"),
+    thumbnailPath: posterPath("17-egitim-14-ayarlar-entegrasyonlar"),
+    chapters: standardChapters("Ayarlar", "Saglayici baglanti", "Canliya hazirlik", 213),
   },
   {
-    slug: "admin-settings-audit",
-    title: "Admin settings and audit",
+    slug: "18-egitim-15-new-level-premium-journey",
+    sortOrder: 18,
+    title: "Egitim 15 - New Level Premium Journey",
     description:
-      "Covers system settings, role governance, audit evidence and controlled production readiness.",
-    category: "Administration",
-    durationSeconds: 219,
-    thumbnailUrl: fallbackImages[2],
-    chapters: [
-      { label: "Settings", time: 0 },
-      { label: "Roles", time: 69 },
-      { label: "Audit", time: 156 },
-    ],
+      "New Level Premium context for the customer, owner and operations journey.",
+    category: "Musteri yolculugu",
+    durationSeconds: 273,
+    videoPath: videoPath("18-egitim-15-new-level-premium-journey"),
+    thumbnailPath: posterPath("18-egitim-15-new-level-premium-journey"),
+    chapters: standardChapters("Proje baglami", "Yolculuk", "Operasyon sonucu", 273),
+  },
+  {
+    slug: "19-egitim-16-kapanis-live-uat-onay",
+    sortOrder: 19,
+    title: "Egitim 16 - Kapanis, Live, UAT ve Onay",
+    description:
+      "Live readiness, UAT, customer approval, provider dependencies and final launch controls.",
+    category: "Kapanis",
+    durationSeconds: 237,
+    videoPath: videoPath("19-egitim-16-kapanis-live-uat-onay"),
+    thumbnailPath: posterPath("19-egitim-16-kapanis-live-uat-onay"),
+    chapters: standardChapters("Canliya gecis", "UAT ve onay", "Son kontrol", 237),
   },
 ]
 
@@ -359,9 +358,7 @@ export async function getVideoLibrary(
   const supabase = createServiceRoleClient()
 
   if (!supabase) {
-    return createFallbackPayload(
-      "Supabase service credentials are not configured, so local video placeholders are shown."
-    )
+    return createSupabaseStoragePayload(null)
   }
 
   const { data, error } = await supabase
@@ -386,11 +383,7 @@ export async function getVideoLibrary(
     .order("sort_order", { ascending: true })
 
   if (error || !Array.isArray(data) || data.length === 0) {
-    return createFallbackPayload(
-      error
-        ? `Supabase video_library could not be loaded: ${error.message}`
-        : "No published Supabase videos were found yet."
-    )
+    return createSupabaseStoragePayload(null)
   }
 
   const videos = await Promise.all(
@@ -400,9 +393,7 @@ export async function getVideoLibrary(
   const publishedVideos = videos.filter((video) => Boolean(video.videoUrl))
 
   if (publishedVideos.length === 0) {
-    return createFallbackPayload(
-      "Supabase video metadata exists, but no playable video files could be signed."
-    )
+    return createSupabaseStoragePayload(null)
   }
 
   return {
@@ -414,18 +405,55 @@ export async function getVideoLibrary(
   }
 }
 
+function createSupabaseStoragePayload(warning: string | null): VideoLibraryPayload {
+  const videos = fallbackVideoSeeds.map((video) => {
+    const videoUrl = publicStorageUrl(video.videoPath)
+    const thumbnailUrl = publicStorageUrl(video.thumbnailPath)
+
+    return {
+      id: `storage-${video.sortOrder}`,
+      slug: video.slug,
+      sortOrder: video.sortOrder,
+      title: video.title,
+      description: video.description,
+      category: video.category,
+      durationSeconds: video.durationSeconds,
+      videoUrl,
+      thumbnailUrl: thumbnailUrl ?? fallbackPlaceholderImage,
+      captions: [],
+      chapters: video.chapters,
+      source: videoUrl ? "supabase" : "fallback",
+    } satisfies VideoLibraryItem
+  })
+
+  if (videos.every((video) => !video.videoUrl)) {
+    return createFallbackPayload(
+      warning ??
+        "Supabase video URLs could not be resolved; local video placeholders are shown."
+    )
+  }
+
+  return {
+    videos,
+    source: "supabase",
+    bucket: VIDEO_LIBRARY_BUCKET,
+    generatedAt: new Date().toISOString(),
+    warning,
+  }
+}
+
 function createFallbackPayload(warning: string): VideoLibraryPayload {
   return {
-    videos: fallbackVideoSeeds.map((video, index) => ({
-      id: `fallback-${index + 1}`,
+    videos: fallbackVideoSeeds.map((video) => ({
+      id: `fallback-${video.sortOrder}`,
       slug: video.slug,
-      sortOrder: index + 1,
+      sortOrder: video.sortOrder,
       title: video.title,
       description: video.description,
       category: video.category,
       durationSeconds: video.durationSeconds,
       videoUrl: null,
-      thumbnailUrl: video.thumbnailUrl,
+      thumbnailUrl: fallbackPlaceholderImage,
       captions: [],
       chapters: video.chapters,
       source: "fallback",
@@ -446,8 +474,8 @@ async function toVideoLibraryItem(
   const row = asRecord(rawRow)
   const slug = readString(row.slug) ?? `video-${index + 1}`
   const fallback = fallbackBySlug.get(slug) ?? fallbackVideoSeeds[index]
-  const videoPath = readString(row.video_path)
-  const thumbnailPath = readString(row.thumbnail_path)
+  const videoPath = readString(row.video_path) ?? fallback?.videoPath ?? null
+  const thumbnailPath = readString(row.thumbnail_path) ?? fallback?.thumbnailPath ?? null
   const [videoUrl, thumbnailUrl, captions] = await Promise.all([
     signStoragePath(supabase, videoPath),
     signStoragePath(supabase, thumbnailPath),
@@ -468,7 +496,10 @@ async function toVideoLibraryItem(
     durationSeconds:
       readNumber(row.duration_seconds) ?? fallback?.durationSeconds ?? 0,
     videoUrl,
-    thumbnailUrl: thumbnailUrl ?? fallback?.thumbnailUrl ?? fallbackImages[0],
+    thumbnailUrl:
+      thumbnailUrl ??
+      (fallback ? publicStorageUrl(fallback.thumbnailPath) : null) ??
+      fallbackPlaceholderImage,
     captions,
     chapters: normalizeChapters(row.chapters, locale, fallback?.chapters ?? []),
     source: "supabase",
@@ -507,8 +538,8 @@ async function signStoragePath(
     .from(VIDEO_LIBRARY_BUCKET)
     .createSignedUrl(path, SIGNED_URL_TTL_SECONDS)
 
-  if (error) return null
-  return data?.signedUrl ?? null
+  if (error) return publicStorageUrl(path)
+  return data?.signedUrl ?? publicStorageUrl(path)
 }
 
 function normalizeCaptionTracks(value: unknown): PendingCaptionTrack[] {

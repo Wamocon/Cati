@@ -13,6 +13,7 @@
     "record:playlist": "node scripts/record-full-playlist.mjs",
     "record:playlist:tr-full": "node scripts/record-full-playlist.mjs --full-timing --locales=tr --output=../../qa_output/full-playlist-recordings-tr-full",
     "record:playlist:tr-full:ceo": "node scripts/record-full-playlist.mjs --full-timing --locales=tr --only=02 --output=../../qa_output/full-playlist-recordings-tr-full",
+    "upload:demo-videos": "node scripts/upload-demo-video-assets.mjs",
     "test:e2e": "playwright test",
     "test:e2e:structured": "playwright test public/landing-functional.spec.ts auth/access-profile-functional.spec.ts roles/role-access-functional.spec.ts dashboard/dashboard-navigation-functional.spec.ts operations/operations-functional.spec.ts operations/workflow-action-menu-functional.spec.ts api/openapi-contract-functional.spec.ts api/site-management-post-functional.spec.ts api/public-ai-concierge-functional.spec.ts api/security-observability-functional.spec.ts"
   },

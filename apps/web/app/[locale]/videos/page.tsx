@@ -12,22 +12,22 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "1Cati Videos | Product Library",
   description:
-    "A Supabase-backed video library for 1Cati product demos, walkthroughs and onboarding videos.",
+    "A polished video library for 1Cati product demos, walkthroughs and onboarding videos.",
 }
 
 const pageCopy = {
   en: {
     eyebrow: "Product video library",
     title: "Watch every 1Cati app video from one polished player.",
-    body: "All 19 app videos are rendered from the Supabase video library when storage is configured. Each item has a thumbnail, chapter list, captions, speed control and full player controls.",
+    body: "All 19 approved app videos are available in one structured playlist. Each item has a thumbnail, chapter list, speed control, fullscreen mode, picture-in-picture and download access.",
     cta: "Open videos",
     stats: [
       ["19", "app videos"],
-      ["Supabase", "private media URLs"],
-      ["VTT", "subtitle tracks"],
+      ["Full HD", "original quality"],
+      ["Player", "modern controls"],
     ],
     featureCards: [
-      ["Private storage", "Videos, thumbnails and subtitles are signed server-side."],
+      ["Fast playback", "Videos use clean public media URLs, thumbnails and browser-friendly loading."],
       ["Player controls", "Speed, captions, volume, seeking, fullscreen and picture-in-picture."],
       ["Playlist view", "Thumbnails, search and categories keep the full library easy to scan."],
     ],
@@ -35,15 +35,15 @@ const pageCopy = {
   de: {
     eyebrow: "Produkt-Videothek",
     title: "Alle 1Cati App-Videos in einem passenden Player.",
-    body: "Die 19 App-Videos werden aus der Supabase-Videothek geladen, sobald Storage konfiguriert ist. Jeder Eintrag hat Thumbnail, Kapitel, Untertitel, Tempo und volle Player-Steuerung.",
+    body: "Alle 19 freigegebenen App-Videos sind in einer strukturierten Playlist verfuegbar. Jeder Eintrag hat Thumbnail, Kapitel, Tempo, Vollbild, Bild-im-Bild und Download-Zugriff.",
     cta: "Videos oeffnen",
     stats: [
       ["19", "App-Videos"],
-      ["Supabase", "private Media-URLs"],
-      ["VTT", "Untertitel"],
+      ["Full HD", "Originalqualitaet"],
+      ["Player", "moderne Kontrollen"],
     ],
     featureCards: [
-      ["Private Ablage", "Videos, Thumbnails und Untertitel werden serverseitig signiert."],
+      ["Schnelle Wiedergabe", "Videos nutzen saubere Media-URLs, Thumbnails und browserfreundliches Laden."],
       ["Player-Kontrollen", "Tempo, Untertitel, Lautstaerke, Suche, Vollbild und Bild-im-Bild."],
       ["Playlist-Ansicht", "Thumbnails, Suche und Kategorien machen die Bibliothek scanbar."],
     ],
@@ -51,15 +51,15 @@ const pageCopy = {
   tr: {
     eyebrow: "Urun video kutuphanesi",
     title: "Tum 1Cati app videolarini tek player icinde izleyin.",
-    body: "Storage ayarlandiginda 19 app videosu Supabase video kutuphanesinden yuklenir. Her kayitta thumbnail, bolumler, altyazi, hiz ve tam player kontrolleri bulunur.",
+    body: "Onaylanmis 19 app videosu tek ve duzenli bir playlist icinde hazir. Her kayitta thumbnail, bolumler, hiz, tam ekran, resim icinde resim ve indirme erisimi bulunur.",
     cta: "Videolari ac",
     stats: [
       ["19", "app videosu"],
-      ["Supabase", "ozel media URL"],
-      ["VTT", "altyazi"],
+      ["Full HD", "orijinal kalite"],
+      ["Player", "modern kontroller"],
     ],
     featureCards: [
-      ["Ozel depolama", "Video, thumbnail ve altyazi URLleri server tarafinda imzalanir."],
+      ["Hizli oynatma", "Videolar temiz media URLleri, thumbnail ve tarayici dostu yukleme ile calisir."],
       ["Player kontrolleri", "Hiz, altyazi, ses, ileri-geri, tam ekran ve resim icinde resim."],
       ["Playlist gorunumu", "Thumbnail, arama ve kategoriler tum kutuphaneyi kolay okunur tutar."],
     ],
@@ -67,15 +67,15 @@ const pageCopy = {
   ru: {
     eyebrow: "Product video library",
     title: "Watch every 1Cati app video from one polished player.",
-    body: "All 19 app videos are rendered from the Supabase video library when storage is configured. Each item has a thumbnail, chapter list, captions, speed control and full player controls.",
+    body: "All 19 approved app videos are available in one structured playlist. Each item has a thumbnail, chapter list, speed control, fullscreen mode, picture-in-picture and download access.",
     cta: "Open videos",
     stats: [
       ["19", "app videos"],
-      ["Supabase", "private media URLs"],
-      ["VTT", "subtitle tracks"],
+      ["Full HD", "original quality"],
+      ["Player", "modern controls"],
     ],
     featureCards: [
-      ["Private storage", "Videos, thumbnails and subtitles are signed server-side."],
+      ["Fast playback", "Videos use clean public media URLs, thumbnails and browser-friendly loading."],
       ["Player controls", "Speed, captions, volume, seeking, fullscreen and picture-in-picture."],
       ["Playlist view", "Thumbnails, search and categories keep the full library easy to scan."],
     ],
