@@ -945,9 +945,10 @@ async function recordChapterAttempt(browser, chapter, locale, attempt) {
       await context.addCookies([{ url: baseUrl, name: "access_profile_role", value: role }])
 
       await page.goto(buildTargetUrl(locale, segment.route), {
-        waitUntil: "networkidle",
+        waitUntil: "domcontentloaded",
         timeout: 60_000,
       })
+      await page.locator("main").first().waitFor({ state: "visible", timeout: 30_000 }).catch(() => {})
       await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {})
       await installOverlay(page, chapter, segment, locale)
       await page.waitForTimeout(600)
