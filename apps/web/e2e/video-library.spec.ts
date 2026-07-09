@@ -7,17 +7,17 @@ test.describe("Public video library", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Tum 1Cati app videolarini tek player icinde izleyin.",
+        name: "1Çatı ile site yönetimini tek merkezden görün, yönetin ve büyütün.",
       })
     ).toBeVisible()
     await expect(page.getByTestId("video-library")).toBeVisible()
     await expect(page.getByTestId("video-player")).toBeVisible()
     await expect(page.locator('[data-testid^="video-card-"]')).toHaveCount(19)
-    await expect(page.getByText("Video dosyasi hazirlaniyor")).toHaveCount(0)
-    await expect(page.getByLabel("Hiz")).toBeVisible()
+    await expect(page.getByText("Video dosyası hazırlanıyor")).toHaveCount(0)
+    await expect(page.getByLabel("Hız")).toBeVisible()
     await expect(
       page.locator(
-        'button[aria-label="Altyazi yok"], button[aria-label="Altyazi acik"], button[aria-label="Altyazi kapali"]'
+        'button[aria-label="Altyazı yok"], button[aria-label="Altyazı açık"], button[aria-label="Altyazı kapalı"]'
       )
     ).toHaveCount(1)
 
@@ -35,7 +35,7 @@ test.describe("Public video library", () => {
     await page.getByTestId("video-card-04-egitim-01-login-roller-veri-guvenligi").click()
     await expect(
       page.getByRole("heading", {
-        name: "Egitim 01 - Login, Roller ve Veri Guvenligi",
+        name: "Eğitim 01 - Login, Roller ve Veri Güvenliği",
       })
     ).toBeVisible()
     await expect(video).toHaveAttribute(
