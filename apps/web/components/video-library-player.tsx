@@ -46,8 +46,16 @@ const playerCopy = {
     all: "All",
     videos: "videos",
     nowPlaying: "Now playing",
-    supabaseReady: "Videos ready",
-    localFallback: "Preview mode",
+    playThis: "Open this video",
+    nextVideo: "Next in the journey",
+    continue: "Continue the walkthrough",
+    finishedTitle: "Walkthrough complete",
+    finishedBody:
+      "You have reached the launch-readiness chapter. Start again from the business overview when you want to present the full story to a client.",
+    restart: "Restart from the first video",
+    currentStep: "Current step",
+    supabaseReady: "Ready for review",
+    localFallback: "Draft preview",
     pendingTitle: "Video file is being prepared",
     pendingBody:
       "This item is listed in the playlist and will become playable as soon as the media file is available.",
@@ -75,8 +83,16 @@ const playerCopy = {
     all: "Alle",
     videos: "Videos",
     nowPlaying: "Aktuell",
-    supabaseReady: "Videos bereit",
-    localFallback: "Vorschaumodus",
+    playThis: "Dieses Video öffnen",
+    nextVideo: "Nächster Schritt",
+    continue: "Produktrundgang fortsetzen",
+    finishedTitle: "Produktrundgang abgeschlossen",
+    finishedBody:
+      "Sie sind beim Kapitel zur Go-live-Bereitschaft angekommen. Starten Sie wieder beim Management-Überblick, wenn Sie die gesamte Geschichte einem Kunden zeigen möchten.",
+    restart: "Wieder beim ersten Video starten",
+    currentStep: "Aktiver Schritt",
+    supabaseReady: "Bereit zur Prüfung",
+    localFallback: "Entwurfsansicht",
     pendingTitle: "Videodatei wird vorbereitet",
     pendingBody:
       "Dieser Eintrag bleibt in der Playlist sichtbar und wird abspielbar, sobald die Mediendatei bereitsteht.",
@@ -103,9 +119,17 @@ const playerCopy = {
     search: "Video ara",
     all: "Tümü",
     videos: "video",
-    nowPlaying: "Oynatılan",
-    supabaseReady: "Videolar hazır",
-    localFallback: "Önizleme modu",
+    nowPlaying: "Şu an oynatılıyor",
+    playThis: "Bu videoya geç",
+    nextVideo: "Sıradaki adım",
+    continue: "Ürün turuna devam et",
+    finishedTitle: "Ürün turu tamamlandı",
+    finishedBody:
+      "Canlıya geçiş hazırlığı bölümüne ulaştınız. Tüm hikayeyi müşteriye yeniden anlatmak için yönetim özetinden tekrar başlayabilirsiniz.",
+    restart: "İlk videodan tekrar başlat",
+    currentStep: "Aktif adım",
+    supabaseReady: "İncelemeye hazır",
+    localFallback: "Taslak önizleme",
     pendingTitle: "Video dosyası hazırlanıyor",
     pendingBody:
       "Bu kayıt playlist içinde görünür ve medya dosyası hazır olduğunda oynatılabilir hale gelir.",
@@ -133,8 +157,16 @@ const playerCopy = {
     all: "Все",
     videos: "видео",
     nowPlaying: "Сейчас воспроизводится",
-    supabaseReady: "Видео готовы",
-    localFallback: "Режим предпросмотра",
+    playThis: "Открыть это видео",
+    nextVideo: "Следующий шаг",
+    continue: "Продолжить обзор",
+    finishedTitle: "Обзор завершен",
+    finishedBody:
+      "Вы дошли до главы о готовности к запуску. Начните снова с управленческого обзора, если хотите показать клиенту всю историю.",
+    restart: "Начать с первого видео",
+    currentStep: "Текущий шаг",
+    supabaseReady: "Готово к проверке",
+    localFallback: "Черновой просмотр",
     pendingTitle: "Видео готовится",
     pendingBody:
       "Этот пункт остается в плейлисте и станет доступен для просмотра, когда медиафайл будет готов.",
@@ -218,6 +250,12 @@ export function VideoLibraryPlayer({
   const hasPlayableVideo = Boolean(selectedVideo?.videoUrl)
   const hasCaptions = Boolean(selectedVideo?.captions.length)
   const selectedVideoSlug = selectedVideo?.slug
+  const selectedIndex = useMemo(
+    () => library.videos.findIndex((video) => video.slug === selectedVideoSlug),
+    [library.videos, selectedVideoSlug]
+  )
+  const nextVideo =
+    selectedIndex >= 0 ? library.videos[selectedIndex + 1] : undefined
 
   useEffect(() => {
     if (!selectedVideoSlug) return
@@ -569,8 +607,8 @@ export function VideoLibraryPlayer({
             </div>
           </div>
 
-          <div className="grid gap-4 px-1 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.42fr)]">
-            <div>
+          <div className="grid gap-4 px-1 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.44fr)]">
+            <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black text-primary">
                   <Video className="h-3.5 w-3.5" aria-hidden="true" />
@@ -593,28 +631,91 @@ export function VideoLibraryPlayer({
               <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
                 {selectedVideo.description}
               </p>
+
+              <button
+                className="group grid w-full grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.055] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/[0.08] hover:shadow-xl hover:shadow-primary/[0.08]"
+                onClick={() => {
+                  const targetVideo = nextVideo ?? library.videos[0]
+                  if (targetVideo) selectVideo(targetVideo)
+                }}
+                type="button"
+              >
+                <span
+                  className="relative block aspect-video overflow-hidden rounded-xl bg-cover bg-center shadow-sm"
+                  style={{
+                    backgroundImage: `linear-gradient(135deg, rgba(6, 26, 23, 0.18), rgba(6, 107, 99, 0.24)), url(${(nextVideo ?? library.videos[0])?.thumbnailUrl})`,
+                  }}
+                >
+                  <span className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/92 text-primary shadow-sm transition group-hover:scale-105">
+                      <Play className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                  </span>
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-xs font-black tracking-[0.14em] text-primary uppercase">
+                    {nextVideo ? copy.nextVideo : copy.finishedTitle}
+                  </span>
+                  <span className="mt-1 line-clamp-2 block text-sm font-black leading-5 text-foreground">
+                    {nextVideo ? nextVideo.title : copy.finishedBody}
+                  </span>
+                  <span className="mt-1 block text-xs font-bold text-muted-foreground">
+                    {nextVideo ? copy.continue : copy.restart}
+                  </span>
+                </span>
+                <ChevronRight
+                  className="h-5 w-5 text-primary transition group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </button>
             </div>
 
-            <div className="rounded-2xl border border-border bg-background/72 p-3">
-              <div className="mb-2 flex items-center gap-2 text-xs font-black tracking-[0.14em] text-muted-foreground uppercase">
-                <ListVideo className="h-4 w-4 text-primary" aria-hidden="true" />
-                {copy.chapters}
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-primary/15 bg-primary/[0.045] p-3">
+                <div className="flex items-center justify-between gap-3 text-xs font-black text-primary">
+                  <span>{copy.currentStep}</span>
+                  <span className="tabular-nums">
+                    {Math.max(selectedIndex + 1, 1)} / {library.videos.length}
+                  </span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-primary/12">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(
+                          0,
+                          ((selectedIndex + 1) / library.videos.length) * 100
+                        )
+                      )}%`,
+                    }}
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                {selectedVideo.chapters.map((chapter) => (
-                  <button
-                    key={`${selectedVideo.slug}-${chapter.label}-${chapter.time}`}
-                    className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left text-xs font-bold text-foreground transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-60"
-                    disabled={!hasPlayableVideo}
-                    onClick={() => seekTo(chapter.time)}
-                    type="button"
-                  >
-                    <span className="min-w-0 truncate">{chapter.label}</span>
-                    <span className="shrink-0 text-muted-foreground tabular-nums">
-                      {formatTime(chapter.time)}
-                    </span>
-                  </button>
-                ))}
+
+              <div className="rounded-2xl border border-border bg-background/72 p-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-black tracking-[0.14em] text-muted-foreground uppercase">
+                  <ListVideo className="h-4 w-4 text-primary" aria-hidden="true" />
+                  {copy.chapters}
+                </div>
+                <div className="grid gap-2">
+                  {selectedVideo.chapters.map((chapter) => (
+                    <button
+                      key={`${selectedVideo.slug}-${chapter.label}-${chapter.time}`}
+                      className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left text-xs font-bold text-foreground transition hover:border-primary/35 hover:bg-primary/[0.035] disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={!hasPlayableVideo}
+                      onClick={() => seekTo(chapter.time)}
+                      type="button"
+                    >
+                      <span className="min-w-0 truncate">{chapter.label}</span>
+                      <span className="shrink-0 text-muted-foreground tabular-nums">
+                        {formatTime(chapter.time)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -718,7 +819,7 @@ export function VideoLibraryPlayer({
                       {video.description}
                     </span>
                     <span className="mt-2 inline-flex items-center gap-1 text-xs font-black text-primary">
-                      {copy.nowPlaying}
+                      {active ? copy.nowPlaying : copy.playThis}
                       <ChevronRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" aria-hidden="true" />
                     </span>
                   </span>

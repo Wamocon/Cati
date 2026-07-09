@@ -35,8 +35,8 @@ const pageCopy = {
     secondaryCta: "Open client portal",
     stats: [
       ["212,298+", "operation records"],
-      ["19", "guided videos"],
-      ["Full HD", "real product proof"],
+      ["19", "guided business scenarios"],
+      ["Approval", "ready for client decision"],
     ],
     proof: {
       eyebrow: "Why this matters now",
@@ -78,8 +78,8 @@ const pageCopy = {
     secondaryCta: "Kundenportal öffnen",
     stats: [
       ["212.298+", "Betriebsdatensätze"],
-      ["19", "geführte Videos"],
-      ["Full HD", "echter Produktnachweis"],
+      ["19", "geführte Geschäftsszenarien"],
+      ["Freigabe", "bereit für Kundenentscheidung"],
     ],
     proof: {
       eyebrow: "Warum das jetzt zählt",
@@ -120,8 +120,8 @@ const pageCopy = {
     secondaryCta: "Müşteri portalını aç",
     stats: [
       ["212.298+", "operasyon kaydı"],
-      ["19", "rehber video"],
-      ["Full HD", "gerçek ürün kanıtı"],
+      ["19", "rehber iş senaryosu"],
+      ["Onay", "müşteri kararına hazır"],
     ],
     proof: {
       eyebrow: "Neden şimdi önemli",
@@ -163,8 +163,8 @@ const pageCopy = {
     secondaryCta: "Открыть портал",
     stats: [
       ["212 298+", "операционных записей"],
-      ["19", "пошаговых видео"],
-      ["Full HD", "реальный продукт"],
+      ["19", "бизнес-сценариев"],
+      ["Согласование", "готово к решению клиента"],
     ],
     proof: {
       eyebrow: "Почему это важно сейчас",
@@ -290,12 +290,12 @@ export default async function VideosPage({
               {copy.stats.map(([value, label]) => (
                 <div
                   key={`${value}-${label}`}
-                  className="grid grid-cols-[minmax(92px,0.38fr)_1fr] items-center gap-3 p-4"
+                  className="grid grid-cols-[minmax(112px,0.42fr)_1fr] items-center gap-4 p-4"
                 >
-                  <div className="whitespace-nowrap text-2xl font-black text-foreground">
+                  <div className="text-2xl leading-none font-black text-foreground">
                     {value}
                   </div>
-                  <div className="text-xs font-black tracking-[0.14em] text-muted-foreground uppercase">
+                  <div className="text-xs leading-5 font-black tracking-[0.12em] text-muted-foreground uppercase">
                     {label}
                   </div>
                 </div>
