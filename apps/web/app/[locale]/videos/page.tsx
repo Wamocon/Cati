@@ -20,14 +20,14 @@ import { Navbar } from "../../sections/navbar"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "1Cati Demo Center | Property Management ERP",
+  title: "Cati Training | 1Cati Property Management ERP",
   description:
-    "A client-facing demo center for the 1Cati property management ERP, with product value, role-based workflows and guided video walkthroughs.",
+    "A client-facing Cati Training page for 1Cati videos, tutorials, product value, role-based workflows and guided walkthroughs.",
 }
 
 const pageCopy = {
   en: {
-    eyebrow: "1Cati demo center",
+    eyebrow: "Cati Training",
     title:
       "See how 1Cati turns property management into one controlled operating system.",
     body: "This page is built for decision makers: watch how sales, owners, tenants, service, finance, documents, AI and reporting work together inside one role-based ERP workspace.",
@@ -70,7 +70,7 @@ const pageCopy = {
     },
   },
   de: {
-    eyebrow: "1Cati Demo-Zentrum",
+    eyebrow: "Cati Training",
     title:
       "Sehen Sie, wie 1Cati Immobilienverwaltung zu einem kontrollierten Betriebssystem macht.",
     body: "Diese Seite ist für Entscheider gebaut: Sie zeigt, wie Vertrieb, Eigentümer, Mieter, Service, Finanzen, Dokumente, KI und Reporting in einem rollenbasierten ERP-Arbeitsbereich zusammenlaufen.",
@@ -113,7 +113,7 @@ const pageCopy = {
     },
   },
   tr: {
-    eyebrow: "1Çatı Demo Merkezi",
+    eyebrow: "Cati Training",
     title: "1Çatı ile site yönetimini tek merkezden görün, yönetin ve büyütün.",
     body: "Bu sayfa karar vericiler için hazırlandı: satış, malik, kiracı, servis, finans, belge, yapay zeka ve raporlamanın tek rol bazlı ERP çalışma alanında nasıl birleştiğini canlı akışlarla izleyin.",
     primaryCta: "Ürün turunu başlat",
@@ -155,7 +155,7 @@ const pageCopy = {
     },
   },
   ru: {
-    eyebrow: "Демо-центр 1Cati",
+    eyebrow: "Cati Training",
     title:
       "Посмотрите, как 1Cati превращает управление недвижимостью в единую операционную систему.",
     body: "Эта страница создана для руководителей: она показывает, как продажи, владельцы, арендаторы, сервис, финансы, документы, ИИ и отчеты работают вместе в одном ERP-пространстве с ролями.",
@@ -208,6 +208,8 @@ export default async function VideosPage({
   const locale = resolveVideoLocale(rawLocale)
   const copy = pageCopy[locale]
   const library = await getVideoLibrary(locale)
+  const heroImage =
+    library.videos[0]?.thumbnailUrl ?? "/new-level-premium/resort-exterior.jpg"
 
   return (
     <main id="main" className="min-h-screen overflow-hidden bg-background">
@@ -258,6 +260,22 @@ export default async function VideosPage({
           </div>
 
           <aside className="premium-surface rounded-3xl p-5">
+            <div className="relative mb-5 aspect-video overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
+              <div
+                aria-label={`${copy.eyebrow} title image`}
+                className="absolute inset-0 bg-cover bg-center"
+                role="img"
+                style={{
+                  backgroundImage: `linear-gradient(180deg, rgba(4, 24, 22, 0.08), rgba(4, 24, 22, 0.5)), url(${heroImage})`,
+                }}
+              />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent p-4">
+                <span className="inline-flex items-center gap-2 rounded-full bg-white/92 px-3 py-1 text-xs font-black tracking-[0.14em] text-primary uppercase shadow-sm">
+                  <Video className="h-3.5 w-3.5" aria-hidden="true" />
+                  {copy.eyebrow}
+                </span>
+              </div>
+            </div>
             <span className="inline-flex items-center gap-2 text-xs font-black tracking-[0.16em] text-primary uppercase">
               <TimerReset className="h-4 w-4" aria-hidden="true" />
               {copy.proof.eyebrow}
