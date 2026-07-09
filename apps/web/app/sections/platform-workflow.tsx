@@ -28,7 +28,7 @@ export function PlatformWorkflow() {
   const Icon = icons[active]
 
   return (
-    <section id="platform" className="relative border-y border-border/50 py-16 md:py-24">
+    <section id="modules" className="relative scroll-mt-24 border-y border-border/50 py-16 md:py-24">
       <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-background to-muted/20" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
