@@ -1,4 +1,6 @@
 // Public AI concierge knowledge base for the landing pages.
+import { resolveChatLanguageFromMessage } from "./language-detection"
+
 //
 // Guardrail by construction: this module (and the /api/ai/public-chat route
 // that uses it) has NO access to live 1Cati data. The visitor-facing assistant
@@ -106,7 +108,7 @@ export function resolvePublicAiResponseLocale(
   message: string,
   fallbackLocale: string | null | undefined
 ): PublicAiLocale {
-  return detectPublicAiLocaleFromMessage(message) ?? resolvePublicAiLocale(fallbackLocale)
+  return resolveChatLanguageFromMessage(message, resolvePublicAiLocale(fallbackLocale))
 }
 
 // Order matters: the private-data guard wins over everything else.

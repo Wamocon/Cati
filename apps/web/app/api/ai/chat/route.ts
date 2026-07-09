@@ -5,6 +5,7 @@ import {
   getAiAccessDecision,
   getAiRoleProfile,
   getAiRoleSystemInstruction,
+  resolveAiLanguage,
 } from "@/lib/ai-responses"
 import { getUserProfile } from "@/lib/auth"
 import { hasAnyPermission } from "@/lib/rbac"
@@ -305,7 +306,7 @@ function buildTicketDraft(message: string) {
 }
 
 export async function POST(request: Request) {
-  let body: { message?: unknown }
+  let body: { message?: unknown; locale?: unknown; uiLocale?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -319,6 +320,12 @@ export async function POST(request: Request) {
   if (message.length > 2000) {
     return NextResponse.json({ error: "Message is too long" }, { status: 413 })
   }
+  const uiLocale =
+    typeof body.locale === "string"
+      ? body.locale
+      : typeof body.uiLocale === "string"
+        ? body.uiLocale
+        : "tr"
 
   const profile = await getUserProfile()
   if (!profile) {
@@ -326,7 +333,7 @@ export async function POST(request: Request) {
   }
 
   const role = profile.role
-  const language = detectAiLanguage(message)
+  const language = resolveAiLanguage(message, uiLocale)
   const roleProfile = getAiRoleProfile(role)
   const accessDecision = getAiAccessDecision(message, role, language)
   const deterministicContext = generateAiResponse(message, role, language)
