@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
 import { Sparkles, Send, X, Bot, User, Languages, ShieldCheck } from "lucide-react"
 import { useUser } from "@/components/user-provider"
-import { getAiSuggestions, generateAiResponse } from "@/lib/ai-responses"
+import { getAiSuggestions, generateAiResponse, resolveAiLanguage } from "@/lib/ai-responses"
 import type { Role } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
 
@@ -138,12 +138,13 @@ export function AiAssistant() {
     setInput("")
     setTyping(true)
 
-    let response = generateAiResponse(text, user.role, locale)
+    const responseLocale = resolveAiLanguage(text, locale)
+    let response = generateAiResponse(text, user.role, responseLocale)
     try {
       const result = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, locale }),
       })
       if (result.ok) {
         const payload = (await result.json()) as {
@@ -168,7 +169,7 @@ export function AiAssistant() {
         }
       }
     } catch {
-      response = generateAiResponse(text, user.role, locale)
+      response = generateAiResponse(text, user.role, responseLocale)
     }
     messageIdRef.current += 1
     const assistantMsg: Message = {

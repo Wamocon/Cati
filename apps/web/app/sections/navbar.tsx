@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 import {
@@ -10,8 +10,10 @@ import {
   useMotionValueEvent,
 } from "framer-motion"
 import { Link } from "@/app/navigation"
+import { usePathname } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { LocaleSwitcher } from "@/components/locale-switcher"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { label: "home", href: "/" },
@@ -20,16 +22,18 @@ const navItems = [
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
   { label: "demo", href: "/pitch" },
-  { label: "videos", href: "/videos", featured: true },
-  { label: "services", href: "/#modules" },
+  { label: "services", href: "/#workflows" },
   { label: "reviews", href: "/reviews" },
-  { label: "contacts", href: "/#contacts" },
+  { label: "contacts", href: "/#contact" },
+  { label: "videos", href: "/videos", pulse: true },
 ]
 
 export function Navbar() {
   const t = useTranslations("nav")
+  const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [hidden, setHidden] = useState(false)
+  const [activeHash, setActiveHash] = useState("")
   const mobileMenuId = "public-mobile-menu"
   const { scrollY } = useScroll()
 
@@ -52,6 +56,13 @@ export function Navbar() {
       document.body.style.overflow = "unset"
     }
   }, [open])
+
+  useEffect(() => {
+    const updateActiveHash = () => setActiveHash(window.location.hash)
+    updateActiveHash()
+    window.addEventListener("hashchange", updateActiveHash)
+    return () => window.removeEventListener("hashchange", updateActiveHash)
+  }, [])
 
   return (
     <>
@@ -76,16 +87,25 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden min-w-0 flex-1 items-center justify-center gap-0 rounded-full border border-border/60 bg-muted/40 px-2 py-1 backdrop-blur-sm 2xl:flex">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                {item.featured ? <Eye className="h-3.5 w-3.5 text-primary" /> : null}
-                {t(item.label)}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const active = isActiveNavItem(item.href, pathname, activeHash)
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                    active &&
+                      "bg-primary/10 font-bold text-primary shadow-sm ring-1 ring-primary/15"
+                  )}
+                  aria-current={active ? "page" : undefined}
+                >
+                  {item.pulse ? <DemoPulse /> : null}
+                  {t(item.label)}
+                </Link>
+              )
+            })}
           </nav>
 
           <div className="hidden shrink-0 items-center gap-2 2xl:flex">
@@ -154,25 +174,34 @@ export function Navbar() {
           >
             <div className="container flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain pt-24 pb-6 sm:pt-28 sm:pb-8">
               <nav className="flex shrink-0 flex-col gap-1 sm:gap-2">
-                {navItems.map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className="block rounded-2xl px-4 py-3 text-xl font-bold text-foreground transition-colors hover:bg-muted sm:py-4 sm:text-2xl"
-                      onClick={() => setOpen(false)}
+                {navItems.map((item, index) => {
+                  const active = isActiveNavItem(item.href, pathname, activeHash)
+
+                  return (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      <span className="inline-flex items-center gap-2">
-                        {item.featured ? <Eye className="h-5 w-5 text-primary" /> : null}
-                        {t(item.label)}
-                      </span>
-                    </Link>
-                  </motion.div>
-                ))}
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "block rounded-2xl px-4 py-3 text-xl font-bold text-foreground transition-colors hover:bg-muted sm:py-4 sm:text-2xl",
+                          active &&
+                            "bg-primary/10 text-primary ring-1 ring-primary/15"
+                        )}
+                        aria-current={active ? "page" : undefined}
+                        onClick={() => setOpen(false)}
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          {item.pulse ? <DemoPulse /> : null}
+                          {t(item.label)}
+                        </span>
+                      </Link>
+                    </motion.div>
+                  )
+                })}
               </nav>
               <div className="mt-4 space-y-4 border-t border-border pt-5 sm:mt-6 sm:pt-6">
                 <div className="flex items-center">
@@ -201,4 +230,23 @@ export function Navbar() {
       </AnimatePresence>
     </>
   )
+}
+
+function DemoPulse() {
+  return (
+    <span className="relative inline-flex h-2.5 w-2.5 shrink-0" aria-hidden="true">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-65" />
+      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_14px_color-mix(in_srgb,var(--primary)_68%,transparent)]" />
+    </span>
+  )
+}
+
+function isActiveNavItem(href: string, pathname: string, activeHash: string) {
+  if (href.includes("#")) {
+    const [basePath, hash] = href.split("#")
+    return pathname === (basePath || "/") && activeHash === `#${hash}`
+  }
+
+  if (href === "/") return pathname === "/" && activeHash === ""
+  return pathname === href || pathname.startsWith(`${href}/`)
 }

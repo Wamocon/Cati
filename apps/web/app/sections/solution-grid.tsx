@@ -509,9 +509,9 @@ export function SolutionGrid() {
   return (
     <section
       ref={rootRef}
-      id="modules"
+      id="workflows"
       data-testid="solution-grid"
-      className="relative bg-[#f4f8f6]"
+      className="relative scroll-mt-24 bg-[#f4f8f6]"
     >
       <div className="container py-12 md:py-16">
         <ScrollReveal className="grid gap-6 lg:grid-cols-[0.82fr_1fr] lg:items-end">
