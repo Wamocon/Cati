@@ -280,7 +280,7 @@ export function PeopleDirectoryLive() {
                 </div>
                 <div className="rounded-lg bg-muted/50 p-2">
                   <p className="text-muted-foreground">{t("Kapsam")}</p>
-                  <p className="font-black">{member.accessScope}</p>
+                  <p className="font-black">{t(member.accessScope)}</p>
                 </div>
               </div>
             </div>

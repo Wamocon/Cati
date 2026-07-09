@@ -400,7 +400,7 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
     capabilityStatus: {
       ready: "Bereit",
       simulation: "Nur Demo",
-      provider_ready: "Provider bereit",
+      provider_ready: "Anbieter bereit",
       needs_device_test: "Gerätetest",
     },
     queueStatus: {
@@ -416,11 +416,11 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
       tenant: "Mieter",
     },
     modules: {
-      tickets: "Tickets",
+      tickets: "Serviceanfragen",
       calendar: "Reservierung",
       documents: "Dokumente",
       communications: "Kommunikation",
-      dashboard: "Dashboard",
+      dashboard: "Übersicht",
     },
     surfaces: {
       "Responsive Web": "Responsive Web",
@@ -448,10 +448,10 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
         qaSignal: "Manifest und Service Worker sind in Browser-QA sichtbar.",
       },
       "MW-FIELD-03": {
-        title: "Saha-/Field-Flow per Smartphone",
+        title: "Feldteam-Ablauf per Smartphone",
         description:
           "Techniker und Reinigungspersonal sehen zugewiesene Jobs, SLA, Route, Checkliste und Nachweispflichten mobil.",
-        qaSignal: "Personal-Mobile-Smoke deckt Tickets und Kalender ab.",
+        qaSignal: "Mobiler Personaltest deckt Serviceanfragen und Kalender ab.",
       },
       "MW-OFFLINE-04": {
         title: "Offline-sichere Ansicht und Retry-Warteschlange",
@@ -516,16 +516,16 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
     capabilityPanel: {
       title: "Панель возможностей Phase 12",
       description:
-        "Mobile-first поведение готовится внутри той же dashboard поверхности. Реальный offline write sync - более поздняя production-интеграция, не live-обещание.",
-      badge: "Только demo sync",
+        "Мобильный веб-интерфейс готовится внутри той же панели. Реальная офлайн-синхронизация записей является отдельной производственной интеграцией, а не текущим обещанием.",
+      badge: "Только демо-синхронизация",
     },
     sideCards: {
-      manualQaTitle: "Ручная mobile QA",
+      manualQaTitle: "Ручная мобильная QA",
       manualQaDescription:
-        "Перед customer UAT проверьте login, sidebar, search, requests, reservations, communications и reports на ширине телефона.",
-      guardrailTitle: "Граница offline безопасности",
+        "Перед клиентским UAT проверьте вход, боковое меню, поиск, заявки, бронирования, коммуникации и отчеты на ширине телефона.",
+      guardrailTitle: "Граница офлайн-безопасности",
       guardrailDescription:
-        "Финансы, депозит, доступ и роли остаются закрытыми offline и требуют server-side approval. Production write sync требует IndexedDB, retry jobs и conflict review.",
+        "Финансы, депозит, доступ и роли остаются закрытыми офлайн и требуют серверного одобрения. Производственная синхронизация записей требует IndexedDB, повторных задач и проверки конфликтов.",
     },
     columns: {
       queue: "Очередь",
@@ -539,14 +539,14 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
     capabilityStatus: {
       ready: "Готово",
       simulation: "Только demo",
-      provider_ready: "Provider ready",
+      provider_ready: "Готово к провайдеру",
       needs_device_test: "Тест устройства",
     },
     queueStatus: {
       synced: "Синхронизировано",
       queued: "В очереди",
       conflict: "Конфликт",
-      read_only_cached: "Read-only cache",
+      read_only_cached: "Кэш только для чтения",
     },
     roles: {
       manager: "Менеджер",
@@ -559,13 +559,13 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
       calendar: "Бронирование",
       documents: "Документы",
       communications: "Коммуникации",
-      dashboard: "Dashboard",
+      dashboard: "Обзор",
     },
     surfaces: {
-      "Responsive Web": "Responsive Web",
-      "Installable PWA": "Installable PWA",
-      "Offline Queue": "Offline Queue",
-      "Touch UX": "Touch UX",
+      "Responsive Web": "Адаптивный веб",
+      "Installable PWA": "Устанавливаемая PWA",
+      "Offline Queue": "Офлайн-очередь",
+      "Touch UX": "Сенсорный UX",
       Accessibility: "Доступность",
     },
     audiences: {
@@ -576,38 +576,38 @@ const offlineCopy: Record<DashboardLocale, OfflineCopy> = {
     },
     capabilities: {
       "MW-RESP-01": {
-        title: "Одна responsive web app, без native app зависимости",
+        title: "Одно адаптивное веб-приложение без зависимости от native app",
         description:
-          "Dashboard, service, booking, documents и communication flows остаются в одной Next.js web app и адаптируются под телефон, планшет и desktop.",
-        qaSignal: "Нет horizontal overflow в 390px mobile smoke checks.",
+          "Панель, сервисные заявки, бронирования, документы и коммуникации остаются в одном веб-приложении Next.js и адаптируются под телефон, планшет и рабочий стол.",
+        qaSignal: "На мобильной проверке 390px нет горизонтального переполнения.",
       },
       "MW-PWA-02": {
-        title: "Installable web shell",
-        description: "Manifest и service-worker shell позволяют browser install после включения HTTPS production hosting.",
-        qaSignal: "Manifest и service worker видны в browser QA.",
+        title: "Устанавливаемая веб-оболочка",
+        description: "Manifest и service worker позволяют установку в браузере после включения HTTPS-продакшн-хостинга.",
+        qaSignal: "Manifest и service worker видны в браузерной QA.",
       },
       "MW-FIELD-03": {
-        title: "Field flow для персонала с телефона",
+        title: "Полевой поток для персонала с телефона",
         description:
-          "Техники и cleaning staff видят assigned jobs, SLA, route slot, checklist и proof requirements на mobile.",
-        qaSignal: "Staff mobile smoke покрывает tickets и calendar.",
+          "Техники и команда уборки видят назначенные задачи, SLA, маршрут, чек-лист и требования к доказательствам на мобильном.",
+        qaSignal: "Мобильная проверка персонала покрывает заявки и календарь.",
       },
       "MW-OFFLINE-04": {
-        title: "Offline-safe read и retry queue",
+        title: "Безопасное офлайн-чтение и очередь повторов",
         description:
-          "Критические записи в demo представлены как safe read-only snapshots и queued-write сценарии. Live writes требуют IndexedDB, retry worker, idempotent API и conflict approval.",
-        qaSignal: "Demo queue показывает retry policy, scope и guardrail; live write queue не включена.",
+          "Критические записи в демо представлены как безопасные снимки только для чтения и сценарии очереди записи. Живые записи требуют IndexedDB, повторного worker, идемпотентного API и одобрения конфликтов.",
+        qaSignal: "Демо-очередь показывает политику повторов, область доступа и ограничение; живая очередь записи не включена.",
       },
       "MW-A11Y-05": {
-        title: "Доступные mobile operations",
+        title: "Доступные мобильные операции",
         description:
-          "Touch targets, skip link, labels, reduced-motion и role-scoped navigation сохраняются во всей web app.",
-        qaSignal: "Browser smoke проверяет h1, labels и mobile overflow.",
+          "Сенсорные цели, ссылка пропуска, метки, reduced-motion и ролевая навигация сохраняются во всем веб-приложении.",
+        qaSignal: "Браузерная проверка контролирует h1, метки и мобильное переполнение.",
       },
     },
     queue: {
       "OFF-9001": {
-        action: "Загрузить before/after proof для TASK-204",
+        action: "Загрузить доказательство до/после для TASK-204",
         guardrail: "Нельзя закрыть job, пока media не дошли до server",
       },
       "OFF-9002": {

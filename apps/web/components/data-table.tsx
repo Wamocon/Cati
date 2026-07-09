@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  cloneElement,
   isValidElement,
   useCallback,
   useEffect,
@@ -8,6 +9,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type ReactElement,
   type ReactNode,
 } from "react"
 import { createPortal } from "react-dom"
@@ -23,6 +25,7 @@ import {
 import { InfoTooltip } from "@/components/info-tooltip"
 import {
   localizeDashboardText,
+  localizeDashboardTextPart,
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
 import { normalizeSearchText } from "@/lib/search"
@@ -119,6 +122,39 @@ function escapeCsv(value: string) {
     : normalized
 }
 
+function localizeRenderedNode(
+  node: ReactNode,
+  locale: ReturnType<typeof resolveDashboardLocale>
+): ReactNode {
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return node
+  }
+
+  if (typeof node === "string") {
+    return localizeDashboardTextPart(node, locale)
+  }
+
+  if (typeof node === "number") {
+    return node
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, index) => (
+      <span key={index}>{localizeRenderedNode(child, locale)}</span>
+    ))
+  }
+
+  if (isValidElement(node)) {
+    const element = node as ReactElement<{ children?: ReactNode }>
+    if (!("children" in element.props)) return node
+    return cloneElement(element, {
+      children: localizeRenderedNode(element.props.children, locale),
+    })
+  }
+
+  return node
+}
+
 export function DataTable<T>({
   columns,
   data,
@@ -177,7 +213,10 @@ export function DataTable<T>({
   const pageStart = (currentPage - 1) * pageSizeValue
   const pageRows = sorted.slice(pageStart, pageStart + pageSizeValue)
   const hasStickyActions = columns.some((column) => column.sticky === "right")
-  const columnLabel = (header: string) => localizeDashboardText(header, locale)
+  const columnLabel = (header: string) =>
+    localizeDashboardTextPart(localizeDashboardText(header, locale), locale)
+  const renderCell = (column: Column<T>, row: T) =>
+    localizeRenderedNode(column.render(row), locale)
 
   const updateOptionsPosition = useCallback(() => {
     const button = optionsButtonRef.current
@@ -278,7 +317,7 @@ export function DataTable<T>({
   function exportCsv() {
     const header = visibleColumns.map((column) => escapeCsv(columnLabel(column.header)))
     const rows = sorted.map((row) =>
-      visibleColumns.map((column) => escapeCsv(textFromNode(column.render(row))))
+      visibleColumns.map((column) => escapeCsv(textFromNode(renderCell(column, row))))
     )
     const csv = [header, ...rows].map((row) => row.join(",")).join("\n")
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
@@ -453,7 +492,7 @@ export function DataTable<T>({
                       {columnLabel(col.header)}
                     </dt>
                     <dd className="mt-1 min-w-0 text-sm font-medium text-foreground [&_*]:max-w-full [&_*]:min-w-0 [&_*]:break-words">
-                      {col.render(row)}
+                      {renderCell(col, row)}
                     </dd>
                   </div>
                 ))}
@@ -528,7 +567,7 @@ export function DataTable<T>({
                         col.cellClassName
                       )}
                     >
-                      {col.render(row)}
+                      {renderCell(col, row)}
                     </td>
                   ))}
                 </tr>
