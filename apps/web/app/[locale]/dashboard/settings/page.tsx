@@ -17,7 +17,7 @@ import {
   type IntegrationProviderRecord,
   type PlatformControl,
 } from "@/lib/site-management-data"
-import { localizeBusinessCopy } from "@/lib/business-copy"
+import { localizeDashboardTextPart } from "@/lib/operational-copy"
 
 const settingsCopy = {
   tr: {
@@ -109,7 +109,7 @@ const settingsCopy = {
     subtitle: "Rollenberechtigungen, Audit-Trail, Sicherheitskontrollen und Benutzersichtbarkeit werden zentral verwaltet.",
     metrics: { controls: "Kontrollen", active: "Aktiv", review: "Prüfung", highRisk: "Hochrisiko-Audits" },
     controlsTitle: "Sicherheits- und Plattformkontrollen",
-    controlsBody: "Owner, Zweck und Live-Status jeder Kontrolle sind für das Management sichtbar.",
+    controlsBody: "Eigentümer, Zweck und Live-Status jeder Kontrolle sind für das Management sichtbar.",
     operationsTitle: "Operationseinstellungen",
     operationsBody: "Administration, Finanzen, Sicherheit und Feldteams sehen Standardregeln im selben Kontrollzentrum.",
     configuration: [
@@ -118,7 +118,7 @@ const settingsCopy = {
       { title: "Sprache und Lokalisierung", desc: "Türkische Hauptoperationen, mehrsprachige Bewohnerunterstützung und formaler Tonstandard." },
     ],
     integrationsTitle: "Phase-13-Integrationsbereitschaft",
-    integrationsBody: "Supabase läuft als angebundenes Backend. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo/Provider-ready-Modus, bis Verträge und API-Schlüssel freigegeben sind.",
+    integrationsBody: "Supabase läuft als angebundenes Backend. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo-/anbieterbereiten Modus, bis Verträge und API-Schlüssel freigegeben sind.",
     live: "Live",
     demo: "Demo",
     waitingClient: "Wartet auf Kunde",
@@ -139,11 +139,11 @@ const settingsCopy = {
       module: "Modul",
       risk: "Risiko",
       action: "Aktion",
-      service: "Service",
-      provider: "Provider",
+      service: "Dienst",
+      provider: "Anbieter",
       status: "Status",
       required: "Vom Kunden benötigt",
-      fallback: "Fallback",
+      fallback: "Rückfalloption",
     },
   },
   ru: {
@@ -407,7 +407,8 @@ export default function SettingsPage() {
   const rawLocale = useLocale()
   const locale = resolveSettingsLocale(rawLocale)
   const copy = settingsCopy[locale]
-  const localizeValue = (value: string) => localizeBusinessCopy(value, rawLocale)
+  const localizeValue = (value: string) =>
+    localizeDashboardTextPart(value, locale)
   const summary = getPlatformControlSummary()
   const integrationSummary = getIntegrationSummary()
 
@@ -537,7 +538,7 @@ export default function SettingsPage() {
           <div>
             <h2 className="text-sm font-bold text-card-foreground">{copy.integrationsTitle}</h2>
             <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-              {copy.integrationsBody}
+              {localizeValue(copy.integrationsBody)}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">

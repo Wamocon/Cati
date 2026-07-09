@@ -1248,9 +1248,11 @@ function OperationsDashboard({
   const occupancyTrend = useMemo(() => {
     const trend = getOccupancyTrend()
     return trend.map((point, index) =>
-      index === trend.length - 1 ? { ...point, value: summary.occupancyRate } : point
+      index === trend.length - 1
+        ? { ...point, label: tRecord(point.label), value: summary.occupancyRate }
+        : { ...point, label: tRecord(point.label) }
     )
-  }, [summary.occupancyRate])
+  }, [summary.occupancyRate, tRecord])
   const kpis: Kpi[] = [
     {
       icon: Building2,
@@ -1606,7 +1608,7 @@ function OperationsDashboard({
             <CommandLink
               key={insight.title}
               href={routeForInsight(insight.title)}
-              ariaLabel={insight.title}
+              ariaLabel={tRecord(insight.title)}
               role={user.role}
             >
               {({ allowed }) => (
@@ -1614,8 +1616,8 @@ function OperationsDashboard({
                   <div className="flex items-start gap-3">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-card-foreground">{insight.title}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{insight.detail}</p>
+                      <h3 className="text-sm font-bold text-card-foreground">{tRecord(insight.title)}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{tRecord(insight.detail)}</p>
                     </div>
                     <DrilldownCue allowed={allowed} />
                   </div>

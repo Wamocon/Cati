@@ -48,6 +48,12 @@ const copy = {
     code: "Davet kodu",
     validUntil: "Bitiş",
     empty: "Aktif kiracı daveti yok.",
+    scopes: {
+      tickets: "Servis",
+      calendar: "Rezervasyon",
+      documents: "Belgeler",
+      communications: "İletişim",
+    },
   },
   en: {
     title: "Tenant time-boxed access",
@@ -70,6 +76,12 @@ const copy = {
     code: "Invite code",
     validUntil: "Ends",
     empty: "No active tenant invites.",
+    scopes: {
+      tickets: "Service",
+      calendar: "Reservation",
+      documents: "Documents",
+      communications: "Communication",
+    },
   },
   de: {
     title: "Mieter-Zeitzugang",
@@ -92,6 +104,12 @@ const copy = {
     code: "Einladungscode",
     validUntil: "Ende",
     empty: "Keine aktiven Mietereinladungen.",
+    scopes: {
+      tickets: "Service",
+      calendar: "Reservierung",
+      documents: "Dokumente",
+      communications: "Kommunikation",
+    },
   },
   ru: {
     title: "Временный доступ арендатора",
@@ -114,8 +132,14 @@ const copy = {
     code: "Код приглашения",
     validUntil: "Окончание",
     empty: "Нет активных приглашений арендаторов.",
+    scopes: {
+      tickets: "Сервис",
+      calendar: "Бронирования",
+      documents: "Документы",
+      communications: "Коммуникация",
+    },
   },
-} satisfies Record<LocaleKey, Record<string, string>>
+} as const
 
 function statusOf(endOffsetDays: number): GrantStatus {
   if (endOffsetDays < 0) return "expired"
@@ -310,7 +334,7 @@ export function TenantAccessPanel() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {grant.scope.map((s) => (
                       <span key={s} className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
-                        {s}
+                        {(t.scopes as Record<string, string>)[s] ?? s}
                       </span>
                     ))}
                   </div>

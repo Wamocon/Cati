@@ -28,6 +28,7 @@ import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { localizeDashboardTextPart } from "@/lib/operational-copy"
 import {
   flats,
   formatEur,
@@ -220,6 +221,7 @@ function UnitActionsMenu({
 export default function ListingsPage() {
   const locale = resolveDashboardLocale(useLocale())
   const copy = unitMatrixCopy[locale]
+  const tRecord = (value: string) => localizeDashboardTextPart(value, locale)
   const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const summary = getSummary()
   const importSummary = getImportSummary()
@@ -637,7 +639,7 @@ export default function ListingsPage() {
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {importBatches.map((batch) => {
-              const batchSourceLabel = localizeOperationalValue(batch.source, locale)
+              const batchSourceLabel = tRecord(batch.source)
 
               return (
                 <DashboardActionButton
@@ -708,29 +710,31 @@ export default function ListingsPage() {
               <div>
                 <h2 className="text-sm font-bold text-card-foreground">{copy.import.findingSummary}</h2>
                 <div className="mt-2 space-y-2">
-                  {importFindings.slice(0, 3).map((finding) => (
+                  {importFindings.slice(0, 3).map((finding) => {
+                    const area = tRecord(finding.area)
+                    return (
                     <DashboardActionButton
                       key={finding.id}
                       actionType="import.finding.view"
-                      ariaLabel={`${finding.area} ${copy.import.findingOpened}`}
+                      ariaLabel={`${area} ${copy.import.findingOpened}`}
                       className="w-full rounded-lg bg-muted/40 p-2 text-left transition hover:bg-primary/10"
                       entityExternalId={finding.id}
                       entityTable="import_findings"
                       metadata={{
                         affectedRows: finding.affectedRows,
-                        area: finding.area,
+                        area,
                         severity: finding.severity,
                       }}
                       successLabel={copy.import.findingOpened}
-                      title={`${finding.area} ${copy.import.findingSummary}`}
+                      title={`${area} ${copy.import.findingSummary}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-foreground">{finding.area}</span>
+                        <span className="text-xs font-semibold text-foreground">{area}</span>
                         <StatusBadge variant={findingVariant(finding.severity)}>{findingLabel(finding.severity, copy)}</StatusBadge>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{finding.affectedRows} {copy.common.rows}</p>
                     </DashboardActionButton>
-                  ))}
+                  )})}
                 </div>
               </div>
             </div>

@@ -179,34 +179,34 @@ export default function CalendarPage() {
   const openSettlements = visibleSettlements.filter((settlement) => settlement.status !== "closed").length
   const readinessRiskData = [
     {
-      label: "low",
+      label: t("low"),
       value: visibleReadiness.filter((record) => record.riskLevel === "low").length,
       color: "var(--primary)",
     },
     {
-      label: "medium",
+      label: t("medium"),
       value: visibleReadiness.filter((record) => record.riskLevel === "medium").length,
       color: "var(--accent)",
     },
     {
-      label: "high",
+      label: t("high"),
       value: visibleReadiness.filter((record) => record.riskLevel === "high" || record.riskLevel === "critical").length,
       color: "var(--destructive)",
     },
   ]
   const turnoverStatusData = [
     {
-      label: "ready",
+      label: t("ready"),
       value: visibleTurnoverTasks.filter((task) => task.status === "ready").length,
       color: "var(--primary)",
     },
     {
-      label: "progress",
+      label: t("in_progress"),
       value: visibleTurnoverTasks.filter((task) => task.status === "in_progress").length,
       color: "var(--accent)",
     },
     {
-      label: "blocked",
+      label: t("blocked"),
       value: blockedTurnover,
       color: "var(--destructive)",
     },
@@ -395,12 +395,12 @@ export default function CalendarPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <StatusBadge variant={taskStatusVariant(task.status)}>{task.status}</StatusBadge>
+                      <StatusBadge variant={taskStatusVariant(task.status)}>{t(task.status)}</StatusBadge>
                       <StatusBadge variant={priorityVariant(task.priority)}>
                         {t(priorityLabels[task.priority])}
                       </StatusBadge>
                     </div>
-                    <h3 className="mt-2 text-sm font-bold text-foreground">{task.title}</h3>
+                    <h3 className="mt-2 text-sm font-bold text-foreground">{t(task.title)}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {task.flatNumber} - {task.owner} - {t("son tarih")} {formatDate(task.dueAt)}
                     </p>
@@ -453,7 +453,7 @@ export default function CalendarPage() {
                         {t(bookingStatusLabels[booking.status])}
                       </StatusBadge>
                       <StatusBadge variant={depositVariant(booking.depositStatus)}>
-                        {depositLabels[booking.depositStatus]}
+                        {t(depositLabels[booking.depositStatus])}
                       </StatusBadge>
                       <StatusBadge variant={accessVariant(booking.accessCodeStatus)}>
                         {t(accessLabels[booking.accessCodeStatus])}

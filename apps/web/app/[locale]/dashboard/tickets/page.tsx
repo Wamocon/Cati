@@ -796,14 +796,14 @@ export default function TicketsPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge variant={item.serviceLevel === "emergency" ? "danger" : item.serviceLevel === "premium" ? "info" : "neutral"}>
-                        {item.serviceLevel}
+                        {t(item.serviceLevel)}
                       </StatusBadge>
                       <StatusBadge variant={item.debtPolicy === "block_until_clear" ? "warning" : "success"}>
                         {item.debtPolicy === "allow" ? t("Borç esnek") : item.debtPolicy === "manager_review" ? t("Yönetici kontrol") : t("Borç kapalı")}
                       </StatusBadge>
                     </div>
-                    <h3 className="mt-2 text-sm font-bold text-foreground">{item.name}</h3>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.description}</p>
+                    <h3 className="mt-2 text-sm font-bold text-foreground">{t(item.name)}</h3>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{t(item.description)}</p>
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-black text-foreground">
@@ -813,24 +813,24 @@ export default function TicketsPage() {
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-semibold text-muted-foreground">{item.team} - {item.providerType}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{t(item.team)} - {t(item.providerType)}</p>
                   {!fieldView && (
                     <DashboardActionMenu
                       compact
-                      label="Servis aksiyonlari"
-                      ariaLabel={`${item.name} servis aksiyonlari`}
+                      label={t("Servis aksiyonlari")}
+                      ariaLabel={`${t(item.name)} ${t("Servis aksiyonlari")}`}
                       buttonClassName="border-primary/25 bg-primary/10 text-primary hover:bg-primary/15"
                       items={[
                         {
                           key: "prepare-order",
-                          label: "Siparis hazirla",
+                          label: t("Siparis hazirla"),
                           description: `${item.team} ${t("ekibi için")} SLA ${item.slaHours} ${t("saat")}.`,
                           icon: <PackageCheck />,
                           actionType: "service_orders.create.prepare",
-                          ariaLabel: `${item.name} siparisi hazirla`,
+                          ariaLabel: `${t(item.name)} ${t("siparisi hazirla")}`,
                           entityTable: "service_orders",
                           entityExternalId: item.code,
-                          title: `${item.name} servis siparisi`,
+                          title: `${t(item.name)} ${t("servis siparisi")}`,
                           metadata: {
                             catalogItemId: item.id,
                             priceTry: item.basePriceTry,
@@ -860,14 +860,14 @@ export default function TicketsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-muted-foreground">{order.orderNo} - {order.flatNumber}</p>
-                    <h3 className="mt-1 text-sm font-bold text-foreground">{order.catalogItemName}</h3>
+                    <h3 className="mt-1 text-sm font-bold text-foreground">{t(order.catalogItemName)}</h3>
                   </div>
                   <StatusBadge variant={orderVariant(order.status)}>{orderStatusLabel(order.status, locale)}</StatusBadge>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <span>{paymentDecisionLabel(order.paymentDecision, locale)}</span>
                   <span>-</span>
-                  <span>{order.assignedTeam}</span>
+                  <span>{t(order.assignedTeam)}</span>
                   {!maskFinance && (
                     <>
                       <span>-</span>
@@ -905,8 +905,8 @@ export default function TicketsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold text-muted-foreground">{task.routeSlot} - {task.flatNumber}</p>
-                  <h3 className="mt-1 text-sm font-bold text-foreground">{task.title}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{task.team} - {task.assignee}</p>
+                  <h3 className="mt-1 text-sm font-bold text-foreground">{t(task.title)}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">{t(task.team)} - {task.assignee}</p>
                 </div>
                 <StatusBadge variant={taskReadinessVariant(task)}>{task.completionReadiness}%</StatusBadge>
               </div>
@@ -928,19 +928,19 @@ export default function TicketsPage() {
                 {!clientView && (
                   <DashboardActionMenu
                     compact
-                    label="Gorev aksiyonlari"
-                    ariaLabel={`${task.id} saha gorev aksiyonlari`}
+                    label={t("Gorev aksiyonlari")}
+                    ariaLabel={`${task.id} ${t("saha gorev aksiyonlari")}`}
                     items={[
                       {
                         key: "prepare-task",
-                        label: "Gorev aksiyonu hazirla",
+                        label: t("Gorev aksiyonu hazirla"),
                         description: `${task.assignee} ${t("için medya ve SLA kaydı")}.`,
                         icon: <ListChecks />,
                         actionType: "workforce_tasks.update.prepare",
-                        ariaLabel: `${task.id} saha gorevini hazirla`,
+                        ariaLabel: `${task.id} ${t("saha gorevini hazirla")}`,
                         entityTable: "workforce_tasks",
                         entityExternalId: task.id,
-                        title: `${task.id} saha gorevi`,
+                        title: `${task.id} ${t("saha gorevi")}`,
                         metadata: {
                           ticketId: task.ticketId,
                           assignee: task.assignee,
@@ -992,7 +992,7 @@ export default function TicketsPage() {
                     </div>
                     <h3 className="mt-2 text-sm font-bold text-foreground">{t(ticket.title)}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {ticket.flatNumber} - {ticket.category}
+                      {ticket.flatNumber} - {t(ticket.category)}
                       {!clientView && ` - ${ticket.assignee}`}
                     </p>
                   </div>
