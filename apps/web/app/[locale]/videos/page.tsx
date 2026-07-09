@@ -220,12 +220,12 @@ export default async function VideosPage({
         <div className="absolute inset-x-0 bottom-0 -z-10 h-px bg-border" />
 
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.42fr)] lg:px-8">
-          <div className="max-w-4xl">
+          <div className="min-w-0 max-w-4xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-black tracking-[0.16em] text-primary uppercase shadow-sm">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               {copy.eyebrow}
             </span>
-            <h1 className="mt-5 max-w-5xl text-4xl leading-[1.05] font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 max-w-5xl text-4xl leading-[1.05] font-black tracking-tight text-foreground hyphens-auto [overflow-wrap:anywhere] sm:text-5xl lg:text-6xl">
               {copy.title}
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
@@ -259,7 +259,7 @@ export default async function VideosPage({
             </div>
           </div>
 
-          <aside className="premium-surface rounded-3xl p-5">
+          <aside className="premium-surface min-w-0 rounded-3xl p-5">
             <div className="relative mb-5 aspect-video overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
               <div
                 aria-label={`${copy.eyebrow} title image`}
@@ -280,7 +280,7 @@ export default async function VideosPage({
               <TimerReset className="h-4 w-4" aria-hidden="true" />
               {copy.proof.eyebrow}
             </span>
-            <h2 className="mt-3 text-2xl leading-tight font-black text-foreground">
+            <h2 className="mt-3 text-2xl leading-tight font-black text-foreground hyphens-auto [overflow-wrap:anywhere]">
               {copy.proof.title}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -331,7 +331,7 @@ export default async function VideosPage({
               <Video className="h-4 w-4" aria-hidden="true" />
               {copy.playlistIntro.eyebrow}
             </span>
-            <h2 className="mt-2 max-w-4xl text-3xl leading-tight font-black text-foreground sm:text-4xl">
+            <h2 className="mt-2 max-w-4xl text-3xl leading-tight font-black text-foreground hyphens-auto [overflow-wrap:anywhere] sm:text-4xl">
               {copy.playlistIntro.title}
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">

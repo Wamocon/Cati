@@ -73,10 +73,10 @@ export function Navbar() {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="glass fixed top-0 right-0 left-0 z-50 border-b border-border/50"
       >
-        <div className="container flex h-16 items-center justify-between gap-3">
+        <div className="container flex h-16 items-center justify-between gap-2 sm:gap-3">
           <Link href="/" className="group flex min-w-0 shrink-0 items-center gap-2.5">
             <CatiLogoMark className="shadow-lg shadow-primary/20 transition-transform group-hover:scale-105" />
-            <div className="hidden min-w-0 flex-col min-[420px]:flex">
+            <div className="hidden min-w-0 flex-col min-[460px]:flex">
               <span className="text-sm leading-tight font-bold tracking-tight text-foreground">
                 Ataberk Estate
               </span>
@@ -124,12 +124,12 @@ export function Navbar() {
             </Link>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 2xl:hidden">
-            <LocaleSwitcher compact className="hidden min-[390px]:flex" />
+          <div className="flex min-w-0 shrink-0 items-center gap-1.5 2xl:hidden">
+            <LocaleSwitcher compact className="hidden min-[360px]:flex" />
             <button
               type="button"
               data-testid="menu-toggle"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground"
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-muted/40 text-foreground"
               onClick={() => setOpen(!open)}
               aria-label={t("toggleMenu")}
               aria-expanded={open}

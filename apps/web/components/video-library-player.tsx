@@ -201,7 +201,7 @@ export function VideoLibraryPlayer({
 }) {
   const copy = playerCopy[resolvePlayerLocale(locale)]
   const videoRef = useRef<HTMLVideoElement | null>(null)
-  const playerShellRef = useRef<HTMLDivElement | null>(null)
+  const videoFrameRef = useRef<HTMLDivElement | null>(null)
   const [selectedSlug, setSelectedSlug] = useState(
     library.videos[0]?.slug ?? ""
   )
@@ -358,15 +358,25 @@ export function VideoLibraryPlayer({
   }
 
   const toggleFullscreen = async () => {
-    const shell = playerShellRef.current
-    if (!shell) return
+    const frame = videoFrameRef.current
+    const video = videoRef.current
+    if (!frame && !video) return
 
     if (document.fullscreenElement) {
       await document.exitFullscreen()
       return
     }
 
-    await shell.requestFullscreen()
+    if (frame?.requestFullscreen) {
+      await frame.requestFullscreen()
+      return
+    }
+
+    const iosVideo = video as (HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void
+    }) | null
+
+    iosVideo?.webkitEnterFullscreen?.()
   }
 
   const togglePictureInPicture = async () => {
@@ -393,11 +403,13 @@ export function VideoLibraryPlayer({
     >
       <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.75fr)]">
         <div
-          ref={playerShellRef}
           className="premium-surface min-w-0 max-w-full overflow-hidden rounded-none border-x-0 p-0 shadow-none sm:rounded-3xl sm:border-x sm:p-4 sm:shadow-sm"
           data-testid="video-player"
         >
-          <div className="relative aspect-video min-w-0 max-w-full overflow-hidden rounded-none bg-[#061a17] text-white shadow-2xl shadow-slate-950/20 sm:rounded-2xl">
+          <div
+            ref={videoFrameRef}
+            className="relative aspect-video min-w-0 max-w-full overflow-hidden rounded-none bg-[#061a17] text-white shadow-2xl shadow-slate-950/20 sm:rounded-2xl [&:fullscreen]:h-screen [&:fullscreen]:w-screen [&:fullscreen]:max-w-none [&:fullscreen]:rounded-none [&:fullscreen]:bg-black [&:fullscreen]:shadow-none"
+          >
             {hasPlayableVideo ? (
               <video
                 key={selectedVideo.slug}
