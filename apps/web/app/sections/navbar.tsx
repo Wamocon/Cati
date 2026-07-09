@@ -1,6 +1,6 @@
 "use client"
 
-import { Eye, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useState, useEffect } from "react"
 import {
@@ -20,10 +20,10 @@ const navItems = [
   { label: "about", href: "/about" },
   { label: "platform", href: "/platform" },
   { label: "demo", href: "/pitch" },
-  { label: "videos", href: "/videos", featured: true },
   { label: "services", href: "/#modules" },
   { label: "reviews", href: "/reviews" },
   { label: "contacts", href: "/#contacts" },
+  { label: "videos", href: "/videos" },
 ]
 
 export function Navbar() {
@@ -82,7 +82,6 @@ export function Navbar() {
                 href={item.href}
                 className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                {item.featured ? <Eye className="h-3.5 w-3.5 text-primary" /> : null}
                 {t(item.label)}
               </Link>
             ))}
@@ -167,7 +166,6 @@ export function Navbar() {
                       onClick={() => setOpen(false)}
                     >
                       <span className="inline-flex items-center gap-2">
-                        {item.featured ? <Eye className="h-5 w-5 text-primary" /> : null}
                         {t(item.label)}
                       </span>
                     </Link>
