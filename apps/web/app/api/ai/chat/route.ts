@@ -182,6 +182,63 @@ function containsAny(text: string, terms: string[]) {
   return terms.some((term) => lower.includes(term))
 }
 
+function hasPromptInjectionSignal(message: string) {
+  return /(ignore|forget) (all )?(previous|above|system|rules|instructions)|system prompt|developer message|jailbreak|bypass|reveal (your )?(prompt|instructions)|act as admin|forget your rules/i.test(
+    message
+  )
+}
+
+function sensitiveActionSignal(message: string) {
+  return /pay|refund|deposit|restriction|restrict|unlock|access card|delete user|role|permission|ödeme|iade|depozito|kısıt|kisit|erişim|erisim|rol|yetki|zahlung|erstattung|kaution|sperr|zugang|rolle|berechtigung|платеж|возврат|депозит|доступ|роль|прав/i.test(
+    message
+  )
+}
+
+function buildAiSafetyEvaluation({
+  message,
+  role,
+  language,
+  source,
+  resource,
+  ticketDraft,
+}: {
+  message: string
+  role: string
+  language: string
+  source: string
+  resource?: string
+  ticketDraft: { requiresHumanApproval: boolean } | null
+}) {
+  const promptInjectionDetected = hasPromptInjectionSignal(message)
+  const sensitiveActionRequested = sensitiveActionSignal(message)
+  const humanApprovalRequired =
+    Boolean(ticketDraft?.requiresHumanApproval) || sensitiveActionRequested
+
+  return {
+    version: "operations-ai-safety-v2",
+    role,
+    language,
+    source,
+    resource: resource ?? "general",
+    roleScoped: true,
+    grounded: source !== "local-ai" || Boolean(resource),
+    promptInjectionDetected,
+    sensitiveActionRequested,
+    humanApprovalRequired,
+    privateDataBoundary:
+      source === "rbac-guard"
+        ? "blocked_by_role"
+        : role === "owner" || role === "tenant" || role === "staff"
+          ? "role_scope_only"
+          : "privileged_role_scope",
+    flags: [
+      ...(promptInjectionDetected ? ["prompt_injection_probe"] : []),
+      ...(humanApprovalRequired ? ["human_approval_required"] : []),
+      ...(source === "rbac-guard" ? ["rbac_guard_applied"] : []),
+    ],
+  }
+}
+
 function isLikelySameLanguage(text: string, language: ReturnType<typeof detectAiLanguage>) {
   const trimmed = text.trim()
   if (!trimmed) return false
@@ -339,6 +396,14 @@ export async function POST(request: Request) {
       language,
       resource: accessDecision.resource,
       ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "rbac-guard",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
     })
   }
 
@@ -351,6 +416,14 @@ export async function POST(request: Request) {
       language,
       resource: accessDecision.resource,
       ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "deterministic-fallback",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
     })
   }
 
@@ -363,6 +436,14 @@ export async function POST(request: Request) {
       language,
       resource: accessDecision.resource,
       ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "deterministic-fallback",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
     })
   }
 
@@ -403,6 +484,14 @@ export async function POST(request: Request) {
       ticketDraft,
       model: completion.model,
       usage: completion.usage,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: guardedContent === completion.content ? "local-ai" : "deterministic-language-guard",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
     })
   } catch {
     return NextResponse.json({
@@ -413,6 +502,14 @@ export async function POST(request: Request) {
       language,
       resource: accessDecision.resource,
       ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "deterministic-fallback",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
     })
   }
 }

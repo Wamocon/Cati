@@ -1412,9 +1412,15 @@ function catalogItemForTicket(ticket: ServiceTicket, index: number) {
             ? "INSP-DAMAGE"
             : category.includes("erisim") || category.includes("guven") || category.includes("kamera")
               ? "SEC-ACCESS"
-              : category.includes("ortak") || category.includes("havuz") || category.includes("finans")
-                ? "AMENITY-SPA"
-                : null
+              : category.includes("tiyatro") || category.includes("theatre") || category.includes("theater") || category.includes("etkinlik") || category.includes("event")
+                ? "AMENITY-THEATRE"
+                : category.includes("restoran") || category.includes("restaurant") || category.includes("dining")
+                  ? "AMENITY-RESTAURANT"
+                  : category.includes("gezi") || category.includes("tur") || category.includes("excursion") || category.includes("quad") || category.includes("bisiklet") || category.includes("bike") || category.includes("jeep") || category.includes("dag") || category.includes("mountain")
+                    ? "CONCIERGE-EXCURSION"
+                    : category.includes("ortak") || category.includes("havuz") || category.includes("spa") || category.includes("fitness") || category.includes("finans")
+                      ? "AMENITY-SPA"
+                      : null
 
   return (
     serviceCatalogItems.find((item) => item.code === matchedCode) ??
@@ -1736,6 +1742,18 @@ function normalizeServiceCatalogRows(rows: unknown): ServiceCatalogItem[] {
       popularityScore: asNumber(record.popularity_score),
     }
   })
+}
+
+function ensureServiceCatalogCoverage(catalog: ServiceCatalogItem[]) {
+  const mergedByCode = new Map(catalog.map((item) => [item.code, item]))
+
+  for (const item of serviceCatalogItems) {
+    if (!mergedByCode.has(item.code)) {
+      mergedByCode.set(item.code, item)
+    }
+  }
+
+  return [...mergedByCode.values()]
 }
 
 function normalizeServiceOrderRows(rows: unknown): ServiceOrderRecord[] {
@@ -3250,10 +3268,11 @@ export async function getServiceTicketQueueData({
     if (ticketResponse.error) throw ticketResponse.error
 
     const tickets = normalizeServiceTicketRows(ticketResponse.data, safeLimit)
-    const catalog =
+    const catalog = ensureServiceCatalogCoverage(
       catalogResponse.error || !Array.isArray(catalogResponse.data) || catalogResponse.data.length === 0
         ? serviceCatalogItems
         : normalizeServiceCatalogRows(catalogResponse.data)
+    )
     const derivedOrders = buildServiceOrdersFromTickets(tickets)
     const orders =
       orderResponse.error || !Array.isArray(orderResponse.data) || orderResponse.data.length === 0
@@ -3564,6 +3583,7 @@ export interface PublicAiInterestInput {
   shouldEscalate?: boolean
   responseMs?: number | null
   sourceIds?: string[]
+  evaluation?: unknown
 }
 
 export interface PublicAiEscalationInput {
@@ -3699,12 +3719,14 @@ export async function logPublicAiInterest(
     topic: input.topic,
     language: input.language ?? null,
     questionLength: input.question.length,
+    redactedQuestionPreview: input.question,
     answeredBy: input.answeredBy,
     outcome: input.outcome ?? null,
     confidence: input.confidence ?? null,
     shouldEscalate: input.shouldEscalate === true,
     responseMs: input.responseMs ?? null,
     sourceIds: input.sourceIds ?? [],
+    evaluation: input.evaluation ?? null,
     page: input.page ?? null,
     channel: "landing-concierge",
   }

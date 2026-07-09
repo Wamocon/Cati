@@ -1,7 +1,7 @@
 # 1Cati Project Handbook
 
 Status: active source-of-truth guide
-Last reviewed: 6 July 2026
+Last reviewed: 8 July 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 Primary audience: Ataberk Estate leadership, WAMOCON delivery, product, engineering, QA and future AI coding agents
 
@@ -29,11 +29,12 @@ As of 30 June 2026, the repository evidence shows:
 
 | Area | Current status | Evidence |
 |---|---|---|
-| Public web app | Implemented as Next.js app with localized routes, including a New Level Premium public page for owner/tenant/staff requests, public reports and a source-grounded product concierge with internal quality telemetry, WhatsApp handoff and CSAT feedback. | `apps/web/app/[locale]`, `apps/web/app/[locale]/new-level-premium`, `apps/web/messages/*.json` |
+| Public web app | Implemented as Next.js app with localized routes, including a New Level Premium public page for owner/tenant/staff requests, public reports, a source-grounded product concierge with redacted safety telemetry, WhatsApp handoff and CSAT feedback, security/privacy headers, and a `/videos` subpage for target-group/language-specific video versions. | `apps/web/app/[locale]`, `apps/web/app/[locale]/new-level-premium`, `apps/web/app/[locale]/videos`, `apps/web/messages/*.json`, `apps/web/next.config.ts` |
 | Dashboard shell | Implemented with role-aware navigation, RBAC-aware drilldowns, module pages and the full 15-phase ERP delivery map. | `apps/web/app/[locale]/dashboard`, `apps/web/lib/site-management-data.ts` |
 | Access profiles | Disabled for cloud/production runtime; retained only as guarded code for explicit non-production QA if ever needed. | `apps/web/lib/auth.ts`, `apps/web/proxy.ts` |
 | Supabase schema | Cloud Supabase project `hczmbaqofxyusellxhyp` has migrations `00000000000000` through `00000000000013` applied for RBAC, site CRM, ledger, tickets, booking/checkout, communications, documents, operational APIs, fuzzy search, dashboard realtime publication, company-scoped Auth profiles and queued public intake via `submit_public_intake`. | `supabase/migrations`, `docs/supabase-cloud.md` |
-| Operational APIs | Dashboard snapshot, phase status, search, action logging, import preview/commit, Phase 4 data, Phase 5 people, Phase 6 ledger, Phase 7 payment-control, Phase 8-9 service operations, Phase 10-11 contracts, document upload/storage contract, Phase 12 offline/mobile-web contract, Phase 13 integration readiness, Phase 14 AI premium contracts, public registration/report intake and public product concierge exist with Supabase cloud-first behavior. Public AI logs topic, outcome, confidence, latency, source IDs, escalation and CSAT feedback without storing raw anonymous questions. | `apps/web/app/api/site-management/*`, `apps/web/app/api/ai/*`, `apps/web/lib/site-management-repository.ts` |
+| Operational APIs | Dashboard snapshot, phase status, search, action logging, import preview/commit, Phase 4 data, Phase 5 people, Phase 6 ledger, Phase 7 payment-control, Phase 8-9 service operations, Phase 10-11 contracts, document upload/storage contract, Phase 12 offline/mobile-web contract, Phase 13 integration readiness, Phase 14 AI premium contracts, public registration/report intake and public product concierge exist with Supabase cloud-first behavior. Public AI logs topic, outcome, confidence, latency, source IDs, escalation, CSAT feedback, redacted question preview and grounding/drift/private-data evaluation without storing raw anonymous questions. | `apps/web/app/api/site-management/*`, `apps/web/app/api/ai/*`, `apps/web/lib/site-management-repository.ts`, `apps/web/lib/public-ai-chat.ts` |
+| Security and AI observability | Hardened browser/API behavior now covers global security headers, no-referrer, dashboard/API no-store/noindex rules, private-data-safe public AI telemetry, operations AI RBAC evaluation metadata, prompt-injection signals and human-approval flags for sensitive finance/access actions. | `apps/web/next.config.ts`, `apps/web/lib/public-ai-chat.ts`, `apps/web/app/api/ai/chat/route.ts`, `docs/security/AI-SECURITY-OBSERVABILITY.md` |
 | Operational modules | Data/API-backed screens exist for listings, leads, calendar, finance, documents, compliance, users, reports, tickets and communications. Some workflows remain foundation depth until production vendors/data are confirmed. | `apps/web/app/[locale]/dashboard/*` |
 | Live dashboard refresh | Implemented with a shared live snapshot hook, Supabase Realtime subscriptions where configured and 30-second polling fallback. | `apps/web/hooks/use-live-dashboard-snapshot.ts`, `apps/web/components/sync-badge.tsx`, `supabase/migrations/00000000000004_realtime_operational_dashboard.sql` |
 | QA and phase control | Current app status and QA harnesses use the 15-phase ERP model. Generated evidence is disposable unless promoted into the active Markdown package. | `scripts/phase-06-09-harness.mjs`, `scripts/phase-10-11-harness.mjs`, `apps/web/e2e/dashboard.spec.ts` |
@@ -78,7 +79,10 @@ The documentation is intentionally divided by document type. This prevents a sin
 | Supabase Cloud runbook | `docs/supabase-cloud.md` | Hosted Supabase project, migrations, storage, realtime and Vercel env rules. |
 | Current DOCX package | `docs/1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
 | User handbook and manual testing mail | `docs/user-handbook/` | German user handbook DOCX and bilingual email draft for internal manual exploratory QA. |
+| Demo/video production | `docs/demo/full-functionality-playlist-de/README.md` | Split German production folder for the full 1Cati video set: pitch, CEO walkthrough, property-manager training chapters, HeyGen plan and QA checklist. |
+| Competitive system quick test | `docs/demo/competitive-system-quick-test-de/Waleri-Fremdsystem-Schnelltest-1Cati-Vergleich-DE.md` | German 5-10 minute manager checklist for testing a similar system against 1Cati requirements; DOCX export is stored in the same folder. |
 | Security/compliance | `docs/requirements/option-3-ai-site-crm/Security-Compliance-Plan.md` | KVKK-aware and OWASP ASVS-aligned delivery checklist. |
+| Security and AI observability hardening | `docs/security/AI-SECURITY-OBSERVABILITY.md` | Code-verified notes for browser privacy, API cache boundaries, ID exposure, AI grounding/drift checks, redacted telemetry and Waleri service-feedback coverage. |
 | Data migration | `docs/requirements/option-3-ai-site-crm/Data-Migration-Plan.md` | Import, reconciliation and cutover rules. |
 | QA/UAT/launch | `docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md` | Mandatory UAT scenarios and launch gates. |
 | Traceability | `docs/requirements/option-3-ai-site-crm/Requirements-Traceability-Matrix.md` | Requirement-to-test coverage. |
@@ -147,8 +151,9 @@ Use these rules whenever adding or changing documentation:
 For management:
 
 1. `docs/1Cati-Current-Project-Documentation.docx`
-2. `docs/requirements/option-3-ai-site-crm/Implementation-Delivery-Plan.md`
-3. `docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md`
+2. `docs/demo/full-functionality-playlist-de/README.md`
+3. `docs/requirements/option-3-ai-site-crm/Implementation-Delivery-Plan.md`
+4. `docs/requirements/option-3-ai-site-crm/QA-UAT-Launch-Plan.md`
 
 For product and design:
 

@@ -33,6 +33,17 @@ export interface PublicAiChatPayload {
   responseMs: number
   eventReference: string | null
   escalationReference: string | null
+  evaluation: PublicAiSafetyEvaluation
+}
+
+export interface PublicAiSafetyEvaluation {
+  version: "public-ai-safety-v2"
+  grounded: boolean
+  groundingScore: number
+  driftScore: number
+  privateDataSafe: boolean
+  sourceCount: number
+  flags: string[]
 }
 
 type PublicAiChatParseResult =
@@ -63,6 +74,64 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function cacheKey(message: string, locale: PublicAiLocale) {
   return `${locale}:${message.toLocaleLowerCase("tr").replace(/\s+/g, " ")}`
+}
+
+function hasPromptInjectionSignal(message: string) {
+  return /(ignore|forget) (all )?(previous|above|system|rules|instructions)|system prompt|developer message|jailbreak|bypass|reveal (your )?(prompt|instructions)|act as admin|forget your rules/i.test(
+    message
+  )
+}
+
+function hasPrivateDataLeakSignal(text: string) {
+  return (
+    /\b[A-G]-\d{2,4}\b/i.test(text) ||
+    /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(text) ||
+    /\+?\d[\d\s().-]{7,}\d/.test(text)
+  )
+}
+
+function redactedTelemetryPreview(message: string) {
+  return message
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, "[phone]")
+    .replace(/\b[A-G]-\d{2,4}\b/gi, "[unit]")
+    .replace(/\b(password|passwort|şifre|sifre|пароль)\s*[:=]\s*\S+/gi, "$1=[redacted]")
+    .slice(0, 180)
+}
+
+function evaluatePublicAiSafety(
+  input: PublicAiChatInput,
+  answer: CachedAnswer,
+  locale: PublicAiLocale
+): PublicAiSafetyEvaluation {
+  const flags: string[] = []
+  const promptInjection = hasPromptInjectionSignal(input.message)
+  const privateLeakSignal = hasPrivateDataLeakSignal(answer.reply)
+  const sourceCount = answer.sources.length
+  const grounded = sourceCount > 0 && answer.outcome !== "uncertain"
+  const privateDataSafe =
+    answer.outcome === "refused_private_data" || !privateLeakSignal
+
+  if (promptInjection) flags.push("prompt_injection_probe")
+  if (!grounded) flags.push("low_grounding")
+  if (!privateDataSafe) flags.push("possible_private_data_leak")
+  if (answer.outcome !== "answered") flags.push(`handoff_${answer.outcome}`)
+  if (locale !== input.locale) flags.push("message_language_override")
+
+  return {
+    version: "public-ai-safety-v2",
+    grounded,
+    groundingScore: grounded ? Math.min(0.98, 0.72 + sourceCount * 0.08) : 0.48,
+    driftScore: Math.min(
+      0.95,
+      (promptInjection ? 0.35 : 0) +
+        (answer.outcome === "uncertain" ? 0.3 : 0) +
+        (privateDataSafe ? 0 : 0.4)
+    ),
+    privateDataSafe,
+    sourceCount,
+    flags,
+  }
 }
 
 function cachedAnswer(message: string, locale: PublicAiLocale): CachedAnswer {
@@ -113,6 +182,7 @@ export function createPublicAiChatPayload(
 ): PublicAiChatPayload {
   const locale = resolvePublicAiResponseLocale(input.message, input.locale)
   const answer = cachedAnswer(input.message, locale)
+  const evaluation = evaluatePublicAiSafety(input, answer, locale)
 
   return {
     reply: answer.reply,
@@ -127,6 +197,7 @@ export function createPublicAiChatPayload(
     responseMs: Date.now() - startedAt,
     eventReference: null,
     escalationReference: null,
+    evaluation,
   }
 }
 
@@ -140,7 +211,7 @@ async function logPublicAiTelemetry(
   const result = await logPublicAiInterest({
     topic: payload.topic,
     language: payload.language,
-    question: input.message,
+    question: redactedTelemetryPreview(input.message),
     answeredBy: payload.source,
     page: input.page,
     outcome: payload.outcome,
@@ -148,6 +219,7 @@ async function logPublicAiTelemetry(
     shouldEscalate: payload.shouldEscalate,
     responseMs: payload.responseMs,
     sourceIds: payload.sources.map((item) => item.id),
+    evaluation: payload.evaluation,
   })
   eventReference = result.reference
 

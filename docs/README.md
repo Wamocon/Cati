@@ -1,7 +1,7 @@
 # Documentation Hub
 
 Status: active documentation map
-Last reviewed: 6 July 2026
+Last reviewed: 8 July 2026
 Confidentiality: STRICTLY CONFIDENTIAL
 
 Start with `PROJECT-HANDBOOK.md`. It explains the full project, the current 6 July 2026 implementation state, the canonical documents, the 15-phase ERP delivery model, open decisions and cleanup rules.
@@ -24,6 +24,9 @@ Current implementation checkpoint: phases 1-14 are complete as a cloud-backed de
 | Supabase Cloud | `supabase-cloud.md` | Hosted Supabase project, migrations, storage, realtime and Vercel env rules. |
 | Current DOCX package | `1Cati-Current-Project-Documentation.docx` | Generated reading copy of the current handbook and requirements package. |
 | User handbook and manual testing mail | `user-handbook/` | German user handbook DOCX and bilingual manual exploratory testing email draft for internal QA. |
+| Demo and video scripts | `demo/full-functionality-playlist-de/README.md` | Split German production folder with pitch, CEO walkthrough, property-manager training scripts, HeyGen plan, QA checklist and `/videos` page publishing structure. |
+| Security and AI observability | `security/AI-SECURITY-OBSERVABILITY.md` | Browser privacy headers, private no-cache/noindex rules, redacted AI telemetry, grounding/drift checks and Waleri service-feedback coverage. |
+| Competitive system quick test | `demo/competitive-system-quick-test-de/Waleri-Fremdsystem-Schnelltest-1Cati-Vergleich-DE.md` | German 5-10 minute comparison checklist for testing a similar system against core 1Cati requirements; DOCX export is stored beside the Markdown source. |
 
 ## Current Status Rule
 

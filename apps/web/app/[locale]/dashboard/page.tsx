@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useLocale, useTranslations } from "next-intl"
@@ -1177,8 +1177,11 @@ function OperationsDashboard({
   roleLabel: string
 }) {
   const dashboardLocale = resolveDashboardLocale(useLocale())
-  const tRecord = (value: string) => localizeDashboardTextPart(value, dashboardLocale)
-  const tActivityMessage = (value: string) => {
+  const tRecord = useCallback(
+    (value: string) => localizeDashboardTextPart(value, dashboardLocale),
+    [dashboardLocale]
+  )
+  const tActivityMessage = useCallback((value: string) => {
     const localized = tRecord(value)
     if (localized !== value) return localized
     if (dashboardLocale !== "tr") return value
@@ -1195,11 +1198,14 @@ function OperationsDashboard({
       .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
       .replace(/\bservice_ticket\b/gi, "servis talebi")
       .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
-  }
-  const tActivityType = (value: string) =>
-    tActivityMessage(value.replaceAll("_", " ")).toLocaleLowerCase(
-      dashboardLocale === "tr" ? "tr-TR" : dashboardLocale
-    )
+  }, [dashboardLocale, tRecord])
+  const tActivityType = useCallback(
+    (value: string) =>
+      tActivityMessage(value.replaceAll("_", " ")).toLocaleLowerCase(
+        dashboardLocale === "tr" ? "tr-TR" : dashboardLocale
+      ),
+    [dashboardLocale, tActivityMessage]
+  )
   const {
     snapshot,
     phase4,

@@ -76,19 +76,19 @@ export function detectPublicAiLocaleFromMessage(
   if (/[А-Яа-яЁё]/.test(text)) return "ru"
 
   if (
+    /[çğıİşÇĞİŞ]|\b(nedir|nasıl|nasil|neden|kayıt|kayit|kaydol|malik|kiracı|kiraci|hangi|servis|servisleri|iste|isteyebilir|örnek|ornek|örneğin|ornegin|restoran|tiyatro|etkinlik|gezi|tur|aidat|borç|borc|güvenli|guvenli|fiyat|ücret|ucret|şikayet|sikayet|başvur|basvur|daire|oturuyor|türkçe|turkce)\b/i.test(
+      text
+    )
+  ) {
+    return "tr"
+  }
+
+  if (
     /[äöüßÄÖÜ]|\b(was|wie|warum|vorteil|nutzen|unterschied|registrier|anmeld|mieter|eigentümer|kosten|preis|datenschutz|sicherheit|konto|zugang|deutsch|gebühr|schulden|saldo|wohnt)\b/i.test(
       text
     )
   ) {
     return "de"
-  }
-
-  if (
-    /[çğıöşüÇĞİÖŞÜ]|\b(nedir|nasıl|nasil|neden|kayıt|kayit|kaydol|malik|kiracı|kiraci|aidat|borç|borc|güvenli|guvenli|fiyat|ücret|ucret|şikayet|sikayet|başvur|basvur|daire|oturuyor|türkçe|turkce)\b/i.test(
-      text
-    )
-  ) {
-    return "tr"
   }
 
   if (
@@ -137,7 +137,7 @@ const topicMatchers: Array<[PublicAiTopic, RegExp]> = [
   ],
   [
     "service-features",
-    /(servis|temizlik|bakım|onarım|talep|sla|service|cleaning|maintenance|repair|request|reinigung|wartung|reparatur|anfrage|сервис|уборк|обслуживани|ремонт|заявк)/i,
+    /(servis|temizlik|bakım|onarım|talep|spa|restoran|tiyatro|etkinlik|gezi|quad|jeep|sla|service|cleaning|maintenance|repair|request|spa|restaurant|theatre|theater|event|excursion|quad|jeep|reinigung|wartung|reparatur|anfrage|restaurant|theater|veranstaltung|ausflug|сервис|уборк|обслуживани|ремонт|заявк|спа|ресторан|театр|мероприяти|экскурс|джип|квадро)/i,
   ],
   [
     "languages",
@@ -191,7 +191,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "finance-features":
       "Malikler kendi dairelerinin muhasebe kaydını, ödeme geçmişini ve varsa borç durumunu doğrudan görür; kimsenin özet okumasına gerek kalmaz. Aidat, depozito ve tahsilat tek deftere işlenir, kayıtlı defter girişleri sonradan değiştirilemez. Kişisel finans verileri yalnızca giriş yaptıktan sonra, kendi yetkinizle görünür.",
     "service-features":
-      "Servis talebi açarsınız; durumu, SLA süresini ve işin foto/video kanıtını sistemden izlersiniz. Temizlik, bakım, transfer gibi talepler sohbet mesajlarında kaybolmaz, sorumlu ekibe atanır ve kapatma onayıyla biter.",
+      "Servis talebi açarsınız; durumu, SLA süresini ve işin foto/video kanıtını sistemden izlersiniz. Temizlik, bakım, transfer, spa, restoran, tiyatro/etkinlik ve gezi-tur gibi talepler sohbet mesajlarında kaybolmaz; doğru iç ekibe veya dış sağlayıcıya yönlendirilir ve kapatma onayıyla biter.",
     languages:
       "1Çatı dört dilde çalışır: Türkçe, İngilizce, Almanca ve Rusça — hepsi aynı derinlikte. Uluslararası malik tabanı için tasarlandı; siz hangi dilde rahatsanız sistemi o dilde kullanırsınız.",
     "project-info":
@@ -221,7 +221,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "finance-features":
       "Owners see their own unit's ledger, payment history and any debt directly; nobody has to read them a summary. Dues, deposits and collections live in one ledger, and posted entries can never be altered afterwards. Personal financial data is visible only after you log in, within your own permissions.",
     "service-features":
-      "You open a service request and follow its status, SLA and photo/video proof of the work in the system. Cleaning, maintenance and transfer requests don't get lost in chat threads; they are assigned to a responsible team and end with a closure approval.",
+      "You open a service request and follow its status, SLA and photo/video proof of the work in the system. Cleaning, maintenance, transfer, spa, restaurant, theatre/event and excursion or tour requests do not get lost in chat threads; they are routed to the right internal team or external provider and end with closure approval.",
     languages:
       "1Çatı works in four languages: Turkish, English, German and Russian, each at the same depth. It was built for an international ownership base, so you use the system in whichever language you are comfortable with.",
     "project-info":
@@ -251,7 +251,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "finance-features":
       "Eigentümer sehen Kontostand, Zahlungshistorie und etwaige Schulden ihrer Einheit direkt; niemand muss ihnen eine Zusammenfassung vorlesen. Beiträge, Kautionen und Einzüge stehen in einem Ledger, gebuchte Einträge sind nachträglich unveränderlich. Persönliche Finanzdaten sind erst nach dem Login sichtbar, im Rahmen Ihrer eigenen Rechte.",
     "service-features":
-      "Sie stellen eine Serviceanfrage und verfolgen Status, SLA und Foto-/Video-Nachweis der Arbeit im System. Reinigung, Wartung und Transfer gehen nicht im Chat verloren; sie werden einem zuständigen Team zugewiesen und enden mit einer Abschlussfreigabe.",
+      "Sie stellen eine Serviceanfrage und verfolgen Status, SLA und Foto-/Video-Nachweis der Arbeit im System. Reinigung, Wartung, Transfer, Spa, Restaurant, Theater/Events und Ausflüge oder Touren gehen nicht im Chat verloren; sie werden dem richtigen internen Team oder externen Anbieter zugeordnet und enden mit Abschlussfreigabe.",
     languages:
       "1Çatı arbeitet in vier Sprachen: Türkisch, Englisch, Deutsch und Russisch, jeweils gleich tief. Es wurde für eine internationale Eigentümerbasis gebaut; Sie nutzen das System in der Sprache, in der Sie sich wohlfühlen.",
     "project-info":
@@ -281,7 +281,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "finance-features":
       "Собственники видят реестр своей квартиры, историю платежей и задолженность напрямую; никто не пересказывает им сводку. Взносы, депозиты и сборы ведутся в одном журнале, проведённые записи нельзя изменить задним числом. Личные финансовые данные видны только после входа, в рамках ваших прав.",
     "service-features":
-      "Вы создаёте заявку и следите за статусом, SLA и фото/видео-подтверждением работ в системе. Уборка, обслуживание и трансфер не теряются в чатах: заявка назначается ответственной команде и закрывается с одобрением.",
+      "Вы создаёте заявку и следите за статусом, SLA и фото/видео-подтверждением работ в системе. Уборка, обслуживание, трансфер, spa, ресторан, театр/мероприятия и экскурсии или туры не теряются в чатах: заявка направляется нужной внутренней команде или внешнему поставщику и закрывается с одобрением.",
     languages:
       "1Çatı работает на четырёх языках: турецком, английском, немецком и русском, с одинаковой глубиной. Система создана для международной базы собственников; пользуйтесь ею на том языке, который вам удобен.",
     "project-info":
@@ -478,6 +478,7 @@ export function getPublicAiSystemPrompt(locale: PublicAiLocale): string {
     "Never promise to execute actions (payments, access, bookings); the system requires human approval for such actions.",
     "PRODUCT KNOWLEDGE: 1Cati is the role-based property-management ERP that Ataberk Estate uses to run New Level Premium in Avsallar (52,000 m2, 7 blocks, 769 units, 900 m to the beach, 5-star hotel infrastructure, 22 amenities).",
     "It unifies finance (per-unit ledger, dues, deposits; posted entries immutable), service (requests with SLA and photo/video proof), documents (TAPU/contracts with verification status), reservations and reasoned access decisions on one record.",
+    "Public service knowledge includes cleaning, maintenance, transfer, spa, restaurant, theatre/events, excursions, tours, quad/jeep/bike activities and mountain trips; requests are routed to the correct internal team or external provider and require closure approval.",
     "Six roles exist (admin, manager, accountant, staff, owner, tenant); each sees only its own scope. Owner/tenant/staff can request access on the landing page; manager/accountant/admin are assigned only internally.",
     "Registration: role selection, legitimacy check, human approval by an administrator; owners/tenants verify identity (KVKK-compliant retention, deleted after the legal period; KBS accommodation reporting is part of the flow).",
     "Tenants best join via a one-time, time-boxed owner invite code; access expires on its own and the owner stays responsible for the whole lease.",
