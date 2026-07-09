@@ -388,21 +388,21 @@ export function VideoLibraryPlayer({
   return (
     <section
       id="video-library"
-      className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6 lg:px-8"
+      className="mx-auto w-full max-w-7xl px-0 pb-16 sm:px-6 sm:pb-20 lg:px-8"
       data-testid="video-library"
     >
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.75fr)]">
+      <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.75fr)]">
         <div
           ref={playerShellRef}
-          className="premium-surface overflow-hidden rounded-3xl p-3 sm:p-4"
+          className="premium-surface min-w-0 max-w-full overflow-hidden rounded-none border-x-0 p-0 shadow-none sm:rounded-3xl sm:border-x sm:p-4 sm:shadow-sm"
           data-testid="video-player"
         >
-          <div className="relative aspect-video overflow-hidden rounded-2xl bg-[#061a17] text-white shadow-2xl shadow-slate-950/20">
+          <div className="relative aspect-video min-w-0 max-w-full overflow-hidden rounded-none bg-[#061a17] text-white shadow-2xl shadow-slate-950/20 sm:rounded-2xl">
             {hasPlayableVideo ? (
               <video
                 key={selectedVideo.slug}
                 ref={videoRef}
-                className="h-full w-full bg-[#061a17] object-contain"
+                className="block h-full w-full min-w-0 max-w-full bg-[#061a17] object-contain"
                 controls={false}
                 crossOrigin="anonymous"
                 onDurationChange={syncDuration}
@@ -456,14 +456,14 @@ export function VideoLibraryPlayer({
               </div>
             ) : null}
 
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/92 via-black/62 to-transparent p-3 sm:p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <span className="w-12 shrink-0 text-right text-xs font-black text-white/76 tabular-nums">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/92 via-black/58 to-transparent p-2 sm:p-4">
+              <div className="mb-2 flex items-center gap-2 sm:mb-3 sm:gap-3">
+                <span className="hidden w-12 shrink-0 text-right text-xs font-black text-white/76 tabular-nums sm:block">
                   {formatTime(currentTime)}
                 </span>
                 <input
                   aria-label="Seek video"
-                  className="h-2 w-full cursor-pointer accent-teal-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-1.5 w-full cursor-pointer accent-teal-300 disabled:cursor-not-allowed disabled:opacity-50 sm:h-2"
                   disabled={!hasPlayableVideo}
                   max={Math.max(duration, 1)}
                   min={0}
@@ -472,12 +472,12 @@ export function VideoLibraryPlayer({
                   type="range"
                   value={Math.min(currentTime, Math.max(duration, 1))}
                 />
-                <span className="w-12 shrink-0 text-xs font-black text-white/76 tabular-nums">
+                <span className="hidden w-12 shrink-0 text-xs font-black text-white/76 tabular-nums sm:block">
                   {formatTime(duration)}
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:flex-wrap sm:gap-2">
                 <IconButton
                   disabled={!hasPlayableVideo}
                   icon={<RefreshCw className="h-4 w-4" />}
@@ -492,7 +492,7 @@ export function VideoLibraryPlayer({
                 />
                 <button
                   aria-label={isPlaying ? copy.pause : copy.play}
-                  className="inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-black text-[#061a17] shadow-xl shadow-black/20 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-10 min-w-10 items-center justify-center gap-2 rounded-full bg-white px-3 text-sm font-black text-[#061a17] shadow-xl shadow-black/20 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:min-w-11 sm:px-4"
                   disabled={!hasPlayableVideo}
                   onClick={togglePlay}
                   type="button"
@@ -526,7 +526,7 @@ export function VideoLibraryPlayer({
                 />
                 <input
                   aria-label="Volume"
-                  className="h-2 w-24 cursor-pointer accent-teal-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="hidden h-2 w-24 cursor-pointer accent-teal-300 disabled:cursor-not-allowed disabled:opacity-50 md:block"
                   disabled={!hasPlayableVideo}
                   max={1}
                   min={0}
@@ -544,7 +544,7 @@ export function VideoLibraryPlayer({
                       : copy.noCaptions
                   }
                   className={cn(
-                    "inline-flex h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-white/14 px-3 text-xs font-black text-white shadow-sm transition",
+                    "hidden h-10 min-w-10 items-center justify-center gap-2 rounded-full border border-white/14 px-3 text-xs font-black text-white shadow-sm transition sm:inline-flex",
                     captionsEnabled && hasCaptions
                       ? "bg-teal-300/22 text-teal-50"
                       : "bg-white/10 hover:bg-white/16",
@@ -586,6 +586,7 @@ export function VideoLibraryPlayer({
                   icon={<PictureInPicture2 className="h-4 w-4" />}
                   label={copy.pictureInPicture}
                   onClick={togglePictureInPicture}
+                  className="hidden sm:inline-flex"
                 />
                 <IconButton
                   icon={<Maximize2 className="h-4 w-4" />}
@@ -595,7 +596,7 @@ export function VideoLibraryPlayer({
                 {selectedVideo.videoUrl ? (
                   <a
                     aria-label={copy.download}
-                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 text-white shadow-sm transition hover:bg-white/16"
+                    className="hidden h-10 min-w-10 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 text-white shadow-sm transition hover:bg-white/16 sm:inline-flex"
                     download
                     href={selectedVideo.videoUrl}
                     title={copy.download}
@@ -607,7 +608,7 @@ export function VideoLibraryPlayer({
             </div>
           </div>
 
-          <div className="grid gap-4 px-1 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.44fr)]">
+          <div className="grid gap-4 px-4 pt-5 sm:px-1 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.44fr)]">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-black text-primary">
@@ -633,7 +634,7 @@ export function VideoLibraryPlayer({
               </p>
 
               <button
-                className="group grid w-full grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.055] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/[0.08] hover:shadow-xl hover:shadow-primary/[0.08]"
+                className="group grid w-full grid-cols-[84px_minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.055] p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/45 hover:bg-primary/[0.08] hover:shadow-xl hover:shadow-primary/[0.08] sm:grid-cols-[96px_minmax(0,1fr)_auto]"
                 onClick={() => {
                   const targetVideo = nextVideo ?? library.videos[0]
                   if (targetVideo) selectVideo(targetVideo)
@@ -721,7 +722,7 @@ export function VideoLibraryPlayer({
           </div>
         </div>
 
-        <aside className="premium-surface rounded-3xl p-4">
+        <aside className="premium-surface mx-4 min-w-0 rounded-3xl p-4 sm:mx-0">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-black tracking-[0.16em] text-primary uppercase">
@@ -780,7 +781,7 @@ export function VideoLibraryPlayer({
                 <button
                   key={video.slug}
                   className={cn(
-                    "group grid grid-cols-[112px_minmax(0,1fr)] gap-3 rounded-2xl border bg-card p-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/[0.08]",
+                    "group grid grid-cols-[96px_minmax(0,1fr)] gap-3 rounded-2xl border bg-card p-2 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-xl hover:shadow-primary/[0.08] sm:grid-cols-[112px_minmax(0,1fr)]",
                     active
                       ? "border-primary/45 bg-primary/[0.045] ring-2 ring-primary/15"
                       : "border-border"
@@ -838,16 +839,21 @@ function IconButton({
   label,
   onClick,
   disabled,
+  className,
 }: {
   icon: ReactNode
   label: string
   onClick: () => void
   disabled?: boolean
+  className?: string
 }) {
   return (
     <button
       aria-label={label}
-      className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 text-white shadow-sm transition hover:bg-white/16 disabled:cursor-not-allowed disabled:opacity-45"
+      className={cn(
+        "inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 text-white shadow-sm transition hover:bg-white/16 disabled:cursor-not-allowed disabled:opacity-45",
+        className
+      )}
       disabled={disabled}
       onClick={onClick}
       title={label}

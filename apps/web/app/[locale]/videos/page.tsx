@@ -357,7 +357,9 @@ export default async function VideosPage({
       <VideoLibraryPlayer library={library} locale={locale} />
 
       <Footer />
-      <SiteConcierge page="videos" />
+      <div className="hidden sm:block">
+        <SiteConcierge page="videos" />
+      </div>
     </main>
   )
 }
