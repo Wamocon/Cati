@@ -374,9 +374,10 @@ export function DashboardActionMenu({
                     onActionComplete={(state) => {
                       onActionComplete?.(item, state)
                       if (state === "success") {
-                        window.setTimeout(() => setOpen(false), 500)
+                        window.setTimeout(() => setOpen(false), 1800)
                       }
                     }}
+                    showInlineState
                     className="w-full justify-start rounded-lg border-0 bg-transparent px-3 py-2 text-left text-sm font-bold text-popover-foreground shadow-none hover:bg-muted"
                   >
                     {content}

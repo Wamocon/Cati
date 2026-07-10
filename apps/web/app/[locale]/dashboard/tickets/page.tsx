@@ -570,7 +570,7 @@ export default function TicketsPage() {
   const approvalCopy = workflowApprovalCopy[locale]
 
   return (
-    <div className="space-y-6">
+    <div id="tickets-top" className="space-y-6 scroll-mt-24">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -809,7 +809,7 @@ export default function TicketsPage() {
           title={t("Servis katalogu ve siparis kapisi")}
           description={t("Fiyat, SLA, borç politikası, depozito ve ekip kuralı sipariş oluşmadan önce görünür.")}
           info={t("Burada yalnızca en ilgili servis kartları gösterilir. Tam operasyon kuyruğu için aşağıdaki talep tablosunu kullanın.")}
-          actionHref="/dashboard/tickets#ticket-table"
+          actionHref="#ticket-table"
           actionLabel={t("Tüm talepler")}
           badge={
             <StatusBadge variant={blockedOrders > 0 ? "warning" : "success"}>
@@ -944,7 +944,7 @@ export default function TicketsPage() {
         title={t("Saha gorevleri, SLA ve medya kaniti")}
         description={t("Atama, rota, checklist, medya kanıtı ve yönetici onayı tek görev panosunda takip edilir.")}
         info={t("Dashboard ilk altı saha görevini gösterir. Rota çok kayıt içerdiğinde tam iş gücü tablosunu kullanın.")}
-        actionHref="/dashboard/tickets#workforce-table"
+        actionHref="#workforce-table"
         actionLabel={t("Tüm görevler")}
         badge={
           <div className="flex flex-wrap gap-2">
@@ -1021,7 +1021,7 @@ export default function TicketsPage() {
           title={clientView ? t("Takipteki talepleriniz") : t("Öncelikli iş kuyruğu")}
           description={t("Bu önizlemede yalnızca acil, gecikmiş veya blokeli talepler kalır. Tam talep tablosu aşağıda aranabilir ve sayfalanabilir.")}
           info={t("Önizleme listeleri panonun taranabilir kalması için sınırlıdır. Tüm kayıtlar için tam tabloyu kullanın.")}
-          actionHref="/dashboard/tickets#ticket-table"
+          actionHref="#ticket-table"
           actionLabel={t("Tüm talepler")}
           badge={
             <StatusBadge variant={overdue > 0 ? "danger" : "success"}>
@@ -1137,7 +1137,7 @@ export default function TicketsPage() {
         title={t("Tam servis talebi kaydı")}
         description={t("Dashboard önizlemesini genişletmek yerine tüm servis taleplerini arayın, sıralayın ve sayfalayın.")}
         info={t("Bu tam operasyon kuyruğudur. Günlük iş kolay taransın diye üstteki kartlar sınırlı tutulur.")}
-        actionHref="/dashboard/tickets"
+        actionHref="#tickets-top"
         actionLabel={t("Üst")}
       >
         <div id="ticket-table" className="scroll-mt-24">
@@ -1224,7 +1224,7 @@ export default function TicketsPage() {
         title={t("Tam saha görev kaydı")}
         description={t("Rota, kontrol listesi, medya, SLA ve onay kayıtları önizleme kartları yoğunlaşınca aranabilir kalır.")}
         info={t("Aynı gün çok sayıda teknisyen görevi olduğunda bu kaydı kullanın.")}
-        actionHref="/dashboard/tickets#ticket-table"
+        actionHref="#ticket-table"
         actionLabel={t("Talepler")}
       >
         <div id="workforce-table" className="scroll-mt-24">

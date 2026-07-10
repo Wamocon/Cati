@@ -48,7 +48,7 @@ const mapCopy = {
     ],
   },
   de: {
-    label: "Tuerkei Kontrollfluss",
+    label: "Türkei Kontrollfluss",
     title: "Compliance ist ein Entscheidungsweg, keine Statusplakette.",
     text:
       "EIDS, Grundbuchpruefung, Aufenthaltspruefung, Steuer- und Mietmeldungen laufen in dieselbe Freigabe.",

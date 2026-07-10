@@ -993,6 +993,7 @@ async function toVideoLibraryItem(
   const row = asRecord(rawRow)
   const slug = readString(row.slug) ?? `video-${index + 1}`
   const fallback = fallbackBySlug.get(slug) ?? fallbackVideoSeeds[index]
+  const fallbackCopy = fallback ? getStorageVideoCopy(fallback, locale) : null
   const videoPath = readString(row.video_path) ?? fallback?.videoPath ?? null
   const thumbnailPath = readString(row.thumbnail_path) ?? fallback?.thumbnailPath ?? null
   const [videoUrl, thumbnailUrl, captions] = await Promise.all([
@@ -1005,13 +1006,21 @@ async function toVideoLibraryItem(
     id: readString(row.id) ?? slug,
     slug,
     sortOrder: readNumber(row.sort_order) ?? index + 1,
-    title: resolveLocalizedText(row.title, locale, fallback?.title ?? slug),
-    description: resolveLocalizedText(
+    title: resolveLocalizedVideoText(
+      row.title,
+      locale,
+      fallbackCopy?.title ?? fallback?.title ?? slug
+    ),
+    description: resolveLocalizedVideoText(
       row.description,
       locale,
-      fallback?.description ?? "Product video"
+      fallbackCopy?.description ?? fallback?.description ?? "Product video"
     ),
-    category: resolveLocalizedText(row.category, locale, fallback?.category ?? "Video"),
+    category: resolveLocalizedVideoText(
+      row.category,
+      locale,
+      fallbackCopy?.category ?? fallback?.category ?? "Video"
+    ),
     durationSeconds:
       readNumber(row.duration_seconds) ?? fallback?.durationSeconds ?? 0,
     videoUrl,
@@ -1020,7 +1029,11 @@ async function toVideoLibraryItem(
       (fallback ? publicStorageUrl(fallback.thumbnailPath) : null) ??
       fallbackPlaceholderImage,
     captions,
-    chapters: normalizeChapters(row.chapters, locale, fallback?.chapters ?? []),
+    chapters: normalizeChapters(
+      row.chapters,
+      locale,
+      fallback ? getStorageVideoChapters(fallback, locale) : []
+    ),
     source: "supabase",
   }
 }
@@ -1094,7 +1107,7 @@ function normalizeChapters(
     .map((chapter): VideoChapter | null => {
       const record = asRecord(chapter)
       const time = readNumber(record.time) ?? readNumber(record.time_seconds)
-      const label = resolveLocalizedText(record.label, locale, "")
+      const label = resolveLocalizedChapterLabel(record.label, locale)
 
       if (!label || typeof time !== "number") return null
       return { label, time }
@@ -1102,6 +1115,29 @@ function normalizeChapters(
     .filter((chapter): chapter is VideoChapter => Boolean(chapter))
 
   return chapters.length > 0 ? chapters : fallback
+}
+
+function resolveLocalizedVideoText(
+  value: unknown,
+  locale: VideoLocale,
+  fallback: string
+): string {
+  if (typeof value === "string" && value.trim()) {
+    return locale === "tr" ? value.trim() : fallback
+  }
+
+  return resolveLocalizedText(value, locale, fallback)
+}
+
+function resolveLocalizedChapterLabel(
+  value: unknown,
+  locale: VideoLocale
+): string | null {
+  if (typeof value === "string" && value.trim()) {
+    return locale === "tr" ? value.trim() : null
+  }
+
+  return resolveLocalizedText(value, locale, "")
 }
 
 function resolveLocalizedText(

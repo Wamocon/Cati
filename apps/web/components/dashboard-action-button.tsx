@@ -20,6 +20,7 @@ interface DashboardActionButtonProps {
   onActionComplete?: (state: Extract<ActionState, "success" | "error">) => void
   onActionStart?: () => void
   role?: AriaRole
+  showInlineState?: boolean
   successLabel?: string
   tabIndex?: number
   title?: string
@@ -70,6 +71,7 @@ export function DashboardActionButton({
   onActionComplete,
   onActionStart,
   role,
+  showInlineState = false,
   successLabel,
   tabIndex,
   title,
@@ -133,7 +135,7 @@ export function DashboardActionButton({
         setState("idle")
         setRequiresApproval(false)
         onActionComplete?.("success")
-      }, 900)
+      }, 2200)
     } catch {
       setState("error")
       onActionComplete?.("error")
@@ -169,6 +171,11 @@ export function DashboardActionButton({
       )}
     >
       {children}
+      {showInlineState && state !== "idle" ? (
+        <span className="ml-auto inline-flex shrink-0 items-center rounded-full border border-current/15 px-2 py-0.5 text-[11px] font-black">
+          {stateLabel}
+        </span>
+      ) : null}
       <span className="sr-only" aria-live="polite">
         {stateLabel}
       </span>

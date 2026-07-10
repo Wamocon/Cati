@@ -932,6 +932,7 @@ const de: TranslationTable = {
   "Belge sayfasi aksiyonlari": "Dokumentseiten-Aktionen",
   "Belge tipi": "Dokumenttyp",
   "Belge yukle": "Dokument hochladen",
+  "İncelemeye yükle": "Zur Prüfung hochladen",
   "Belgeyi goruntule": "Dokument anzeigen",
   "Belgeyi indir": "Dokument herunterladen",
   "Packet": "Paket",

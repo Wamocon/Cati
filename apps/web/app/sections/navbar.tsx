@@ -111,12 +111,6 @@ export function Navbar() {
           <div className="hidden shrink-0 items-center gap-2 2xl:flex">
             <LocaleSwitcher />
             <Link
-              href="/login"
-              className="inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              {t("login")}
-            </Link>
-            <Link
               href="/login?next=/dashboard"
               className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:bg-primary/90 hover:shadow-primary/30"
             >
@@ -207,14 +201,7 @@ export function Navbar() {
                 <div className="flex items-center">
                   <LocaleSwitcher />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Link
-                    href="/login"
-                    className="inline-flex h-12 items-center justify-center rounded-2xl border border-border bg-background px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted"
-                    onClick={() => setOpen(false)}
-                  >
-                    {t("login")}
-                  </Link>
+                <div className="grid gap-3">
                   <Link
                     href="/login?next=/dashboard"
                     className="inline-flex h-12 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90"
