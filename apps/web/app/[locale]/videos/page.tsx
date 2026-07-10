@@ -307,52 +307,52 @@ export default async function VideosPage({
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-3 px-4 pb-5 sm:px-6 lg:grid-cols-3 lg:px-8">
+      <section className="mx-auto grid max-w-[88rem] items-stretch gap-4 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-3 lg:px-8">
         {copy.valueCards.map(([title, body], index) => {
           const Icon =
             index === 0 ? LayoutDashboard : index === 1 ? Gauge : BrainCircuit
           return (
             <div
               key={title}
-              className="rounded-2xl border border-border bg-card/82 p-4 shadow-sm backdrop-blur"
+              className="flex min-h-44 flex-col rounded-2xl border border-border bg-card/88 p-5 shadow-sm backdrop-blur"
             >
               <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <h2 className="text-base font-black text-foreground">{title}</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{body}</p>
+              <h2 className="text-base leading-tight font-black text-foreground">{title}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{body}</p>
             </div>
           )
         })}
       </section>
 
-      <section className="border-y border-border bg-card/45 py-8">
-        <div className="mx-auto grid max-w-7xl gap-5 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.52fr)] lg:px-8">
+      <section className="border-y border-border bg-card/45 py-10 sm:py-12">
+        <div className="mx-auto grid max-w-[88rem] items-center gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.42fr)] lg:px-8">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-black tracking-[0.16em] text-primary uppercase">
               <Video className="h-4 w-4" aria-hidden="true" />
               {copy.playlistIntro.eyebrow}
             </span>
-            <h2 className="mt-2 max-w-4xl text-3xl leading-tight font-black text-foreground hyphens-auto [overflow-wrap:anywhere] sm:text-4xl">
+            <h2 className="mt-2 max-w-4xl text-[1.75rem] leading-[1.14] font-black text-foreground hyphens-none [overflow-wrap:break-word] sm:text-4xl sm:leading-tight">
               {copy.playlistIntro.title}
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
               {copy.playlistIntro.body}
             </p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <ol className="grid overflow-hidden rounded-2xl border border-border bg-background/78 p-2 shadow-sm sm:grid-cols-3 lg:grid-cols-1">
             {copy.playlistIntro.steps.map((step, index) => (
-              <div
+              <li
                 key={step}
-                className="flex items-center gap-3 border-l-2 border-primary/35 bg-background/55 px-4 py-3"
+                className="flex min-h-16 items-center gap-3 border-border px-4 py-3 sm:border-l sm:first:border-l-0 lg:border-l-0 lg:border-t lg:first:border-t-0"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">
                   {index + 1}
                 </span>
-                <span className="text-sm font-black text-foreground">{step}</span>
-              </div>
+                <span className="min-w-0 text-sm leading-tight font-black text-foreground">{step}</span>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
