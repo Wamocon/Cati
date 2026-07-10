@@ -370,6 +370,9 @@ function localizeStreamMessage(value: string, locale: ReturnType<typeof resolveD
 }
 
 function localizeTicketActor(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  const localized = localizeDashboardTextPart(value, locale)
+  if (localized !== value) return localized
+
   if (locale !== "tr") return value
   return value
     .replace(/\bwaiting_approval\b/gi, "Onay bekliyor")
@@ -439,7 +442,10 @@ export function LiveErpSimulation({
   const streamEvents = useMemo(() => {
     const localizedActivityItems = activityItems.slice(0, 3).map((event) => ({
       ...event,
-      actor: copy.events[event.id as keyof typeof copy.events]?.actor ?? event.actor,
+      actor: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.actor ?? event.actor,
+        dashboardLocale
+      ),
       message: localizeStreamMessage(
         copy.events[event.id as keyof typeof copy.events]?.message ?? event.message,
         dashboardLocale

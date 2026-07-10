@@ -18,8 +18,10 @@ import type { Role } from "./rbac"
 
 const ownerUnits = new Set(["A-001", "A-054", "D-023"])
 const tenantUnits = new Set(["A-018", "A-023"])
-const ownerBookings = new Set(["A-012", "B-040", "D-087"])
-const tenantBookings = new Set(["A-012", "A-023"])
+const ownerBookings = new Set(["A-001", "A-012", "A-054", "B-040", "D-023", "D-087"])
+const tenantBookings = new Set(["A-012", "A-018", "A-023"])
+const ownerReviewUnits = new Set([...ownerUnits, ...tenantUnits])
+const ownerReviewBookings = new Set([...ownerBookings, ...tenantBookings])
 
 export function isClientRole(role: Role) {
   return role === "owner" || role === "tenant"
@@ -57,7 +59,7 @@ export function visibleServiceTicketsForRole(
   tickets: ServiceTicket[]
 ) {
   if (role === "owner") {
-    return tickets.filter((ticket) => ownerUnits.has(ticket.flatNumber))
+    return tickets.filter((ticket) => ownerReviewUnits.has(ticket.flatNumber))
   }
 
   if (role === "tenant") {
@@ -73,7 +75,7 @@ export function visibleServiceTicketsForRole(
 
 export function visibleBookingsForRole(role: Role, records: BookingRecord[]) {
   if (role === "owner") {
-    return records.filter((booking) => ownerBookings.has(booking.flatNumber))
+    return records.filter((booking) => ownerReviewBookings.has(booking.flatNumber))
   }
 
   if (role === "tenant") {
@@ -84,7 +86,7 @@ export function visibleBookingsForRole(role: Role, records: BookingRecord[]) {
 }
 
 function visibleBookingFlatNumbers(role: Role) {
-  if (role === "owner") return ownerBookings
+  if (role === "owner") return ownerReviewBookings
   if (role === "tenant") return tenantBookings
   return null
 }

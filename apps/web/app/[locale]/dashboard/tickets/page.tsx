@@ -13,9 +13,12 @@ import {
   ListChecks,
   PackageCheck,
   RefreshCw,
+  Save,
+  Send,
   ShieldAlert,
   Sparkles,
   TicketCheck,
+  Trash2,
   UserCheck,
   Wrench,
   XCircle,
@@ -37,6 +40,7 @@ import {
 import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { createClient } from "@/lib/supabase/client"
 import type { ServiceTicketQueueData } from "@/lib/site-management-repository"
+import { resolveTicketRoute, ticketAssigneeOptions } from "@/lib/ticket-routing"
 import {
   isClientRole,
   isFieldRole,
@@ -61,6 +65,21 @@ import {
 
 type RequestState = "idle" | "loading" | "success" | "error"
 type WorkflowDecision = "approved" | "rejected"
+
+const ticketUnitOptionsByRole = {
+  owner: ["A-001", "A-054", "D-023"],
+  tenant: ["A-018", "A-023"],
+  default: ["A-001", "A-018", "A-023", "B-040", "C-078", "D-087"],
+}
+
+const ticketCategoryOptions = [
+  "maintenance",
+  "cleaning",
+  "amenity",
+  "security",
+  "inspection",
+  "concierge",
+]
 
 interface WorkflowRequestView {
   id: string
@@ -375,6 +394,23 @@ export default function TicketsPage() {
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
   const maskFinance = shouldMaskFinance(user.role)
+  const ticketUnitOptions =
+    user.role === "owner"
+      ? ticketUnitOptionsByRole.owner
+      : user.role === "tenant"
+        ? ticketUnitOptionsByRole.tenant
+        : ticketUnitOptionsByRole.default
+  const [ticketForm, setTicketForm] = useState({
+    title: "",
+    unitNo: ticketUnitOptions[0] ?? "A-001",
+    category: "maintenance",
+    priority: "medium",
+    description: "",
+  })
+  const [ticketSubmitState, setTicketSubmitState] = useState<RequestState>("idle")
+  const [ticketEditState, setTicketEditState] = useState<RequestState>("idle")
+  const [selectedTicketId, setSelectedTicketId] = useState("")
+  const suggestedRoute = resolveTicketRoute(ticketForm)
   const fetchTickets = useCallback(async () => {
     setRequestState("loading")
     try {
@@ -529,6 +565,95 @@ export default function TicketsPage() {
   const approvalPending = approvalQueue.filter((item) =>
     ["submitted", "queued", "logged"].includes(workflowStatusLabel(item))
   ).length
+  const selectedTicket =
+    visibleTickets.find((ticket) => ticket.id === selectedTicketId) ?? visibleTickets[0] ?? null
+
+  async function submitTicket() {
+    setTicketSubmitState("loading")
+    try {
+      const response = await fetch("/api/site-management/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ticketForm),
+      })
+      if (!response.ok) throw new Error("Ticket create failed.")
+      setTicketForm((current) => ({
+        ...current,
+        title: "",
+        description: "",
+      }))
+      setTicketSubmitState("success")
+      await fetchTickets()
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
+    } catch {
+      setTicketSubmitState("error")
+    }
+  }
+
+  function readTicketUpdateForm(form: HTMLFormElement) {
+    const formData = new FormData(form)
+    return {
+      title: String(formData.get("title") ?? ""),
+      category: String(formData.get("category") ?? "maintenance"),
+      priority: String(formData.get("priority") ?? "medium"),
+      status: String(formData.get("status") ?? "open"),
+      assignee: String(formData.get("assignee") ?? "Operations queue"),
+      description: String(formData.get("description") ?? ""),
+    }
+  }
+
+  async function submitTicketUpdate(
+    payload: ReturnType<typeof readTicketUpdateForm>,
+    clearDescription = false
+  ) {
+    if (!selectedTicket) return
+    setTicketEditState("loading")
+    try {
+      const response = await fetch("/api/site-management/tickets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          clientView
+            ? {
+                ticketId: selectedTicket.id,
+                title: payload.title,
+                category: payload.category,
+                clearDescription,
+                description: clearDescription ? null : payload.description,
+              }
+            : {
+                ticketId: selectedTicket.id,
+                ...payload,
+                clearDescription,
+                description: clearDescription ? null : payload.description,
+              }
+        ),
+      })
+      if (!response.ok) throw new Error("Ticket update failed.")
+      setTicketEditState("success")
+      await fetchTickets()
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
+    } catch {
+      setTicketEditState("error")
+    }
+  }
+
+  async function decideTenantTicket(ticketId: string, approvalStatus: "approved" | "rejected") {
+    setTicketEditState("loading")
+    try {
+      const response = await fetch("/api/site-management/tickets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticketId, approvalStatus }),
+      })
+      if (!response.ok) throw new Error("Ticket approval failed.")
+      setTicketEditState("success")
+      await fetchTickets()
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
+    } catch {
+      setTicketEditState("error")
+    }
+  }
 
   async function decideWorkflow(item: WorkflowRequestView, status: WorkflowDecision) {
     setWorkflowDecisionState((current) => ({ ...current, [item.id]: "loading" }))
@@ -707,6 +832,277 @@ export default function TicketsPage() {
               <AnimatedCounter value={averageReadiness} suffix="%" className="text-2xl font-black" />
             </div>
           </div>
+        </Card3D>
+      </div>
+
+      {user.role === "owner" && visibleTickets.some((ticket) => ticket.status === "waiting_approval") && (
+        <DashboardSection
+          icon={UserCheck}
+          title={t("Kiraci talep onay kuyrugu")}
+          description={t("Normal kiraci talepleri operasyona gitmeden once malik karari bekler. Acil talepler bekletilmez.")}
+        >
+          <div className="flex flex-col gap-2">
+            {visibleTickets.filter((ticket) => ticket.status === "waiting_approval").map((ticket) => (
+              <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <p className="text-sm font-semibold text-foreground">{ticket.title} · {ticket.flatNumber}</p>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => void decideTenantTicket(ticket.id, "approved")} disabled={ticketEditState === "loading"} className="rounded-lg bg-primary px-3 py-2 text-xs font-black text-primary-foreground disabled:opacity-60">{t("Onayla")}</button>
+                  <button type="button" onClick={() => void decideTenantTicket(ticket.id, "rejected")} disabled={ticketEditState === "loading"} className="rounded-lg border border-border px-3 py-2 text-xs font-black text-foreground disabled:opacity-60">{t("Reddet")}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DashboardSection>
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        {!fieldView && (
+          <Card3D glow={false}>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-black text-card-foreground">{t("Servis talebi olustur")}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("Daire, kategori, oncelik ve aciklama ile gercek talep kaydi acilir.")}
+                </p>
+              </div>
+              <StatusBadge variant={ticketSubmitState === "success" ? "success" : ticketSubmitState === "error" ? "danger" : "info"}>
+                {ticketSubmitState === "loading" ? t("Kaydediliyor") : ticketSubmitState === "success" ? t("Kaydedildi") : t("Portal")}
+              </StatusBadge>
+            </div>
+            <form
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void submitTicket()
+              }}
+            >
+              <label className="block text-xs font-black uppercase text-muted-foreground">
+                {t("Konu")}
+                <input
+                  value={ticketForm.title}
+                  onChange={(event) => setTicketForm((current) => ({ ...current, title: event.target.value }))}
+                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  placeholder={t("Ornek: Sauna rezervasyonu veya klima arizasi")}
+                  maxLength={160}
+                  required
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Daire")}
+                  <select
+                    value={ticketForm.unitNo}
+                    onChange={(event) => setTicketForm((current) => ({ ...current, unitNo: event.target.value }))}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketUnitOptions.map((unitNo) => (
+                      <option key={unitNo} value={unitNo}>
+                        {unitNo}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Kategori")}
+                  <select
+                    value={ticketForm.category}
+                    onChange={(event) => setTicketForm((current) => ({ ...current, category: event.target.value }))}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketCategoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {t(category)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Oncelik")}
+                  <select
+                    value={ticketForm.priority}
+                    onChange={(event) => setTicketForm((current) => ({ ...current, priority: event.target.value }))}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {(["low", "medium", "high", "urgent"] as const).map((priority) => (
+                      <option key={priority} value={priority}>
+                        {servicePriorityLabel(priority, locale)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label className="block text-xs font-black uppercase text-muted-foreground">
+                {t("Aciklama")}
+                <textarea
+                  value={ticketForm.description}
+                  onChange={(event) => setTicketForm((current) => ({ ...current, description: event.target.value }))}
+                  className="mt-1 min-h-24 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  placeholder={t("Sorunu, istenen zamani veya ek bilgiyi yazin.")}
+                  maxLength={1200}
+                />
+              </label>
+              <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground" role="status">
+                {suggestedRoute.emergency ? t("Acil rota") : t("Otomatik rota")}: {t(suggestedRoute.assignee)} - {t(suggestedRoute.reason)}
+              </p>
+              <button
+                type="submit"
+                disabled={ticketSubmitState === "loading" || ticketForm.title.trim().length < 3}
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Send className="h-4 w-4" />
+                {t("Talep gonder")}
+              </button>
+            </form>
+          </Card3D>
+        )}
+
+        <Card3D glow={false} className={fieldView ? "xl:col-span-2" : undefined}>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-sm font-black text-card-foreground">{t("Talep duzenle ve ata")}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {clientView
+                  ? t("Kendi talebinizin metnini duzenleyin veya gereksiz bilgiyi kaldirin.")
+                  : t("Durum, sorumlu, oncelik ve aciklama ayni kayda uygulanir.")}
+              </p>
+            </div>
+            <StatusBadge variant={ticketEditState === "success" ? "success" : ticketEditState === "error" ? "danger" : "neutral"}>
+              {ticketEditState === "loading" ? t("Kaydediliyor") : selectedTicket ? selectedTicket.id : t("Bos")}
+            </StatusBadge>
+          </div>
+
+          {selectedTicket ? (
+            <form
+              key={selectedTicket.id}
+              className="space-y-3"
+              onSubmit={(event) => {
+                event.preventDefault()
+                void submitTicketUpdate(readTicketUpdateForm(event.currentTarget), false)
+              }}
+            >
+              <label className="block text-xs font-black uppercase text-muted-foreground">
+                {t("Talep sec")}
+                <select
+                  value={selectedTicket.id}
+                  onChange={(event) => setSelectedTicketId(event.target.value)}
+                  className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                >
+                  {visibleTickets.map((ticket) => (
+                    <option key={ticket.id} value={ticket.id}>
+                      {ticket.id} - {ticket.flatNumber} - {t(ticket.title)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Konu")}
+                  <input
+                    name="title"
+                    defaultValue={selectedTicket.title}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                    maxLength={160}
+                    required
+                  />
+                </label>
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Kategori")}
+                  <select
+                    name="category"
+                    defaultValue={selectedTicket.category}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketCategoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {t(category)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              {!clientView && (
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <label className="block text-xs font-black uppercase text-muted-foreground">
+                    {t("Durum")}
+                    <select
+                      name="status"
+                      defaultValue={selectedTicket.status}
+                      className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                    >
+                      {(["open", "assigned", "in_progress", "resolved", "closed"] as const).map((status) => (
+                        <option key={status} value={status}>
+                          {serviceStatusLabel(status, locale)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-black uppercase text-muted-foreground">
+                    {t("Oncelik")}
+                    <select
+                      name="priority"
+                      defaultValue={selectedTicket.priority}
+                      className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                    >
+                      {(["low", "medium", "high", "urgent"] as const).map((priority) => (
+                        <option key={priority} value={priority}>
+                          {servicePriorityLabel(priority, locale)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="block text-xs font-black uppercase text-muted-foreground">
+                    {t("Sorumlu")}
+                    <select
+                      name="assignee"
+                      defaultValue={selectedTicket.assignee}
+                      className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                    >
+                      {ticketAssigneeOptions.map((assignee) => (
+                        <option key={assignee} value={assignee}>
+                          {t(assignee)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
+              <label className="block text-xs font-black uppercase text-muted-foreground">
+                {t("Aciklama")}
+                <textarea
+                  name="description"
+                  defaultValue={selectedTicket.description ?? ""}
+                  className="mt-1 min-h-24 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  maxLength={1200}
+                />
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="submit"
+                  disabled={ticketEditState === "loading"}
+                  className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Save className="h-4 w-4" />
+                  {t("Degisiklikleri kaydet")}
+                </button>
+                <button
+                  type="button"
+                  disabled={ticketEditState === "loading"}
+                  onClick={(event) => {
+                    const form = event.currentTarget.form
+                    if (form) void submitTicketUpdate(readTicketUpdateForm(form), true)
+                  }}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-500/25 bg-rose-500/10 px-4 py-2 text-sm font-black text-rose-700 transition hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-60 dark:text-rose-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t("Aciklamayi kaldir")}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border p-4 text-sm font-semibold text-muted-foreground">
+              {t("Henuz duzenlenecek servis talebi yok.")}
+            </div>
+          )}
         </Card3D>
       </div>
 
@@ -952,7 +1348,7 @@ export default function TicketsPage() {
               {managerApprovalTasks} {t("onay")}
             </StatusBadge>
             <StatusBadge variant={overdue > 0 ? "danger" : "success"}>
-              {overdue} SLA riski
+              {overdue} {t("SLA riski")}
             </StatusBadge>
           </div>
         }
@@ -964,7 +1360,7 @@ export default function TicketsPage() {
                 <div>
                   <p className="text-xs font-bold text-muted-foreground">{task.routeSlot} - {task.flatNumber}</p>
                   <h3 className="mt-1 text-sm font-bold text-foreground">{t(task.title)}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">{t(task.team)} - {task.assignee}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t(task.team)} - {t(task.assignee)}</p>
                 </div>
                 <StatusBadge variant={taskReadinessVariant(task)}>{task.completionReadiness}%</StatusBadge>
               </div>
@@ -992,7 +1388,7 @@ export default function TicketsPage() {
                       {
                         key: "prepare-task",
                         label: t("Gorev aksiyonu hazirla"),
-                        description: `${task.assignee} ${t("için medya ve SLA kaydı")}.`,
+                        description: `${t(task.assignee)} ${t("için medya ve SLA kaydı")}.`,
                         icon: <ListChecks />,
                         actionType: "workforce_tasks.update.prepare",
                         ariaLabel: `${task.id} ${t("saha gorevini hazirla")}`,
@@ -1051,7 +1447,7 @@ export default function TicketsPage() {
                     <h3 className="mt-2 text-sm font-bold text-foreground">{t(ticket.title)}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {ticket.flatNumber} - {t(ticket.category)}
-                      {!clientView && ` - ${ticket.assignee}`}
+                      {!clientView && ` - ${t(ticket.assignee)}`}
                     </p>
                   </div>
                   <div className="text-left sm:text-right">
@@ -1121,10 +1517,10 @@ export default function TicketsPage() {
                 <div>
                   <h2 className="text-sm font-bold text-card-foreground">{t("Ticketing mimarisi")}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {queueData.strategy.systemOfRecord}
+                    {t(queueData.strategy.systemOfRecord)}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {queueData.strategy.crmRole}
+                    {t(queueData.strategy.crmRole)}
                   </p>
                 </div>
               </div>
@@ -1173,7 +1569,7 @@ export default function TicketsPage() {
                 {
                   key: "assignee",
                   header: t("Sorumlu"),
-                  render: (ticket: ServiceTicket) => ticket.assignee,
+                  render: (ticket: ServiceTicket) => t(ticket.assignee),
                 },
               ]
             : []),
@@ -1231,13 +1627,13 @@ export default function TicketsPage() {
           <DataTable
             data={visibleTasks}
             pageSize={8}
-            searchValue={(task) => `${task.id} ${task.ticketId} ${task.flatNumber} ${task.title} ${task.team} ${task.assignee}`}
+            searchValue={(task) => `${task.id} ${task.ticketId} ${task.flatNumber} ${task.title} ${t(task.team)} ${t(task.assignee)}`}
             columns={[
               { key: "id", header: "Görev", sortable: true, render: (task) => task.id },
               { key: "flat", header: t("Daire"), sortable: true, render: (task) => task.flatNumber },
               { key: "title", header: "İş", render: (task) => task.title },
               { key: "team", header: "Ekip", sortable: true, render: (task) => task.team },
-              { key: "assignee", header: t("Sorumlu"), sortable: true, render: (task) => task.assignee },
+              { key: "assignee", header: t("Sorumlu"), sortable: true, render: (task) => t(task.assignee) },
               {
                 key: "readiness",
                 header: "Hazır",

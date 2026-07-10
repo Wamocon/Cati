@@ -1713,7 +1713,7 @@ function OperationsDashboard({
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-foreground">{tActivityMessage(activity.message)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {activity.actor} - {tActivityType(activity.type)}
+                          {tActivityMessage(activity.actor)} - {tActivityType(activity.type)}
                         </p>
                       </div>
                       <DrilldownCue allowed={allowed} />
@@ -1741,7 +1741,7 @@ function OperationsDashboard({
                   <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{tRecord(ticket.title)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{tRecord(ticket.assignee)}</p>
               </div>
               </CommandLink>
             ))}

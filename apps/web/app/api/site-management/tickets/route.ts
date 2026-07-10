@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { getUserProfile } from "@/lib/auth"
 import { hasAnyPermission } from "@/lib/rbac"
 import {
+  createServiceTicket,
   getServiceTicketQueueData,
   logClientAction,
+  updateServiceTicket,
   type ServiceTicketQueueData,
 } from "@/lib/site-management-repository"
 import {
@@ -17,6 +19,7 @@ import {
   visibleServiceTicketsForRole,
 } from "@/lib/role-scoped-views"
 import type { Role } from "@/lib/rbac"
+import { isTicketAssignee, resolveTicketRoute } from "@/lib/ticket-routing"
 
 export const dynamic = "force-dynamic"
 
@@ -37,11 +40,31 @@ function asRecord(value: unknown): Record<string, unknown> {
 
 function readPriority(value: unknown) {
   return value === "low" ||
+    value === "medium" ||
     value === "normal" ||
     value === "high" ||
     value === "urgent"
     ? value
-    : "normal"
+    : "medium"
+}
+
+function readStatus(value: unknown) {
+  return value === "open" ||
+    value === "assigned" ||
+    value === "waiting_payment" ||
+    value === "in_progress" ||
+    value === "resolved" ||
+    value === "closed" ||
+    value === "cancelled"
+    ? value
+    : null
+}
+
+function readOptionalText(record: Record<string, unknown>, key: string) {
+  if (!(key in record)) return undefined
+  const value = record[key]
+  if (value === null) return null
+  return typeof value === "string" ? value.trim() : undefined
 }
 
 function scopeTicketQueueForRole(
@@ -197,8 +220,6 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const actionType = origin === "ai" ? "ticket.create.ai_draft" : "ticket.create.request"
-  const workflowAction = resolveWorkflowAction(actionType, "service_tickets")
   const proposedPayload = {
     title,
     description,
@@ -206,15 +227,44 @@ export async function POST(request: NextRequest) {
     priority,
     unitNo,
   }
+  const requestedAssignee = asString(payload.assignee)
+  if (requestedAssignee && !isTicketAssignee(requestedAssignee)) {
+    return NextResponse.json({ error: "The requested assignee is not available." }, { status: 400 })
+  }
+  const route = requestedAssignee
+    ? { assignee: requestedAssignee, reason: "Manual assignment", emergency: false }
+    : resolveTicketRoute(proposedPayload)
+  const requiresOwnerApproval = profile.role === "tenant" && !route.emergency
 
   try {
-    const result = await logClientAction({
+    const ticketResult = await createServiceTicket({
+      title,
+      description,
+      category,
+      priority,
+      unitNo,
+      assignee: route.assignee,
+      requiresOwnerApproval,
+      suggestedAssignee: route.assignee,
+      actor: {
+        id: profile.id,
+        role: profile.role,
+        companyId: profile.company_id,
+        displayName: profile.full_name,
+        email: profile.email,
+      },
+    })
+
+    const actionType = origin === "ai" ? "ticket.create.ai_draft" : "ticket.create.request"
+    const workflowAction = resolveWorkflowAction(actionType, "service_tickets")
+    const audit = await logClientAction({
       actionType,
       entityTable: "service_tickets",
-      entityExternalId: unitNo ?? "ticket-request",
+      entityExternalId: ticketResult.ticket.id,
       title,
       metadata: {
         proposedPayload,
+        materializedTicketId: ticketResult.ticket.id,
         ...buildWorkflowMetadata({
           action: workflowAction,
           origin,
@@ -226,19 +276,190 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        ...result,
+        ...audit,
         workflow: workflowAction,
-        ticketRequest: {
-          status: "submitted",
-          proposedPayload,
-          requiresHumanApproval: workflowAction.requiresHumanApproval,
-        },
+        ticket: ticketResult.ticket,
+        routing: route,
+        ownerApprovalRequired: requiresOwnerApproval,
       },
-      { status: 202 }
+      { status: 201 }
     )
   } catch {
     return NextResponse.json(
-      { error: "Ticket request could not be submitted." },
+      { error: "Ticket could not be created." },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  let body: unknown
+
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json(
+      { error: "Request body must be valid JSON." },
+      { status: 400 }
+    )
+  }
+
+  const profile = await getUserProfile()
+  if (!profile) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+  }
+
+  const payload = asRecord(body)
+  const ticketId = asString(payload.ticketId)
+  if (!ticketId) {
+    return NextResponse.json(
+      { error: "A ticket id is required." },
+      { status: 400 }
+    )
+  }
+
+  const title = readOptionalText(payload, "title")
+  const description = readOptionalText(payload, "description")
+  const category = readOptionalText(payload, "category")
+  const assignee = readOptionalText(payload, "assignee")
+  const clearDescription = payload.clearDescription === true
+  const priority = "priority" in payload ? readPriority(payload.priority) : undefined
+  const status = readStatus(payload.status)
+  const approvalDecision = payload.approvalStatus === "approved" || payload.approvalStatus === "rejected"
+    ? payload.approvalStatus
+    : null
+  const wantsOperationalChange = Boolean(status || assignee || priority)
+
+  if (approvalDecision && !hasAnyPermission(profile.role, "tickets", ["approve", "manage"])) {
+    return NextResponse.json({ error: "Your role is not allowed to approve tenant tickets." }, { status: 403 })
+  }
+
+  if (assignee !== undefined && assignee !== null && !isTicketAssignee(assignee)) {
+    return NextResponse.json({ error: "The requested assignee is not available." }, { status: 400 })
+  }
+
+  if (
+    wantsOperationalChange &&
+    !hasAnyPermission(profile.role, "tickets", ["update", "assign", "manage"])
+  ) {
+    return NextResponse.json(
+      { error: "Your role is not allowed to assign or change ticket status." },
+      { status: 403 }
+    )
+  }
+
+  if (
+    !wantsOperationalChange &&
+    !hasAnyPermission(profile.role, "tickets", ["update", "create", "manage"])
+  ) {
+    return NextResponse.json(
+      { error: "Your role is not allowed to edit service tickets." },
+      { status: 403 }
+    )
+  }
+
+  if (title !== undefined && (!title || title.length < 3 || title.length > 160)) {
+    return NextResponse.json(
+      { error: "Ticket title must be between 3 and 160 characters." },
+      { status: 400 }
+    )
+  }
+
+  if (description && description.length > 1200) {
+    return NextResponse.json(
+      { error: "Ticket description must be 1200 characters or fewer." },
+      { status: 400 }
+    )
+  }
+
+  try {
+    if (isClientRole(profile.role)) {
+      const currentData = await getServiceTicketQueueData({ limit: 100 })
+      const visibleTicketIds = new Set(
+        visibleServiceTicketsForRole(profile.role, currentData.tickets).map((ticket) => ticket.id)
+      )
+      if (!visibleTicketIds.has(ticketId)) {
+        return NextResponse.json(
+          { error: "Your role is not allowed to edit this service ticket." },
+          { status: 403 }
+        )
+      }
+    }
+
+    if (approvalDecision) {
+      const currentData = await getServiceTicketQueueData({ limit: 100 })
+      const currentTicket = currentData.tickets.find((ticket) => ticket.id === ticketId)
+      if (!currentTicket || currentTicket.status !== "waiting_approval") {
+        return NextResponse.json({ error: "This ticket is not waiting for owner approval." }, { status: 409 })
+      }
+      const approvedRoute = resolveTicketRoute({
+        title: currentTicket.title,
+        description: currentTicket.description,
+        category: currentTicket.category,
+        priority: currentTicket.priority,
+      })
+      const decisionResult = await updateServiceTicket({
+        ticketId,
+        status: approvalDecision === "approved" ? "assigned" : "cancelled",
+        assignee: approvalDecision === "approved" ? approvedRoute.assignee : "Owner approval queue",
+        actor: { id: profile.id, role: profile.role, companyId: profile.company_id, displayName: profile.full_name, email: profile.email },
+      })
+      if (!decisionResult) return NextResponse.json({ error: "Ticket was not found." }, { status: 404 })
+      await logClientAction({
+        actionType: `ticket.owner_${approvalDecision}`,
+        entityTable: "service_tickets",
+        entityExternalId: decisionResult.ticket.id,
+        title: decisionResult.ticket.title,
+        metadata: { decidedByRole: profile.role, approvalDecision, routedTo: approvalDecision === "approved" ? approvedRoute.assignee : null },
+      })
+      return NextResponse.json({ ...decisionResult, approvalStatus: approvalDecision, routing: approvedRoute })
+    }
+
+    const result = await updateServiceTicket({
+      ticketId,
+      title,
+      description,
+      clearDescription,
+      category,
+      priority,
+      status: status ?? undefined,
+      assignee,
+      actor: {
+        id: profile.id,
+        role: profile.role,
+        companyId: profile.company_id,
+        displayName: profile.full_name,
+        email: profile.email,
+      },
+    })
+
+    if (!result) {
+      return NextResponse.json({ error: "Ticket was not found." }, { status: 404 })
+    }
+
+    await logClientAction({
+      actionType: assignee ? "ticket.assign" : "ticket.update",
+      entityTable: "service_tickets",
+      entityExternalId: result.ticket.id,
+      title: result.ticket.title,
+      metadata: {
+        requestedByRole: profile.role,
+        changes: {
+          title,
+          description: clearDescription ? null : description,
+          category,
+          priority,
+          status,
+          assignee,
+          clearDescription,
+        },
+      },
+    })
+
+    return NextResponse.json(result)
+  } catch {
+    return NextResponse.json(
+      { error: "Ticket could not be updated." },
       { status: 500 }
     )
   }
