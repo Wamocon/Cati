@@ -219,32 +219,34 @@ export default async function VideosPage({
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--primary)_10%,var(--background)),var(--background)_46%,color-mix(in_srgb,#f6a94a_9%,var(--background)))]" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-px bg-border" />
 
-        <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.42fr)] lg:px-8">
-          <div className="min-w-0 max-w-4xl">
+        <div className="mx-auto grid max-w-[88rem] items-start gap-8 px-4 sm:px-6 xl:grid-cols-[minmax(0,1fr)_minmax(420px,0.43fr)] xl:px-8">
+          <div className="min-w-0 max-w-5xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card px-3 py-1 text-xs font-black tracking-[0.16em] text-primary uppercase shadow-sm">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               {copy.eyebrow}
             </span>
-            <h1 className="mt-5 max-w-5xl text-4xl leading-[1.05] font-black tracking-tight text-foreground hyphens-auto [overflow-wrap:anywhere] sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 max-w-5xl text-[2rem] leading-[1.08] font-black tracking-tight text-balance text-foreground hyphens-none [overflow-wrap:break-word] sm:text-5xl sm:leading-[1.05] lg:text-6xl 2xl:text-7xl">
               {copy.title}
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
               {copy.body}
             </p>
-            <a
-              className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90"
-              href="#video-library"
-            >
-              <ArrowDownCircle className="h-5 w-5" aria-hidden="true" />
-              {copy.primaryCta}
-            </a>
-            <a
-              className="ml-0 mt-3 inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-6 text-sm font-black text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary sm:ml-3"
-              href={`/${locale}/login`}
-            >
-              <Building2 className="h-5 w-5" aria-hidden="true" />
-              {copy.secondaryCta}
-            </a>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <a
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-black text-primary-foreground shadow-xl shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90 sm:w-auto"
+                href="#video-library"
+              >
+                <ArrowDownCircle className="h-5 w-5" aria-hidden="true" />
+                {copy.primaryCta}
+              </a>
+              <a
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-card px-6 text-sm font-black text-foreground shadow-sm transition hover:-translate-y-0.5 hover:border-primary/30 hover:text-primary sm:w-auto"
+                href={`/${locale}/login`}
+              >
+                <Building2 className="h-5 w-5" aria-hidden="true" />
+                {copy.secondaryCta}
+              </a>
+            </div>
 
             <div className="mt-7 grid gap-3 text-sm leading-6 text-muted-foreground">
               {copy.checklist.map((item) => (
@@ -259,7 +261,7 @@ export default async function VideosPage({
             </div>
           </div>
 
-          <aside className="premium-surface min-w-0 rounded-3xl p-5">
+          <aside className="premium-surface mx-auto w-full max-w-[34rem] min-w-0 rounded-3xl p-4 sm:p-5 xl:max-w-none xl:p-6">
             <div className="relative mb-5 aspect-video overflow-hidden rounded-2xl border border-border bg-muted shadow-sm">
               <div
                 aria-label={`${copy.eyebrow} title image`}
@@ -280,22 +282,22 @@ export default async function VideosPage({
               <TimerReset className="h-4 w-4" aria-hidden="true" />
               {copy.proof.eyebrow}
             </span>
-            <h2 className="mt-3 text-2xl leading-tight font-black text-foreground hyphens-auto [overflow-wrap:anywhere]">
+            <h2 className="mt-3 text-xl leading-tight font-black text-foreground hyphens-auto [overflow-wrap:anywhere] sm:text-2xl">
               {copy.proof.title}
             </h2>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
               {copy.proof.body}
             </p>
-            <div className="mt-6 divide-y divide-border rounded-2xl border border-border bg-background/55">
+            <div className="mt-6 grid gap-2 rounded-2xl border border-border bg-background/55 p-2">
               {copy.stats.map(([value, label]) => (
                 <div
                   key={`${value}-${label}`}
-                  className="grid grid-cols-[minmax(112px,0.42fr)_1fr] items-center gap-4 p-4"
+                  className="grid min-w-0 gap-2 rounded-xl bg-card/55 p-3 sm:grid-cols-[minmax(96px,auto)_minmax(0,1fr)] sm:items-center sm:gap-4"
                 >
-                  <div className="text-2xl leading-none font-black text-foreground">
+                  <div className="min-w-0 text-2xl leading-none font-black text-foreground">
                     {value}
                   </div>
-                  <div className="text-xs leading-5 font-black tracking-[0.12em] text-muted-foreground uppercase">
+                  <div className="min-w-0 text-[11px] leading-5 font-black tracking-[0.08em] text-muted-foreground uppercase [overflow-wrap:anywhere] sm:text-xs sm:tracking-[0.1em]">
                     {label}
                   </div>
                 </div>
