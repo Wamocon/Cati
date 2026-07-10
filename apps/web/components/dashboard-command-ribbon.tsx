@@ -1118,14 +1118,6 @@ export function DashboardCommandRibbon() {
           </button>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={openFilters}
-              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 py-1.5 text-xs font-bold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              {copy.filters}
-            </button>
             <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300">
               <Sparkles className="h-4 w-4" />
               {copy.attention} {activeCount}

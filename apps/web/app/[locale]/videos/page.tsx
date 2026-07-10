@@ -30,7 +30,7 @@ const pageCopy = {
     eyebrow: "Cati Training",
     title:
       "See how 1Cati turns property management into one controlled operating system.",
-    body: "This page is built for decision makers: watch how sales, owners, tenants, service, finance, documents, AI and reporting work together inside one role-based ERP workspace.",
+    body: "This page is built for decision makers and shows how sales, owners, tenants, service, finance, documents, AI and reporting work together inside one role-based ERP workspace.",
     primaryCta: "Start the walkthrough",
     secondaryCta: "Open client portal",
     stats: [
@@ -73,7 +73,7 @@ const pageCopy = {
     eyebrow: "Cati Training",
     title:
       "Sehen Sie, wie 1Cati Immobilienverwaltung zu einem kontrollierten Betriebssystem macht.",
-    body: "Diese Seite ist für Entscheider gebaut: Sie zeigt, wie Vertrieb, Eigentümer, Mieter, Service, Finanzen, Dokumente, KI und Reporting in einem rollenbasierten ERP-Arbeitsbereich zusammenlaufen.",
+    body: "Diese Seite ist für Entscheider gebaut und zeigt, wie Vertrieb, Eigentümer, Mieter, Service, Finanzen, Dokumente, KI und Reporting in einem rollenbasierten ERP-Arbeitsbereich zusammenlaufen.",
     primaryCta: "Produktführung starten",
     secondaryCta: "Kundenportal öffnen",
     stats: [
@@ -115,7 +115,7 @@ const pageCopy = {
   tr: {
     eyebrow: "Cati Training",
     title: "1Çatı ile site yönetimini tek merkezden görün, yönetin ve büyütün.",
-    body: "Bu sayfa karar vericiler için hazırlandı: satış, malik, kiracı, servis, finans, belge, yapay zeka ve raporlamanın tek rol bazlı ERP çalışma alanında nasıl birleştiğini canlı akışlarla izleyin.",
+    body: "Bu sayfa karar vericiler için hazırlandı ve satış, malik, kiracı, servis, finans, belge, yapay zeka ve raporlamanın tek rol bazlı ERP çalışma alanında nasıl birleştiğini canlı akışlarla gösterir.",
     primaryCta: "Ürün turunu başlat",
     secondaryCta: "Müşteri portalını aç",
     stats: [

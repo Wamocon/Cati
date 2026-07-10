@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useLocale, useTranslations } from "next-intl"
@@ -122,6 +122,7 @@ function CommandLink({
   role: Role
 }) {
   const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
+  const [lockedNoticeVisible, setLockedNoticeVisible] = useState(false)
   const resource = resourceForDashboardPath(href)
   const allowed = hasPermission(role, resource, "view")
   const content = typeof children === "function" ? children({ allowed }) : children
@@ -138,10 +139,29 @@ function CommandLink({
         aria-label={`${ariaLabel} - ${copy.command.lockedAriaSuffix}`}
         className={baseClassName}
         data-access="locked"
-        role="group"
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          setLockedNoticeVisible(true)
+          window.setTimeout(() => setLockedNoticeVisible(false), 5200)
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return
+          event.preventDefault()
+          setLockedNoticeVisible(true)
+          window.setTimeout(() => setLockedNoticeVisible(false), 5200)
+        }}
         title={copy.command.lockedTitle}
       >
         {content}
+        {lockedNoticeVisible ? (
+          <span
+            role="status"
+            className="absolute right-3 top-3 z-10 rounded-full border border-amber-500/30 bg-amber-500/95 px-3 py-1 text-xs font-black text-white shadow-lg shadow-amber-500/20"
+          >
+            {copy.command.locked}
+          </span>
+        ) : null}
       </div>
     )
   }
@@ -797,11 +817,13 @@ function GlobalOperationsScene({
 
 function RoleFocusedDashboard({
   copy,
+  permittedDashboardHrefs,
   quickActions,
   role,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
+  permittedDashboardHrefs: string[]
   quickActions: SimulationQuickAction[]
   role: FocusedRole
   roleLabel: string
@@ -831,6 +853,7 @@ function RoleFocusedDashboard({
       <LiveErpSimulation
         blocks={blocks}
         criticalTickets={[]}
+        permittedHrefs={permittedDashboardHrefs}
         quickActions={quickActions}
         realtimeState="disabled"
         requestState="success"
@@ -909,11 +932,20 @@ function RoleFocusedDashboard({
 }
 
 function routeForActivity(type: string) {
-  if (type.includes("Tahsilat")) return "/dashboard/finance"
-  if (type.includes("Rezervasyon")) return "/dashboard/calendar"
-  if (type.includes("Eri")) return "/dashboard/compliance"
-  if (type.includes("Servis")) return "/dashboard/tickets"
-  if (type.includes("AI")) return "/dashboard/reports"
+  const normalized = type.toLocaleLowerCase("tr-TR")
+  if (/(tahsilat|finans|payment|finance|buchhaltung|inkasso)/i.test(normalized)) {
+    return "/dashboard/finance"
+  }
+  if (/(rezervasyon|booking|reservation|calendar|takvim|check-?in|check-?out)/i.test(normalized)) {
+    return "/dashboard/calendar"
+  }
+  if (/(erişim|erisim|access|compliance|security|zugang|güvenlik|guvenlik)/i.test(normalized)) {
+    return "/dashboard/compliance"
+  }
+  if (/(servis|service|ticket|order|task|auftrag|görev|gorev)/i.test(normalized)) {
+    return "/dashboard/tickets"
+  }
+  if (/(ai|ki|report|bericht|rapor)/i.test(normalized)) return "/dashboard/reports"
   return "/dashboard"
 }
 
@@ -1094,7 +1126,13 @@ function routeForEntityTable(entityTable: string) {
   if (entityTable.includes("unit") || entityTable.includes("import")) {
     return "/dashboard/listings"
   }
-  if (entityTable.includes("service_ticket")) return "/dashboard/tickets"
+  if (
+    entityTable.includes("service_ticket") ||
+    entityTable.includes("service_order") ||
+    entityTable.includes("workforce_task")
+  ) {
+    return "/dashboard/tickets"
+  }
   if (entityTable.includes("reservation") || entityTable.includes("booking")) {
     return "/dashboard/calendar"
   }
@@ -1143,11 +1181,19 @@ export default function DashboardHomePage() {
   const quickActions = buildSimulationQuickActions(user.role, (resource) =>
     dashboardT(`menu.${resource}`)
   )
+  const permittedDashboardHrefs = useMemo(
+    () =>
+      dashboardRoutes
+        .filter((route) => hasPermission(user.role, route.resource, "view"))
+        .map((route) => route.href),
+    [user.role]
+  )
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
     return (
       <RoleFocusedDashboard
         copy={copy}
+        permittedDashboardHrefs={permittedDashboardHrefs}
         quickActions={quickActions}
         role={user.role}
         roleLabel={roleLabel}
@@ -1158,6 +1204,7 @@ export default function DashboardHomePage() {
   return (
     <OperationsDashboard
       copy={copy}
+      permittedDashboardHrefs={permittedDashboardHrefs}
       quickActions={quickActions}
       user={user}
       roleLabel={roleLabel}
@@ -1167,11 +1214,13 @@ export default function DashboardHomePage() {
 
 function OperationsDashboard({
   copy,
+  permittedDashboardHrefs,
   quickActions,
   user,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
+  permittedDashboardHrefs: string[]
   quickActions: SimulationQuickAction[]
   user: ReturnType<typeof useUser>
   roleLabel: string
@@ -1360,6 +1409,7 @@ function OperationsDashboard({
         blocks={blocks}
         criticalTickets={criticalTickets}
         generatedAt={snapshot?.generatedAt}
+        permittedHrefs={permittedDashboardHrefs}
         quickActions={quickActions}
         realtimeState={realtimeState}
         requestState={requestState}

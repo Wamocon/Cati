@@ -57,6 +57,7 @@ interface LiveErpSimulationProps {
   blocks: BlockOverview[]
   criticalTickets?: CriticalTicket[]
   generatedAt?: string
+  permittedHrefs?: string[]
   quickActions?: SimulationQuickAction[]
   realtimeState?: "checking" | "connected" | "disabled" | "error"
   requestState?: "idle" | "loading" | "success" | "error"
@@ -388,6 +389,7 @@ export function LiveErpSimulation({
   blocks,
   criticalTickets = [],
   generatedAt,
+  permittedHrefs,
   quickActions,
   realtimeState = "disabled",
   requestState = "idle",
@@ -399,13 +401,35 @@ export function LiveErpSimulation({
   const locale = resolveSimulationLocale(rawLocale)
   const dashboardLocale = resolveDashboardLocale(rawLocale)
   const copy = simulationCopy[locale]
-  const actionItems =
-    quickActions?.slice(0, 4) ?? [
-      { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
-      { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
-      { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
-      { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
+  const actionItems = useMemo(
+    () =>
+      quickActions?.slice(0, 4) ?? [
+        { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
+        { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
+        { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
+        { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
+      ],
+    [
+      copy.actions.finance,
+      copy.actions.listings,
+      copy.actions.reports,
+      copy.actions.tickets,
+      quickActions,
     ]
+  )
+  const allowedHrefSet = useMemo(
+    () => new Set(permittedHrefs?.length ? permittedHrefs : actionItems.map((item) => item.href)),
+    [actionItems, permittedHrefs]
+  )
+  const resolveMetricHref = (preferredHref: string, fallbackHrefs: string[]) => {
+    if (allowedHrefSet.has(preferredHref)) return preferredHref
+
+    return (
+      fallbackHrefs.find((href) => allowedHrefSet.has(href)) ??
+      actionItems.find((item) => allowedHrefSet.has(item.href))?.href ??
+      preferredHref
+    )
+  }
   const prefersReducedMotion = useReducedMotion()
   const visibleBlocks = useMemo(() => blocks.slice(0, 8), [blocks])
   const [activeBlock, setActiveBlock] = useState(visibleBlocks[0]?.block ?? "")
@@ -518,28 +542,48 @@ export function LiveErpSimulation({
           <div className="mt-5 grid grid-cols-2 gap-2">
             {[
               {
-                href: "/dashboard/listings",
+                href: resolveMetricHref("/dashboard/listings", [
+                  "/dashboard/documents",
+                  "/dashboard/calendar",
+                  "/dashboard/tickets",
+                  "/dashboard/communications",
+                ]),
                 icon: Building2,
                 label: copy.units,
                 value: summary.totalFlats,
                 helper: copyText(copy.occupancy, { value: summary.occupancyRate }),
               },
               {
-                href: "/dashboard/tickets",
+                href: resolveMetricHref("/dashboard/tickets", [
+                  "/dashboard/calendar",
+                  "/dashboard/documents",
+                  "/dashboard/communications",
+                ]),
                 icon: TicketCheck,
                 label: copy.openService,
                 value: summary.openTickets,
                 helper: copyText(copy.sla, { value: summary.overdueTickets }),
               },
               {
-                href: "/dashboard/finance",
+                href: resolveMetricHref("/dashboard/finance", [
+                  "/dashboard/documents",
+                  "/dashboard/reports",
+                  "/dashboard/communications",
+                  "/dashboard/tickets",
+                ]),
                 icon: CreditCard,
                 label: copy.debt,
                 value: Math.round(summary.totalDebtTry / 1000),
                 helper: copy.debtUnit,
               },
               {
-                href: "/dashboard/compliance",
+                href: resolveMetricHref("/dashboard/compliance", [
+                  "/dashboard/calendar",
+                  "/dashboard/tickets",
+                  "/dashboard/finance",
+                  "/dashboard/documents",
+                  "/dashboard/communications",
+                ]),
                 icon: LockKeyhole,
                 label: copy.accessRisk,
                 value: summary.restrictedAccess,

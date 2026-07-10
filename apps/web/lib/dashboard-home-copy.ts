@@ -610,7 +610,7 @@ export const dashboardHomeCopy = {
   de: {
     command: {
       inspect: "Prüfen",
-      locked: "Rolle gesperrt",
+      locked: "Bereich gesperrt",
       lockedAriaSuffix: "Rollenberechtigung fehlt",
       lockedTitle: "Dieses Modul ist für die aktuelle Rolle geschlossen",
     },

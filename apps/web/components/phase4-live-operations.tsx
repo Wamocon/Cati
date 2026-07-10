@@ -215,7 +215,7 @@ export function Phase4LiveOperations() {
       if (!response.ok) throw new Error("Import action failed.")
       if (payload.phase4) setData(payload.phase4)
       window.dispatchEvent(new CustomEvent("site-management:changed"))
-      setLastMessage(payload.message ?? copy.live.requestSaved)
+      setLastMessage(copy.live.requestSaved)
       setState("success")
       window.setTimeout(() => setState("idle"), 1800)
     } catch {
