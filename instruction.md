@@ -1,10 +1,11 @@
 # instruction.md — Arbeits- und Zustandsleitfaden für 1Çatı (für KI-Coding-Agenten)
 
 > Zweck: Diese Datei ist der **Wiedereinstiegspunkt für zukünftige Phasen**. Beim Weiterarbeiten zuerst diese Datei lesen, dann `CLAUDE.md` (tiefe technische Referenz) und `docs/PROJECT-HANDBOOK.md` (Phasenwahrheit).
-> Zuletzt aktualisiert: 10.07.2026 · Branch: `waleri-dev` (= `main`, siehe Deploy-Workflow) · Code-Stand: `35f5637` · Vertraulich.
+> Zuletzt aktualisiert: 11.07.2026 · Branch: `waleri-dev` (= `main`, siehe Deploy-Workflow) · Code-Stand: `9aa6213` · Vertraulich.
 > Reihenfolge bei Widersprüchen: aktueller **Code** > `docs/PROJECT-HANDBOOK.md` > `CLAUDE.md` > diese Datei.
 > Seit 07.07.2026: **Code-Tiefenanalyse** (14 Bereiche) mit korrigierter Phasenwahrheit (§10), **Kundendokumente** (Anforderungsdokument v2 + Kundenversion, Benutzerhandbuch v2 + Kundenversion) und **PowerPoint-Präsentationen** (lang + Pitch) inkl. Design-/Render-Pipeline (§9).
 > Seit 10.07.2026: der **parallele Strang (`yash_dev`)** hat 25 Commits auf `main` gebracht — neu sind **„Cati Training" (Video-Library)**, **Security-Header/CSP**, **Public-AI-Telemetrie + NDJSON-Streaming**, **Same-Language-Chat**, **Emergency-Service-Routing**, **Live-Dokumenten-Download** sowie **Dark-Mode entfernt**. Details in §6/§7; **⚠ Migrations-Kollision `0015` beachten (§7.7)**.
+> Seit 11.07.2026: **CEO-Vertriebsphase gestartet.** Neu: **CEO-OnePager** (PPTX + PNG) und die **finalen Präsentationsskripte** (DE + TR) für den Termin mit dem CEO (Fatih), sowie die **21 Heygen-Vertonungsskripte** hinter den 19 „Cati Training"-Videos (`1.CAIT_Video_Scripts/Scripts/`). **⚠ Wichtig vor jeder Kunden-/CEO-Aussage: die verifizierten Zahlen und die verbotenen Zahlen in §9.1 lesen** (insbesondere: die live sichtbare „212.298" ist KEINE Systemkennzahl).
 
 ---
 
@@ -12,12 +13,14 @@
 
 1Çatı ist eine Property-Management-/Real-Estate-ERP-Plattform für Ataberk Estate (Referenzobjekt: New Level Premium, Avsallar/Alanya), umgesetzt von WAMOCON. Eine Next.js-App unter `apps/web` vereint öffentliche Produktseiten, Login/Demo, ein rollenbasiertes ERP-Dashboard, ein öffentliches New-Level-Premium-Modul (Registrierung/Meldung/Concierge) und die öffentliche Schulungsseite **„Cati Training"**.
 
-**Live und verifiziert (Stand 10.07.2026, geprüft gegen `https://cati-blond.vercel.app`):**
+**Projektkontext (Stand 11.07.2026, aus dem finalen CEO-Skript):** New Level Premium steht **kurz vor der İSKÂN-Freigabe** (türkische Bezugs-/Wohnungsnutzungsgenehmigung) und damit vor der **Inbetriebnahme der Anlage**. Das ist der aktuelle Vertriebs-Aufhänger („genau jetzt das Betriebssystem bereit haben") und hat die frühere Ausgangslage-Erzählung („läuft heute über Excel/WhatsApp") **abgelöst** — in OnePager und Skripten entsprechend formuliert.
+
+**Live und verifiziert (Stand 11.07.2026, geprüft gegen `https://cati-blond.vercel.app`):**
 - **Supabase Cloud** (Projekt-Ref `hczmbaqofxyusellxhyp`) ist angebunden und befüllt (769 units, Blocks/Floors, Tickets, Finanz-Ledger, Service-Orders, `client_action_requests` etc.). Die App liest/schreibt echte Cloud-Daten (`source: "supabase"`).
 - **AI-Gateway** (OpenAI-kompatibel, „sokrates") ist live: interne CATI-KI (`/api/ai/chat`) und öffentliche Landing-KI (`/api/ai/public-chat`) liefern `source: "local-ai"`.
 - **Ein-Klick-Demo ist auf Produktion AKTIV** — live geprüft: `GET /api/access-profile` → `{"enabled":true}`, `/tr/dashboard` liefert 200 ohne Login-Redirect. (⚠ `docs/PROJECT-HANDBOOK.md` behauptet „Access profiles: disabled for cloud/production" — **das ist veraltet**, der Code + die Vercel-Flags sind maßgeblich.)
 - **„Cati Training"** unter `/{locale}/videos` ist öffentlich (ohne Login), 19 reale Videos aus Supabase Storage.
-- **Security-Header sind scharf** (live geprüft): CSP, HSTS-preload, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, Permissions-Policy, `nosniff`, `no-store` auf `/api`, `/{locale}/dashboard`, `/{locale}/login`.
+- **Security-Header sind scharf** (live geprüft): CSP, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, Permissions-Policy, `nosniff`, `no-store` auf `/api`, `/{locale}/dashboard`, `/{locale}/login`. ⚠ **Präzisierung zu HSTS:** `Strict-Transport-Security` ist **live vorhanden, kommt aber von Vercel (Edge)** — es steht **NICHT** in `next.config.ts`. Bei Kundenaussagen also nicht als „im Code umgesetzt" verkaufen; bei einem Hosting-Wechsel wäre es weg.
 - **Vercel-Produktion** deployt automatisch von `main`.
 
 **Phasen (korrigiert durch die Tiefenanalyse vom 07.07.2026, siehe §10):** 1–9 als Fundament fertig (mit einzelnen dokumentierten Lücken); New-Level-Premium-Modul umgesetzt; **10–14 sind NICHT „nicht begonnen", sondern „Foundation mit getrennten Schichten"** — für jede Phase existieren bereits UI + API + DB-Schema, sind aber überwiegend nicht miteinander verdrahtet (UI liest statische Arrays statt der dafür angelegten Supabase-Tabellen). Details und Belege: §10 dieser Datei, `docs/requirements/option-3-ai-site-crm/Anforderungsdokument-1Cati-v2.md`, `docs/PROJECT-HANDBOOK.md` §3.1.
@@ -146,8 +149,46 @@ In dieser Session entstanden **kundenfertige Deliverables** und die Werkzeuge, u
 - **Interne, code-verifizierte Fassung (mit Statusdetails):** `Anforderungsdokument-1Cati-v2.md` (+ `.docx`, auch in `apps/web/public/`) und `docs/user-handbook/1Cati-Benutzerhandbuch-v2.md` (+ `.docx`). Diese enthalten Reifegrad-Legende, Zeile-für-Zeile-Abgleich der Original-Kundenanforderung und die §10-Befunde. **Nicht für den Kunden** (enthalten Statusfeinheiten).
 - **Kundenversionen (ohne interne Infos, im 1CATI-CI):** `1Cati-Anforderungsdokument-Kundenversion.html` + `.pdf` und `docs/user-handbook/1Cati-Benutzerhandbuch-Kundenversion.html` + `.pdf`. Standalone (kein „Fortführungs"-Bezug), alle Kapitel, keine Code-/Migrations-/Interna. HTML ist die editierbare Quelle → PDF via Chromium.
 - **Präsentationen (1CATI-CI, Echtbilder, Ataberk-Co-Branding):** `1Cati-Anforderungsdokument-Praesentation.pptx` (lang, 33 Folien) und `…-Praesentation-Pitch.pptx` (Pitch, 12 Folien).
+- **CEO-Ebene (neu 11.07.2026):**
+  - `1Cati-OnePager-CEO.pptx` — **native, editierbare 16:9-Folie** (ein einziger „Hook"-OnePager für den CEO-Termin). Aufbau: Header mit 1CATI- + Ataberk-Logo → Ausgangslage/Problem/Ziel → „Warum jetzt"-Marktleiste → 9 Funktions-Kacheln + Kommunikation/Flexibilität → Kennzahlen-Band (769 · 13 · 6 · 4 · 19) → 5 Vorteils-Karten → Reife/Investition/Service → **rechts unten ein reservierter Avatar-Rahmen** für das sprechende Heygen-Video. Echtbild „Gesamt" (Luftaufnahme) rechts oben.
+  - `1Cati-OnePager-CEO.png` — Vorschau, **immer synchron zum PPTX halten** (aus dem PPTX rendern, nicht separat bauen).
+  - `1Cati-OnePager-CEO-Heygen-Skript.md` — Arbeitsentwurf + **Regie- und Ehrlichkeits-Hinweise** (welche Aussagen belastbar sind, welche Vertriebswerte sind).
+  - **Finale, freigegebene Sprechskripte:** `docs/Skript CEO_Präsentation_Onepager_de.docx` (DE) und `docs/Skript CEO_Präsentation_Onepager_de tr.docx` (DE + TR). **Bei Abweichungen gilt die DOCX**, nicht die `.md`.
+- **Video-Vertonungsskripte:** `1.CAIT_Video_Scripts/Scripts/` — 21 Markdown-Skripte hinter den 19 „Cati Training"-Videos (Pitch/90 s, CEO-Walkthrough, 17 Trainingsmodule) + Heygen-Schnittplan + QA-/Freigabe-Checkliste. Dateinamen tragen den Freigabestatus (`-OK-` / `-NOK-`).
 
 **Original-Kundenanforderung** (Referenz für Abgleiche): `docs/requirements/CRM Kundenanforderungen Premıum de-DE.docx` (Original-Spezifikation des Kunden).
+
+### 9.1 ⚠ Belastbare Zahlen — und welche NIE verwenden
+
+Vor jeder Kunden-/CEO-Aussage prüfen. Ergebnis einer Faktenextraktion gegen den Code (6 parallele Audits, 11.07.2026).
+
+**Verifiziert (im Code zählbar — gefahrlos verwendbar):**
+
+| Kennzahl | Wert | Beleg |
+|---|---|---|
+| Wohneinheiten | **769** | `lib/new-level-premium-data.ts` (769 Unit-Records; Blocksumme stimmt) |
+| Blöcke | **7** (A–G) | ebd. |
+| Rollen / Ressourcen / Aktionen | **6 / 14 / 8** | `lib/rbac.ts` |
+| Dashboard-Arbeitsbereiche | **13** | `lib/dashboard-routing.ts` |
+| Trainingsvideos | **19** | `lib/video-library.ts` (`fallbackVideoSeeds`) |
+| Sprachen | **4** (tr/en/de/ru) | `i18n.ts` + `messages/*.json` |
+| Service-Katalog-Positionen | **19** | `lib/site-management-data.ts` |
+| ERP-Phasen | **15** | Projektrahmen |
+| Objektdaten New Level Premium | 52.000 m² Grundstück · 900 m zum Strand · 5-Sterne-Hotel · 3 J. Mietgarantie zu 10 %/J. | `lib/new-level-premium-data.ts` |
+
+**🚫 NIEMALS als 1Çatı-Systemkennzahl verwenden:**
+- **„212.298+ operational records"** — steht zwar live auf `/videos`, `/platform` und in `stats.tsx`, ist aber laut Quelle (`docs/source/client-inputs/wmc_report.md`) die Zahl **gelisteter Objekte auf der Website ataberkestate.com**, NICHT Datensätze in der 1Çatı-DB (die hat **769** Units). Vor einem CEO wäre das eine Falschaussage. **Auf dem CEO-OnePager bewusst weggelassen.**
+- **6.000 Deals · 12 Jahre Erfahrung · 150 Mitarbeiter · 10.000 Portfolio** (`stats.tsx`, `platform/page.tsx`) — reine Marketing-Claims, **keine Datenquelle im Repo**.
+- **„HSTS im Code"** — nicht in `next.config.ts` (kommt von Vercel, siehe §1).
+- **Foto-/Video-/Voice-Tickets** — **nicht gebaut** (`media_reports` ohne UI/API). Nie als vorhandene Funktion nennen, schon gar nicht direkt vor einer Live-Demo.
+
+**Kosten/Preis — was belegbar ist:**
+- **€5 pro Nutzer/Monat** = **Wartungs-/Servicegebühr** (nicht Lizenz), belegt in `app/[locale]/pitch/page.tsx`.
+- **„Keine Entwicklungskosten für den Bauträger"** — ebenfalls aus `/pitch` („WAMOCON übernimmt Entwicklung, Service, Wartung, Sicherheitsupdates"; Modell = OpEx).
+- **Es gibt KEINE konkrete Entwicklungskosten-Zahl im Repo** — in den Angeboten stehen nur `€[__]`-Platzhalter („to be finalized"). Die „100k+" in `/pitch` ist ein **rhetorischer CapEx-Vergleich**, kein 1Çatı-Preis.
+- **Vertriebs-/Erfahrungswerte des Beraters** (im CEO-Skript verwendet, aber **nicht** gemessen — bei Nachfrage als Markt-/Erfahrungswert einordnen): „~200.000 € deutsches Marktniveau", „50–70 % weniger manuelle Arbeit", „1–2 % weniger Fluktuation → 3.500–8.000 €/Wohnung·Jahr".
+
+**Video-Detail (Vorsicht bei Aussagen):** Das „90-Sekunden"-Video heißt zwar so, ist aber **142 s (2:22)** lang; das CEO-Video ist **428 s (7:08)**. Vertonung ist **türkisch**; nur Titel/Beschreibungen sind viersprachig.
 
 **CI / Marken-Vorgaben** (aus `apps/web/app/globals.css`): Primär-Petrol `#066B63`, Tief-Petrol `#044F49`, Gold-Akzent `#B9822B`/`#E2B75D`, Ink `#101820`, BG `#F7F9F8`; Schrift **„Aptos", "Segoe UI"**. Motive: Aurora-Radials (Petrol/Gold), Verlaufslinie Petrol→Gold, Gebäude-Silhouette (aus `components/building-illustration.tsx`). 1CATI-Logo aus `components/cati-logo.tsx` (Haus-Mark).
 
@@ -160,8 +201,10 @@ In dieser Session entstanden **kundenfertige Deliverables** und die Werkzeuge, u
 - **HTML → PNG (Assets/Composites):** analog `apps/web/.render-png.mjs`, `page.screenshot({omitBackground})`, `deviceScaleFactor:2`.
 - **PPTX bauen:** `python-pptx` (1.0.2 vorhanden). Helper-Muster im Session-Scratchpad (`build_pptx.py`/`build_pitch.py`): `slide()`, `header()`, `ataberk_badge()`, `add_table()` mit Status-Pillen, `cards_2x2()`, `kpi_row()`, `callout()`, `footer()`. Vollflächen-Hintergründe als **JPG q88** einbetten (nicht PNG) → Deck 24 MB → 1,5 MB.
 - **PPTX → PDF (zur Sicht-Prüfung):** PowerPoint-COM via PowerShell (`New-Object -ComObject PowerPoint.Application; $pres.SaveAs($pdf, 32)`; 32 = ppSaveAsPDF). Danach mit PyMuPDF (`fitz`) einzelne Seiten rastern und ansehen.
-- **DOCX aus Markdown:** `python scripts/build-docx-from-md.py <md> --output <docx> --title "…"`.
-- **Wichtig bei python-pptx-Strings:** deutsche Anführungszeichen „…" im Python-`"…"`-String terminieren ihn — Guillemets »…« verwenden.
+- **Pixel-genaues natives PPTX (Rezept vom CEO-OnePager):** Layout zuerst in einem 1920×1080-Raster denken, dann linear mappen — Folie auf `13.333in × 7.5in` setzen und `P(px) = px * 13.333 * 914400 / 1920` (EMU) sowie `FS(px) = px * 0.5` (pt, weil 1920 px = 960 pt) verwenden. Damit lässt sich ein HTML-/PNG-Entwurf 1:1 in editierbare Shapes übersetzen. Zwei-Stopp-Gradienten via `shape.fill.gradient()` + `gradient_stops` + `gradient_angle` funktionieren; `MSO_SHAPE.ISOSCELES_TRIANGLE` (nicht „ISOCELES") für das Play-Symbol; Emoji rendern in PowerPoint problemlos. Am Ende **immer** über PowerPoint→PDF→PNG gegen die Referenz-PNG prüfen.
+- **DOCX aus Markdown:** `python scripts/build-docx-from-md.py <md> --output <docx> --title "…"`. **DOCX → Text** (zum Gegenlesen finaler Skripte): `python-docx`, Absätze + Tabellen in Dokumentreihenfolge iterieren und **in eine UTF-8-Datei schreiben** (die Windows-Konsole ist cp1252 und bricht an türkischen Zeichen wie `ı`).
+- **Wichtig bei python-pptx-Strings:** deutsche Anführungszeichen „…" im Python-`"…"`-String terminieren ihn — Guillemets »…« verwenden. **Achtung bei globalem Suchen/Ersetzen:** ein `"` am Wortende kann der String-Delimiter sein — nicht blind ersetzen.
+- **Wenn der Nutzer ein PPTX manuell nachbearbeitet hat** (z. B. Sonderzeichen bereinigt): **Build-Skript NICHT erneut laufen lassen** (überschreibt seine Änderungen). Stattdessen die Vorschau-PNG **aus seinem PPTX** neu rendern, damit beide konsistent bleiben.
 
 **Governance:** `docs/README.md`, `docs/PROJECT-HANDBOOK.md` und `docs/requirements/option-3-ai-site-crm/README.md` verweisen bereits auf v1/v2. Bei Doku-Änderungen dort und in `AGENTS.md`/`CLAUDE.md` nachziehen. Regel bleibt: keine generierten QA-Artefakte im Repo; Markdown ist die editierbare Quelle, PDF/DOCX/PPTX sind Exporte.
 
@@ -215,4 +258,5 @@ Vollständige Detailtiefe je Funktion: `Anforderungsdokument-1Cati-v2.md` Kap. 7
 - **Live-Statuschecks (read-only):** `curl -s .../api/access-profile` → Demo-Flag · `curl -sI .../tr | grep -i 'content-security\|x-frame'` → Security-Header
 - Video-Pipeline (manuell, lokal): `pnpm --dir apps/web record:playlist` → `pnpm --dir apps/web upload:demo-videos` (braucht `SUPABASE_SERVICE_ROLE_KEY`)
 - Verbindungscheck (read-only): kurzes Node-Skript mit `@supabase/supabase-js` (Service-Role) gegen Cloud + `fetch` gegen AI-Gateway — druckt nie Secret-Werte.
+- **Vertriebs-/CEO-Material:** OnePager + Skripte siehe §9 · **vor jeder Zahl gegenüber Kunde/CEO → §9.1 lesen** (verifizierte vs. verbotene Zahlen).
 - Kanonische Doku: `CLAUDE.md`, `AGENTS.md`, `docs/PROJECT-HANDBOOK.md`, `docs/security/AI-SECURITY-OBSERVABILITY.md`, `docs/requirements/option-3-ai-site-crm/` (BRD/PRD/TRD/Security/QA/Vendor/Anforderungsdokument).
