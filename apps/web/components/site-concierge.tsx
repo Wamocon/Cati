@@ -3,7 +3,18 @@
 import { useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot, MessageCircle, Send, Sparkles, ThumbsDown, ThumbsUp, User, X } from "lucide-react"
+import {
+  Bot,
+  Maximize2,
+  MessageCircle,
+  Minimize2,
+  Send,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  X,
+} from "lucide-react"
 import { publicAiSuggestions } from "@/lib/public-ai-knowledge"
 import { cn } from "@/lib/utils"
 
@@ -31,6 +42,8 @@ const copy = {
     placeholder: "1Çatı hakkında sorun...",
     send: "Gönder",
     close: "Kapat",
+    expand: "Asistanı büyüt",
+    shrink: "Asistanı küçült",
     error: "Yanıt alınamadı. Lütfen tekrar deneyin.",
   },
   en: {
@@ -48,6 +61,8 @@ const copy = {
     placeholder: "Ask about 1Çatı...",
     send: "Send",
     close: "Close",
+    expand: "Expand assistant",
+    shrink: "Shrink assistant",
     error: "No answer received. Please try again.",
   },
   de: {
@@ -65,6 +80,8 @@ const copy = {
     placeholder: "Zu 1Çatı fragen...",
     send: "Senden",
     close: "Schließen",
+    expand: "Assistent vergrößern",
+    shrink: "Assistent verkleinern",
     error: "Keine Antwort erhalten. Bitte erneut versuchen.",
   },
   ru: {
@@ -82,6 +99,8 @@ const copy = {
     placeholder: "Спросите о 1Çatı...",
     send: "Отправить",
     close: "Закрыть",
+    expand: "Развернуть ассистента",
+    shrink: "Свернуть ассистента",
     error: "Ответ не получен. Пожалуйста, попробуйте снова.",
   },
 } satisfies Record<LocaleKey, unknown>
@@ -259,6 +278,7 @@ export function SiteConcierge({ page }: { page: string }) {
 
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
@@ -565,7 +585,12 @@ export function SiteConcierge({ page }: { page: string }) {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.25 }}
             data-testid="concierge-panel"
-            className="fixed right-4 bottom-4 z-50 flex w-[min(420px,92vw)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl print:hidden sm:right-6 sm:bottom-6"
+            className={cn(
+              "fixed inset-x-4 bottom-4 z-50 flex max-h-[calc(100svh-2rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl print:hidden sm:inset-x-auto sm:right-6 sm:bottom-6",
+              expanded
+                ? "top-4 h-[calc(100svh-2rem)] sm:top-auto sm:h-[min(760px,calc(100svh-3rem))] sm:w-[min(860px,calc(100vw-3rem))]"
+                : "sm:w-[min(420px,92vw)]"
+            )}
           >
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-emerald-500/10 px-4 py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -577,16 +602,35 @@ export function SiteConcierge({ page }: { page: string }) {
                   <p className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">{t.subtitle}</p>
                 </div>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
-                aria-label={t.close}
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setExpanded((current) => !current)}
+                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={expanded ? t.shrink : t.expand}
+                  aria-pressed={expanded}
+                  title={expanded ? t.shrink : t.expand}
+                >
+                  {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={t.close}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
-            <div ref={scrollRef} className="flex h-80 flex-col gap-3 overflow-y-auto p-4">
+            <div
+              ref={scrollRef}
+              className={cn(
+                "flex min-h-40 flex-col gap-3 overflow-y-auto p-4",
+                expanded ? "flex-1" : "h-80"
+              )}
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
