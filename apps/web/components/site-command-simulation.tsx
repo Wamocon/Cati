@@ -1,8 +1,13 @@
 "use client"
 
 import type { CSSProperties } from "react"
+import { useLocale } from "next-intl"
 import { Activity, ArrowUpRight, LockKeyhole, TicketCheck, WalletCards } from "lucide-react"
 import { Link } from "@/app/navigation"
+import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+} from "@/lib/operational-copy"
 import { cn } from "@/lib/utils"
 import {
   type BlockOverview,
@@ -37,6 +42,8 @@ export function SiteCommandSimulation({
   const summary = liveSummary ?? getSummary()
   const urgentTickets = serviceTickets.filter((ticket) => ticket.slaHoursRemaining < 0 || ticket.priority === "urgent")
   const urgentTicketTotal = urgentTicketCount ?? urgentTickets.length
+  const locale = resolveDashboardLocale(useLocale())
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
 
   return (
     <section
@@ -44,7 +51,7 @@ export function SiteCommandSimulation({
         "relative overflow-hidden rounded-2xl border border-border bg-[linear-gradient(135deg,color-mix(in_srgb,var(--card)_94%,transparent),color-mix(in_srgb,var(--primary)_8%,var(--card)))] p-4 shadow-sm md:p-5",
         className
       )}
-      aria-label="Site operations risk map"
+      aria-label={t("Site operations risk map")}
     >
       <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px),linear-gradient(90deg,color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:36px_36px]" />
       <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-stretch">
@@ -52,17 +59,17 @@ export function SiteCommandSimulation({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                Operasyon risk haritası
+                {t("Operasyon risk haritası")}
               </p>
-              <h2 className="mt-3 text-lg font-black text-foreground md:text-xl">Blok, borç, servis ve erişim risk haritası</h2>
+              <h2 className="mt-3 text-lg font-black text-foreground md:text-xl">{t("Blok, borç, servis ve erişim risk haritası")}</h2>
               <p className="mt-1 max-w-2xl text-xs text-muted-foreground md:text-sm">
-                8 blok ve 769 daire; borç, servis, erişim ve SLA riskleri tek operasyon görünümünde okunur.
+                {t("8 blok ve 769 daire; borç, servis, erişim ve SLA riskleri tek operasyon görünümünde okunur.")}
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
               <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
                 <p className="font-black text-foreground">{summary.restrictedAccess}</p>
-                <p className="text-muted-foreground">kısıt</p>
+                <p className="text-muted-foreground">{t("kısıt")}</p>
               </div>
               <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
                 <p className="font-black text-foreground">{summary.overdueTickets}</p>
@@ -70,14 +77,14 @@ export function SiteCommandSimulation({
               </div>
               <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
                 <p className="font-black text-foreground">{formatTryShort(summary.totalDebtTry)}</p>
-                <p className="text-muted-foreground">borç</p>
+                <p className="text-muted-foreground">{t("borç")}</p>
               </div>
             </div>
           </div>
 
           <Link
             href="/dashboard/listings"
-            aria-label="3D blok risk haritasını daire matrisinde aç"
+            aria-label={t("3D blok risk haritasını daire matrisinde aç")}
             className="mt-6 block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
           <div className="site-orbit-scene min-h-[300px] rounded-2xl border border-border/70 bg-background/70 p-4 transition hover:border-primary/40">
@@ -112,7 +119,7 @@ export function SiteCommandSimulation({
                       ))}
                     </div>
                     <div className="site-tower-label">
-                      <span>Blok {block.block}</span>
+                      <span>{t("Blok")} {block.block}</span>
                       <strong>{block.total}</strong>
                     </div>
                   </div>
@@ -127,27 +134,27 @@ export function SiteCommandSimulation({
           {[
             {
               icon: WalletCards,
-              label: "Tahsilat rotası",
+              label: t("Tahsilat rotası"),
               value: formatTryShort(summary.totalDebtTry),
-              text: "90+ gün, aktif rezervasyon ve erişim kısıtı birlikte skorlanır.",
+              text: t("90+ gün, aktif rezervasyon ve erişim kısıtı birlikte skorlanır."),
             },
             {
               icon: TicketCheck,
-              label: "SLA alarmı",
-              value: `${urgentTicketTotal} iş`,
-              text: "Teknik rota ödeme onayı ve öncelik riskine göre sıralanır.",
+              label: t("SLA alarmı"),
+              value: `${urgentTicketTotal} ${t("iş")}`,
+              text: t("Teknik rota ödeme onayı ve öncelik riskine göre sıralanır."),
             },
             {
               icon: LockKeyhole,
-              label: "Erişim motoru",
-              value: `${summary.restrictedAccess} kısıt`,
-              text: "Mobil kod, kart ve plaka kararları tek güvenlik modelinden geçer.",
+              label: t("Erişim motoru"),
+              value: `${summary.restrictedAccess} ${t("kısıt")}`,
+              text: t("Mobil kod, kart ve plaka kararları tek güvenlik modelinden geçer."),
             },
             {
               icon: Activity,
-              label: "AI nabız",
-              value: `${summary.aiRiskCount} risk`,
-              text: "Her risk aksiyona çevrilir: ara, kısıtla, servis ata, belge iste.",
+              label: t("AI nabız"),
+              value: `${summary.aiRiskCount} ${t("risk")}`,
+              text: t("Her risk aksiyona çevrilir: ara, kısıtla, servis ata, belge iste."),
             },
           ].map((item) => {
             const href =
@@ -163,7 +170,7 @@ export function SiteCommandSimulation({
             <Link
               key={item.label}
               href={href}
-              aria-label={`${item.label} detayını aç`}
+              aria-label={item.label}
               className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
             <div className="rounded-xl border border-border bg-card/80 p-3 shadow-sm backdrop-blur transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">

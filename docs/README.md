@@ -37,6 +37,10 @@ For current delivery status, trust this order:
 3. `ways-of-work/implementation/option-3-ai-site-crm/phase-execution-runbook.md`
 4. Current code and scripts under `apps/web`, `supabase` and `scripts`
 
+## Change-Control Rule
+
+Before changing a workflow, identify its relevant BRD/PRD/TRD requirement, implementation-plan phase and QA/UAT scenario. Cross-check the proposed code, API/migration and RBAC/RLS behavior against those sources, then run the matching automated checks before release. Do not present provider-ready payment, bank, messaging, access, storage or AI adapters as production-live without the documented vendor, legal, security and UAT approvals.
+
 Files outside this map are not current project documentation.
 
 ## Stakeholder Reading Copies

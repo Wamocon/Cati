@@ -13,7 +13,7 @@ export type FlatStatus = "occupied" | "vacant" | "reserved" | "maintenance" | "b
 export type AccessStatus = "active" | "restricted" | "pending" | "disabled"
 export type PaymentStatus = "clear" | "minor_debt" | "overdue" | "legal"
 export type ServicePriority = "low" | "medium" | "high" | "urgent"
-export type ServiceStatus = "open" | "assigned" | "waiting_payment" | "in_progress" | "resolved" | "closed"
+export type ServiceStatus = "open" | "assigned" | "waiting_approval" | "waiting_payment" | "in_progress" | "resolved" | "closed"
 export type BookingStatus = "confirmed" | "precheck_pending" | "move_in_today" | "checkout_today" | "deposit_review" | "cancelled"
 export type DepositStatus = "not_required" | "reserved" | "held" | "deduction_pending" | "refund_ready"
 export type PhaseDeliveryStatus = "complete" | "ready_for_uat" | "in_progress" | "planned" | "blocked"
@@ -59,11 +59,13 @@ export interface ServiceTicket {
   flatId: string
   flatNumber: string
   title: string
+  description?: string | null
   category: string
   priority: ServicePriority
   status: ServiceStatus
   assignee: string
   requester: string
+  requesterRole?: string
   openedAt: string
   dueAt: string
   slaHoursRemaining: number
@@ -166,6 +168,9 @@ export interface BookingRecord {
   flatId: string
   flatNumber: string
   guestName: string
+  resourceName?: string
+  notes?: string | null
+  approvalStatus?: "pending_owner" | "approved" | "rejected"
   channel: "Airbnb" | "Booking.com" | "Owner" | "Direct" | "Corporate"
   checkIn: string
   checkOut: string
@@ -3401,6 +3406,7 @@ export const paymentLabels: Record<PaymentStatus, string> = {
 }
 
 export const serviceStatusLabels: Record<ServiceStatus, string> = {
+  waiting_approval: "Owner approval pending",
   open: "Açık",
   assigned: "Atandı",
   waiting_payment: "Ödeme bekliyor",

@@ -9,6 +9,10 @@ import { PeopleDirectoryLive } from "@/components/people-directory-live"
 import { StatusBadge } from "@/components/status-badge"
 import { TenantAccessPanel } from "@/components/tenant-access-panel"
 import {
+  localizeDashboardTextPart,
+  resolveDashboardLocale,
+} from "@/lib/operational-copy"
+import {
   formatTry,
   getResidentSummary,
   getStaffSummary,
@@ -205,7 +209,9 @@ function booleanBadge(value: boolean, copy: (typeof usersCopy)[keyof typeof user
 }
 
 export default function UsersPage() {
-  const copy = usersCopy[resolveUsersLocale(useLocale())]
+  const locale = resolveDashboardLocale(useLocale())
+  const copy = usersCopy[resolveUsersLocale(locale)]
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
   const staffSummary = getStaffSummary()
   const residentSummary = getResidentSummary()
 
@@ -278,8 +284,8 @@ export default function UsersPage() {
                       <StatusBadge variant={staffRoleVariant(member.role)}>{staffRoleLabel(member.role, copy)}</StatusBadge>
                       <StatusBadge variant={statusVariant(member.status)}>{statusLabel(member.status, copy)}</StatusBadge>
                     </div>
-                    <h3 className="mt-2 text-sm font-black text-foreground">{member.name}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{member.team} - {member.phone}</p>
+                    <h3 className="mt-2 text-sm font-black text-foreground">{t(member.name)}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{t(member.team)} - {member.phone}</p>
                   </div>
                   <Languages className="h-5 w-5 text-primary" />
                 </div>
@@ -340,12 +346,12 @@ export default function UsersPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <DataTable
           data={staffMembers}
-          searchValue={(member) => `${member.name} ${member.team} ${staffRoleLabel(member.role, copy)} ${member.phone}`}
+          searchValue={(member) => `${t(member.name)} ${t(member.team)} ${staffRoleLabel(member.role, copy)} ${member.phone}`}
           pageSize={10}
           columns={[
-            { key: "name", header: copy.headers.name, sortable: true, render: (member) => member.name },
+            { key: "name", header: copy.headers.name, sortable: true, render: (member) => t(member.name) },
             { key: "role", header: copy.headers.role, render: (member) => <StatusBadge variant={staffRoleVariant(member.role)}>{staffRoleLabel(member.role, copy)}</StatusBadge> },
-            { key: "team", header: copy.headers.team, sortable: true, render: (member) => member.team },
+            { key: "team", header: copy.headers.team, sortable: true, render: (member) => t(member.team) },
             { key: "tasks", header: copy.headers.tasks, sortable: true, sortValue: (member) => member.activeTasks, render: (member) => member.activeTasks },
             { key: "scope", header: copy.headers.scope, render: (member) => scopeLabel(member.accessScope, copy) },
             { key: "status", header: copy.headers.status, render: (member) => <StatusBadge variant={statusVariant(member.status)}>{statusLabel(member.status, copy)}</StatusBadge> },

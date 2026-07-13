@@ -49,6 +49,9 @@ interface DataTableProps<T> {
   searchValue?: (row: T) => string
   pageSize?: number
   className?: string
+  onRowClick?: (row: T) => void
+  rowLabel?: (row: T) => string
+  rowKey?: (row: T) => string
 }
 
 interface OptionsPosition {
@@ -162,6 +165,9 @@ export function DataTable<T>({
   searchValue,
   pageSize = 20,
   className,
+  onRowClick,
+  rowLabel,
+  rowKey,
 }: DataTableProps<T>) {
   const t = useTranslations("dataTable")
   const locale = resolveDashboardLocale(useLocale())
@@ -482,8 +488,20 @@ export function DataTable<T>({
         {pageRows.length > 0 ? (
           pageRows.map((row, rowIndex) => (
             <article
-              key={rowIndex}
-              className="rounded-xl border border-border/70 bg-background/72 p-3 shadow-sm"
+              key={rowKey?.(row) ?? rowIndex}
+              role={onRowClick ? "button" : undefined}
+              tabIndex={onRowClick ? 0 : undefined}
+              aria-label={onRowClick ? rowLabel?.(row) : undefined}
+              onClick={() => onRowClick?.(row)}
+              onKeyDown={(event) => {
+                if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) return
+                event.preventDefault()
+                onRowClick(row)
+              }}
+              className={cn(
+                "rounded-xl border border-border/70 bg-background/72 p-3 shadow-sm",
+                onRowClick && "cursor-pointer transition hover:border-primary/35 hover:bg-primary/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+              )}
             >
               <dl className="space-y-3">
                 {visibleColumns.map((col) => (
@@ -554,8 +572,19 @@ export function DataTable<T>({
             {pageRows.length > 0 ? (
               pageRows.map((row, index) => (
                 <tr
-                  key={index}
-                  className="transition-colors hover:bg-primary/[0.045]"
+                  key={rowKey?.(row) ?? index}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={onRowClick ? rowLabel?.(row) : undefined}
+                  onClick={() => onRowClick?.(row)}
+                  onKeyDown={(event) => {
+                    if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) return
+                    event.preventDefault()
+                    onRowClick(row)
+                  }}
+                  className={cn(
+                    "transition-colors hover:bg-primary/[0.045]",
+                    onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/35"
+                  )}
                 >
                   {visibleColumns.map((col) => (
                     <td

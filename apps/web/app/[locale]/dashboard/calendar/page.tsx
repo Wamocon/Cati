@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback, useEffect, useState } from "react"
 import { useLocale } from "next-intl"
 import {
   AlertTriangle,
@@ -11,6 +12,8 @@ import {
   ListChecks,
   LockKeyhole,
   MessageCircle,
+  RefreshCw,
+  Send,
   Sparkles,
   ShieldCheck,
   TimerReset,
@@ -63,6 +66,30 @@ import {
   type ViewingStatus,
   viewingPipeline,
 } from "@/lib/site-management-data"
+import type { BookingOperationsData } from "@/lib/site-management-repository"
+
+type RequestState = "idle" | "loading" | "success" | "error"
+
+const reservationUnitOptionsByRole = {
+  owner: ["A-001", "A-054", "D-023"],
+  tenant: ["A-018", "A-023"],
+  default: ["A-001", "A-018", "A-023", "B-040", "C-078", "D-087"],
+}
+
+const amenityReservationOptions = [
+  "Fitnessraum",
+  "Sauna",
+  "Pool",
+  "Spa",
+  "Restaurant",
+  "Gemeinschaftsbereich",
+]
+
+function dateTimeLocalFromOffset(hours: number) {
+  const date = new Date(Date.now() + hours * 3_600_000)
+  date.setMinutes(0, 0, 0)
+  return date.toISOString().slice(0, 16)
+}
 
 function bookingVariant(status: BookingStatus) {
   if (status === "confirmed") return "success"
@@ -143,12 +170,113 @@ export default function CalendarPage() {
   const clientView = isClientRole(user.role)
   const fieldView = isFieldRole(user.role)
   const maskFinance = shouldMaskFinance(user.role)
-  const visibleBookings = visibleBookingsForRole(user.role, bookings)
-  const visibleReadiness = visibleBookingReadinessForRole(user.role, bookingReadinessRecords)
+  const reservationUnitOptions =
+    user.role === "owner"
+      ? reservationUnitOptionsByRole.owner
+      : user.role === "tenant"
+        ? reservationUnitOptionsByRole.tenant
+        : reservationUnitOptionsByRole.default
+  const [bookingData, setBookingData] = useState<BookingOperationsData | null>(null)
+  const [bookingRequestState, setBookingRequestState] = useState<RequestState>("loading")
+  const [reservationState, setReservationState] = useState<RequestState>("idle")
+  const [selectedBookingId, setSelectedBookingId] = useState("")
+  const [reservationForm, setReservationForm] = useState({
+    unitNo: reservationUnitOptions[0] ?? "A-001",
+    resourceName: amenityReservationOptions[0],
+    checkInAt: dateTimeLocalFromOffset(24),
+    checkOutAt: dateTimeLocalFromOffset(26),
+    notes: "",
+  })
+  const fetchBookingOperations = useCallback(async () => {
+    setBookingRequestState("loading")
+    try {
+      const response = await fetch("/api/site-management/booking-operations?limit=80", {
+        cache: "no-store",
+      })
+      if (!response.ok) throw new Error("Booking request failed.")
+      setBookingData((await response.json()) as BookingOperationsData)
+      setBookingRequestState("success")
+    } catch {
+      setBookingRequestState("error")
+    }
+  }, [])
+
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      void fetchBookingOperations()
+    }, 0)
+
+    const handleOperationalChange = () => {
+      void fetchBookingOperations()
+    }
+
+    window.addEventListener("site-management:changed", handleOperationalChange)
+    return () => {
+      window.clearTimeout(handle)
+      window.removeEventListener("site-management:changed", handleOperationalChange)
+    }
+  }, [fetchBookingOperations])
+
+  async function submitReservation() {
+    setReservationState("loading")
+    try {
+      const response = await fetch("/api/site-management/booking-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...reservationForm,
+          guestName: user.full_name ?? user.email ?? "Portal user",
+        }),
+      })
+      if (!response.ok) throw new Error("Reservation create failed.")
+      setReservationState("success")
+      setReservationForm((current) => ({
+        ...current,
+        notes: "",
+      }))
+      await fetchBookingOperations()
+      window.dispatchEvent(new CustomEvent("site-management:changed"))
+    } catch {
+      setReservationState("error")
+    }
+  }
+
+  async function decideReservation(reservationId: string, approvalStatus: "approved" | "rejected") {
+    const response = await fetch("/api/site-management/booking-operations", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reservationId, approvalStatus }),
+    })
+    if (!response.ok) return
+    await fetchBookingOperations()
+    window.dispatchEvent(new CustomEvent("site-management:changed"))
+  }
+
+  const sourceBookings = bookingData?.bookings ?? bookings
+  const selectedBooking = sourceBookings.find((booking) => booking.id === selectedBookingId) ?? null
+
+  function openBooking(bookingId: string) {
+    setSelectedBookingId(bookingId)
+    window.requestAnimationFrame(() => {
+      document.getElementById("reservation-details")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
+  const reservationStart = new Date(reservationForm.checkInAt).getTime()
+  const reservationEnd = new Date(reservationForm.checkOutAt).getTime()
+  const reservationAvailable = Number.isFinite(reservationStart) && Number.isFinite(reservationEnd) && reservationEnd > reservationStart && !sourceBookings.some((booking) =>
+    (booking.resourceName ?? "Amenity") === reservationForm.resourceName &&
+    booking.approvalStatus !== "rejected" &&
+    booking.status !== "cancelled" &&
+    new Date(booking.checkIn).getTime() < reservationEnd &&
+    new Date(booking.checkOut).getTime() > reservationStart
+  )
+  const sourceReadiness = bookingData?.readinessQueue ?? bookingReadinessRecords
+  const visibleBookings = visibleBookingsForRole(user.role, sourceBookings)
+  const visibleReadiness = visibleBookingReadinessForRole(user.role, sourceReadiness)
   const visibleTurnoverTasks = visibleTurnoverTasksForRole(user.role, turnoverTasks)
   const visibleAccessHandoffs = visibleAccessHandoffsForRole(user.role, accessHandoffs)
   const visibleSettlements = visibleDepositSettlementsForRole(user.role, depositSettlements)
-  const bookingOpsSummary = getBookingOperationsSummary()
+  const bookingOpsSummary = bookingData?.summary ?? getBookingOperationsSummary()
   const moveIns = visibleBookings.filter((booking) => booking.status === "move_in_today").length
   const checkouts = visibleBookings.filter((booking) => booking.status === "checkout_today").length
   const depositReviews = visibleBookings.filter(
@@ -263,6 +391,167 @@ export default function CalendarPage() {
           </div>
         </Card3D>
       </div>
+
+      {(bookingRequestState === "error" || bookingData?.warning) && (
+        <div role="alert" className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-sm font-semibold text-amber-800 dark:text-amber-200">
+          {bookingData?.warning ?? t("Rezervasyon verisi su anda canli kaynaktan alinamadi. Yerel veriyle devam ediliyor.")}
+        </div>
+      )}
+
+      {!fieldView && user.role !== "accountant" && (
+        <DashboardSection
+          icon={CalendarDays}
+          title={t("Yeni rezervasyon olustur")}
+          description={t("Kiraci, malik veya operasyon ekibi fitness, sauna, havuz ve ortak alan rezervasyonunu dogrudan portal kaydina baglar.")}
+          badge={
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge variant={reservationState === "success" ? "success" : reservationState === "error" ? "danger" : "info"}>
+                {reservationState === "loading" ? t("Kaydediliyor") : reservationState === "success" ? t("Rezervasyon olustu") : t("Portal")}
+              </StatusBadge>
+              <button
+                type="button"
+                onClick={() => void fetchBookingOperations()}
+                disabled={bookingRequestState === "loading"}
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-xs font-black text-foreground transition hover:bg-muted disabled:cursor-wait disabled:opacity-70"
+              >
+                <RefreshCw className={bookingRequestState === "loading" ? "h-3.5 w-3.5 animate-spin" : "h-3.5 w-3.5"} />
+                {t("Yenile")}
+              </button>
+            </div>
+          }
+        >
+          <form
+            className="grid gap-3 lg:grid-cols-[0.8fr_0.9fr_0.9fr_1.2fr_auto]"
+            onSubmit={(event) => {
+              event.preventDefault()
+              void submitReservation()
+            }}
+          >
+            <label className="block text-xs font-black uppercase text-muted-foreground">
+              {t("Daire")}
+              <select
+                value={reservationForm.unitNo}
+                onChange={(event) => setReservationForm((current) => ({ ...current, unitNo: event.target.value }))}
+                className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+              >
+                {reservationUnitOptions.map((unitNo) => (
+                  <option key={unitNo} value={unitNo}>
+                    {unitNo}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-black uppercase text-muted-foreground">
+              {t("Alan")}
+              <select
+                value={reservationForm.resourceName}
+                onChange={(event) => setReservationForm((current) => ({ ...current, resourceName: event.target.value }))}
+                className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+              >
+                {amenityReservationOptions.map((resource) => (
+                  <option key={resource} value={resource}>
+                    {resource}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-xs font-black uppercase text-muted-foreground">
+              {t("Baslangic")}
+              <input
+                type="datetime-local"
+                value={reservationForm.checkInAt}
+                onChange={(event) => setReservationForm((current) => ({ ...current, checkInAt: event.target.value }))}
+                className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                required
+              />
+            </label>
+            <label className="block text-xs font-black uppercase text-muted-foreground">
+              {t("Bitis")}
+              <input
+                type="datetime-local"
+                value={reservationForm.checkOutAt}
+                onChange={(event) => setReservationForm((current) => ({ ...current, checkOutAt: event.target.value }))}
+                className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                required
+              />
+            </label>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                disabled={reservationState === "loading" || !reservationAvailable}
+                className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Send className="h-4 w-4" />
+                {t("Rezerve et")}
+              </button>
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground lg:col-span-5" role="status">
+              {reservationAvailable ? t("Seçilen saat bu alan için müsait.") : t("Seçilen saat bu alan için dolu veya geçersiz.")}
+              {user.role === "tenant" ? ` ${t("Talep malik onayına gönderilecektir.")}` : ""}
+            </p>
+            <label className="block text-xs font-black uppercase text-muted-foreground lg:col-span-5">
+              {t("Not")}
+              <textarea
+                value={reservationForm.notes}
+                onChange={(event) => setReservationForm((current) => ({ ...current, notes: event.target.value }))}
+                className="mt-1 min-h-20 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                placeholder={t("Saat tercihi, kisi sayisi veya ozel hazirlik notu")}
+                maxLength={600}
+              />
+            </label>
+          </form>
+        </DashboardSection>
+      )}
+
+      {user.role === "owner" && visibleBookings.some((booking) => booking.approvalStatus === "pending_owner") && (
+        <DashboardSection
+          icon={ClipboardCheck}
+          title={t("Malik onay kuyruğu")}
+          description={t("Kiracı rezervasyonları etkinleşmeden önce malik kararı gerektirir.")}
+        >
+          <div className="flex flex-col gap-2">
+            {visibleBookings.filter((booking) => booking.approvalStatus === "pending_owner").map((booking) => (
+              <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <button type="button" onClick={() => openBooking(booking.id)} className="min-w-0 flex-1 rounded-lg p-2 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35">
+                  <span className="block text-sm font-black text-foreground">{booking.resourceName ?? t("Alan")} · {booking.guestName}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{booking.flatNumber} · {formatDate(booking.checkIn)} — {formatDate(booking.checkOut)}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{booking.notes || t("Not yok")}</span>
+                  <span className="mt-1 block text-[11px] font-semibold text-primary">{t("Detaylari ac")}</span>
+                </button>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => void decideReservation(booking.id, "approved")} className="rounded-lg bg-primary px-3 py-2 text-xs font-black text-primary-foreground">{t("Onayla")}</button>
+                  <button type="button" onClick={() => void decideReservation(booking.id, "rejected")} className="rounded-lg border border-border px-3 py-2 text-xs font-black text-foreground">{t("Reddet")}</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DashboardSection>
+      )}
+
+      {selectedBooking && (
+        <div id="reservation-details" className="scroll-mt-24">
+          <DashboardSection
+            icon={CalendarDays}
+            title={t("Rezervasyon detaylari")}
+            description={t("Talep, zaman araligi, alan ve malik onayi ayni kayitta gorunur.")}
+          >
+            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Alan")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.resourceName ?? t("Alan")}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Daire")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.flatNumber}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Baslangic")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{formatDate(selectedBooking.checkIn)}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Bitis")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{formatDate(selectedBooking.checkOut)}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3 sm:col-span-2"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Misafir/Sakin")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.guestName}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3 sm:col-span-2"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Not")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.notes || t("Not yok")}</dd></div>
+            </dl>
+            {user.role === "owner" && selectedBooking.approvalStatus === "pending_owner" && (
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button type="button" onClick={() => void decideReservation(selectedBooking.id, "approved")} className="min-h-10 flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground">{t("Onayla")}</button>
+                <button type="button" onClick={() => void decideReservation(selectedBooking.id, "rejected")} className="min-h-10 rounded-lg border border-border px-4 py-2 text-sm font-black text-foreground">{t("Reddet")}</button>
+              </div>
+            )}
+          </DashboardSection>
+        </div>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <DashboardSection
@@ -758,7 +1047,10 @@ export default function CalendarPage() {
         <div id="reservations-table" className="scroll-mt-24">
           <DataTable
             data={visibleBookings}
-            searchValue={(booking) => `${booking.id} ${booking.flatNumber} ${booking.guestName} ${booking.channel}`}
+            rowKey={(booking) => booking.id}
+            rowLabel={(booking) => `${t("Detaylari ac")}: ${booking.resourceName ?? booking.guestName}`}
+            onRowClick={(booking) => openBooking(booking.id)}
+            searchValue={(booking) => `${booking.id} ${booking.flatNumber} ${booking.guestName} ${booking.resourceName ?? ""} ${booking.notes ?? ""} ${booking.channel}`}
             columns={[
           { key: "id", header: t("Kayıt"), sortable: true, render: (booking) => booking.id },
           { key: "flat", header: t("Daire"), sortable: true, render: (booking) => booking.flatNumber },

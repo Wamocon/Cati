@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   type ClientActionInput,
   getClientActionRequest,
+  getServiceTicketQueueData,
   logClientAction,
   materializeApprovedTicketRequest,
   updateClientActionRequestStatus,
+  updateServiceTicket,
   type MaterializedTicketResult,
 } from "@/lib/site-management-repository"
 import { getUserProfile } from "@/lib/auth"
@@ -16,6 +18,7 @@ import {
 } from "@/lib/action-catalog"
 import { visibleOfflineSyncQueueForRole } from "@/lib/role-scoped-views"
 import { offlineSyncQueue } from "@/lib/site-management-data"
+import { isTicketAssignee } from "@/lib/ticket-routing"
 
 export const dynamic = "force-dynamic"
 
@@ -47,12 +50,14 @@ function withDecisionMetadata({
   decidedById,
   decidedByRole,
   materializedTicket,
+  assignedTo,
 }: {
   metadata: Record<string, unknown>
   status: NonNullable<ReturnType<typeof asDecisionStatus>>
   decidedById: string
   decidedByRole: string
   materializedTicket: MaterializedTicketResult | null
+  assignedTo?: string | null
 }) {
   const workflow = asRecord(metadata.workflow)
   return {
@@ -64,6 +69,7 @@ function withDecisionMetadata({
       decidedById,
       decidedByRole,
       decidedAt: new Date().toISOString(),
+      ...(assignedTo ? { assignedTo } : {}),
       ...(materializedTicket
         ? {
             materializedTicketId: materializedTicket.id,
@@ -201,6 +207,11 @@ export async function PATCH(request: NextRequest) {
     storedRequest.actionType,
     storedRequest.entityTable
   )
+  const isTicketCreationApproval =
+    storedRequest.entityTable === "service_tickets" &&
+    (storedRequest.actionType === "ticket.create.request" ||
+      storedRequest.actionType === "ticket.create.ai_draft")
+  const assignee = asString(payload.assignee)
   const canApproveByPermission = hasAnyPermission(profile.role, workflowAction.resource, [
     "approve",
     "manage",
@@ -214,6 +225,38 @@ export async function PATCH(request: NextRequest) {
     )
   }
 
+  if (status === "approved" && isTicketCreationApproval) {
+    if (!assignee || !isTicketAssignee(assignee)) {
+      return NextResponse.json(
+        { error: "Choose an available assignee before approving this ticket." },
+        { status: 400 }
+      )
+    }
+    if (!hasAnyPermission(profile.role, "tickets", ["assign", "manage"])) {
+      return NextResponse.json(
+        { error: "Your role is not allowed to assign service tickets." },
+        { status: 403 }
+      )
+    }
+
+    const workflowMetadata = asRecord(storedRequest.metadata.workflow)
+    const requestedByRole = asString(workflowMetadata.requestedByRole)
+    const existingTicketId =
+      asString(workflowMetadata.materializedTicketId) ??
+      asString(storedRequest.metadata.materializedTicketId)
+
+    if (requestedByRole === "tenant" && existingTicketId) {
+      const ticketQueue = await getServiceTicketQueueData({ limit: 100 })
+      const existingTicket = ticketQueue.tickets.find((ticket) => ticket.id === existingTicketId)
+      if (existingTicket?.status === "waiting_approval") {
+        return NextResponse.json(
+          { error: "The owner must approve this tenant ticket before it can be assigned." },
+          { status: 409 }
+        )
+      }
+    }
+  }
+
   try {
     const materializedTicket =
       status === "approved"
@@ -221,8 +264,29 @@ export async function PATCH(request: NextRequest) {
             request: storedRequest,
             decidedById: profile.id,
             decidedByRole: profile.role,
+            assignee,
           })
         : null
+    const assignmentResult =
+      status === "approved" && isTicketCreationApproval && materializedTicket && assignee
+        ? await updateServiceTicket({
+            ticketId: materializedTicket.id,
+            status: "assigned",
+            assignee,
+            actor: {
+              id: profile.id,
+              role: profile.role,
+              companyId: profile.company_id,
+              displayName: profile.full_name,
+              email: profile.email,
+            },
+          })
+        : null
+
+    if (status === "approved" && isTicketCreationApproval && !assignmentResult) {
+      throw new Error("Approved ticket could not be assigned.")
+    }
+
     const result = await updateClientActionRequestStatus({
       id: actionId,
       status,
@@ -232,6 +296,7 @@ export async function PATCH(request: NextRequest) {
         decidedById: profile.id,
         decidedByRole: profile.role,
         materializedTicket,
+        assignedTo: assignmentResult?.ticket.assignee ?? assignee,
       }),
     })
     return NextResponse.json(
@@ -242,6 +307,7 @@ export async function PATCH(request: NextRequest) {
           decisionStatus: status,
           decidedByRole: profile.role,
           materializedTicket,
+          assignment: assignmentResult?.ticket ?? null,
         },
       },
       { status: 200 }
