@@ -158,3 +158,4 @@ pnpm --filter cati-web typecheck
 - Nicht löschen oder veröffentlichen — Inhalte sind vertraulich.
 - Änderungen an `AGENTS.md`, `docs/README.md` und `docs/PROJECT-HANDBOOK.md` müssen bei Architektur-, Struktur- oder Dokumentationsänderungen nachgeführt werden.
 - Vor größeren Architekturentscheidungen einen Plan erstellen und absegnen lassen.
+- Vor jeder Produktänderung die betroffene Anforderung in `docs/requirements/option-3-ai-site-crm/` sowie den passenden Abschnitt in `docs/ways-of-work/` prüfen. Implementierung, Supabase-Migrationen/API-Verträge, RBAC/RLS und die zugehörigen QA-Szenarien müssen vor dem Release gegengeprüft werden. Provider- oder Sicherheitsfunktionen dürfen erst nach den in der Dokumentation genannten Freigaben und mit passenden End-to-End-Nachweisen als produktiv bezeichnet werden.

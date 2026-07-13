@@ -145,6 +145,7 @@ Use these rules whenever adding or changing documentation:
 5. Exact duplicate exports should be deleted after a canonical copy is kept.
 6. Do not keep root-level business docs, screenshots, zip files, archive folders, phase-delivery folders or QA outputs.
 7. When code or architecture changes, update this handbook, `docs/README.md`, the affected BRD/PRD/TRD section and `AGENTS.md` if agent instructions changed.
+8. Before implementing or releasing a workflow change, cross-check its applicable BRD/PRD/TRD requirement, delivery phase, API/migration contract, RBAC/RLS boundary and QA/UAT scenario. Record gaps or external approval dependencies rather than presenting provider-ready functions as live production integrations.
 
 ## 8. Practical Reading Order
 
