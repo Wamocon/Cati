@@ -39,6 +39,7 @@ import {
 } from "@/lib/operational-copy"
 import { localizeOperationalValue } from "@/lib/unit-matrix-copy"
 import { createClient } from "@/lib/supabase/client"
+import { hasAnyPermission } from "@/lib/rbac"
 import type { ServiceTicketQueueData } from "@/lib/site-management-repository"
 import { resolveTicketRoute, ticketAssigneeOptions } from "@/lib/ticket-routing"
 import {
@@ -94,6 +95,8 @@ interface WorkflowRequestView {
   executionMode: string
   requiresHumanApproval: boolean
   approvalRoles: string[]
+  suggestedAssignee: string | null
+  requestedByRole: string | null
 }
 
 function readString(record: Record<string, unknown>, key: string, fallback = "") {
@@ -124,6 +127,7 @@ function normalizeWorkflowRequest(
   const title = readString(record, "title", actionType)
   const entityTable = readString(record, "entityTable", readString(record, "entity_table", "client_action_requests"))
   const status = readString(record, "status", readString(workflow, "status", "submitted"))
+  const proposedPayload = readRecord(metadata.proposedPayload ?? workflow.proposedPayload)
   const requiresHumanApproval =
     workflow.requiresHumanApproval === true ||
     readString(workflow, "executionMode") === "approval_required" ||
@@ -142,7 +146,20 @@ function normalizeWorkflowRequest(
     executionMode: readString(workflow, "executionMode", requiresHumanApproval ? "request_only" : "log_only"),
     requiresHumanApproval,
     approvalRoles: readStringArray(workflow.approvalRoles),
+    suggestedAssignee: actionType.includes("ticket.create")
+      ? resolveTicketRoute({
+          title: readString(proposedPayload, "title", title),
+          description: readString(proposedPayload, "description") || null,
+          category: readString(proposedPayload, "category"),
+          priority: readString(proposedPayload, "priority"),
+        }).assignee
+      : null,
+    requestedByRole: readString(workflow, "requestedByRole", readString(metadata, "requestedByRole")) || null,
   }
+}
+
+function isTicketCreationApproval(item: WorkflowRequestView) {
+  return item.entityTable === "service_tickets" && item.actionType.includes("ticket.create")
 }
 
 function workflowStatusLabel(item: WorkflowRequestView) {
@@ -177,6 +194,11 @@ const workflowApprovalCopy = {
     approvers: "Onay rolleri",
     origin: "Kaynak",
     mode: "Mod",
+    reviewHint: "Atamayı seçin ve talebi operasyona gönderin.",
+    assignTo: "Sorumlu kişi veya ekip",
+    approveAndAssign: "Onayla ve ata",
+    assignmentSuccess: "Talep onaylandı ve seçilen sorumluya atandı.",
+    decisionError: "Karar kaydedilemedi. Lütfen tekrar deneyin.",
   },
   en: {
     title: "AI and approval queue",
@@ -189,6 +211,11 @@ const workflowApprovalCopy = {
     approvers: "Approval roles",
     origin: "Origin",
     mode: "Mode",
+    reviewHint: "Choose the assignee, then send the request to Operations.",
+    assignTo: "Person or team responsible",
+    approveAndAssign: "Approve and assign",
+    assignmentSuccess: "The request was approved and assigned to the selected person or team.",
+    decisionError: "The decision could not be saved. Please try again.",
   },
   de: {
     title: "KI- und Freigabewarteschlange",
@@ -201,6 +228,11 @@ const workflowApprovalCopy = {
     approvers: "Freigaberollen",
     origin: "Quelle",
     mode: "Modus",
+    reviewHint: "Zuständige Person oder Team auswählen und die Anfrage an den Betrieb weiterleiten.",
+    assignTo: "Zuständige Person oder Team",
+    approveAndAssign: "Freigeben und zuweisen",
+    assignmentSuccess: "Die Anfrage wurde freigegeben und der ausgewählten Person oder dem Team zugewiesen.",
+    decisionError: "Die Entscheidung konnte nicht gespeichert werden. Bitte erneut versuchen.",
   },
   ru: {
     title: "AI и очередь одобрения",
@@ -213,6 +245,11 @@ const workflowApprovalCopy = {
     approvers: "Роли одобрения",
     origin: "Источник",
     mode: "Режим",
+    reviewHint: "Выберите исполнителя и передайте заявку в работу.",
+    assignTo: "Ответственный сотрудник или команда",
+    approveAndAssign: "Одобрить и назначить",
+    assignmentSuccess: "Заявка одобрена и назначена выбранному сотруднику или команде.",
+    decisionError: "Не удалось сохранить решение. Повторите попытку.",
   },
 } as const
 
@@ -370,12 +407,7 @@ export default function TicketsPage() {
     const localized = t(item.title)
     if (localized !== item.title) return localized
 
-    const freeformPrompt =
-      item.title.length > 72 ||
-      /[\u0400-\u04FF]/.test(item.title) ||
-      item.actionType.includes("ticket.create")
-
-    if (item.origin === "ai" || freeformPrompt) {
+    if (item.origin === "ai") {
       const base = item.actionType.includes("ticket.create")
         ? workflowDisplay.aiDraft
         : workflowDisplay.approvalRequest
@@ -385,13 +417,16 @@ export default function TicketsPage() {
       return showExternalId ? `${base} - ${item.entityExternalId}` : base
     }
 
-    return localized
+    return item.title === item.actionType ? workflowDisplay.approvalRequest : localized
   }
   const [queueData, setQueueData] = useState<ServiceTicketQueueData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
   const [localWorkflowRequests, setLocalWorkflowRequests] = useState<WorkflowRequestView[]>([])
   const [workflowDecisionState, setWorkflowDecisionState] = useState<Record<string, RequestState>>({})
+  const [workflowAssignees, setWorkflowAssignees] = useState<Record<string, string>>({})
+  const [tenantApprovalAssignees, setTenantApprovalAssignees] = useState<Record<string, string>>({})
   const clientView = isClientRole(user.role)
+  const canAssignTickets = hasAnyPermission(user.role, "tickets", ["assign", "manage"])
   const fieldView = isFieldRole(user.role)
   const maskFinance = shouldMaskFinance(user.role)
   const ticketUnitOptions =
@@ -559,14 +594,36 @@ export default function TicketsPage() {
       normalizeWorkflowRequest(record as Record<string, unknown>, index)
     )),
   ].filter((item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index)
+  const ownerPendingTicketIds = new Set(
+    (queueData?.tickets ?? [])
+      .filter((ticket) => ticket.status === "waiting_approval")
+      .map((ticket) => ticket.id)
+  )
   const approvalQueue = workflowRequests
-    .filter((item) => item.requiresHumanApproval || item.executionMode !== "log_only")
+    .filter(
+      (item) =>
+        (item.requiresHumanApproval || item.executionMode !== "log_only") &&
+        !(
+          isTicketCreationApproval(item) &&
+          item.requestedByRole === "tenant" &&
+          ownerPendingTicketIds.has(item.entityExternalId)
+        )
+    )
     .slice(0, 5)
   const approvalPending = approvalQueue.filter((item) =>
     ["submitted", "queued", "logged"].includes(workflowStatusLabel(item))
   ).length
   const selectedTicket =
     visibleTickets.find((ticket) => ticket.id === selectedTicketId) ?? visibleTickets[0] ?? null
+  const selectedIsTenantTicket = user.role === "owner" && selectedTicket?.requesterRole === "tenant"
+  const selectedNeedsOwnerDecision = selectedIsTenantTicket && selectedTicket?.status === "waiting_approval"
+
+  function openTicket(ticketId: string) {
+    setSelectedTicketId(ticketId)
+    window.requestAnimationFrame(() => {
+      document.getElementById("ticket-details")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
 
   async function submitTicket() {
     setTicketSubmitState("loading")
@@ -618,6 +675,7 @@ export default function TicketsPage() {
                 ticketId: selectedTicket.id,
                 title: payload.title,
                 category: payload.category,
+                ...(canAssignTickets ? { assignee: payload.assignee } : {}),
                 clearDescription,
                 description: clearDescription ? null : payload.description,
               }
@@ -638,13 +696,13 @@ export default function TicketsPage() {
     }
   }
 
-  async function decideTenantTicket(ticketId: string, approvalStatus: "approved" | "rejected") {
+  async function decideTenantTicket(ticketId: string, approvalStatus: "approved" | "rejected", assignee?: string) {
     setTicketEditState("loading")
     try {
       const response = await fetch("/api/site-management/tickets", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticketId, approvalStatus }),
+        body: JSON.stringify({ ticketId, approvalStatus, ...(approvalStatus === "approved" && assignee ? { assignee } : {}) }),
       })
       if (!response.ok) throw new Error("Ticket approval failed.")
       setTicketEditState("success")
@@ -655,7 +713,11 @@ export default function TicketsPage() {
     }
   }
 
-  async function decideWorkflow(item: WorkflowRequestView, status: WorkflowDecision) {
+  async function decideWorkflow(
+    item: WorkflowRequestView,
+    status: WorkflowDecision,
+    assignee?: string
+  ) {
     setWorkflowDecisionState((current) => ({ ...current, [item.id]: "loading" }))
     try {
       const response = await fetch("/api/site-management/actions", {
@@ -666,6 +728,7 @@ export default function TicketsPage() {
           status,
           actionType: item.actionType,
           entityTable: item.entityTable,
+          ...(status === "approved" && isTicketCreationApproval(item) ? { assignee } : {}),
         }),
       })
       if (!response.ok) throw new Error("Workflow decision failed.")
@@ -674,6 +737,7 @@ export default function TicketsPage() {
         ...current.filter((request) => request.id !== item.id),
       ].slice(0, 5))
       setWorkflowDecisionState((current) => ({ ...current, [item.id]: "success" }))
+      await fetchTickets()
       window.dispatchEvent(new CustomEvent("site-management:changed"))
     } catch {
       setWorkflowDecisionState((current) => ({ ...current, [item.id]: "error" }))
@@ -844,9 +908,21 @@ export default function TicketsPage() {
           <div className="flex flex-col gap-2">
             {visibleTickets.filter((ticket) => ticket.status === "waiting_approval").map((ticket) => (
               <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-sm font-semibold text-foreground">{ticket.title} · {ticket.flatNumber}</p>
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => void decideTenantTicket(ticket.id, "approved")} disabled={ticketEditState === "loading"} className="rounded-lg bg-primary px-3 py-2 text-xs font-black text-primary-foreground disabled:opacity-60">{t("Onayla")}</button>
+                <button type="button" onClick={() => openTicket(ticket.id)} className="min-w-0 flex-1 rounded-lg p-2 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35">
+                  <span className="block text-sm font-black text-foreground">{ticket.title} · {ticket.flatNumber}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{ticket.description || t("Aciklama yok")}</span>
+                  <span className="mt-1 block text-[11px] font-semibold text-primary">{t("Detaylari ac")}</span>
+                </button>
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    aria-label={`Assignee for ${ticket.title}`}
+                    value={tenantApprovalAssignees[ticket.id] ?? resolveTicketRoute(ticket).assignee}
+                    onChange={(event) => setTenantApprovalAssignees((current) => ({ ...current, [ticket.id]: event.target.value }))}
+                    className="min-h-9 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketAssigneeOptions.map((assignee) => <option key={assignee} value={assignee}>{t(assignee)}</option>)}
+                  </select>
+                  <button type="button" onClick={() => void decideTenantTicket(ticket.id, "approved", tenantApprovalAssignees[ticket.id] ?? resolveTicketRoute(ticket).assignee)} disabled={ticketEditState === "loading"} className="rounded-lg bg-primary px-3 py-2 text-xs font-black text-primary-foreground disabled:opacity-60">{t("Onayla")}</button>
                   <button type="button" onClick={() => void decideTenantTicket(ticket.id, "rejected")} disabled={ticketEditState === "loading"} className="rounded-lg border border-border px-3 py-2 text-xs font-black text-foreground disabled:opacity-60">{t("Reddet")}</button>
                 </div>
               </div>
@@ -956,12 +1032,15 @@ export default function TicketsPage() {
           </Card3D>
         )}
 
-        <Card3D glow={false} className={fieldView ? "xl:col-span-2" : undefined}>
+        <Card3D glow={false} className={fieldView ? "xl:col-span-2 scroll-mt-24" : "scroll-mt-24"}>
+          <div id="ticket-details" className="scroll-mt-24" />
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-sm font-black text-card-foreground">{t("Talep duzenle ve ata")}</h2>
+              <h2 className="text-sm font-black text-card-foreground">{selectedIsTenantTicket ? t("Talep detaylari ve malik karari") : t("Talep duzenle ve ata")}</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                {clientView
+                {selectedIsTenantTicket
+                  ? t("Kiraci tarafindan gonderilen konu ve aciklamayi inceleyin; ardindan onaylayin veya reddedin.")
+                  : clientView
                   ? t("Kendi talebinizin metnini duzenleyin veya gereksiz bilgiyi kaldirin.")
                   : t("Durum, sorumlu, oncelik ve aciklama ayni kayda uygulanir.")}
               </p>
@@ -977,6 +1056,7 @@ export default function TicketsPage() {
               className="space-y-3"
               onSubmit={(event) => {
                 event.preventDefault()
+                if (selectedIsTenantTicket) return
                 void submitTicketUpdate(readTicketUpdateForm(event.currentTarget), false)
               }}
             >
@@ -1000,6 +1080,7 @@ export default function TicketsPage() {
                   <input
                     name="title"
                     defaultValue={selectedTicket.title}
+                    readOnly={selectedIsTenantTicket}
                     className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
                     maxLength={160}
                     required
@@ -1010,6 +1091,7 @@ export default function TicketsPage() {
                   <select
                     name="category"
                     defaultValue={selectedTicket.category}
+                    disabled={selectedIsTenantTicket}
                     className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
                   >
                     {ticketCategoryOptions.map((category) => (
@@ -1021,7 +1103,7 @@ export default function TicketsPage() {
                 </label>
               </div>
               {!clientView && (
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <label className="block text-xs font-black uppercase text-muted-foreground">
                     {t("Durum")}
                     <select
@@ -1050,32 +1132,50 @@ export default function TicketsPage() {
                       ))}
                     </select>
                   </label>
-                  <label className="block text-xs font-black uppercase text-muted-foreground">
-                    {t("Sorumlu")}
-                    <select
-                      name="assignee"
-                      defaultValue={selectedTicket.assignee}
-                      className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
-                    >
-                      {ticketAssigneeOptions.map((assignee) => (
-                        <option key={assignee} value={assignee}>
-                          {t(assignee)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
                 </div>
+              )}
+              {canAssignTickets && !selectedIsTenantTicket && (
+                <label className="block text-xs font-black uppercase text-muted-foreground">
+                  {t("Sorumlu")}
+                  <select
+                    name="assignee"
+                    defaultValue={selectedTicket.assignee}
+                    className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketAssigneeOptions.map((assignee) => (
+                      <option key={assignee} value={assignee}>
+                        {t(assignee)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               )}
               <label className="block text-xs font-black uppercase text-muted-foreground">
                 {t("Aciklama")}
                 <textarea
                   name="description"
                   defaultValue={selectedTicket.description ?? ""}
+                  readOnly={selectedIsTenantTicket}
                   className="mt-1 min-h-24 w-full resize-y rounded-lg border border-border bg-background px-3 py-2 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
                   maxLength={1200}
                 />
               </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
+              {selectedNeedsOwnerDecision ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <select
+                    aria-label={`Assignee for ${selectedTicket.title}`}
+                    value={tenantApprovalAssignees[selectedTicket.id] ?? resolveTicketRoute(selectedTicket).assignee}
+                    onChange={(event) => setTenantApprovalAssignees((current) => ({ ...current, [selectedTicket.id]: event.target.value }))}
+                    className="min-h-10 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                  >
+                    {ticketAssigneeOptions.map((assignee) => <option key={assignee} value={assignee}>{t(assignee)}</option>)}
+                  </select>
+                  <button type="button" onClick={() => void decideTenantTicket(selectedTicket.id, "approved", tenantApprovalAssignees[selectedTicket.id] ?? resolveTicketRoute(selectedTicket).assignee)} disabled={ticketEditState === "loading"} className="inline-flex min-h-10 flex-1 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground disabled:opacity-60">{t("Onayla ve operasyona gonder")}</button>
+                  <button type="button" onClick={() => void decideTenantTicket(selectedTicket.id, "rejected")} disabled={ticketEditState === "loading"} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-border px-4 py-2 text-sm font-black text-foreground disabled:opacity-60">{t("Reddet")}</button>
+                </div>
+              ) : selectedIsTenantTicket ? (
+                <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm font-semibold text-muted-foreground">{t("Kiraci talebi salt okunur olarak goruntulenir.")}</p>
+              ) : <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="submit"
                   disabled={ticketEditState === "loading"}
@@ -1096,7 +1196,7 @@ export default function TicketsPage() {
                   <Trash2 className="h-4 w-4" />
                   {t("Aciklamayi kaldir")}
                 </button>
-              </div>
+              </div>}
             </form>
           ) : (
             <div className="rounded-xl border border-dashed border-border p-4 text-sm font-semibold text-muted-foreground">
@@ -1106,7 +1206,7 @@ export default function TicketsPage() {
         </Card3D>
       </div>
 
-      {!clientView && (
+      {(user.role === "admin" || user.role === "manager") && (
         <DashboardSection
           title={approvalCopy.title}
           description={approvalCopy.description}
@@ -1141,13 +1241,12 @@ export default function TicketsPage() {
                   const status = workflowStatusLabel(item)
                   const isPending = ["submitted", "queued", "logged"].includes(status)
                   const isLoading = workflowDecisionState[item.id] === "loading"
-                  const approverLabels =
-                    item.approvalRoles.length > 0
-                      ? item.approvalRoles.map((role) => t(role)).join(", ")
-                      : t("manager")
+                  const isTicketApproval = isTicketCreationApproval(item)
+                  const selectedAssignee =
+                    workflowAssignees[item.id] ?? item.suggestedAssignee ?? "Operations queue"
 
                   return (
-                    <div key={item.id} className="rounded-xl border border-border bg-background/70 p-3">
+                    <div key={item.id} data-testid="workflow-approval-card" className="rounded-xl border border-border bg-background/70 p-3">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1157,23 +1256,54 @@ export default function TicketsPage() {
                             </StatusBadge>
                           </div>
                           <h3 className="mt-2 truncate text-sm font-black text-foreground">{displayWorkflowTitle(item)}</h3>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {approvalCopy.origin}: {t(item.origin)} · {approvalCopy.mode}: {t(item.executionMode)}
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {approvalCopy.approvers}: {approverLabels}
-                          </p>
+                          {isPending && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {approvalCopy.reviewHint}
+                            </p>
+                          )}
+                          {isTicketApproval && isPending && (
+                            <label className="mt-3 block text-xs font-black text-foreground">
+                              {approvalCopy.assignTo}
+                              <select
+                                aria-label={`${approvalCopy.assignTo}: ${displayWorkflowTitle(item)}`}
+                                value={selectedAssignee}
+                                onChange={(event) =>
+                                  setWorkflowAssignees((current) => ({
+                                    ...current,
+                                    [item.id]: event.target.value,
+                                  }))
+                                }
+                                className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary"
+                              >
+                                {ticketAssigneeOptions.map((assignee) => (
+                                  <option key={assignee} value={assignee}>
+                                    {t(assignee)}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                          )}
+                          {workflowDecisionState[item.id] === "success" && (
+                            <p className="mt-2 text-xs font-bold text-emerald-700 dark:text-emerald-300" role="status">
+                              {isTicketApproval ? approvalCopy.assignmentSuccess : t(status)}
+                            </p>
+                          )}
+                          {workflowDecisionState[item.id] === "error" && (
+                            <p className="mt-2 text-xs font-bold text-rose-700 dark:text-rose-300" role="alert">
+                              {approvalCopy.decisionError}
+                            </p>
+                          )}
                         </div>
 
                         <div className="flex shrink-0 gap-2">
                           <button
                             type="button"
                             disabled={!isPending || isLoading}
-                            onClick={() => void decideWorkflow(item, "approved")}
+                            onClick={() => void decideWorkflow(item, "approved", selectedAssignee)}
                             className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-black text-emerald-700 transition hover:bg-emerald-500/15 disabled:cursor-not-allowed disabled:opacity-45 dark:text-emerald-300"
                           >
                             <CheckCircle2 className="h-4 w-4" />
-                            {approvalCopy.approve}
+                            {isTicketApproval ? approvalCopy.approveAndAssign : approvalCopy.approve}
                           </button>
                           <button
                             type="button"
@@ -1539,8 +1669,11 @@ export default function TicketsPage() {
         <div id="ticket-table" className="scroll-mt-24">
           <DataTable
             data={visibleTickets}
+            rowKey={(ticket) => ticket.id}
+            rowLabel={(ticket) => `${t("Detaylari ac")}: ${ticket.title}`}
+            onRowClick={(ticket) => openTicket(ticket.id)}
             searchValue={(ticket) =>
-              `${ticket.id} ${ticket.flatNumber} ${ticket.title} ${ticket.assignee} ${ticket.requester}`
+              `${ticket.id} ${ticket.flatNumber} ${ticket.title} ${ticket.description ?? ""} ${ticket.assignee} ${ticket.requester}`
             }
             columns={[
           { key: "id", header: t("Talep"), sortable: true, render: (ticket) => ticket.id },

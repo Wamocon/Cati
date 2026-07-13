@@ -253,13 +253,38 @@ export interface ReservationMutationResult {
   booking: BookingRecord
 }
 
-const localClientActionRequests = new Map<string, ClientActionRequestRecord>()
-const localMaterializedTickets: ServiceTicket[] = []
-const localTicketOverrides = new Map<string, ServiceTicket>()
-const localMaterializedServiceOrders: ServiceOrderRecord[] = []
-const localMaterializedWorkforceTasks: WorkforceTaskRecord[] = []
-const localMaterializedBookings: BookingRecord[] = []
-let localActionSequence = 0
+interface LocalSiteManagementState {
+  clientActionRequests: Map<string, ClientActionRequestRecord>
+  materializedTickets: ServiceTicket[]
+  ticketOverrides: Map<string, ServiceTicket>
+  materializedServiceOrders: ServiceOrderRecord[]
+  materializedWorkforceTasks: WorkforceTaskRecord[]
+  materializedBookings: BookingRecord[]
+  actionSequence: number
+}
+
+const localStateGlobal = globalThis as typeof globalThis & {
+  __catiSiteManagementLocalState?: LocalSiteManagementState
+}
+const localSiteManagementState =
+  localStateGlobal.__catiSiteManagementLocalState ??
+  {
+    clientActionRequests: new Map<string, ClientActionRequestRecord>(),
+    materializedTickets: [],
+    ticketOverrides: new Map<string, ServiceTicket>(),
+    materializedServiceOrders: [],
+    materializedWorkforceTasks: [],
+    materializedBookings: [],
+    actionSequence: 0,
+  }
+localStateGlobal.__catiSiteManagementLocalState = localSiteManagementState
+
+const localClientActionRequests = localSiteManagementState.clientActionRequests
+const localMaterializedTickets = localSiteManagementState.materializedTickets
+const localTicketOverrides = localSiteManagementState.ticketOverrides
+const localMaterializedServiceOrders = localSiteManagementState.materializedServiceOrders
+const localMaterializedWorkforceTasks = localSiteManagementState.materializedWorkforceTasks
+const localMaterializedBookings = localSiteManagementState.materializedBookings
 
 export interface Phase4Unit {
   id: string
@@ -2528,6 +2553,10 @@ function normalizeServiceTicketRows(rows: unknown, limit: number): ServiceTicket
     const assignmentEvent = events
       .map((event) => asRecord(asRecord(event).metadata))
       .find((metadata) => asNullableString(metadata.assigneeLabel))
+    const creationEvent = events
+      .map(asRecord)
+      .find((event) => asString(event.event_type) === "portal_ticket_created")
+    const creationMetadata = asRecord(creationEvent?.metadata)
 
     return {
       id: ticketNo,
@@ -2544,6 +2573,7 @@ function normalizeServiceTicketRows(rows: unknown, limit: number): ServiceTicket
         asNullableString(record.assigned_to) ??
         "Operations queue",
       requester: asNullableString(resident.full_name) ?? "Site management",
+      requesterRole: asNullableString(creationMetadata.requestedByRole) ?? undefined,
       openedAt: asString(record.created_at, new Date().toISOString()),
       dueAt: dueAt ?? "",
       slaHoursRemaining: slaHoursRemaining(dueAt),
@@ -3208,7 +3238,7 @@ function storeLocalClientAction(
   input: ClientActionInput,
   status: ClientActionResult["status"] = "locally-logged"
 ): ClientActionResult {
-  const id = `local-action-${Date.now()}-${++localActionSequence}`
+  const id = `local-action-${Date.now()}-${++localSiteManagementState.actionSequence}`
   localClientActionRequests.set(id, {
     id,
     companyId: "local-company",
@@ -3260,6 +3290,13 @@ function actionProposedPayload(action: ClientActionRequestRecord) {
   return Object.keys(proposedPayload).length > 0 ? proposedPayload : workflowPayload
 }
 
+function materializedTicketIdFromAction(action: ClientActionRequestRecord) {
+  return (
+    asNullableString(asRecord(action.metadata.workflow).materializedTicketId) ??
+    asNullableString(action.metadata.materializedTicketId)
+  )
+}
+
 function ticketTitleFromAction(action: ClientActionRequestRecord) {
   const proposedPayload = actionProposedPayload(action)
   return asString(proposedPayload.title, action.title ?? "Approved service ticket")
@@ -3302,9 +3339,10 @@ function ticketDueAt(priority: string, serviceSlaHours?: number) {
 function localMaterializeTicket(
   action: ClientActionRequestRecord,
   decidedByRole = "manager",
-  decidedAt = new Date().toISOString()
+  decidedAt = new Date().toISOString(),
+  assignee?: string | null
 ): MaterializedTicketResult {
-  const existingTicketId = asNullableString(asRecord(action.metadata.workflow).materializedTicketId)
+  const existingTicketId = materializedTicketIdFromAction(action)
   const existingTicket = existingTicketId
     ? localMaterializedTickets.find((ticket) => ticket.id === existingTicketId)
     : null
@@ -3322,6 +3360,7 @@ function localMaterializeTicket(
   const catalogItem = serviceCatalogItemForAction(proposedPayload)
   const emergencyScenario = emergencyScenarioForCatalog(catalogItem)
   const providerQueue = emergencyProviderQueue(catalogItem)
+  const assignmentTarget = assignee?.trim() || providerQueue
   const dueAt = ticketDueAt(priority, catalogItem.slaHours)
   const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}-${localMaterializedTickets.length + 1}`
   const unitNo = asNullableString(proposedPayload.unitNo) ?? action.entityExternalId ?? "Unassigned"
@@ -3337,7 +3376,7 @@ function localMaterializeTicket(
     category: asString(proposedPayload.category, "general"),
     priority: ticketPriorityForView(priority),
     status: "assigned",
-    assignee: providerQueue,
+    assignee: assignmentTarget,
     requester: "Approved workflow",
     openedAt: new Date().toISOString(),
     dueAt,
@@ -3366,7 +3405,7 @@ function localMaterializeTicket(
     taskCreated: true,
     requestedForAt: dueAt,
     createdAt: decidedAt,
-    nextAction: `${emergencyScenario.label} routed to ${providerQueue}. SLA ${catalogItem.slaHours}h; media proof and manager closure review required.`,
+    nextAction: `${emergencyScenario.label} routed to ${assignmentTarget}. SLA ${catalogItem.slaHours}h; media proof and manager closure review required.`,
   })
 
   localMaterializedWorkforceTasks.unshift({
@@ -3375,7 +3414,7 @@ function localMaterializeTicket(
     flatNumber: unitNo,
     title: `${catalogItem.name} - ${unitNo}`,
     team: catalogItem.team,
-    assignee: providerQueue,
+    assignee: assignmentTarget,
     status: "assigned",
     priority: ticketPriorityForView(priority),
     slaHoursRemaining: slaHoursRemaining(dueAt),
@@ -3385,7 +3424,7 @@ function localMaterializeTicket(
     mediaCount: 0,
     managerApprovalRequired: emergencyScenario.managerApprovalRequired,
     lastUpdateAt: decidedAt,
-    fieldNote: `Human approval completed by ${decidedByRole}; ${providerQueue} notified in demo mode.`,
+    fieldNote: `Human approval completed by ${decidedByRole}; ${assignmentTarget} notified in demo mode.`,
     completionReadiness: 18,
   })
 
@@ -3398,20 +3437,20 @@ function localMaterializeTicket(
       orderNo,
       catalogCode: catalogItem.code,
       team: catalogItem.team,
-      providerQueue,
+      providerQueue: assignmentTarget,
       slaHours: catalogItem.slaHours,
     },
     workforceTask: {
       id: taskNo,
       taskNo,
       team: catalogItem.team,
-      assignee: providerQueue,
+      assignee: assignmentTarget,
       slaHours: catalogItem.slaHours,
     },
     notification: {
       channel: emergencyScenario.notificationChannel,
       status: "queued",
-      recipient: providerQueue,
+      recipient: assignmentTarget,
     },
     humanApprovalBoundary: {
       required: true,
@@ -3920,6 +3959,7 @@ function buildTicketViewFromInput({
   unitNo,
   assignee,
   requester,
+  requesterRole,
   dueAt,
   estimatedCostTry,
 }: {
@@ -3932,6 +3972,7 @@ function buildTicketViewFromInput({
   unitNo: string | null
   assignee?: string | null
   requester: string
+  requesterRole?: string
   dueAt: string
   estimatedCostTry: number
 }): ServiceTicket {
@@ -3946,6 +3987,7 @@ function buildTicketViewFromInput({
     status: mapTicketStatus(ticketStatusForDb(status)),
     assignee: assignee?.trim() || "Operations queue",
     requester,
+    requesterRole,
     openedAt: new Date().toISOString(),
     dueAt,
     slaHoursRemaining: slaHoursRemaining(dueAt),
@@ -3979,6 +4021,7 @@ function localCreateServiceTicket(input: CreateServiceTicketInput): ServiceTicke
     unitNo: input.unitNo,
     assignee,
     requester: input.actor.displayName ?? input.actor.email ?? input.actor.role,
+    requesterRole: input.actor.role,
     dueAt,
     estimatedCostTry: catalogItem.basePriceTry,
   })
@@ -4115,6 +4158,7 @@ export async function createServiceTicket(
         unitNo: context.unitNo,
         assignee,
         requester: input.actor.displayName ?? input.actor.email ?? input.actor.role,
+        requesterRole: input.actor.role,
         dueAt,
         estimatedCostTry: catalogItem.basePriceTry,
       }),
@@ -4258,11 +4302,12 @@ function normalizeBookingRows(rows: unknown, limit: number): BookingRecord[] {
     const id = asString(record.id, `BKG-LIVE-${index + 1}`)
 
     return {
-      id: id.startsWith("BKG-") ? id : `BKG-${id.slice(0, 8).toUpperCase()}`,
+      id,
       flatId: asString(unit.id, asString(record.unit_id, `unit-${index + 1}`)),
       flatNumber: asString(unit.unit_no, "Unassigned"),
       guestName: asString(record.guest_name, "Portal reservation"),
       resourceName: asNullableString(record.resource_name) ?? "Amenity",
+      notes: asNullableString(record.notes),
       approvalStatus:
         asNullableString(record.approval_status) === "rejected"
           ? "rejected"
@@ -4346,6 +4391,7 @@ function localCreateReservation(input: CreateReservationInput): ReservationMutat
   const existingConflict = localMergedBookings(100).some((booking) => {
     if (booking.resourceName !== input.resourceName) return false
     if (booking.status === "cancelled") return false
+    if (booking.approvalStatus === "rejected") return false
     return (
       new Date(booking.checkIn).getTime() < new Date(input.checkOutAt).getTime() &&
       new Date(booking.checkOut).getTime() > new Date(input.checkInAt).getTime()
@@ -4362,6 +4408,7 @@ function localCreateReservation(input: CreateReservationInput): ReservationMutat
     flatNumber: input.unitNo,
     guestName: `${input.guestName} - ${input.resourceName}`,
     resourceName: input.resourceName,
+    notes: input.notes ?? null,
     approvalStatus: input.actor.role === "tenant" ? "pending_owner" : "approved",
     channel: "Direct",
     checkIn: input.checkInAt,
@@ -4399,7 +4446,7 @@ export async function getBookingOperationsData({
     const supabase = await createDataClient()
     const { data, error } = await supabase
       .from("reservations")
-      .select("id, unit_id, guest_name, resource_name, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
+      .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
       .order("check_in_at", { ascending: true })
       .limit(safeLimit)
 
@@ -4455,10 +4502,12 @@ export async function createReservation(
     const conflictResponse = await supabase
       .from("reservations")
       .select("id")
+      .eq("company_id", context.companyId)
       .eq("resource_name", input.resourceName)
       .lt("check_in_at", input.checkOutAt)
       .gt("check_out_at", input.checkInAt)
       .not("status", "in", "(cancelled,no_show)")
+      .neq("approval_status", "rejected")
       .limit(1)
 
     if (conflictResponse.error) throw conflictResponse.error
@@ -4475,6 +4524,7 @@ export async function createReservation(
         resident_id: null,
         guest_name: input.guestName,
         resource_name: input.resourceName,
+        notes: input.notes ?? null,
         check_in_at: input.checkInAt,
         check_out_at: input.checkOutAt,
         status: "scheduled",
@@ -4483,7 +4533,7 @@ export async function createReservation(
         cleaning_status: "pending",
         deposit_status: "not_required",
       })
-      .select("id, unit_id, guest_name, resource_name, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
+      .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
       .single()
 
     if (error) throw error
@@ -4507,7 +4557,7 @@ export async function updateReservationApproval(
   const local = localMaterializedBookings.find((booking) => booking.id === input.reservationId)
   if (!isSupabaseConfigured()) {
     if (!local) return null
-    const booking = { ...local, approvalStatus: input.approvalStatus }
+    const booking = { ...local, approvalStatus: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" as const : local.status }
     localMaterializedBookings[localMaterializedBookings.findIndex((item) => item.id === local.id)] = booking
     return { source: "local-seed", booking }
   }
@@ -4515,14 +4565,14 @@ export async function updateReservationApproval(
   const supabase = await createDataClient()
   const query = supabase
     .from("reservations")
-    .update({ approval_status: input.approvalStatus, updated_at: new Date().toISOString() })
-    .select("id, unit_id, guest_name, resource_name, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
+    .update({ approval_status: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" : "scheduled", updated_at: new Date().toISOString() })
+    .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
 
   const response = isUuid(input.reservationId)
     ? await query.eq("id", input.reservationId).maybeSingle()
     : null
   if (!response || response.error) {
-    if (canUseLocalSeedFallback() && local) return { source: "local-seed", booking: { ...local, approvalStatus: input.approvalStatus } }
+    if (canUseLocalSeedFallback() && local) return { source: "local-seed", booking: { ...local, approvalStatus: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" : local.status } }
     if (response?.error) throw response.error
     return null
   }
@@ -4589,14 +4639,16 @@ export async function materializeApprovedTicketRequest({
   request,
   decidedById,
   decidedByRole,
+  assignee,
 }: {
   request: ClientActionRequestRecord
   decidedById: string
   decidedByRole: string
+  assignee?: string | null
 }): Promise<MaterializedTicketResult | null> {
   if (!isTicketCreateRequest(request)) return null
 
-  const existingTicketId = asNullableString(asRecord(request.metadata.workflow).materializedTicketId)
+  const existingTicketId = materializedTicketIdFromAction(request)
   if (existingTicketId) {
     return {
       id: existingTicketId,
@@ -4615,7 +4667,7 @@ export async function materializeApprovedTicketRequest({
   const decidedAt = new Date().toISOString()
 
   if (!isSupabaseConfigured() || !isUuid(request.id) || !request.companyId) {
-    return localMaterializeTicket(request, decidedByRole, decidedAt)
+    return localMaterializeTicket(request, decidedByRole, decidedAt, assignee)
   }
 
   try {
@@ -4665,6 +4717,7 @@ export async function materializeApprovedTicketRequest({
     const liveSlaHours = asNumber(catalogRecord.sla_hours, catalogItem.slaHours)
     const liveTeam = asString(catalogRecord.team, catalogItem.team)
     const liveProviderQueue = providerQueue
+    const liveAssignmentTarget = assignee?.trim() || liveProviderQueue
     const quotedPriceCents =
       asNumber(catalogRecord.base_price_cents, catalogItem.basePriceTry * 100)
     const paymentDecision = serviceOrderPaymentDecisionForCatalog({
@@ -4687,6 +4740,7 @@ export async function materializeApprovedTicketRequest({
         category: asString(proposedPayload.category, "general"),
         priority,
         status: "assigned",
+        assignment_label: liveAssignmentTarget,
         sla_due_at: dueAt,
         estimated_cost_cents: quotedPriceCents,
         requires_finance_approval: false,
@@ -4715,14 +4769,14 @@ export async function materializeApprovedTicketRequest({
         quoted_price_cents: quotedPriceCents,
         currency: "TRY",
         requested_for_at: dueAt,
-        next_action: `${emergencyScenario.label} routed to ${liveProviderQueue}. SLA ${liveSlaHours}h; media proof and manager closure review required.`,
+        next_action: `${emergencyScenario.label} routed to ${liveAssignmentTarget}. SLA ${liveSlaHours}h; media proof and manager closure review required.`,
         created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
         approved_by: isUuid(decidedById) ? decidedById : null,
         approved_at: decidedAt,
         metadata: {
           actionRequestId: request.id,
           catalogCode: liveCatalogCode,
-          assignmentQueue: liveProviderQueue,
+          assignmentQueue: liveAssignmentTarget,
           emergencyScenario: emergencyScenario.code,
           slaHours: liveSlaHours,
           humanApprovalBoundary: {
@@ -4733,7 +4787,7 @@ export async function materializeApprovedTicketRequest({
           notificationPlaceholder: {
             channel: emergencyScenario.notificationChannel,
             status: "queued",
-            recipient: liveProviderQueue,
+            recipient: liveAssignmentTarget,
           },
         },
       })
@@ -4765,10 +4819,10 @@ export async function materializeApprovedTicketRequest({
         media_count: 0,
         manager_approval_required: emergencyScenario.managerApprovalRequired,
         completion_readiness: 18,
-        field_note: `Human approval completed by ${decidedByRole}; ${liveProviderQueue} notified in demo mode.`,
+        field_note: `Human approval completed by ${decidedByRole}; ${liveAssignmentTarget} notified in demo mode.`,
         metadata: {
           actionRequestId: request.id,
-          assigneeLabel: liveProviderQueue,
+          assigneeLabel: liveAssignmentTarget,
           catalogCode: liveCatalogCode,
           emergencyScenario: emergencyScenario.code,
           serviceOrderId: orderId,
@@ -4788,7 +4842,7 @@ export async function materializeApprovedTicketRequest({
         {
           company_id: request.companyId,
           site_id: siteId,
-          recipient_ref: liveProviderQueue,
+          recipient_ref: liveAssignmentTarget,
           channel: emergencyScenario.notificationChannel,
           status: "queued",
           related_entity_table: "service_tickets",
@@ -4798,7 +4852,7 @@ export async function materializeApprovedTicketRequest({
           provider_mode: "demo",
           provider_response: {
             placeholder: true,
-            message: `${liveCatalogName} assigned to ${liveProviderQueue}`,
+            message: `${liveCatalogName} assigned to ${liveAssignmentTarget}`,
             humanApprovalBoundary: "manager_approved_before_dispatch",
           },
         },
@@ -4821,12 +4875,12 @@ export async function materializeApprovedTicketRequest({
         serviceOrderNo: asString(asRecord(orderData).order_no, orderNo),
         workforceTaskId: taskId,
         workforceTaskNo: asString(asRecord(taskData).task_no, taskNo),
-        assignmentQueue: liveProviderQueue,
+        assignmentQueue: liveAssignmentTarget,
         slaHours: liveSlaHours,
         notificationPlaceholder: {
           channel: emergencyScenario.notificationChannel,
           status: notificationResult.error ? "manual_review" : "queued",
-          recipient: liveProviderQueue,
+          recipient: liveAssignmentTarget,
           deliveryId: asNullableString(asRecord(notificationResult.data).id),
         },
         humanApprovalBoundary: {
@@ -4848,20 +4902,20 @@ export async function materializeApprovedTicketRequest({
         orderNo: asString(asRecord(orderData).order_no, orderNo),
         catalogCode: liveCatalogCode,
         team: liveTeam,
-        providerQueue: liveProviderQueue,
+        providerQueue: liveAssignmentTarget,
         slaHours: liveSlaHours,
       },
       workforceTask: {
         id: taskId,
         taskNo: asString(asRecord(taskData).task_no, taskNo),
         team: liveTeam,
-        assignee: liveProviderQueue,
+        assignee: liveAssignmentTarget,
         slaHours: liveSlaHours,
       },
       notification: {
         channel: emergencyScenario.notificationChannel,
         status: notificationResult.error ? "manual_review" : "queued",
-        recipient: liveProviderQueue,
+        recipient: liveAssignmentTarget,
       },
       humanApprovalBoundary: {
         required: true,
@@ -4870,7 +4924,7 @@ export async function materializeApprovedTicketRequest({
       },
     }
   } catch (error) {
-    if (canUseLocalSeedFallback()) return localMaterializeTicket(request, decidedByRole, decidedAt)
+    if (canUseLocalSeedFallback()) return localMaterializeTicket(request, decidedByRole, decidedAt, assignee)
     throw error
   }
 }

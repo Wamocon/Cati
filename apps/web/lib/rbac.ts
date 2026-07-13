@@ -263,6 +263,7 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("tickets", "view"),
     permission("tickets", "create"),
     permission("tickets", "approve"),
+    permission("tickets", "assign"),
     permission("calendar", "view"),
     permission("calendar", "create"),
     permission("calendar", "approve"),

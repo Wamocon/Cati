@@ -65,6 +65,7 @@ export interface ServiceTicket {
   status: ServiceStatus
   assignee: string
   requester: string
+  requesterRole?: string
   openedAt: string
   dueAt: string
   slaHoursRemaining: number
@@ -168,6 +169,7 @@ export interface BookingRecord {
   flatNumber: string
   guestName: string
   resourceName?: string
+  notes?: string | null
   approvalStatus?: "pending_owner" | "approved" | "rejected"
   channel: "Airbnb" | "Booking.com" | "Owner" | "Direct" | "Corporate"
   checkIn: string

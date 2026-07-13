@@ -43,6 +43,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "A reservation id and valid decision are required." }, { status: 400 })
   }
 
+  if (profile.role === "owner") {
+    const currentData = await getBookingOperationsData({ limit: 100 })
+    const visibleReservationIds = new Set(
+      visibleBookingsForRole(profile.role, currentData.bookings).map((booking) => booking.id)
+    )
+    if (!visibleReservationIds.has(reservationId)) {
+      return NextResponse.json(
+        { error: "This reservation is outside the owner's authorized units." },
+        { status: 403 }
+      )
+    }
+  }
+
   const result = await updateReservationApproval({
     reservationId,
     approvalStatus,

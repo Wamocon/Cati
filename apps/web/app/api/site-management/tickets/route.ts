@@ -328,7 +328,9 @@ export async function PATCH(request: NextRequest) {
   const approvalDecision = payload.approvalStatus === "approved" || payload.approvalStatus === "rejected"
     ? payload.approvalStatus
     : null
-  const wantsOperationalChange = Boolean(status || assignee || priority)
+  // An owner can select the operational recipient while approving a tenant
+  // request. That is part of the approval decision, not a separate rewrite.
+  const wantsOperationalChange = Boolean(status || priority || (assignee && !approvalDecision))
 
   if (approvalDecision && !hasAnyPermission(profile.role, "tickets", ["approve", "manage"])) {
     return NextResponse.json({ error: "Your role is not allowed to approve tenant tickets." }, { status: 403 })
@@ -375,12 +377,17 @@ export async function PATCH(request: NextRequest) {
   try {
     if (isClientRole(profile.role)) {
       const currentData = await getServiceTicketQueueData({ limit: 100 })
-      const visibleTicketIds = new Set(
-        visibleServiceTicketsForRole(profile.role, currentData.tickets).map((ticket) => ticket.id)
-      )
-      if (!visibleTicketIds.has(ticketId)) {
+      const visibleTicket = visibleServiceTicketsForRole(profile.role, currentData.tickets)
+        .find((ticket) => ticket.id === ticketId)
+      if (!visibleTicket) {
         return NextResponse.json(
           { error: "Your role is not allowed to edit this service ticket." },
+          { status: 403 }
+        )
+      }
+      if (profile.role === "owner" && visibleTicket.requesterRole === "tenant" && !approvalDecision) {
+        return NextResponse.json(
+          { error: "Owners may review tenant tickets but cannot rewrite the tenant's request." },
           { status: 403 }
         )
       }
@@ -398,10 +405,11 @@ export async function PATCH(request: NextRequest) {
         category: currentTicket.category,
         priority: currentTicket.priority,
       })
+      const approvedAssignee = assignee ?? approvedRoute.assignee
       const decisionResult = await updateServiceTicket({
         ticketId,
         status: approvalDecision === "approved" ? "assigned" : "cancelled",
-        assignee: approvalDecision === "approved" ? approvedRoute.assignee : "Owner approval queue",
+        assignee: approvalDecision === "approved" ? approvedAssignee : "Owner approval queue",
         actor: { id: profile.id, role: profile.role, companyId: profile.company_id, displayName: profile.full_name, email: profile.email },
       })
       if (!decisionResult) return NextResponse.json({ error: "Ticket was not found." }, { status: 404 })
@@ -410,9 +418,9 @@ export async function PATCH(request: NextRequest) {
         entityTable: "service_tickets",
         entityExternalId: decisionResult.ticket.id,
         title: decisionResult.ticket.title,
-        metadata: { decidedByRole: profile.role, approvalDecision, routedTo: approvalDecision === "approved" ? approvedRoute.assignee : null },
+        metadata: { decidedByRole: profile.role, approvalDecision, routedTo: approvalDecision === "approved" ? approvedAssignee : null },
       })
-      return NextResponse.json({ ...decisionResult, approvalStatus: approvalDecision, routing: approvedRoute })
+      return NextResponse.json({ ...decisionResult, approvalStatus: approvalDecision, routing: { ...approvedRoute, assignee: approvedAssignee } })
     }
 
     const result = await updateServiceTicket({

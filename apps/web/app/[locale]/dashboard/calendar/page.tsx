@@ -179,6 +179,7 @@ export default function CalendarPage() {
   const [bookingData, setBookingData] = useState<BookingOperationsData | null>(null)
   const [bookingRequestState, setBookingRequestState] = useState<RequestState>("loading")
   const [reservationState, setReservationState] = useState<RequestState>("idle")
+  const [selectedBookingId, setSelectedBookingId] = useState("")
   const [reservationForm, setReservationForm] = useState({
     unitNo: reservationUnitOptions[0] ?? "A-001",
     resourceName: amenityReservationOptions[0],
@@ -252,6 +253,14 @@ export default function CalendarPage() {
   }
 
   const sourceBookings = bookingData?.bookings ?? bookings
+  const selectedBooking = sourceBookings.find((booking) => booking.id === selectedBookingId) ?? null
+
+  function openBooking(bookingId: string) {
+    setSelectedBookingId(bookingId)
+    window.requestAnimationFrame(() => {
+      document.getElementById("reservation-details")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
   const reservationStart = new Date(reservationForm.checkInAt).getTime()
   const reservationEnd = new Date(reservationForm.checkOutAt).getTime()
   const reservationAvailable = Number.isFinite(reservationStart) && Number.isFinite(reservationEnd) && reservationEnd > reservationStart && !sourceBookings.some((booking) =>
@@ -503,7 +512,12 @@ export default function CalendarPage() {
           <div className="flex flex-col gap-2">
             {visibleBookings.filter((booking) => booking.approvalStatus === "pending_owner").map((booking) => (
               <div key={booking.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3">
-                <p className="text-sm font-semibold text-foreground">{booking.resourceName ?? t("Alan")} · {booking.guestName}</p>
+                <button type="button" onClick={() => openBooking(booking.id)} className="min-w-0 flex-1 rounded-lg p-2 text-left transition hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35">
+                  <span className="block text-sm font-black text-foreground">{booking.resourceName ?? t("Alan")} · {booking.guestName}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{booking.flatNumber} · {formatDate(booking.checkIn)} — {formatDate(booking.checkOut)}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{booking.notes || t("Not yok")}</span>
+                  <span className="mt-1 block text-[11px] font-semibold text-primary">{t("Detaylari ac")}</span>
+                </button>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => void decideReservation(booking.id, "approved")} className="rounded-lg bg-primary px-3 py-2 text-xs font-black text-primary-foreground">{t("Onayla")}</button>
                   <button type="button" onClick={() => void decideReservation(booking.id, "rejected")} className="rounded-lg border border-border px-3 py-2 text-xs font-black text-foreground">{t("Reddet")}</button>
@@ -512,6 +526,31 @@ export default function CalendarPage() {
             ))}
           </div>
         </DashboardSection>
+      )}
+
+      {selectedBooking && (
+        <div id="reservation-details" className="scroll-mt-24">
+          <DashboardSection
+            icon={CalendarDays}
+            title={t("Rezervasyon detaylari")}
+            description={t("Talep, zaman araligi, alan ve malik onayi ayni kayitta gorunur.")}
+          >
+            <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Alan")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.resourceName ?? t("Alan")}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Daire")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.flatNumber}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Baslangic")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{formatDate(selectedBooking.checkIn)}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Bitis")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{formatDate(selectedBooking.checkOut)}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3 sm:col-span-2"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Misafir/Sakin")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.guestName}</dd></div>
+              <div className="rounded-lg border border-border bg-muted/25 p-3 sm:col-span-2"><dt className="text-xs font-black uppercase text-muted-foreground">{t("Not")}</dt><dd className="mt-1 text-sm font-semibold text-foreground">{selectedBooking.notes || t("Not yok")}</dd></div>
+            </dl>
+            {user.role === "owner" && selectedBooking.approvalStatus === "pending_owner" && (
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <button type="button" onClick={() => void decideReservation(selectedBooking.id, "approved")} className="min-h-10 flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground">{t("Onayla")}</button>
+                <button type="button" onClick={() => void decideReservation(selectedBooking.id, "rejected")} className="min-h-10 rounded-lg border border-border px-4 py-2 text-sm font-black text-foreground">{t("Reddet")}</button>
+              </div>
+            )}
+          </DashboardSection>
+        </div>
       )}
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -1008,7 +1047,10 @@ export default function CalendarPage() {
         <div id="reservations-table" className="scroll-mt-24">
           <DataTable
             data={visibleBookings}
-            searchValue={(booking) => `${booking.id} ${booking.flatNumber} ${booking.guestName} ${booking.channel}`}
+            rowKey={(booking) => booking.id}
+            rowLabel={(booking) => `${t("Detaylari ac")}: ${booking.resourceName ?? booking.guestName}`}
+            onRowClick={(booking) => openBooking(booking.id)}
+            searchValue={(booking) => `${booking.id} ${booking.flatNumber} ${booking.guestName} ${booking.resourceName ?? ""} ${booking.notes ?? ""} ${booking.channel}`}
             columns={[
           { key: "id", header: t("Kayıt"), sortable: true, render: (booking) => booking.id },
           { key: "flat", header: t("Daire"), sortable: true, render: (booking) => booking.flatNumber },
