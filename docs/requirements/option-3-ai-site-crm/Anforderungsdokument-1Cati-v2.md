@@ -234,19 +234,20 @@ Siehe `Anforderungsdokument-1Cati.md` Kapitel 7.5 — weiterhin gültig: Alle in
 
 Wenn dieses Dokument oder das Produkt selbst von „Demo" spricht, ist damit ein präzise definierter, technischer Zustand gemeint — keine grobe Umschreibung von „noch nicht fertig". Der Demo-Modus von 1Çatı funktioniert wie folgt:
 
-1. **Zugang ohne echten Login:** Über die lokalen Access-Profile (`ENABLE_ACCESS_PROFILES=true`) kann jede der 6 Rollen per Klick aktiviert werden, ohne Supabase-Auth-Session. Ein "Demo starten"-Button auf der Login-Seite loggt in einem Klick als `admin` mit Vollzugriff ein. Dieser Mechanismus ist mehrfach serverseitig abgesichert (siehe 8.1.1) und auf Produktions-/Remote-Deployments standardmäßig gesperrt, sofern nicht explizit über `CATI_ALLOW_REMOTE_ACCESS_PROFILES=true` freigegeben.
+1. **Zugang ohne echten Login:** Über lokale Access-Profile kann jede der 6 Rollen per Klick aktiviert werden, ohne Supabase-Auth-Session. Dieser Modus ist ausschließlich für lokale QA oder eine ausdrücklich isolierte, rein synthetische Remote-Preview bestimmt. Auf einer Produktionsumgebung bleibt er unabhängig von Konfigurationsflags immer gesperrt; ein Client-Demo mit echten oder produktionsnahen Daten verwendet echte Authentifizierung.
 2. **Deterministische Seed-Daten statt echter Kundendaten:** Ohne konfigurierte Supabase-Cloud-Instanz (oder wenn eine Abfrage fehlschlägt) liefert praktisch jedes Modul deterministische, vorab definierte Beispieldaten (der 769-Einheiten-Referenzdatensatz für New Level Premium, Beispiel-Tickets, Beispiel-Buchungen usw.). Diese Daten sind realistisch, aber nicht echt — Namen, Salden und Historien sind synthetisch generiert.
 3. **Kein Vollzug sensibler Aktionen:** Zahlungen werden nicht gebucht, Zugänge werden nicht gesperrt, Identitäten werden nicht wirklich geprüft, Behördenmeldungen werden nicht übermittelt, KI trifft keine autonomen Entscheidungen. Jede sensible Aktion endet — by design — in einer Freigabe-Warteschlange (`client_action_requests`) statt in einer sofortigen Ausführung.
 4. **Audit-Protokollierung ist die einzige durchgängig „echte" Schreibfunktion:** Unabhängig vom Modul schreibt praktisch jede Nutzerinteraktion (Freigabe anfordern, Aktion protokollieren) tatsächlich einen Datensatz — entweder echt in Supabase (`log_client_action`-RPC) oder in einen lokalen In-Memory-Fallback, wenn keine Cloud-Instanz konfiguriert ist.
 
 #### 8.1.1 Die Absicherung des Demo-Zugangs im Detail
 
-Der Ein-Klick-Demo-Zugang ist kein einfacher Schalter, sondern eine Kombination aus vier unabhängigen Signalen, die **alle** zusammen erfüllt sein müssen:
+Der Ein-Klick-Demo-Zugang ist kein einfacher Schalter, sondern eine zentral ausgewertete Fail-Closed-Policy:
 
-- `ENABLE_ACCESS_PROFILES=true` muss gesetzt sein (Grundvoraussetzung).
-- Wird eine Produktionsumgebung erkannt (`VERCEL_ENV=production` oder `CATI_ENV=production`), bleibt der Zugang zusätzlich gesperrt, **außer** `CATI_ALLOW_REMOTE_ACCESS_PROFILES=true` ist explizit gesetzt.
-- Wird eine Remote-Umgebung erkannt (`VERCEL_ENV`/`VERCEL_URL` gesetzt), gilt dieselbe zusätzliche Freigabe-Voraussetzung.
-- Diese Logik ist in `apps/web/lib/auth.ts` und `apps/web/proxy.ts` **zweimal unabhängig implementiert** (mit einem Kommentar-Hinweis "Keep in sync") — das ist funktional sicher, aber wartungsanfällig, da eine künftige Änderung an nur einer der beiden Stellen zu einer stillen Inkonsistenz führen könnte.
+- Eine Produktionsumgebung (`VERCEL_ENV=production` oder `CATI_ENV=production`) lehnt Access-Profile immer ab; kein Flag kann diese Sperre aufheben.
+- Eine Remote-Preview benötigt gleichzeitig `ENABLE_ACCESS_PROFILES=true`, `CATI_ALLOW_REMOTE_ACCESS_PROFILES=true` und `CATI_DEMO_DATA_ISOLATED=true`.
+- Sobald in dieser Preview eine Supabase-Datenebene konfiguriert ist, bleibt der Zugang gesperrt. Damit können anonyme Rollenprofile nicht mit echten Profilen, Finanzdaten oder Bewohnerdaten verbunden werden.
+- Lokale Entwicklung bleibt testbar; ein lokaler Production-Build benötigt die explizite serverseitige QA-Freigabe `ENABLE_ACCESS_PROFILES=true`.
+- `apps/web/lib/access-profile-policy.ts` ist die einzige Policy-Quelle und wird von Auth, Proxy und den funktionalen Sicherheitsverträgen gemeinsam verwendet. Dadurch gibt es keine driftende Doppelimplementierung.
 
 ### 8.2 Reifegrad-Legende (angewendet in Kapitel 7 und 9)
 

@@ -21,6 +21,8 @@ import {
   resolveWorkflowAction,
 } from "@/lib/action-catalog"
 
+const LOCAL_ACCESS_PROFILE_ID = "00000000-0000-0000-0000-000000000000"
+
 function choosePurpose(message: string): LocalAiPurpose {
   const lower = message.toLocaleLowerCase("tr-TR")
   if (
@@ -470,6 +472,7 @@ export async function POST(request: Request) {
               requestedById: profile.id,
             }),
           },
+          useLocalAccessProfile: profile.id === LOCAL_ACCESS_PROFILE_ID,
         })
         ticketDraft = {
           id: result.id,

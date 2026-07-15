@@ -30,6 +30,9 @@ const pageCopy = {
     authReady: "Supabase kimlik doğrulaması aktif.",
     authNote: "Kimlik doğrulama anahtarları bekleniyor. Yetkili ortamda e-posta/şifre ile giriş açılır.",
     authError: "Giriş başarısız. E-posta ve şifreyi kontrol edin.",
+    forgotPassword: "Şifremi unuttum",
+    resetNeedEmail: "Önce e-posta adresinizi girin, ardından sıfırlama bağlantısını isteyin.",
+    resetSent: "Hesabınız varsa bir şifre sıfırlama bağlantısı gönderildi. Gelen kutunuzu kontrol edin.",
     accessError: "Rol profili açılamadı. Tekrar deneyin.",
     demoButton: "Demo başlat",
     demoHint: "Demo ortamı: Demo başlat'a tıklayın, rol seçin ve ilgili modülleri şifresiz açın.",
@@ -73,6 +76,9 @@ const pageCopy = {
     authReady: "Supabase authentication is active.",
     authNote: "Authentication keys are pending. Email/password access opens in an authorized environment.",
     authError: "Sign-in failed. Check email and password.",
+    forgotPassword: "Forgot password?",
+    resetNeedEmail: "Enter your email address first, then request the reset link.",
+    resetSent: "If an account exists, a password reset link has been sent. Please check your inbox.",
     accessError: "Role profile could not be opened. Try again.",
     demoButton: "Start demo",
     demoHint: "Demo environment: click Start demo, choose a role, and open the matching modules without a password.",
@@ -116,6 +122,9 @@ const pageCopy = {
     authReady: "Supabase-Authentifizierung ist aktiv.",
     authNote: "Authentifizierungsschlüssel fehlen. E-Mail/Passwort wird in autorisierter Umgebung aktiviert.",
     authError: "Anmeldung fehlgeschlagen. E-Mail und Passwort prüfen.",
+    forgotPassword: "Passwort vergessen?",
+    resetNeedEmail: "Geben Sie zuerst Ihre E-Mail-Adresse ein und fordern Sie dann den Link an.",
+    resetSent: "Falls ein Konto existiert, wurde ein Link zum Zurücksetzen gesendet. Bitte prüfen Sie Ihr Postfach.",
     accessError: "Rollenprofil konnte nicht geöffnet werden. Erneut versuchen.",
     demoButton: "Demo starten",
     demoHint: "Demo-Umgebung: Demo starten anklicken, Rolle wählen und passende Module ohne Passwort öffnen.",
@@ -159,6 +168,9 @@ const pageCopy = {
     authReady: "Аутентификация Supabase активна.",
     authNote: "Ключи аутентификации ожидаются. В авторизованной среде будет доступен вход по e-mail/паролю.",
     authError: "Вход не удался. Проверьте e-mail и пароль.",
+    forgotPassword: "Забыли пароль?",
+    resetNeedEmail: "Сначала введите адрес e-mail, затем запросите ссылку для сброса.",
+    resetSent: "Если аккаунт существует, ссылка для сброса пароля отправлена. Проверьте почту.",
     accessError: "Ролевой профиль не открылся. Попробуйте еще раз.",
     demoButton: "Запустить демо",
     demoHint: "Демо-среда: нажмите запуск демо, выберите роль и откройте нужные модули без пароля.",
@@ -243,6 +255,7 @@ export default function LoginPage() {
   const [demoRolesOpen, setDemoRolesOpen] = useState(false)
   const [activeRole, setActiveRole] = useState<Role | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [resetNotice, setResetNotice] = useState<string | null>(null)
   const [providerNotice, setProviderNotice] = useState<{
     detail: string
     label: string
@@ -290,6 +303,25 @@ export default function LoginPage() {
     }
 
     router.push(nextPath)
+  }
+
+  async function handleForgotPassword() {
+    if (!supabaseConfigured) return
+    setError(null)
+    setResetNotice(null)
+    if (!email.trim()) {
+      setError(t.resetNeedEmail)
+      return
+    }
+    setAuthPending(true)
+    const supabase = createClient()
+    // Neutral outcome regardless of whether the email exists, so the form never
+    // reveals which addresses have accounts.
+    await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: new URL(`/${locale}/login`, window.location.origin).toString(),
+    })
+    setAuthPending(false)
+    setResetNotice(t.resetSent)
   }
 
   async function signInAs(role: Role) {
@@ -401,6 +433,7 @@ export default function LoginPage() {
                   </p>
                 </div>
 
+                {accessProfileStatusLoaded && accessProfilesEnabled ? (
                 <section className="mb-6 rounded-2xl border border-primary/15 bg-primary/[0.04] p-3 sm:p-4">
                   <div className="flex items-start gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -462,6 +495,7 @@ export default function LoginPage() {
                     </div>
                   )}
                 </section>
+                ) : null}
 
                 <form className="grid gap-4" onSubmit={handlePasswordSignIn}>
                   <div className="grid gap-2">
@@ -481,9 +515,19 @@ export default function LoginPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <label htmlFor="password" className="text-sm font-bold text-card-foreground">
-                      {t.password}
-                    </label>
+                    <div className="flex items-center justify-between gap-3">
+                      <label htmlFor="password" className="text-sm font-bold text-card-foreground">
+                        {t.password}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => void handleForgotPassword()}
+                        disabled={!supabaseConfigured || authPending}
+                        className="text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+                      >
+                        {t.forgotPassword}
+                      </button>
+                    </div>
                     <input
                       id="password"
                       type="password"
@@ -501,6 +545,13 @@ export default function LoginPage() {
                     <div className="flex items-start gap-2 rounded-xl border border-destructive/25 bg-destructive/10 p-3 text-sm text-destructive" role="alert" aria-live="polite">
                       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>{error}</span>
+                    </div>
+                  )}
+
+                  {resetNotice && (
+                    <div className="flex items-start gap-2 rounded-xl border border-primary/25 bg-primary/10 p-3 text-sm text-card-foreground" role="status" aria-live="polite">
+                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{resetNotice}</span>
                     </div>
                   )}
 
@@ -554,13 +605,16 @@ export default function LoginPage() {
                 </section>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Link
-                    href="/login/profiles"
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-center text-sm font-black text-foreground transition hover:bg-muted"
-                  >
-                    {t.openAllProfiles}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  {accessProfileStatusLoaded && accessProfilesEnabled ? (
+                    <Link
+                      href="/login/profiles"
+                      data-testid="qa-role-catalogue-link"
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-center text-sm font-black text-foreground transition hover:bg-muted"
+                    >
+                      {t.openAllProfiles}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : null}
                   <Link
                     href={signupHref}
                     className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-center text-sm font-black text-foreground transition hover:bg-muted"

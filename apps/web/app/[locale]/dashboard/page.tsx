@@ -38,6 +38,8 @@ import { PieChart } from "@/components/charts/pie-chart"
 import { GlassCard } from "@/components/glass-card"
 import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
+import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
+import { RoleFocusedLiveDashboard } from "@/components/role-focused-live-dashboard"
 import { LiveErpSimulation, type SimulationQuickAction } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
@@ -263,6 +265,12 @@ const roleWorkspaceConfig: Partial<
   accountant: {
     cards: [
       {
+        href: "/dashboard/tickets",
+        resource: "tickets",
+        icon: TicketCheck,
+        copyKey: "tickets",
+      },
+      {
         href: "/dashboard/finance",
         resource: "finance",
         icon: CreditCard,
@@ -329,6 +337,12 @@ const roleWorkspaceConfig: Partial<
         resource: "calendar",
         icon: CalendarCheck,
         copyKey: "calendar",
+      },
+      {
+        href: "/dashboard/finance",
+        resource: "finance",
+        icon: CreditCard,
+        copyKey: "finance",
       },
       {
         href: "/dashboard/documents",
@@ -398,10 +412,10 @@ const roleSceneConfig: Partial<
     bars: [72, 84, 58],
   },
   owner: {
-    metric: "4",
+    metric: "5",
     accent: "from-cyan-500 via-emerald-500 to-orange-300",
     icon: Building2,
-    bars: [68, 54, 81],
+    bars: [68, 72, 81],
   },
   tenant: {
     metric: "4",
@@ -817,14 +831,10 @@ function GlobalOperationsScene({
 
 function RoleFocusedDashboard({
   copy,
-  permittedDashboardHrefs,
-  quickActions,
   role,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
-  permittedDashboardHrefs: string[]
-  quickActions: SimulationQuickAction[]
   role: FocusedRole
   roleLabel: string
 }) {
@@ -835,8 +845,6 @@ function RoleFocusedDashboard({
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
-  const summary = getSummary()
-  const blocks = getBlockOverview()
 
   return (
     <div className="space-y-6">
@@ -850,22 +858,7 @@ function RoleFocusedDashboard({
         </p>
       </div>
 
-      <LiveErpSimulation
-        blocks={blocks}
-        criticalTickets={[]}
-        permittedHrefs={permittedDashboardHrefs}
-        quickActions={quickActions}
-        realtimeState="disabled"
-        requestState="success"
-        roleLabel={roleLabel}
-        source="local-seed"
-        summary={{
-          ...summary,
-          openTickets: role === "staff" ? summary.openTickets : cards.length,
-        }}
-      />
-
-      <RoleWorkspaceScene copy={copy} role={role} />
+      <RoleFocusedLiveDashboard role={role} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
@@ -901,6 +894,8 @@ function RoleFocusedDashboard({
           )
         })}
       </div>
+
+      {role === "owner" || role === "tenant" ? <TenantAccessLivePanel /> : null}
 
       <Card3D glow={false}>
         <div className="flex items-start gap-3">
@@ -1193,8 +1188,6 @@ export default function DashboardHomePage() {
     return (
       <RoleFocusedDashboard
         copy={copy}
-        permittedDashboardHrefs={permittedDashboardHrefs}
-        quickActions={quickActions}
         role={user.role}
         roleLabel={roleLabel}
       />
@@ -1462,8 +1455,9 @@ function OperationsDashboard({
             </p>
           </div>
           <span className="flex shrink-0 items-center gap-2">
-          <StatusBadge variant="success">
+          <StatusBadge variant={phaseSummary.blocked > 0 ? "warning" : "success"}>
             {copyText(copy.modules.badge, {
+              blocked: phaseSummary.blocked,
               complete: phaseSummary.complete,
               progress: phaseSummary.inProgress,
               ready: phaseSummary.readyForUat,
@@ -1483,7 +1477,10 @@ function OperationsDashboard({
                 href={phaseRoutes[phase.phase] ?? "/dashboard"}
                 ariaLabel={copyText(copy.modules.openAria, {
                   phase: phase.phase,
-                  title: phase.title,
+                  title:
+                    dashboardLocale === "tr"
+                      ? phase.title
+                      : `${copy.modules.module} ${phase.phase}`,
                 })}
                 role={user.role}
               >
@@ -1493,24 +1490,37 @@ function OperationsDashboard({
                     <p className="text-xs font-semibold uppercase text-muted-foreground">
                       {copy.modules.module} {phase.phase}
                     </p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{phase.title}</h3>
+                    <h3 className="mt-1 text-sm font-black text-foreground">
+                      {dashboardLocale === "tr"
+                        ? phase.title
+                        : `${copy.modules.module} ${phase.phase}`}
+                    </h3>
                   </div>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black", status.className)}>
                     <StatusIcon className="h-3 w-3" />
                     {copy.phaseStatus[phase.status]}
                   </span>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{phase.businessOutcome}</p>
-                <p className="mt-3 text-xs font-semibold text-foreground">
-                  {copy.modules.howTo}: {phase.userGuide}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {phase.evidence.slice(0, 2).map((item) => (
-                    <span key={item} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                {dashboardLocale === "tr" ? (
+                  <div data-testid={`phase-delivery-detail-${phase.phase}`}>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      {phase.businessOutcome}
+                    </p>
+                    <p className="mt-3 text-xs font-semibold text-foreground">
+                      {copy.modules.howTo}: {phase.userGuide}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {phase.evidence.slice(0, 2).map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
               </CommandLink>
             )

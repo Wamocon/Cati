@@ -96,7 +96,7 @@ async function waitForServer({ baseUrl }) {
   let lastStatus = "not reached"
   while (Date.now() - started < 60_000) {
     try {
-      const response = await fetch(apiUrl(baseUrl, "/api/site-management/phase-status"), {
+      const response = await fetch(apiUrl(baseUrl, "/tr"), {
         cache: "no-store",
       })
       lastStatus = `HTTP ${response.status}`
@@ -204,9 +204,9 @@ async function verifyPhaseStatus({ baseUrl }) {
   const phaseByNumber = new Map((payload.phases ?? []).map((phase) => [phase.phase, phase]))
 
   assert((payload.phases ?? []).length >= 15, "phase-status must expose the 15-phase ERP model")
-  assert(phaseByNumber.get(5)?.status === "ready_for_uat", "Phase 5 must be ready_for_uat")
-  assert(phaseByNumber.get(6)?.status === "ready_for_uat", "Phase 6 must be ready_for_uat")
-  assert(phaseByNumber.get(7)?.status === "ready_for_uat", "Phase 7 must be ready_for_uat")
+  assert(phaseByNumber.get(5)?.status === "in_progress", "Phase 5 must expose remaining live/UAT gates")
+  assert(phaseByNumber.get(6)?.status === "in_progress", "Phase 6 must expose remaining live/RLS gates")
+  assert(phaseByNumber.get(7)?.status === "in_progress", "Phase 7 must expose remaining provider gates")
 
   return {
     phases: payload.phases.length,

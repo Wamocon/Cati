@@ -1,5 +1,7 @@
 # Option 3 AI Site CRM - Phase Execution Runbook
 
+> Status correction – 13 July 2026: the existing commands remain useful as regression helpers, but they do not currently prove production RLS, migration application, durable lifecycle persistence, concurrency, p95, WCAG 2.2 or AI safety. The replacement harness design and stop rules are proposed in `../../plan/option-3-ai-site-crm/functional-hardening-plan-2026-07.md`.
+
 Last reviewed: 30 June 2026
 Scope: Phase-wise implementation, automated harnesses, retry loops, quality loops, browser QA, Jira/Xray dry-run review and manual testing.
 
@@ -119,7 +121,19 @@ Current Jira/Xray structure:
 - 20 functional system test cases, 10 exploratory role/functionality test cases and 13 automated QA/API test cases.
 - Latest local QA JSON/JUnit summaries are linked to the relevant Test Execution issues when live sync is explicitly approved. Use `--skip-attachments` to skip confidential documentation files; QA evidence is separate from documentation attachments.
 
-### 3.9 Browser Audit Only
+### 3.9 Current Functional Release Suites
+
+```powershell
+pnpm --filter cati-web typecheck
+pnpm --filter cati-web lint
+pnpm --filter cati-web build
+pnpm --filter cati-web test:e2e:window1
+pnpm --filter cati-web test:e2e:structured
+```
+
+`test:e2e:window1` is the focused core-operations gate for role dashboards, exact unit scope, ticket/emergency security, compliance, owner finance, manual payment, registration and service proof. `test:e2e:structured` is the cross-window release regression suite. Both run in the deterministic access-profile environment and therefore do not replace clean Supabase migration execution, real-auth RLS probes, production Realtime/Storage tests, backup/restore or provider UAT.
+
+### 3.10 Browser Audit Only
 
 ```powershell
 pnpm build
@@ -128,7 +142,7 @@ pnpm browser:audit -- --start-server --server-mode start
 
 Use this for screenshot and console-error evidence.
 
-### 3.10 Manual Browser Session
+### 3.11 Manual Browser Session
 
 ```powershell
 pnpm build

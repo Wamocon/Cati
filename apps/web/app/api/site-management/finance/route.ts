@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getUserProfile } from "@/lib/auth"
-import { hasAnyPermission } from "@/lib/rbac"
+import { canViewInternalFinance } from "@/lib/rbac"
 import { getFinanceLedgerData } from "@/lib/site-management-repository"
 
 export const dynamic = "force-dynamic"
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
-  if (!hasAnyPermission(profile.role, "finance", ["view"])) {
+  if (!canViewInternalFinance(profile.role)) {
     return NextResponse.json(
       { error: "Your role is not allowed to view finance ledger data." },
       { status: 403 }

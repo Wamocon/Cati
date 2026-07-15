@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test"
 import { collectConsoleIssues, screenshot } from "./helpers"
+import { resetQaState } from "./support/flows"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 const roleByTurkishLabel = {
   "Yönetim": "admin",
@@ -128,14 +133,14 @@ test.describe("Dashboard portal", () => {
 
     const modules = [
       { menu: "Daire Matrisi", heading: "Proje & Daire Matrisi", url: /\/dashboard\/listings/ },
-      { menu: "Müşteri Adayları", heading: "Müşteri & Malik CRM", url: /\/dashboard\/leads/ },
+      { menu: "Müşteri Adayları", heading: "Alıcı hattı", url: /\/dashboard\/leads/ },
       { menu: "Servis Talepleri", heading: "Servis Talepleri", url: /\/dashboard\/tickets/ },
-      { menu: "Rezervasyon", heading: "Rezervasyon & Giriş-Çıkış", url: /\/dashboard\/calendar/ },
-      { menu: "Erişim & Uyum", heading: "Erişim & Uyum", url: /\/dashboard\/compliance/ },
+      { menu: "Rezervasyon", heading: "Rezervasyon ve tesis kullanımı", url: /\/dashboard\/calendar/ },
+      { menu: "Erişim & Uyum", heading: "Karar bekleyen dosyaları tek yerde yönetin", url: /\/dashboard\/compliance/ },
       { menu: "Finans & Aidat", heading: "Finans, Satış & Aidat", url: /\/dashboard\/finance/ },
       { menu: "Belgeler", heading: "TAPU & Belge Kasası", url: /\/dashboard\/documents/ },
-      { menu: "Raporlar", heading: "AI Rapor Merkezi", url: /\/dashboard\/reports/ },
-      { menu: "İletişim", heading: "İletişim Merkezi", url: /\/dashboard\/communications/ },
+      { menu: "Raporlar", heading: "Kalıcı rapor arşivi", url: /\/dashboard\/reports/ },
+      { menu: "İletişim", heading: "İletişim merkezi", url: /\/dashboard\/communications/ },
       { menu: "Kullanıcılar & Roller", heading: "Kullanıcılar & Roller", url: /\/dashboard\/users/ },
       { menu: "Ayarlar", heading: "Platform Yönetim Merkezi", url: /\/dashboard\/settings/ },
     ]
@@ -149,18 +154,16 @@ test.describe("Dashboard portal", () => {
     }
 
     await clickDashboardMenu(page, "Daire Matrisi")
-    await expect(page.getByText("Daire matrisi kayıtları")).toBeVisible()
-    await expect(page.getByText("Veri kalite bulguları")).toBeVisible()
+    await expect(page.getByTestId("unit-live-matrix")).toBeVisible()
+    await expect(page.getByTestId("unit-matrix-source")).toBeVisible()
+    await expect(page.getByTestId("unit-matrix-freshness")).not.toContainText("—")
     await page.getByPlaceholder("Daire, malik, sakin veya blok ara").fill("A-001")
     await expect(page.getByRole("button", { name: /A-001 Daire detay/ }).first()).toBeVisible()
-    await page.getByRole("button", { name: "Veri kontrolü" }).click()
-    await expect(page.getByRole("button", { name: "Veri kontrolü" })).toHaveAttribute("data-state", "success")
-    await page.getByRole("button", { name: "Değişiklik iste" }).click()
-    await expect(page.getByRole("button", { name: "Değişiklik iste" })).toHaveAttribute("data-state", "success")
-    await expect(page.getByText("Veri doğrulama merkezi")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Veri kontrolü" })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "Değişiklik iste" })).toHaveCount(0)
 
     await clickDashboardMenu(page, "Rezervasyon")
-    await expect(page.getByText("Gezinti ve online tur akışı")).toBeVisible()
+    await expect(page.getByText(/Uygunluğu görün, kuralları okuyun/)).toBeVisible()
 
     await clickDashboardMenu(page, "Finans & Aidat")
     await expect(page.getByRole("heading", { name: "Finans defteri" })).toBeVisible()
@@ -176,7 +179,9 @@ test.describe("Dashboard portal", () => {
     await expect(page.getByText("Satış dosyası, TAPU, KYC ve EIDS kontrolü")).toBeVisible()
 
     await clickDashboardMenu(page, "Erişim & Uyum")
-    await expect(page.getByText("Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü")).toBeVisible()
+    await expect(
+      page.getByText(/Erişim, depozito ve alıcı ön kontrollerini aynı sırada inceleyin/)
+    ).toBeVisible()
 
     await clickDashboardMenu(page, "Kullanıcılar & Roller")
     await expect(page.getByText("Kişi ve rol dizini")).toBeVisible()
@@ -289,11 +294,19 @@ test.describe("Dashboard portal", () => {
       {
         label: "Muhasebe",
         heading: /Finans Çalışma Alanı/,
-        visible: ["Genel Bakış", "Finans & Aidat", "Belgeler", "Raporlar", "İletişim"],
+        // Accountant holds tickets:view (finance-linked service requests), so the
+        // "Servis Talepleri" nav is visible to this role.
+        visible: [
+          "Genel Bakış",
+          "Servis Talepleri",
+          "Finans & Aidat",
+          "Belgeler",
+          "Raporlar",
+          "İletişim",
+        ],
         hidden: [
           "Daire Matrisi",
           "Müşteri Adayları",
-          "Servis Talepleri",
           "Rezervasyon",
           "Erişim & Uyum",
           "Kullanıcılar & Roller",
@@ -319,12 +332,20 @@ test.describe("Dashboard portal", () => {
       {
         label: "Malik",
         heading: /Malik Çalışma Alanı/,
-        visible: ["Genel Bakış", "Servis Talepleri", "Rezervasyon", "Belgeler", "İletişim"],
+        // Owner holds finance:view (own-unit balance & statement), so "Finans & Aidat"
+        // is visible to this role.
+        visible: [
+          "Genel Bakış",
+          "Servis Talepleri",
+          "Finans & Aidat",
+          "Rezervasyon",
+          "Belgeler",
+          "İletişim",
+        ],
         hidden: [
           "Daire Matrisi",
           "Müşteri Adayları",
           "Erişim & Uyum",
-          "Finans & Aidat",
           "Raporlar",
           "Kullanıcılar & Roller",
           "Ayarlar",

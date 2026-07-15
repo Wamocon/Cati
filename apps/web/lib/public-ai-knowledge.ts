@@ -94,7 +94,7 @@ export function detectPublicAiLocaleFromMessage(
   }
 
   if (
-    /\b(what|how|why|who|owner|tenant|register|registration|benefit|advantage|price|cost|security|privacy|data|payment|service|demo|language|report|issue|help|safe|does|is|are)\b/i.test(
+    /\b(what|how|why|who|do|does|owner|tenant|register|registration|benefit|advantage|price|cost|security|privacy|data|information|details|collect|share|retain|delete|payment|service|demo|language|report|issue|help|safe|is|are)\b/i.test(
       text
     )
   ) {
@@ -115,7 +115,7 @@ export function resolvePublicAiResponseLocale(
 const topicMatchers: Array<[PublicAiTopic, RegExp]> = [
   [
     "private-data",
-    /(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)/i,
+    /(borcu|borç durumu|bakiyesi|kim oturuyor|kimin|oturan|sakini|telefon numarası|kişisel veri(?:yi|si(?:ni)?|leri(?:ni)?)\s+(?:göster|ver|paylaş|açıkla)|şifre|hesap bilgisi|debt of|balance of|who lives|who owns|resident of|phone number of|password|wer wohnt|schulden von|saldo von|kontostand von|telefonnummer von|passwort|кто живет|кто живёт|долг квартиры|баланс квартиры|телефон владельца|пароль)/i,
   ],
   [
     "registration",
@@ -167,8 +167,77 @@ const topicMatchers: Array<[PublicAiTopic, RegExp]> = [
   ],
 ]
 
+function normalizePublicIntentText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replaceAll("ı", "i")
+    .replaceAll("ß", "ss")
+    .replaceAll("ё", "е")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+}
+
+function isPrivacyPolicyIntent(message: string) {
+  const text = normalizePublicIntentText(message)
+
+  // Do not let a negated aside containing the word "data" steal an otherwise
+  // clear product intent. Explicit privacy questions with negative wording
+  // (for example "won't you delete my data?") still match the retention terms
+  // below.
+  const privacyAsideNegated =
+    /\b(?:(?:not asking (?:about|for)|do not need|don t need|dont need|no need for) (?:any )?(?:(?:personal |user )?data(?: collection| protection)?|privacy(?: information| policy)?|data protection)|(?:do not|don t|dont) need information about privacy)\b/.test(text) ||
+    /\b(veri(?:ler)? hakkinda sormuyorum|veri toplama hakkinda sormuyorum|gizlilik hakkinda sormuyorum|veri istemiyorum)\b/.test(text) ||
+    /\b(ich frage nicht nach daten|ich frage nicht nach datenschutz|ich brauche keine daten|ich brauche keine datenschutzinformationen)\b/.test(text) ||
+    /\b(?:я не спрашиваю о данных|я не спрашиваю о конфиденциальности|мне не нужны данные)\b/.test(text)
+  const hasCompetingIntent =
+    /\b(register|registration|sign up|price|cost|demo|kayit|fiyat|demo|registrier|preis|kosten|регистрац|цена|демо)\b/.test(
+      text
+    )
+  if (privacyAsideNegated && hasCompetingIntent) return false
+
+  if (
+    /\b(kvkk|gdpr|dsgvo|datenschutz|data protection|privacy policy|gizlilik|veri koruma|kisisel verilerin korunmasi|конфиденциальност|защита данных|персональных данных)\b/.test(
+      text
+    )
+  ) {
+    return true
+  }
+
+  const turkishData =
+    /\b(veri(?:m|ler|leri|lerim|lerimi|lerinizi)?|hangi (?:kisisel )?(?:veri(?:leri)?|bilgileri)|veri guvenligi|bilgi(?:m|ler|leri|lerim|lerimi)?|detaylarim|kisisel bilgi(?:lerim|ler)?|kimlik veri(?:m|si|lerim)?)\b/.test(
+      text
+    )
+  const turkishControl =
+    /\b(guvende|guvenli|korun\w*|sakla\w*|ne kadar sure tut\w*|tutuyor|tutuyorsunuz|tutma suresi|sil\w*|saklama suresi|topl\w*|paylas\w*|aktar\w*|kullan\w*|isle\w*|sat\w*|ucuncu taraf\w*)\b/.test(text)
+  const englishData =
+    /\b(my (?:personal )?(?:data|information|details)|personal (?:data|information|details)|(?:user|customer|visitor|resident|identity) (?:data|information|details)|(?:information|details) about me|the (?:data|information|details) i (?:give|provide)(?: you)?|(?:what|which) (?:personal |user )?(?:data|information|details))\b/.test(text)
+  const englishControl =
+    /\b(safe|secure|protected|encrypt\w*|stor(?:e|ed|ing)|keep|kept|retention|retain(?:ed|ing|s)?|delet(?:e|ed|ing|es)|eras(?:e|ed|ing|es)|collect(?:ed|ing|s)?|gather(?:ed|ing|s)?|process(?:ed|ing|es)?|use(?:d|s|ing)?|share(?:d|s|ing)?|disclos(?:e|ed|ing|es)|transfer(?:red|ring|s)?|sell|sold|third part\w*|how long)\b/.test(text)
+  const germanData =
+    /\b(meine (?:daten|angaben|informationen)|personliche daten|personenbezogen\w* (?:daten|angaben)|identitatsdaten|nutzerdaten|welche\w* (?:personenbezogen\w* )?(?:daten|angaben|informationen))\b/.test(text)
+  const germanControl =
+    /\b(sicher|geschutzt|verschlussel\w*|speicher\w*|aufbewahrt|aufbewahrung|speicherdauer|losch\w*|erheb\w*|sammel\w*|teil\w*|weitergeb\w*|geb\w* .* weiter|verarbeit\w*|nutz\w*|verkauf\w*|dritte\w*|wie lange)\b/.test(text)
+  const russianData = /(мои данные|личные данные|персональные данные|данные удостоверения|какие (?:персональные )?данные)/.test(text)
+  const russianControl =
+    /(безопасн|защищен|шифр|хранят|хранение|срок хранения|удал|собира|обрабатыва|использу|переда|делятся|прода|третьим лиц|как долго)/.test(text)
+
+  return (
+    (turkishData && turkishControl) ||
+    (englishData && englishControl) ||
+    (germanData && germanControl) ||
+    (russianData && russianControl)
+  )
+}
+
 export function classifyPublicAiTopic(message: string): PublicAiTopic {
+  const privateDataMatcher = topicMatchers.find(([topic]) => topic === "private-data")?.[1]
+  if (privateDataMatcher?.test(message)) return "private-data"
+  if (isPrivacyPolicyIntent(message)) return "security-kvkk"
+
   for (const [topic, pattern] of topicMatchers) {
+    if (topic === "private-data") continue
     if (pattern.test(message)) return topic
   }
   return "general"
@@ -183,13 +252,13 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     advantages:
       "Fark şurada: satış vaadi günlük operasyona bağlanır. Bakiyenizi telefon etmeden görürsünüz, servis talepleriniz kanıtla kapanır, belgeleriniz doğrulanabilir durumda tek yerde durur ve her erişim kararının gerekçesi vardır. Dört dilde aynı derinlik, her işlem kayıtlı ve izlenebilir.",
     registration:
-      "Kayıt bu sayfadan yapılır: rolünüzü seçin (Malik, Kiracı veya Personel), bilgilerinizi girin ve talebi gönderin. Meşruiyet kontrolünden sonra erişimi bir yönetici açar; hiçbir hesap kendiliğinden aktifleşmez. Malik ve kiracı için kimlik doğrulaması istenir, bu KVKK kapsamında yalnızca gereken süre saklanır.",
+      "Kayıt bu sayfadan yapılır: rolünüzü seçin (Malik, Kiracı veya Personel), bilgilerinizi girin ve talebi gönderin. Meşruiyet kontrolünden sonra erişimi bir yönetici açar; hiçbir hesap kendiliğinden aktifleşmez. Malik ve kiracı kimliği veri minimizasyonu ve korumalı erişimle doğrulanır; kesin saklama ve silme koşulları onaylı KVKK politikasına bağlıdır ve yönetimden teyit edilmelidir.",
     "tenant-access":
       "Kiracılar için en iyi yol malik davet kodudur: malikiniz panelinden tek kullanımlık, süreli bir kod üretir. Erişim malikin seçtiği süreyle sınırlıdır ve süre dolunca kendiliğinden kapanır. Sorumluluğu kira boyunca malik taşır; bu, sitedeki herkes için güvenli bir zincir oluşturur.",
     reporting:
       "Bir sorun bildirmek için hesap gerekmez. Sayfadaki bildirim formunu kullanın ya da sahadaki QR posterini okutun; konum ve kısa açıklama yeterli. Her bildirim triyaj kuyruğuna düşer, referans numarası alır ve çözülene kadar takip edilir.",
     "security-kvkk":
-      "Güvenlik tasarımın merkezinde: her rol yalnızca yetkili olduğu veriyi görür, tüm işlemler kayıt altındadır ve kimlik verileri KVKK kapsamında yalnızca gerekli süre saklanıp sonra silinir. Yasal konaklama bildirimi (KBS) süreci de sisteme entegredir. Bu asistan dahi kişisel veya finansal veriye erişemez.",
+      "Güvenlik tasarımın merkezinde: veri minimizasyonu, rol bazlı erişim ve işlem kaydı uygulanır; bu asistan kişisel veya finansal veriye erişemez. Kesin saklama ve silme süreleri, müşteri ve hukuk tarafından onaylanmış KVKK politikasına göre belirlenir; sistem şu anda otomatik silme veya yasal süre garantisi vermez. Kendi durumunuz için yönetim ya da KVKK irtibatıyla WhatsApp üzerinden teyit edin.",
     "finance-features":
       "Malikler kendi dairelerinin muhasebe kaydını, ödeme geçmişini ve varsa borç durumunu doğrudan görür; kimsenin özet okumasına gerek kalmaz. Aidat, depozito ve tahsilat tek deftere işlenir, kayıtlı defter girişleri sonradan değiştirilemez. Kişisel finans verileri yalnızca giriş yaptıktan sonra, kendi yetkinizle görünür.",
     "service-features":
@@ -201,7 +270,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     pricing:
       "Fiyat ve sözleşme koşulları daireye ve pakete göre değişir; bu yüzden en doğru bilgiyi satış ekibi verir. WhatsApp butonundan doğrudan yönetime ulaşabilir ya da kayıt formundan bilgilerinizi bırakabilirsiniz, ekip sizi arar.",
     demo:
-      "Canlı demoyu tek tıkla, şifresiz açabilirsiniz: sayfadaki 'Canlı demoyu görün' bağlantısı sizi rol seçim ekranına götürür. Malik, kiracı veya yönetim gözünden sistemin gerçek ekranlarını gezersiniz.",
+      "Kontrollü ve yalnızca sentetik veri kullanan QA/demo ortamında rol seçimiyle farklı kullanıcı akışları incelenebilir. Müşteriye açık veya üretim ortamlarında onaylı kimlik doğrulama gerekir; şifresiz rol değiştirme sunulmaz. Uygun demo erişimini ekipten WhatsApp üzerinden isteyebilirsiniz.",
     "private-data":
       "Bu asistan yalnızca 1Çatı'yı tanıtır; kişisel, finansal veya daireye özel verilere erişimi yoktur ve bunları paylaşamaz. Kendi verilerinizi görmek için kayıt olup erişim aldıktan sonra sisteme girin; acil bir konu için WhatsApp üzerinden yönetime ulaşın.",
     general:
@@ -213,13 +282,13 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     advantages:
       "The difference: the sales promise is wired to daily operations. You see your balance without calling anyone, service requests close with proof, your documents sit verified in one place, and every access decision has a stated reason. Four languages at the same depth, every action logged and traceable.",
     registration:
-      "You register right on this page: pick your role (Owner, Tenant or Staff), fill in your details and send the request. After a legitimacy check an administrator opens your access; no account ever activates on its own. Owners and tenants verify their identity, which is stored under KVKK only as long as required.",
+      "You register right on this page: pick your role (Owner, Tenant or Staff), fill in your details and send the request. After a legitimacy check an administrator opens your access; no account activates on its own. Owner and tenant identity is verified with data minimization and protected access; exact retention and deletion terms depend on the approved KVKK policy and must be confirmed with management.",
     "tenant-access":
       "For tenants the best route is the owner invite code: your owner generates a one-time, time-boxed code from their dashboard. Access lasts only for the window the owner sets and closes on its own. The owner carries responsibility for the whole lease, which keeps the chain of trust intact for everyone.",
     reporting:
       "You don't need an account to report an issue. Use the report form on this page or scan the on-site QR poster; a location and a short note are enough. Every report lands in the triage queue, gets a reference number and is tracked to resolution.",
     "security-kvkk":
-      "Security is the core of the design: every role sees only the data it is entitled to, all actions are logged, and identity data is kept under KVKK only as long as required, then deleted. The legal accommodation reporting process (KBS) is built into the flow. Even this assistant has no access to personal or financial data.",
+      "Security is built around data minimization, role-based access and action logging; this assistant has no access to personal or financial data. Exact retention and deletion periods are governed by a KVKK policy that still requires client and legal approval, so the system does not promise automatic deletion or a legal retention period. Confirm your case with management or the privacy contact on WhatsApp.",
     "finance-features":
       "Owners see their own unit's ledger, payment history and any debt directly; nobody has to read them a summary. Dues, deposits and collections live in one ledger, and posted entries can never be altered afterwards. Personal financial data is visible only after you log in, within your own permissions.",
     "service-features":
@@ -231,7 +300,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     pricing:
       "Prices and contract terms depend on the unit and package, so the sales team gives the accurate answer. Reach management directly via the WhatsApp button, or leave your details in the registration form and the team will call you.",
     demo:
-      "You can open the live demo in one click, no password: the 'See the live demo' link takes you to the role selection screen, where you explore the real system through the eyes of an owner, tenant or manager.",
+      "A controlled QA/demo environment that contains only synthetic data may offer role selection for reviewing user journeys. Customer-facing and production environments require approved authentication and never offer passwordless role switching. Ask the team on WhatsApp for the appropriate demo access.",
     "private-data":
       "This assistant only explains 1Çatı; it has no access to personal, financial or unit-specific data and cannot share any. To see your own data, register and log in once your access is opened; for urgent matters contact management via WhatsApp.",
     general:
@@ -243,13 +312,13 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     advantages:
       "Der Unterschied: Das Verkaufsversprechen ist mit dem täglichen Betrieb verdrahtet. Sie sehen Ihren Saldo ohne Anruf, Serviceanfragen schließen mit Nachweis, Ihre Dokumente liegen verifiziert an einem Ort, und jede Zutrittsentscheidung hat eine Begründung. Vier Sprachen in gleicher Tiefe, jede Aktion protokolliert und nachvollziehbar.",
     registration:
-      "Sie registrieren sich direkt auf dieser Seite: Rolle wählen (Eigentümer, Mieter oder Mitarbeiter), Daten eintragen, Anfrage senden. Nach einer Legitimitätsprüfung öffnet ein Administrator Ihren Zugang; kein Konto aktiviert sich von allein. Eigentümer und Mieter verifizieren ihre Identität, die nach KVKK nur so lange wie nötig gespeichert wird.",
+      "Sie registrieren sich direkt auf dieser Seite: Rolle wählen (Eigentümer, Mieter oder Mitarbeiter), Daten eintragen, Anfrage senden. Nach einer Legitimitätsprüfung öffnet ein Administrator Ihren Zugang; kein Konto aktiviert sich von allein. Die Identität von Eigentümern und Mietern wird mit Datenminimierung und geschütztem Zugriff verifiziert; genaue Aufbewahrungs- und Löschregeln hängen von der freigegebenen KVKK-Richtlinie ab und sind mit der Verwaltung zu klären.",
     "tenant-access":
       "Für Mieter ist der Einladungscode des Eigentümers der beste Weg: Ihr Eigentümer erzeugt im Dashboard einen Einmal-Code mit Frist. Der Zugang gilt nur für das gewählte Zeitfenster und läuft von selbst ab. Die Verantwortung trägt der Eigentümer über die gesamte Mietzeit, das hält die Vertrauenskette für alle intakt.",
     reporting:
       "Für eine Meldung brauchen Sie kein Konto. Nutzen Sie das Formular auf dieser Seite oder scannen Sie das QR-Poster vor Ort; Ort und kurze Beschreibung genügen. Jede Meldung landet in der Triage, erhält eine Referenznummer und wird bis zur Lösung verfolgt.",
     "security-kvkk":
-      "Sicherheit ist der Kern des Designs: Jede Rolle sieht nur die Daten, zu denen sie berechtigt ist, alle Aktionen werden protokolliert, und Identitätsdaten werden nach KVKK nur so lange wie nötig gespeichert und dann gelöscht. Auch die gesetzliche Beherbergungsmeldung (KBS) ist im Ablauf verankert. Selbst dieser Assistent hat keinen Zugriff auf persönliche oder finanzielle Daten.",
+      "Sicherheit basiert auf Datenminimierung, rollenbasiertem Zugriff und Aktionsprotokollen; dieser Assistent hat keinen Zugriff auf persönliche oder finanzielle Daten. Genaue Aufbewahrungs- und Löschfristen richten sich nach einer noch durch Kunde und Rechtsprüfung freizugebenden KVKK-Richtlinie; das System verspricht keine automatische Löschung oder gesetzliche Frist. Bitte den Einzelfall per WhatsApp mit Verwaltung oder Datenschutzkontakt klären.",
     "finance-features":
       "Eigentümer sehen Kontostand, Zahlungshistorie und etwaige Schulden ihrer Einheit direkt; niemand muss ihnen eine Zusammenfassung vorlesen. Beiträge, Kautionen und Einzüge stehen in einem Ledger, gebuchte Einträge sind nachträglich unveränderlich. Persönliche Finanzdaten sind erst nach dem Login sichtbar, im Rahmen Ihrer eigenen Rechte.",
     "service-features":
@@ -261,7 +330,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     pricing:
       "Preise und Vertragskonditionen hängen von Einheit und Paket ab; die genaue Auskunft gibt das Vertriebsteam. Erreichen Sie die Verwaltung direkt über den WhatsApp-Button oder hinterlassen Sie Ihre Daten im Registrierungsformular, das Team meldet sich.",
     demo:
-      "Die Live-Demo öffnen Sie mit einem Klick, ohne Passwort: Der Link 'Live-Demo ansehen' führt zur Rollenauswahl, dort erkunden Sie die echten Systembildschirme aus Sicht von Eigentümer, Mieter oder Verwaltung.",
+      "Eine kontrollierte QA-/Demo-Umgebung mit ausschließlich synthetischen Daten kann eine Rollenauswahl für die Prüfung der Nutzerwege anbieten. Kunden- und Produktionsumgebungen verlangen eine freigegebene Authentifizierung und bieten keinen passwortlosen Rollenwechsel. Den passenden Demo-Zugang erhalten Sie über das Team per WhatsApp.",
     "private-data":
       "Dieser Assistent erklärt nur 1Çatı; er hat keinen Zugriff auf persönliche, finanzielle oder einheitsbezogene Daten und kann sie nicht weitergeben. Ihre eigenen Daten sehen Sie nach Registrierung und Freischaltung im System; bei dringenden Anliegen erreichen Sie die Verwaltung per WhatsApp.",
     general:
@@ -273,13 +342,13 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     advantages:
       "Отличие в том, что обещание продаж связано с ежедневной работой. Вы видите свой баланс без звонков, заявки закрываются с подтверждением, документы лежат проверенными в одном месте, а у каждого решения о доступе есть причина. Четыре языка с одинаковой глубиной, каждое действие фиксируется и отслеживается.",
     registration:
-      "Регистрация прямо на этой странице: выберите роль (Собственник, Арендатор или Персонал), заполните данные и отправьте заявку. После проверки легитимности доступ открывает администратор; ни один аккаунт не активируется сам. Собственники и арендаторы подтверждают личность, данные хранятся по KVKK только необходимое время.",
+      "Регистрация прямо на этой странице: выберите роль (Собственник, Арендатор или Персонал), заполните данные и отправьте заявку. После проверки легитимности доступ открывает администратор; ни один аккаунт не активируется сам. Личность собственников и арендаторов проверяется с минимизацией данных и защищённым доступом; точные сроки хранения и удаления зависят от утверждённой политики KVKK и уточняются у управления.",
     "tenant-access":
       "Для арендаторов лучший путь — код приглашения от собственника: он создаёт в кабинете одноразовый код со сроком. Доступ действует только в выбранный период и закрывается сам. Ответственность несёт собственник весь срок аренды, что сохраняет цепочку доверия для всех.",
     reporting:
       "Чтобы сообщить о проблеме, аккаунт не нужен. Используйте форму на этой странице или отсканируйте QR-плакат на территории; достаточно места и короткого описания. Каждое сообщение попадает в очередь триажа, получает номер и отслеживается до решения.",
     "security-kvkk":
-      "Безопасность — ядро системы: каждая роль видит только положенные ей данные, все действия фиксируются, а данные личности хранятся по KVKK только необходимое время и затем удаляются. Обязательная регистрация проживания (KBS) встроена в процесс. Даже у этого ассистента нет доступа к личным или финансовым данным.",
+      "Безопасность основана на минимизации данных, ролевом доступе и журналировании действий; у этого ассистента нет доступа к личным или финансовым данным. Точные сроки хранения и удаления определяются политикой KVKK, которую ещё должны утвердить клиент и юристы; система не обещает автоматическое удаление или установленный законом срок. Уточните свой случай у управления или контакта по приватности через WhatsApp.",
     "finance-features":
       "Собственники видят реестр своей квартиры, историю платежей и задолженность напрямую; никто не пересказывает им сводку. Взносы, депозиты и сборы ведутся в одном журнале, проведённые записи нельзя изменить задним числом. Личные финансовые данные видны только после входа, в рамках ваших прав.",
     "service-features":
@@ -291,7 +360,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     pricing:
       "Цены и условия договора зависят от квартиры и пакета, точную информацию даёт отдел продаж. Свяжитесь с управлением напрямую через кнопку WhatsApp или оставьте данные в форме регистрации, и команда вам перезвонит.",
     demo:
-      "Живое демо открывается одним кликом, без пароля: ссылка «Посмотреть демо» ведёт к выбору роли, где вы увидите реальные экраны системы глазами собственника, арендатора или управляющего.",
+      "В контролируемой QA/демо-среде только с синтетическими данными может быть доступен выбор роли для проверки пользовательских сценариев. Клиентская и производственная среды требуют утверждённой аутентификации и не допускают переключение ролей без пароля. Подходящий демо-доступ можно запросить у команды через WhatsApp.",
     "private-data":
       "Этот ассистент только рассказывает о 1Çatı; у него нет доступа к личным, финансовым или квартирным данным, и он не может ими делиться. Свои данные вы увидите после регистрации и открытия доступа; по срочным вопросам напишите управлению в WhatsApp.",
     general:
@@ -372,7 +441,7 @@ const topicOutcome: Record<PublicAiTopic, PublicAiOutcome> = {
   registration: "answered",
   "tenant-access": "answered",
   reporting: "answered",
-  "security-kvkk": "answered",
+  "security-kvkk": "handoff_recommended",
   "finance-features": "answered",
   "service-features": "answered",
   languages: "answered",
@@ -410,6 +479,13 @@ const escalationCopy: Record<PublicAiLocale, Record<PublicAiOutcome, string | nu
   },
 }
 
+const privacyHandoffCopy: Record<PublicAiLocale, string> = {
+  tr: "Kesin saklama, silme veya paylaşım koşulları için yönetim ya da KVKK irtibatı WhatsApp üzerinden teyit vermelidir.",
+  en: "Management or the privacy contact should confirm the exact retention, deletion or sharing terms on WhatsApp.",
+  de: "Verwaltung oder Datenschutzkontakt sollten die genauen Aufbewahrungs-, Lösch- oder Weitergaberegeln per WhatsApp bestätigen.",
+  ru: "Точные условия хранения, удаления или передачи данных следует подтвердить у управления или контакта по приватности через WhatsApp.",
+}
+
 export function getPublicAiSources(topic: PublicAiTopic): PublicAiSource[] {
   return topicSourceIds[topic].map((id) => publicAiSourceCatalog[id])
 }
@@ -426,7 +502,10 @@ export function answerPublicAiQuestion(
     confidence: topicConfidence[topic],
     outcome,
     shouldEscalate: outcome !== "answered",
-    escalationReason: escalationCopy[locale][outcome],
+    escalationReason:
+      topic === "security-kvkk"
+        ? privacyHandoffCopy[locale]
+        : escalationCopy[locale][outcome],
     sources: getPublicAiSources(topic),
   }
 }
@@ -482,11 +561,11 @@ export function getPublicAiSystemPrompt(locale: PublicAiLocale): string {
     "It unifies finance (per-unit ledger, dues, deposits; posted entries immutable), service (requests with SLA and photo/video proof), documents (TAPU/contracts with verification status), reservations and reasoned access decisions on one record.",
     "Public service knowledge includes cleaning, maintenance, transfer, spa, restaurant, theatre/events, excursions, tours, quad/jeep/bike activities and mountain trips; requests are routed to the correct internal team or external provider and require closure approval.",
     "Six roles exist (admin, manager, accountant, staff, owner, tenant); each sees only its own scope. Owner/tenant/staff can request access on the landing page; manager/accountant/admin are assigned only internally.",
-    "Registration: role selection, legitimacy check, human approval by an administrator; owners/tenants verify identity (KVKK-compliant retention, deleted after the legal period; KBS accommodation reporting is part of the flow).",
+    "Registration: role selection, legitimacy check and human approval by an administrator; owner/tenant identity verification uses data minimization and protected access. Exact retention and deletion terms depend on a client- and legal-approved KVKK policy that is not yet confirmed; never claim automatic deletion or a legal-period guarantee, and recommend management/privacy handoff. KBS accommodation reporting is part of the flow.",
     "Tenants best join via a one-time, time-boxed owner invite code; access expires on its own and the owner stays responsible for the whole lease.",
     "Anyone can report an issue without an account (form or on-site QR poster); reports get a reference and are tracked to resolution.",
     "The platform works in four languages at equal depth: Turkish, English, German, Russian.",
-    "A live demo opens without a password via the role-selection screen.",
+    "A controlled, isolated QA/demo environment containing only synthetic data may offer role selection; customer-facing and production environments require approved authentication. Never promise passwordless access to a live deployment.",
     "Pricing/contract terms are handled by the sales team (WhatsApp button or registration form).",
   ].join(" ")
 }

@@ -16,12 +16,20 @@ import type {
 } from "./site-management-data"
 import type { Role } from "./rbac"
 
-const ownerUnits = new Set(["A-001", "A-054", "D-023"])
 const tenantUnits = new Set(["A-018", "A-023"])
-const ownerBookings = new Set(["A-001", "A-012", "A-054", "B-040", "D-023", "D-087"])
-const tenantBookings = new Set(["A-012", "A-018", "A-023"])
-const ownerReviewUnits = new Set([...ownerUnits, ...tenantUnits])
-const ownerReviewBookings = new Set([...ownerBookings, ...tenantBookings])
+// UC22 is an exact relationship boundary: the local QA owner sees only these
+// owned units. Tenant scope is never inherited merely because both demo
+// personas belong to the same project. Authenticated environments enforce the
+// equivalent boundary from verified relationship records plus RLS.
+const ownerUnits = new Set(["A-001", "A-054", "D-023"])
+const tenantBookings = tenantUnits
+const ownerReviewUnits = ownerUnits
+const ownerReviewBookings = ownerUnits
+// Controlled local/QA staff access profile. Authenticated Supabase reads bypass
+// this fallback and are scoped by the assigned-profile RLS/RPC contract. The
+// fallback must still model one actor, never the whole technical queue.
+export const LOCAL_QA_STAFF_ASSIGNMENT_LABEL = "Teknik - Ahmet"
+const localQaStaffAssignmentLabels = new Set([LOCAL_QA_STAFF_ASSIGNMENT_LABEL])
 
 export function isClientRole(role: Role) {
   return role === "owner" || role === "tenant"
@@ -67,7 +75,9 @@ export function visibleServiceTicketsForRole(
   }
 
   if (role === "staff") {
-    return tickets.filter((ticket) => ticket.category !== "Tahsilat")
+    return tickets.filter((ticket) =>
+      localQaStaffAssignmentLabels.has(ticket.assignee.trim())
+    )
   }
 
   return tickets

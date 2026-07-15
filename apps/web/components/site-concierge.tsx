@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { useLocale } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
 import { Bot, MessageCircle, Send, Sparkles, ThumbsDown, ThumbsUp, User, X } from "lucide-react"
@@ -31,6 +32,7 @@ const copy = {
     placeholder: "1Çatı hakkında sorun...",
     send: "Gönder",
     close: "Kapat",
+    typing: "Asistan yanıt hazırlıyor",
     error: "Yanıt alınamadı. Lütfen tekrar deneyin.",
   },
   en: {
@@ -48,6 +50,7 @@ const copy = {
     placeholder: "Ask about 1Çatı...",
     send: "Send",
     close: "Close",
+    typing: "The assistant is preparing a response",
     error: "No answer received. Please try again.",
   },
   de: {
@@ -65,6 +68,7 @@ const copy = {
     placeholder: "Zu 1Çatı fragen...",
     send: "Senden",
     close: "Schließen",
+    typing: "Der Assistent bereitet eine Antwort vor",
     error: "Keine Antwort erhalten. Bitte erneut versuchen.",
   },
   ru: {
@@ -82,6 +86,7 @@ const copy = {
     placeholder: "Спросите о 1Çatı...",
     send: "Отправить",
     close: "Закрыть",
+    typing: "Ассистент готовит ответ",
     error: "Ответ не получен. Пожалуйста, попробуйте снова.",
   },
 } satisfies Record<LocaleKey, unknown>
@@ -265,9 +270,72 @@ export function SiteConcierge({ page }: { page: string }) {
     { id: "welcome", role: "assistant", content: t.welcome, language: locale },
   ])
   const scrollRef = useRef<HTMLDivElement>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const launcherRef = useRef<HTMLButtonElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const idRef = useRef(0)
   const responseCacheRef = useRef<Map<string, CachedAssistantMessage>>(new Map())
   const suggestions = publicAiSuggestions[locale]
+  const dialogTitleId = useId()
+  const dialogDescriptionId = useId()
+
+  useEffect(() => {
+    if (!open || !overlayRef.current) return
+
+    const background = Array.from(document.body.children)
+      .filter((element): element is HTMLElement =>
+        element instanceof HTMLElement && element !== overlayRef.current
+      )
+      .map((element) => ({
+        element,
+        wasInert: element.hasAttribute("inert"),
+      }))
+
+    background.forEach(({ element }) => element.setAttribute("inert", ""))
+    const previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    const focusTimer = window.requestAnimationFrame(() => inputRef.current?.focus())
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault()
+        setOpen(false)
+        return
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => element.offsetParent !== null)
+      if (focusable.length === 0) return
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+      if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || !dialogRef.current.contains(active))) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      window.cancelAnimationFrame(focusTimer)
+      document.removeEventListener("keydown", handleKeyDown)
+      background.forEach(({ element, wasInert }) => {
+        if (!wasInert) element.removeAttribute("inert")
+      })
+      document.body.style.overflow = previousBodyOverflow
+      window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+    }
+  }, [open])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -520,6 +588,7 @@ export function SiteConcierge({ page }: { page: string }) {
               <button
                 type="button"
                 onClick={() => {
+                  returnFocusRef.current = launcherRef.current
                   setOpen(true)
                   setMenuOpen(false)
                 }}
@@ -538,6 +607,7 @@ export function SiteConcierge({ page }: { page: string }) {
         </AnimatePresence>
 
         <motion.button
+          ref={launcherRef}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           whileHover={{ scale: 1.05 }}
@@ -557,27 +627,47 @@ export function SiteConcierge({ page }: { page: string }) {
         </motion.button>
       </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.25 }}
-            data-testid="concierge-panel"
-            className="fixed right-4 bottom-4 z-50 flex w-[min(420px,92vw)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl print:hidden sm:right-6 sm:bottom-6"
-          >
+      {open && typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {open && (
+              <motion.div
+                ref={overlayRef}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                data-testid="concierge-overlay"
+                className="fixed inset-0 z-50 flex items-end justify-end bg-black/35 p-4 print:hidden sm:p-6"
+                onMouseDown={(event) => {
+                  if (event.currentTarget === event.target) setOpen(false)
+                }}
+              >
+                <motion.section
+                  ref={dialogRef}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.25 }}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby={dialogTitleId}
+                  aria-describedby={dialogDescriptionId}
+                  data-testid="concierge-panel"
+                  className="flex max-h-[calc(100dvh-2rem)] w-[min(420px,92vw)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+                >
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-emerald-500/10 px-4 py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]">
                   <Bot className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="break-words text-sm font-bold leading-tight text-foreground [overflow-wrap:anywhere]">{t.title}</p>
-                  <p className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">{t.subtitle}</p>
+                  <p id={dialogTitleId} className="break-words text-sm font-bold leading-tight text-foreground [overflow-wrap:anywhere]">{t.title}</p>
+                  <p id={dialogDescriptionId} className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">{t.subtitle}</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setOpen(false)}
                 className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
                 aria-label={t.close}
@@ -586,7 +676,15 @@ export function SiteConcierge({ page }: { page: string }) {
               </button>
             </div>
 
-            <div ref={scrollRef} className="flex h-80 flex-col gap-3 overflow-y-auto p-4">
+            <div
+              ref={scrollRef}
+              role="log"
+              aria-label={t.title}
+              aria-live="polite"
+              aria-relevant="additions text"
+              aria-busy={typing}
+              className="flex h-80 min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4"
+            >
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -679,7 +777,8 @@ export function SiteConcierge({ page }: { page: string }) {
                 </div>
               ))}
               {typing && (
-                <div className="mr-auto flex max-w-[85%] gap-2">
+                <div role="status" aria-live="polite" className="mr-auto flex max-w-[85%] gap-2">
+                  <span className="sr-only">{t.typing}</span>
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Bot className="h-3.5 w-3.5" />
                   </div>
@@ -712,9 +811,11 @@ export function SiteConcierge({ page }: { page: string }) {
               className="flex items-center gap-2 border-t border-border p-3"
             >
               <input
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t.placeholder}
+                aria-label={t.aiLabel}
                 maxLength={600}
                 className="min-w-0 flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground outline-none focus:border-primary"
               />
@@ -737,9 +838,12 @@ export function SiteConcierge({ page }: { page: string }) {
                 <Send className="h-4 w-4" />
               </button>
             </form>
-          </motion.div>
+                </motion.section>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </>
   )
 }

@@ -6,8 +6,10 @@ import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { PeopleDirectoryLive } from "@/components/people-directory-live"
+import { RoleGovernancePanel } from "@/components/role-governance-panel"
+import { RegistrationReviewPanel } from "@/components/registration-review-panel"
 import { StatusBadge } from "@/components/status-badge"
-import { TenantAccessPanel } from "@/components/tenant-access-panel"
+import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
 import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
@@ -263,9 +265,13 @@ export default function UsersPage() {
         </Card3D>
       </div>
 
+      <RoleGovernancePanel />
+
+      <RegistrationReviewPanel />
+
       <PeopleDirectoryLive />
 
-      <TenantAccessPanel />
+      <TenantAccessLivePanel />
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { createClient } from "./supabase/server"
 import { Role, roles, isValidRole } from "./rbac"
+import { accessProfilesEnabledForEnvironment } from "./access-profile-policy"
 
 export interface UserProfile {
   id: string
@@ -30,11 +31,19 @@ async function getAccessProfile(): Promise<UserProfile> {
   }
 
   const role: Role = isValidRole(accessRole) ? accessRole : "manager"
+  const displayNames: Record<Role, string> = {
+    admin: "Organizasyon Yöneticisi",
+    manager: "Site Yöneticisi",
+    accountant: "Muhasebe Sorumlusu",
+    staff: "Teknik - Ahmet",
+    owner: "Demo Malik",
+    tenant: "Demo Kiracı",
+  }
 
   return {
     id: "00000000-0000-0000-0000-000000000000",
     email: "access@cati.local",
-    full_name: "Operasyon Kullanıcısı",
+    full_name: displayNames[role],
     role,
     company_id: null,
     phone: null,
@@ -52,26 +61,7 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function isAccessProfileEnabled(): boolean {
-  const productionDeployment =
-    process.env.VERCEL_ENV === "production" ||
-    process.env.CATI_ENV === "production"
-  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const localDevelopment =
-    process.env.NODE_ENV !== "production" &&
-    !process.env.VERCEL_ENV &&
-    !process.env.VERCEL_URL &&
-    process.env.CATI_ENV !== "production"
-  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
-  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
-
-  // Local development keeps QA profiles available; remote/production
-  // deployments they stay OFF unless CATI_ALLOW_REMOTE_ACCESS_PROFILES=true is
-  // ALSO set — that flag is the explicit, documented approval for running a
-  // controlled demo/QA environment (incl. production), per the security policy.
-  // Removing that flag re-locks the deployment to real authentication.
-  if (localDevelopment) return true
-
-  return (!productionDeployment || remoteQaAllowed) && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
+  return accessProfilesEnabledForEnvironment()
 }
 
 /**

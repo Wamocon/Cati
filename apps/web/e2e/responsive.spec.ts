@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test"
 import { collectConsoleIssues, screenshot } from "./helpers"
+import { resetQaState } from "./support/flows"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 async function assertNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => {

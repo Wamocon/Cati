@@ -54,6 +54,18 @@ export interface FlatRecord {
   lastPaymentAt: string
 }
 
+export interface ServiceTicketHistoryEvent {
+  id: string
+  type: string
+  message: string
+  occurredAt: string
+  /** Used only for defense-in-depth response filtering; the UI never displays it. */
+  audience?: "resident" | "internal" | "finance"
+  version?: string
+  fromState?: string | null
+  toState?: string | null
+}
+
 export interface ServiceTicket {
   id: string
   flatId: string
@@ -66,6 +78,9 @@ export interface ServiceTicket {
   assignee: string
   requester: string
   requesterRole?: string
+  /** Internal actor key used by the API to calculate requester-only actions. */
+  requesterProfileId?: string | null
+  assigneeProfileId?: string | null
   openedAt: string
   dueAt: string
   slaHoursRemaining: number
@@ -73,6 +88,16 @@ export interface ServiceTicket {
   paymentVerified: boolean
   mediaCount: number
   estimatedCostTry: number
+  /** Opaque optimistic-concurrency token returned by the ticket API. */
+  version?: string
+  workflowState?: string
+  approvalStatus?: "not_required" | "pending_owner" | "approved" | "rejected"
+  dispatchStatus?: "not_required" | "pending" | "assigned" | "acknowledged" | "en_route" | "on_site" | "completed" | "failed"
+  paymentWorkflowStatus?: "not_required" | "pending" | "paid" | "waived" | "post_emergency_review" | "failed" | "refunded"
+  severity?: "P0" | "P1" | "P2" | "P3"
+  emergency?: boolean
+  /** Append-only, role-filtered progress history safe for the current viewer. */
+  history?: ServiceTicketHistoryEvent[]
 }
 
 export type ServiceCatalogCategory =
@@ -102,6 +127,7 @@ export type ServicePaymentDecision =
   | "debit_to_account"
   | "paid_or_debit_approved"
   | "hold"
+  | "post_emergency_review"
 
 export interface ServiceCatalogItem {
   id: string
@@ -1217,6 +1243,11 @@ function paymentDecisionForTicket(
   ticket: ServiceTicket,
   catalogItem: ServiceCatalogItem
 ): ServicePaymentDecision {
+  if (ticket.emergency) {
+    return ticket.estimatedCostTry > 0 || catalogItem.basePriceTry > 0
+      ? "post_emergency_review"
+      : "no_charge"
+  }
   if (ticket.debtBlocked) return "hold"
   if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
   if (ticket.paymentVerified) return "paid_or_debit_approved"
@@ -1225,6 +1256,11 @@ function paymentDecisionForTicket(
 }
 
 function serviceOrderStatusForTicket(ticket: ServiceTicket): ServiceOrderStatus {
+  if (ticket.emergency) {
+    if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
+    if (ticket.status === "assigned" || ticket.status === "in_progress") return "assigned"
+    return "debt_check"
+  }
   if (ticket.debtBlocked) return "blocked"
   if (ticket.status === "waiting_payment") return "payment_pending"
   if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
@@ -1236,6 +1272,7 @@ function serviceOrderNextAction(
   ticket: ServiceTicket,
   paymentDecision: ServicePaymentDecision
 ) {
+  if (ticket.emergency) return "Acil mudahaleye devam et; sonrasinda insan finans incelemesini tamamla"
   if (ticket.debtBlocked) return "Muhasebe onayi ve borc kontrolu tamamlanmadan saha isine cikarma"
   if (paymentDecision === "collect_before_dispatch") return "Odeme linki veya cari hesaba borclandirma secimini onayla"
   if (ticket.status === "open") return "SLA ve ekip uygunluguna gore gorevi ata"
@@ -1259,8 +1296,10 @@ export const serviceOrders: ServiceOrderRecord[] = serviceTickets.slice(0, 12).m
     flatNumber: ticket.flatNumber,
     requester: ticket.requester,
     status: serviceOrderStatusForTicket(ticket),
-    debtCheckStatus: ticket.debtBlocked
-      ? "blocked"
+    debtCheckStatus: ticket.emergency
+      ? "clear"
+      : ticket.debtBlocked
+        ? "blocked"
       : ticket.paymentVerified
         ? "clear"
         : "minor_debt_review",
@@ -1269,7 +1308,7 @@ export const serviceOrders: ServiceOrderRecord[] = serviceTickets.slice(0, 12).m
     currency: "TRY",
     slaHours: catalogItem.slaHours,
     assignedTeam: catalogItem.team,
-    taskCreated: ticket.status !== "open" && !ticket.debtBlocked,
+    taskCreated: ticket.status !== "open" && (ticket.emergency || !ticket.debtBlocked),
     requestedForAt: isoDaysFromAnchor(index % 4, 10 + (index % 6)),
     createdAt: ticket.openedAt,
     nextAction: serviceOrderNextAction(ticket, paymentDecision),
@@ -3019,52 +3058,77 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
     phase: 5,
     title: "Kullanıcı, malik, kiracı ve personel yönetimi",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Operations + Admin",
     businessOutcome: "Her kişi doğru daire, hesap, belge, iletişim dili ve yetki kapsamıyla tek kayıtta yönetilir.",
     userGuide: "Kullanıcılar ekranında sakin, malik, kiracı, personel ve rol ilişkilerini kontrol edin.",
-    evidence: ["Resident profile model", "Kişi dizini servisi", "Kullanıcı yönetim paneli", "Rol matrisi"],
+    evidence: [
+      "Yerel/sentetik rol akışı doğrulandı",
+      "Kişi dizini ve rol matrisi kaynak sözleşmesi",
+      "Canlı Auth/RLS doğrulaması bekliyor",
+      "Müşteri verisi UAT kapsamı bekliyor",
+    ],
   },
   {
     phase: 6,
     title: "Finans ledger motoru",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Finance + Engineering",
     businessOutcome: "Bakiyeler ekran hesabından değil, hesap, borç/alacak, tahakkuk, düzeltme ve ekstre kayıtlarından hesaplanır.",
     userGuide: "Finans ekranında aidat, borç, tahsilat, gecikme ve ekstre hareketlerini ledger mantığıyla inceleyin.",
-    evidence: ["Finans defteri modeli", "Finans defteri servisi", "Finans operasyon paneli", "Denetimli finans aksiyonları"],
+    evidence: [
+      "Malik ekstresi yerel/sentetik sözleşmede doğrulandı",
+      "Ana finans defteri kaynak sözleşmesi",
+      "Canlı RLS ve sorgu planı bekliyor",
+      "Kiracı borç tahsisi ürün sözleşmesi bekliyor",
+    ],
   },
   {
     phase: 7,
     title: "Ödeme, depozito, mutabakat ve borç kısıtı",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Finance + Legal",
     businessOutcome: "Ödeme, depozito, iade, borç eşiği ve servis/erişim kısıtları muhasebe ve hukuk onayıyla yürür.",
     userGuide: "Finans ve Uyum ekranlarında gecikme, depozito, kısıt ve onay kuyruğunu takip edin.",
-    evidence: ["Debt restriction model", "Deposit states", "Finance approval queue", "Human-approved access policy"],
+    evidence: [
+      "Kontrollü yerel ödeme ve kısıt akışı",
+      "İnsan onaylı finans/erişim kararı",
+      "Canlı mutabakat ve webhook doğrulaması bekliyor",
+      "Ödeme sağlayıcısı seçimi bekliyor",
+    ],
   },
   {
     phase: 8,
     title: "Servis kataloğu ve servis siparişi akışı",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Operations + Finance",
     businessOutcome: "Temizlik, transfer, bakım ve özel hizmetler fiyat, SLA, borç kontrolü ve görev üretimiyle siparişe dönüşür.",
     userGuide: "Servis Talepleri ekranında katalog, borç kontrolü, görev üretimi ve durum takibini yönetin.",
-    evidence: ["Service catalogue", "Debt-check gate", "Service order API", "Resident order flow"],
+    evidence: [
+      "Yerel/sentetik servis siparişi akışı doğrulandı",
+      "Acil işlerde para beklememe sözleşmesi",
+      "Canlı veritabanı/RLS kanıtı bekliyor",
+      "Saha müşteri UAT kapsamı bekliyor",
+    ],
   },
   {
     phase: 9,
     title: "Görev, saha ekibi, SLA ve medya raporu",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Technical + Staff",
     businessOutcome: "Saha işleri atama, öncelik, SLA, foto/video kanıt, iptal ve yönetici onayıyla görünür olur.",
     userGuide: "Servis Talepleri ekranında görev panosu, SLA riski ve saha raporlarını yönetin.",
-    evidence: ["Task board", "Mobile staff flow", "SLA timer", "Media proof"],
+    evidence: [
+      "Yerel/sentetik görev ve SLA akışı",
+      "Rol kapsamlı saha kanıtı sözleşmesi",
+      "Özel obje depolama ve tarama bekliyor",
+      "Canlı Realtime/RLS kanıtı bekliyor",
+    ],
   },
   {
     phase: 10,
     title: "Rezervasyon, kiralama, move-in ve checkout",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Reservations + Operations",
     businessOutcome: "Müsaitlik, rezervasyon, depozito, giriş hazırlığı, checkout, kesinti ve erişim kapatma tek süreç olur.",
     userGuide: "Rezervasyon ekranında takvim, giriş/çıkış işleri, depozito ve final kontrol adımlarını takip edin.",
@@ -3073,13 +3137,14 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
       "Move-in readiness board",
       "Checkout settlement queue",
       "Access handoff queue",
-      "Phase 10/11 QA harness",
+      "Yerel/sentetik tarayıcı sözleşmesi doğrulandı",
+      "Canlı RLS ve erişim sağlayıcısı bekliyor",
     ],
   },
   {
     phase: 11,
     title: "İletişim, bildirim ve doküman merkezi",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Support + Backoffice",
     businessOutcome: "Sakin, malik, yönetici ve personel iletişimi daire, borç, görev, rezervasyon ve belgeyle ilişkilendirilir.",
     userGuide: "İletişim ve Belgeler ekranlarında konuşma, duyuru, bildirim ve dosya izinlerini yönetin.",
@@ -3089,34 +3154,50 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
       "Notification retry queue",
       "Document packet board",
       "Provider-ready simulation mode",
+      "Canlı teslimat makbuzu ve özel depolama bekliyor",
     ],
   },
   {
     phase: 12,
     title: "Mobil uyumlu web/PWA ve offline-guvenli deneyim",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Frontend + QA",
     businessOutcome: "Native mobile app yerine tek web uygulamasi telefonda hizli, kurulabilir, erisilebilir ve offline-safe calisir.",
     userGuide: "Offline Senkron ekraninda mobil web hazirligini, offline kuyrugu, stale veri uyarilarini ve rol kapsamlarini test edin.",
-    evidence: ["Responsive web surface", "Manifest/service worker shell", "Offline retry queue", "Touch-safe QA"],
+    evidence: [
+      "Yerel responsive web/PWA akışı",
+      "Offline tekrar kuyruğu kaynak sözleşmesi",
+      "Masaüstü/mobil tarayıcı kapısı bekliyor",
+      "Gerçek cihaz performans ve erişilebilirlik UAT bekliyor",
+    ],
   },
   {
     phase: 13,
     title: "Dis sistem entegrasyonlari",
-    status: "ready_for_uat",
+    status: "blocked",
     owner: "Integrations + Security",
-    businessOutcome: "Supabase canli backend olarak kullanilir; odeme, banka, SMS, e-posta, erisim, kamera ve OAuth baglantilari demo/provider-ready placeholder olarak durur.",
+    businessOutcome: "Ayarlar ekranı Supabase durumunu çalışma anında kontrol eder; ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth için canlı teslimat kanıtı olmadan bağlantı varmış gibi göstermez.",
     userGuide: "Ayarlar ekraninda entegrasyon durumunu, musteri tarafindan gereken karar/API key listesini ve manuel fallback planini takip edin.",
-    evidence: ["Supabase connected", "Provider-ready placeholders", "Integration health matrix", "Manual fallback"],
+    evidence: [
+      "Çalışma zamanı Supabase sağlık kontrolü",
+      "Temiz migration/RLS/yedekleme kanıtı bekliyor",
+      "Dış sağlayıcılar bloke veya provider-ready",
+      "İnsan kontrollü manuel fallback",
+    ],
   },
   {
     phase: 14,
     title: "AI premium katmani ve gelismis analitik",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "AI Governance + Analytics",
-    businessOutcome: "AI gunluk brifing, servis triage, borc riski, rezervasyon kontrolu, rapor taslagi, entegrasyon tavsiyesi ve gorsel kanit yardimi uretir; hassas islem yapmaz.",
+    businessOutcome: "Kontrollü yerel demo AI öneri ve taslak üretir; finans, erişim, rol veya acil müdahale kararı vermez. Canlı model, kaynaklandırma ve değerlendirme kapıları ayrıca tamamlanır.",
     userGuide: "AI Rapor Merkezi ve sohbet asistaninda onerileri kaynak, guven, dil ve insan onayi notuyla inceleyin.",
-    evidence: ["AI command center", "Same-language assistant", "Guardrailed recommendations", "Image-proof workflow"],
+    evidence: [
+      "Local demo contract",
+      "İnsan onayı ve hassas işlem guardrail'i",
+      "Çok dilli golden-set kaynak testleri",
+      "Canlı model/eval/güvenlik UAT bekliyor",
+    ],
   },
   {
     phase: 15,

@@ -1,24 +1,10 @@
 import { createHash, randomUUID } from "node:crypto"
-import { createServiceRoleClient } from "@/lib/supabase/server"
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server"
 import { isSupabaseConfigured, type UserProfile } from "@/lib/auth"
-import { isClientRole, visibleDocumentsForRole } from "@/lib/role-scoped-views"
-import { documentVault, type DocumentVaultRecord } from "@/lib/site-management-data"
 
 export const DOCUMENT_UPLOAD_CONTRACT_VERSION = "phase-11-document-upload-storage.v1"
 export const DOCUMENT_UPLOAD_BUCKET = process.env.SUPABASE_DOCUMENT_BUCKET || "cati-documents"
 export const MAX_DOCUMENT_UPLOAD_BYTES = 25 * 1024 * 1024
-const DEFAULT_DOCUMENT_COMPANY_ID = "11111111-1111-4111-8111-111111111111"
-const DEFAULT_DOCUMENT_SITE_ID = "33333333-3333-4333-8333-333333333333"
-const DEFAULT_DOCUMENT_COMPANY = {
-  id: DEFAULT_DOCUMENT_COMPANY_ID,
-  name: "Ataberk Estate",
-  slug: "ataberk-estate",
-  status: "active",
-  primary_locale: "tr",
-  timezone: "Europe/Istanbul",
-  currency: "TRY",
-}
-
 export type DocumentStorageMode = "supabase-storage" | "demo-object-store"
 export type DocumentReviewStatus = "pending_review" | "approved" | "rejected"
 export type DocumentRetentionClass = "identity" | "legal" | "finance" | "service" | "guest" | "general"
@@ -169,13 +155,16 @@ export async function storeDocumentUpload({
   const retentionClass = normalizeRetentionClass(fields.retentionClass)
   const storageMode = getDocumentStorageMode()
   const serviceClient = createServiceRoleClient()
-  const context = await resolveStorageContext(serviceClient, profile, storageMode)
-  const date = new Date()
+  const context = await resolveStorageContext(
+    serviceClient,
+    profile,
+    storageMode,
+    fields.flatNumber
+  )
   const storagePath = [
     context.companySegment,
-    String(date.getUTCFullYear()),
-    String(date.getUTCMonth() + 1).padStart(2, "0"),
-    profile.role,
+    context.siteId ?? "no-site",
+    context.unitId ?? "internal",
     id,
     safeFilename,
   ].join("/")
@@ -315,45 +304,6 @@ function companySegment(companyId: string | null) {
   return companyId ? companyId.replace(/[^a-zA-Z0-9-]/g, "") : "demo-company"
 }
 
-async function resolveDefaultCompanyId(
-  serviceClient: ReturnType<typeof createServiceRoleClient>
-) {
-  if (!serviceClient) return null
-
-  const defaultCompanyResponse = await serviceClient.rpc("default_company_id")
-  if (typeof defaultCompanyResponse.data === "string") {
-    return defaultCompanyResponse.data
-  }
-
-  const companyResponse = await serviceClient
-    .from("companies")
-    .select("id")
-    .eq("slug", DEFAULT_DOCUMENT_COMPANY.slug)
-    .maybeSingle()
-  const companyRow = companyResponse.data as { id?: string | null } | null
-  if (companyRow?.id) {
-    return companyRow.id
-  }
-
-  const insertResponse = await serviceClient
-    .from("companies")
-    .insert(DEFAULT_DOCUMENT_COMPANY)
-    .select("id")
-    .single()
-  const insertedRow = insertResponse.data as { id?: string | null } | null
-  if (insertedRow?.id) {
-    return insertedRow.id
-  }
-
-  const retryResponse = await serviceClient
-    .from("companies")
-    .select("id")
-    .eq("slug", DEFAULT_DOCUMENT_COMPANY.slug)
-    .maybeSingle()
-  const retryRow = retryResponse.data as { id?: string | null } | null
-  return retryRow?.id ?? null
-}
-
 async function resolveDefaultSiteId(
   serviceClient: ReturnType<typeof createServiceRoleClient>,
   companyId: string | null
@@ -372,54 +322,27 @@ async function resolveDefaultSiteId(
     return siteRow.id
   }
 
-  const upsertResponse = await serviceClient
-    .from("sites")
-    .upsert(
-      {
-        id: DEFAULT_DOCUMENT_SITE_ID,
-        company_id: companyId,
-        name: "New Level Premium Avsallar",
-        code: "NLP-AVS",
-        city: "Alanya",
-        district: "Avsallar",
-        address: "Avsallar, Alanya, Antalya",
-        status: "active",
-        total_units: 769,
-      },
-      { onConflict: "company_id,code" }
-    )
-    .select("id")
-    .single()
-
-  const upsertRow = upsertResponse.data as { id?: string | null } | null
-  return upsertRow?.id ?? null
-}
-
-async function backfillProfileCompanyId(
-  serviceClient: ReturnType<typeof createServiceRoleClient>,
-  profileId: string,
-  companyId: string
-) {
-  if (!serviceClient) return
-
-  await serviceClient
-    .from("profiles")
-    .update({ company_id: companyId })
-    .eq("id", profileId)
-    .is("company_id", null)
+  return null
 }
 
 async function resolveStorageContext(
   serviceClient: ReturnType<typeof createServiceRoleClient>,
   profile: UserProfile,
-  storageMode: DocumentStorageMode
+  storageMode: DocumentStorageMode,
+  unitNo?: string
 ) {
   if (!serviceClient) {
     if (storageMode === "supabase-storage") {
       throw new Error("Supabase service role client is required for live document storage.")
     }
 
-    return { companyId: null, siteId: null, companySegment: "demo-company" }
+    return {
+      companyId: null,
+      siteId: null,
+      unitId: null,
+      residentId: null,
+      companySegment: "demo-company",
+    }
   }
 
   let companyId: string | null = isUuid(profile.company_id) ? profile.company_id! : null
@@ -434,127 +357,71 @@ async function resolveStorageContext(
     companyId = profileRow?.company_id ?? null
   }
 
-  if (!companyId) {
-    companyId = await resolveDefaultCompanyId(serviceClient)
-    if (companyId && isUuid(profile.id)) {
-      await backfillProfileCompanyId(serviceClient, profile.id, companyId)
-    }
+  if (!companyId && storageMode === "supabase-storage") {
+    throw new Error(
+      "Live document storage requires an authorized company membership. Complete onboarding or accept a valid invitation first."
+    )
   }
 
-  if (!companyId && storageMode === "supabase-storage") {
-    throw new Error("Live document storage requires a company context. Add a default company or link the profile to a company.")
+  if (storageMode === "supabase-storage") {
+    try {
+      const authenticatedClient = await createClient()
+      const { data, error } = await authenticatedClient.rpc(
+        "authorize_document_upload_context",
+        { p_unit_no: unitNo?.trim() || null }
+      )
+      if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+        throw new Error("Document upload scope is not authorized.")
+      }
+
+      const row = data as Record<string, unknown>
+      const authorizedCompanyId =
+        typeof row.companyId === "string" ? row.companyId : null
+      const siteId = typeof row.siteId === "string" ? row.siteId : null
+      const unitId = typeof row.unitId === "string" ? row.unitId : null
+      const residentId =
+        typeof row.residentId === "string" ? row.residentId : null
+
+      if (
+        !authorizedCompanyId ||
+        authorizedCompanyId !== companyId ||
+        !isUuid(authorizedCompanyId) ||
+        !isUuid(siteId) ||
+        (unitId !== null && !isUuid(unitId)) ||
+        (residentId !== null && !isUuid(residentId))
+      ) {
+        throw new Error("Document upload scope is not authorized.")
+      }
+
+      return {
+        companyId: authorizedCompanyId,
+        siteId,
+        unitId,
+        residentId,
+        companySegment: companySegment(authorizedCompanyId),
+      }
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "Document upload scope is not authorized."
+      )
+    }
   }
 
   const siteId = await resolveDefaultSiteId(serviceClient, companyId)
 
-  return { companyId, siteId, companySegment: companySegment(companyId) }
+  return {
+    companyId,
+    siteId,
+    unitId: null,
+    residentId: null,
+    companySegment: companySegment(companyId),
+  }
 }
 
 function normalizeStoragePath(path: string | null | undefined) {
   return path?.replaceAll("\\", "/").replace(/^\/+/, "").trim() ?? ""
-}
-
-function filenameFromPath(path: string, fallback: string) {
-  const normalized = normalizeStoragePath(path)
-  const filename = normalized.split("/").filter(Boolean).at(-1)
-  return filename || fallback
-}
-
-function referenceFromSeedDocument(document: DocumentVaultRecord): DocumentFileReference | null {
-  const storagePath = normalizeStoragePath(document.storagePath ?? document.sourcePath)
-
-  if (!storagePath) {
-    return null
-  }
-
-  return {
-    id: document.id,
-    title: document.name,
-    safeFilename: filenameFromPath(storagePath, `${document.id}.pdf`),
-    storageBucket: document.storageBucket ?? DOCUMENT_UPLOAD_BUCKET,
-    storagePath,
-    mimeType: null,
-    status: document.status === "verified" ? "available" : "not_approved",
-    source: "seed",
-  }
-}
-
-async function findSeedDocumentReference(profile: UserProfile, documentId: string) {
-  const document = visibleDocumentsForRole(profile.role, documentVault).find(
-    (item) => item.id === documentId
-  )
-
-  return document ? referenceFromSeedDocument(document) : null
-}
-
-async function findUploadRequestReference({
-  serviceClient,
-  context,
-  profile,
-  documentId,
-}: {
-  serviceClient: ReturnType<typeof createServiceRoleClient>
-  context: Awaited<ReturnType<typeof resolveStorageContext>>
-  profile: UserProfile
-  documentId: string
-}): Promise<DocumentFileReference | null> {
-  if (!serviceClient || !context.companyId) {
-    return null
-  }
-
-  const selectColumns =
-    "id,title,safe_filename,file_path,storage_bucket,mime_type,review_status,upload_status,requested_by"
-  const scopedQuery = () => {
-    let query = serviceClient
-      .from("document_upload_requests")
-      .select(selectColumns)
-      .eq("company_id", context.companyId)
-      .limit(1)
-
-    if (isClientRole(profile.role) && isUuid(profile.id)) {
-      query = query.eq("requested_by", profile.id)
-    }
-
-    return query
-  }
-
-  const response = isUuid(documentId)
-    ? await scopedQuery().eq("id", documentId).maybeSingle()
-    : await scopedQuery()
-        .contains("metadata", { externalUploadId: documentId })
-        .maybeSingle()
-
-  const row = response.data as
-    | {
-        id?: string | null
-        title?: string | null
-        safe_filename?: string | null
-        file_path?: string | null
-        storage_bucket?: string | null
-        mime_type?: string | null
-        review_status?: string | null
-        upload_status?: string | null
-      }
-    | null
-
-  if (!row?.id || !row.file_path) {
-    return null
-  }
-
-  const uploadStored =
-    row.upload_status === "stored" || row.upload_status === "demo_stored"
-  const reviewAllowsAccess = row.review_status !== "rejected"
-
-  return {
-    id: row.id,
-    title: row.title ?? row.safe_filename ?? row.id,
-    safeFilename: row.safe_filename ?? filenameFromPath(row.file_path, `${row.id}.pdf`),
-    storageBucket: row.storage_bucket ?? DOCUMENT_UPLOAD_BUCKET,
-    storagePath: normalizeStoragePath(row.file_path),
-    mimeType: row.mime_type ?? null,
-    status: uploadStored && reviewAllowsAccess ? "available" : "not_approved",
-    source: "upload_request",
-  }
 }
 
 export async function resolveDocumentFileReference({
@@ -563,23 +430,74 @@ export async function resolveDocumentFileReference({
 }: {
   profile: UserProfile
   documentId: string
-}) {
+}): Promise<DocumentFileReference | null> {
   const storageMode = getDocumentStorageMode()
   const serviceClient = createServiceRoleClient()
 
-  if (!serviceClient || storageMode !== "supabase-storage") {
+  if (
+    !serviceClient ||
+    storageMode !== "supabase-storage" ||
+    !isUuid(profile.id) ||
+    !isUuid(profile.company_id)
+  ) {
     return null
   }
 
-  const context = await resolveStorageContext(serviceClient, profile, storageMode)
-  return (
-    (await findUploadRequestReference({
-      serviceClient,
-      context,
-      profile,
-      documentId,
-    })) ?? (await findSeedDocumentReference(profile, documentId))
-  )
+  // Never let a service-role query choose the object path. The authenticated
+  // RPC applies company/site/unit/invitation scope and returns the canonical
+  // approved path; the service role is used only afterwards to sign it.
+  try {
+    const authenticatedClient = await createClient()
+    const { data, error } = await authenticatedClient.rpc(
+      "authorize_document_file_access",
+      { p_document_identifier: documentId }
+    )
+    if (error || !data || typeof data !== "object" || Array.isArray(data)) {
+      return null
+    }
+
+    const row = data as Record<string, unknown>
+    const id = typeof row.id === "string" ? row.id : null
+    const title = typeof row.title === "string" ? row.title : null
+    const safeFilename =
+      typeof row.safeFilename === "string" ? row.safeFilename : null
+    const storageBucket =
+      typeof row.storageBucket === "string" ? row.storageBucket : null
+    const storagePath =
+      typeof row.storagePath === "string"
+        ? normalizeStoragePath(row.storagePath)
+        : null
+    const mimeType = typeof row.mimeType === "string" ? row.mimeType : null
+    const source =
+      row.source === "document" || row.source === "upload_request"
+        ? row.source
+        : null
+
+    if (
+      !id ||
+      !title ||
+      !safeFilename ||
+      storageBucket !== DOCUMENT_UPLOAD_BUCKET ||
+      !storagePath ||
+      row.status !== "available" ||
+      !source
+    ) {
+      return null
+    }
+
+    return {
+      id,
+      title,
+      safeFilename,
+      storageBucket,
+      storagePath,
+      mimeType,
+      status: "available",
+      source,
+    }
+  } catch {
+    return null
+  }
 }
 
 export async function documentFileExists(reference: DocumentFileReference) {
@@ -683,6 +601,8 @@ async function persistUploadMetadata({
       .insert({
         company_id: context.companyId,
         site_id: context.siteId,
+        unit_id: context.unitId,
+        resident_id: context.residentId,
         title,
         category,
         original_filename: originalFilename,

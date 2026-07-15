@@ -1,6 +1,41 @@
-import { createClient, createServiceRoleClient } from "@/lib/supabase/server"
+import {
+  closeSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "node:fs"
+import { createHash } from "node:crypto"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
+import { createClient } from "@/lib/supabase/server"
 import { isAccessProfileEnabled, isSupabaseConfigured } from "@/lib/auth"
+import {
+  commitResourceBooking,
+  createBookingHold,
+  decideResourceBooking,
+  getBookingLifecycleWorkspace,
+  type BookingLifecycleWorkspace,
+} from "@/lib/booking-lifecycle-repository"
+import type { Role } from "@/lib/rbac"
 import { normalizeSearchText } from "@/lib/search"
+import { visibleTicketHistoryForRole } from "@/lib/ticket-history"
+import {
+  deriveDispatchState,
+  derivePaymentState,
+  persistedStatusForPrimaryState,
+  primaryStateFromPersistedStatus,
+  ticketSeverityForPriority,
+  type TicketApprovalState,
+  type TicketCommand,
+  type TicketDispatchState,
+  type OwnerApprovalContext,
+  type TicketPaymentState,
+  type TicketPrimaryState,
+  type TicketSeverity,
+} from "@/lib/ticket-workflow"
 import {
   accessHandoffs,
   aiImageWorkflows,
@@ -47,6 +82,7 @@ import {
   type ServiceCatalogItem,
   type ServiceOrderRecord,
   type ServiceTicket,
+  type ServiceTicketHistoryEvent,
   type WorkforceTaskRecord,
 } from "@/lib/site-management-data"
 
@@ -122,12 +158,20 @@ export interface ClientActionInput {
   entityExternalId?: string | null
   title?: string | null
   metadata?: Record<string, unknown>
+  /** Explicit zero-UUID access-profile mode; never infer this from a global flag. */
+  useLocalAccessProfile?: boolean
 }
 
 export interface ClientActionResult {
   id: string
   source: DataSource
-  status: "logged" | "locally-logged" | "approved" | "rejected" | "completed" | "failed"
+  status:
+    | "logged"
+    | "locally-logged"
+    | "approved"
+    | "rejected"
+    | "completed"
+    | "failed"
 }
 
 export interface ClientActionRequestRecord {
@@ -192,6 +236,10 @@ export interface CreateServiceTicketInput {
   assignee?: string | null
   requiresOwnerApproval?: boolean
   suggestedAssignee?: string | null
+  emergency?: boolean
+  emergencyPolicyCode?: string | null
+  routingReason?: string | null
+  idempotencyKey?: string | null
   actor: TicketMutationActor
 }
 
@@ -204,12 +252,129 @@ export interface UpdateServiceTicketInput {
   priority?: ServiceTicket["priority"] | "normal"
   status?: ServiceTicket["status"] | "triage" | "waiting_approval" | "cancelled"
   assignee?: string | null
+  assigneeProfileId?: string | null
+  command?: TicketCommand
+  workflowState?: TicketPrimaryState
+  approvalStatus?: TicketApprovalState
+  dispatchStatus?: TicketDispatchState
+  paymentStatus?: TicketPaymentState
+  expectedVersion?: string | null
+  idempotencyKey?: string | null
+  reason?: string | null
+  ownerApprovalContext?: OwnerApprovalContext | null
   actor: TicketMutationActor
 }
 
 export interface ServiceTicketMutationResult {
   source: DataSource
   ticket: ServiceTicket
+  version: string
+  replayed?: boolean
+}
+
+/**
+ * Deterministic relationship scope for the local access-profile queue only.
+ * Authenticated database reads remain governed by their RPC/RLS projection.
+ */
+export interface LocalTicketQueueScope {
+  ticketIds?: readonly string[]
+  unitNos?: readonly string[]
+  assignee?: string
+}
+
+interface LocalTicketCreateReceipt {
+  fingerprint: string
+  result: ServiceTicketMutationResult
+}
+
+interface LocalTicketMutationReceipt {
+  fingerprint: string
+  result: ServiceTicketMutationResult
+}
+
+function serviceTicketCreateFingerprint(input: CreateServiceTicketInput) {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        actorId: input.actor.id,
+        actorRole: input.actor.role,
+        title: input.title,
+        description: input.description ?? null,
+        category: input.category,
+        priority: input.priority,
+        unitNo: input.unitNo,
+        emergency: Boolean(input.emergency),
+        emergencyPolicyCode: input.emergencyPolicyCode ?? null,
+      })
+    )
+    .digest("hex")
+}
+
+function serviceTicketMutationFingerprint(input: UpdateServiceTicketInput) {
+  const ownerApproval = input.ownerApprovalContext
+  const canonicalRequest = {
+    actorId: input.actor.id,
+    actorRole: input.actor.role,
+    ticketId: input.ticketId,
+    expectedVersion: input.expectedVersion ?? null,
+    operation: input.command ?? "update_details",
+    title: input.title ?? null,
+    description: input.description ?? null,
+    clearDescription: Boolean(input.clearDescription),
+    category: input.category ?? null,
+    priority: input.priority ?? null,
+    assignee: input.assignee ?? null,
+    assigneeProfileId: input.assigneeProfileId ?? null,
+    reason: input.reason ?? null,
+    ownerApprovalContext: ownerApproval
+      ? {
+          responsibility: ownerApproval.responsibility,
+          policyCode: ownerApproval.policyCode,
+          estimatedCostCents: ownerApproval.estimatedCostCents,
+          approvalThresholdCents: ownerApproval.approvalThresholdCents,
+        }
+      : null,
+  }
+  return createHash("sha256")
+    .update(JSON.stringify(canonicalRequest))
+    .digest("hex")
+}
+
+export interface ServiceTicketWorkflowRecord {
+  databaseId: string | null
+  createdBy: string | null
+  assignedTo: string | null
+  ticket: ServiceTicket
+  rawStatus: string
+  workflowState: TicketPrimaryState
+  approvalStatus: TicketApprovalState
+  dispatchStatus: TicketDispatchState
+  paymentStatus: TicketPaymentState
+  severity: TicketSeverity
+  emergency: boolean
+  requiresFinanceApproval: boolean
+  version: string
+}
+
+export type TicketRepositoryErrorCode =
+  | "TICKET_WORKFLOW_UNAVAILABLE"
+  | "TICKET_TRANSITION_FORBIDDEN"
+  | "TICKET_INPUT_INVALID"
+  | "TICKET_INVALID_TRANSITION"
+  | "TICKET_VERSION_CONFLICT"
+  | "TICKET_IDEMPOTENCY_CONFLICT"
+  | "TICKET_NOT_FOUND"
+
+export class TicketRepositoryError extends Error {
+  constructor(
+    readonly code: TicketRepositoryErrorCode,
+    message: string,
+    readonly httpStatus: number,
+    readonly details?: Record<string, unknown>
+  ) {
+    super(message)
+    this.name = "TicketRepositoryError"
+  }
 }
 
 export interface BookingOperationsData {
@@ -263,12 +428,14 @@ interface LocalSiteManagementState {
   actionSequence: number
 }
 
-const localStateGlobal = globalThis as typeof globalThis & {
+// Next.js may evaluate route modules in separate VM globals during local QA.
+// The Node process object is shared by those contexts, so it is the narrowest
+// deterministic anchor for demo-only state without introducing production I/O.
+const localStateProcess = process as typeof process & {
   __catiSiteManagementLocalState?: LocalSiteManagementState
 }
 const localSiteManagementState =
-  localStateGlobal.__catiSiteManagementLocalState ??
-  {
+  localStateProcess.__catiSiteManagementLocalState ?? {
     clientActionRequests: new Map<string, ClientActionRequestRecord>(),
     materializedTickets: [],
     ticketOverrides: new Map<string, ServiceTicket>(),
@@ -277,14 +444,221 @@ const localSiteManagementState =
     materializedBookings: [],
     actionSequence: 0,
   }
-localStateGlobal.__catiSiteManagementLocalState = localSiteManagementState
+localStateProcess.__catiSiteManagementLocalState = localSiteManagementState
 
 const localClientActionRequests = localSiteManagementState.clientActionRequests
 const localMaterializedTickets = localSiteManagementState.materializedTickets
 const localTicketOverrides = localSiteManagementState.ticketOverrides
-const localMaterializedServiceOrders = localSiteManagementState.materializedServiceOrders
-const localMaterializedWorkforceTasks = localSiteManagementState.materializedWorkforceTasks
+const localMaterializedServiceOrders =
+  localSiteManagementState.materializedServiceOrders
+const localMaterializedWorkforceTasks =
+  localSiteManagementState.materializedWorkforceTasks
 const localMaterializedBookings = localSiteManagementState.materializedBookings
+
+const localTicketWorkflowProcess = process as typeof process & {
+  __catiTicketCreateIdempotency?: Map<string, LocalTicketCreateReceipt>
+  __catiTicketMutationIdempotency?: Map<string, LocalTicketMutationReceipt>
+}
+const localTicketCreateIdempotency =
+  localTicketWorkflowProcess.__catiTicketCreateIdempotency ??
+  new Map<string, LocalTicketCreateReceipt>()
+const localTicketMutationIdempotency =
+  localTicketWorkflowProcess.__catiTicketMutationIdempotency ??
+  new Map<string, LocalTicketMutationReceipt>()
+localTicketWorkflowProcess.__catiTicketCreateIdempotency =
+  localTicketCreateIdempotency
+localTicketWorkflowProcess.__catiTicketMutationIdempotency =
+  localTicketMutationIdempotency
+
+interface PersistedLocalQaState {
+  version: 1
+  clientActionRequests: Array<[string, ClientActionRequestRecord]>
+  materializedTickets: ServiceTicket[]
+  ticketOverrides: Array<[string, ServiceTicket]>
+  materializedServiceOrders: ServiceOrderRecord[]
+  materializedWorkforceTasks: WorkforceTaskRecord[]
+  materializedBookings: BookingRecord[]
+  actionSequence: number
+  ticketCreateIdempotency: Array<[string, LocalTicketCreateReceipt]>
+  ticketMutationIdempotency: Array<[string, LocalTicketMutationReceipt]>
+}
+
+const localQaStateNamespace =
+  process.env.CATI_LOCAL_STATE_NAMESPACE ??
+  Buffer.from(process.cwd()).toString("base64url").slice(-64)
+const localQaStatePath = join(
+  tmpdir(),
+  `cati-site-management-${localQaStateNamespace}.v1.json`
+)
+const localQaStateLockPath = `${localQaStatePath}.lock`
+const localQaStateWaitBuffer = new Int32Array(new SharedArrayBuffer(4))
+
+function localQaPersistenceEnabled() {
+  return !isSupabaseConfigured() || isAccessProfileEnabled()
+}
+
+function acquireLocalQaStateLock() {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    try {
+      const descriptor = openSync(localQaStateLockPath, "wx", 0o600)
+      closeSync(descriptor)
+      return
+    } catch (error) {
+      const code = (error as NodeJS.ErrnoException).code
+      if (code !== "EEXIST") throw error
+      try {
+        if (Date.now() - statSync(localQaStateLockPath).mtimeMs > 30_000) {
+          unlinkSync(localQaStateLockPath)
+          continue
+        }
+      } catch (lockError) {
+        if ((lockError as NodeJS.ErrnoException).code !== "ENOENT")
+          throw lockError
+      }
+      Atomics.wait(localQaStateWaitBuffer, 0, 0, 10)
+    }
+  }
+  throw new Error("Local QA state is busy; retry the request.")
+}
+
+function releaseLocalQaStateLock() {
+  try {
+    unlinkSync(localQaStateLockPath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error
+  }
+}
+
+function replaceArray<T>(target: T[], source: unknown) {
+  if (!Array.isArray(source)) return
+  target.splice(0, target.length, ...(source as T[]))
+}
+
+function replaceMap<K, V>(target: Map<K, V>, source: unknown) {
+  if (!Array.isArray(source)) return
+  target.clear()
+  for (const entry of source) {
+    if (Array.isArray(entry) && entry.length === 2) {
+      target.set(entry[0] as K, entry[1] as V)
+    }
+  }
+}
+
+function hydrateLocalQaState() {
+  let raw: string
+  try {
+    raw = readFileSync(localQaStatePath, "utf8")
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return
+    throw error
+  }
+  const persisted = JSON.parse(raw) as Partial<PersistedLocalQaState>
+  if (persisted.version !== 1) {
+    throw new Error("Local QA state has an unsupported version.")
+  }
+  replaceMap(localClientActionRequests, persisted.clientActionRequests)
+  replaceArray(localMaterializedTickets, persisted.materializedTickets)
+  replaceMap(localTicketOverrides, persisted.ticketOverrides)
+  replaceArray(
+    localMaterializedServiceOrders,
+    persisted.materializedServiceOrders
+  )
+  replaceArray(
+    localMaterializedWorkforceTasks,
+    persisted.materializedWorkforceTasks
+  )
+  replaceArray(localMaterializedBookings, persisted.materializedBookings)
+  replaceMap(
+    localTicketCreateIdempotency,
+    (persisted.ticketCreateIdempotency ?? []).filter((entry) => {
+      const receipt = entry?.[1] as LocalTicketCreateReceipt | undefined
+      return Boolean(
+        receipt &&
+        typeof receipt.fingerprint === "string" &&
+        receipt.result &&
+        typeof receipt.result.version === "string"
+      )
+    })
+  )
+  replaceMap(
+    localTicketMutationIdempotency,
+    (persisted.ticketMutationIdempotency ?? []).filter((entry) => {
+      const receipt = entry?.[1] as LocalTicketMutationReceipt | undefined
+      return Boolean(
+        receipt &&
+        typeof receipt.fingerprint === "string" &&
+        receipt.result &&
+        typeof receipt.result.version === "string"
+      )
+    })
+  )
+  localSiteManagementState.actionSequence = Number.isSafeInteger(
+    persisted.actionSequence
+  )
+    ? Number(persisted.actionSequence)
+    : 0
+}
+
+function persistLocalQaState() {
+  const persisted: PersistedLocalQaState = {
+    version: 1,
+    clientActionRequests: [...localClientActionRequests.entries()],
+    materializedTickets: localMaterializedTickets,
+    ticketOverrides: [...localTicketOverrides.entries()],
+    materializedServiceOrders: localMaterializedServiceOrders,
+    materializedWorkforceTasks: localMaterializedWorkforceTasks,
+    materializedBookings: localMaterializedBookings,
+    actionSequence: localSiteManagementState.actionSequence,
+    ticketCreateIdempotency: [...localTicketCreateIdempotency.entries()],
+    ticketMutationIdempotency: [...localTicketMutationIdempotency.entries()],
+  }
+  const temporaryPath = `${localQaStatePath}.${process.pid}.${Date.now()}.tmp`
+  writeFileSync(temporaryPath, JSON.stringify(persisted), {
+    encoding: "utf8",
+    mode: 0o600,
+  })
+  try {
+    renameSync(temporaryPath, localQaStatePath)
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error
+    unlinkSync(localQaStatePath)
+    renameSync(temporaryPath, localQaStatePath)
+  }
+}
+
+function withLocalQaState<T>(write: boolean, operation: () => T): T {
+  if (!localQaPersistenceEnabled()) return operation()
+  acquireLocalQaStateLock()
+  try {
+    hydrateLocalQaState()
+    const result = operation()
+    if (write) persistLocalQaState()
+    return result
+  } finally {
+    releaseLocalQaStateLock()
+  }
+}
+
+/**
+ * Test-only: drop every accumulated local-QA mutation and shrink the shared state
+ * file back to empty. Reads still return the static seed (localMerged* functions
+ * merge the seed with these dynamic arrays), so the seed is preserved — only
+ * cross-test accumulation and the resulting per-request latency are removed. This
+ * clears inside withLocalQaState so the emptied state is persisted under the lock.
+ */
+export function resetLocalQaStateForTesting() {
+  withLocalQaState(true, () => {
+    localClientActionRequests.clear()
+    localMaterializedTickets.length = 0
+    localTicketOverrides.clear()
+    localMaterializedServiceOrders.length = 0
+    localMaterializedWorkforceTasks.length = 0
+    localMaterializedBookings.length = 0
+    localTicketCreateIdempotency.clear()
+    localTicketMutationIdempotency.clear()
+    localSiteManagementState.actionSequence = 0
+  })
+}
 
 export interface Phase4Unit {
   id: string
@@ -674,8 +1048,11 @@ function canUseLocalSeedFallback() {
 }
 
 async function createDataClient() {
-  const serviceClient = isAccessProfileEnabled() ? createServiceRoleClient() : null
-  return serviceClient ?? (await createClient())
+  // User-facing repositories always keep the authenticated session and RLS.
+  // A QA access-profile flag must never silently promote ordinary reads or
+  // writes to service-role authority; unauthenticated QA paths fall back to
+  // explicit local seed adapters at their call boundary instead.
+  return createClient()
 }
 
 type DataClient = Awaited<ReturnType<typeof createDataClient>>
@@ -717,7 +1094,9 @@ async function resolveOperationalContext(
     throw new Error("No company is available for this operation.")
   }
 
-  const normalizedUnitNo = unitNo?.trim() ? unitNo.trim().toLocaleUpperCase("tr-TR") : null
+  const normalizedUnitNo = unitNo?.trim()
+    ? unitNo.trim().toLocaleUpperCase("tr-TR")
+    : null
   const unitResponse = normalizedUnitNo
     ? await supabase
         .from("units")
@@ -840,8 +1219,7 @@ function normalizeSearchRows(payload: unknown): OperationalSearchResult[] {
     const record = row as Record<string, unknown>
     return {
       entityTable: String(record.entity_table ?? ""),
-      entityId:
-        typeof record.entity_id === "string" ? record.entity_id : null,
+      entityId: typeof record.entity_id === "string" ? record.entity_id : null,
       entityExternalId:
         typeof record.entity_external_id === "string"
           ? record.entity_external_id
@@ -890,8 +1268,14 @@ function normalizePhase4(payload: unknown): Phase4SiteData {
             reservedUnits: asNumber(record.reserved_units),
             vacantUnits: asNumber(record.vacant_units),
             blockedUnits: asNumber(record.blocked_units),
-            availableForSale: asNumber(record.available_for_sale, asNumber(record.vacant_units)),
-            soldUnits: asNumber(record.sold_units, asNumber(record.occupied_units)),
+            availableForSale: asNumber(
+              record.available_for_sale,
+              asNumber(record.vacant_units)
+            ),
+            soldUnits: asNumber(
+              record.sold_units,
+              asNumber(record.occupied_units)
+            ),
             sourceMissingUnits: asNumber(record.source_missing_units),
             minBuyNowEurCents: asNullableNumber(record.min_buy_now_eur_cents),
             maxBuyNowEurCents: asNullableNumber(record.max_buy_now_eur_cents),
@@ -1068,7 +1452,10 @@ function normalizeResidentLinkRows(rows: unknown): PeopleDirectoryResident[] {
     const resident = relatedRecord(record.residents)
 
     return {
-      id: asString(resident.id, asString(record.resident_id, asString(record.id))),
+      id: asString(
+        resident.id,
+        asString(record.resident_id, asString(record.id))
+      ),
       unitNo: asNullableString(unit.unit_no),
       relationship: asString(record.relationship, "resident"),
       isPrimary: asBoolean(record.is_primary),
@@ -1115,16 +1502,22 @@ function summarizePeopleDirectory(
   people: PeopleDirectoryResident[],
   roles: PeopleRoleCoverage[]
 ): PeopleDirectoryData["summary"] {
-  const uniqueResidents = new Set(people.map((resident) => resident.id).filter(Boolean))
+  const uniqueResidents = new Set(
+    people.map((resident) => resident.id).filter(Boolean)
+  )
 
   return {
     staffTotal: staff.length,
     activeStaff: staff.filter((member) => member.status === "active").length,
     residentTotal: uniqueResidents.size || people.length,
-    owners: people.filter((resident) => resident.relationship === "owner").length,
-    tenants: people.filter((resident) => resident.relationship === "tenant").length,
-    guests: people.filter((resident) => resident.relationship === "guest").length,
-    highRiskResidents: people.filter((resident) => resident.riskScore >= 70).length,
+    owners: people.filter((resident) => resident.relationship === "owner")
+      .length,
+    tenants: people.filter((resident) => resident.relationship === "tenant")
+      .length,
+    guests: people.filter((resident) => resident.relationship === "guest")
+      .length,
+    highRiskResidents: people.filter((resident) => resident.riskScore >= 70)
+      .length,
     financeApprovers: roles
       .filter((role) => role.canApproveFinance)
       .reduce((sum, role) => sum + role.usersCount, 0),
@@ -1132,13 +1525,17 @@ function summarizePeopleDirectory(
   }
 }
 
-function qualityStatus(checks: OperationalQualityCheck[]): OperationalQualityStatus {
+function qualityStatus(
+  checks: OperationalQualityCheck[]
+): OperationalQualityStatus {
   if (checks.some((check) => check.status === "failed")) return "failed"
   if (checks.some((check) => check.status === "warning")) return "warning"
   return "passed"
 }
 
-function qualityReport(checks: OperationalQualityCheck[]): OperationalQualityReport {
+function qualityReport(
+  checks: OperationalQualityCheck[]
+): OperationalQualityReport {
   return {
     status: qualityStatus(checks),
     checks,
@@ -1150,14 +1547,19 @@ function buildPeopleDirectoryQuality(
   people: PeopleDirectoryResident[],
   roles: PeopleRoleCoverage[]
 ): OperationalQualityReport {
-  const uniqueResidents = new Set(people.map((resident) => resident.id).filter(Boolean))
-  const relationshipTypes = new Set(people.map((resident) => resident.relationship).filter(Boolean))
+  const uniqueResidents = new Set(
+    people.map((resident) => resident.id).filter(Boolean)
+  )
+  const relationshipTypes = new Set(
+    people.map((resident) => resident.relationship).filter(Boolean)
+  )
   const languages = new Set([
     ...staff.map((member) => member.language).filter(Boolean),
     ...people.map((resident) => resident.preferredLanguage).filter(Boolean),
   ])
   const rolesWithSensitiveControls = roles.filter(
-    (role) => role.canApproveFinance || role.canRestrictAccess || role.canManageUsers
+    (role) =>
+      role.canApproveFinance || role.canRestrictAccess || role.canManageUsers
   )
 
   return qualityReport([
@@ -1176,7 +1578,10 @@ function buildPeopleDirectoryQuality(
     {
       id: "people.relationship-coverage",
       label: "Owner/tenant/guest relationships are represented",
-      status: relationshipTypes.has("owner") && relationshipTypes.has("tenant") ? "passed" : "warning",
+      status:
+        relationshipTypes.has("owner") && relationshipTypes.has("tenant")
+          ? "passed"
+          : "warning",
       detail: `${Array.from(relationshipTypes).join(", ") || "no relationships"} in the response.`,
     },
     {
@@ -1201,12 +1606,18 @@ function buildPeopleDirectoryQuality(
 }
 
 function isOpenLedgerStatus(status: string) {
-  return status === "open" || status === "partially_paid" || status === "overdue"
+  return (
+    status === "open" || status === "partially_paid" || status === "overdue"
+  )
 }
 
 function isOverdueLedgerEntry(entry: FinanceLedgerEntry) {
   if (entry.status === "overdue") return true
-  if (!isOpenLedgerStatus(entry.status) || entry.entryType === "payment" || !entry.dueDate) {
+  if (
+    !isOpenLedgerStatus(entry.status) ||
+    entry.entryType === "payment" ||
+    !entry.dueDate
+  ) {
     return false
   }
   const dueTime = new Date(entry.dueDate).getTime()
@@ -1223,8 +1634,12 @@ function isPaidThisMonth(entry: FinanceLedgerEntry) {
   )
 }
 
-function summarizeFinanceRows(entries: FinanceLedgerEntry[]): FinanceLedgerData["summary"] {
-  const openEntries = entries.filter((entry) => isOpenLedgerStatus(entry.status))
+function summarizeFinanceRows(
+  entries: FinanceLedgerEntry[]
+): FinanceLedgerData["summary"] {
+  const openEntries = entries.filter((entry) =>
+    isOpenLedgerStatus(entry.status)
+  )
   const overdueEntries = entries.filter(isOverdueLedgerEntry)
   const currency = entries.find((entry) => entry.currency)?.currency ?? "TRY"
   const restrictedUnits = new Set(
@@ -1254,8 +1669,14 @@ function summarizeFinanceRows(entries: FinanceLedgerEntry[]): FinanceLedgerData[
 
   return {
     currency,
-    openLedgerCents: openEntries.reduce((sum, entry) => sum + entry.amountCents, 0),
-    overdueLedgerCents: overdueEntries.reduce((sum, entry) => sum + entry.amountCents, 0),
+    openLedgerCents: openEntries.reduce(
+      (sum, entry) => sum + entry.amountCents,
+      0
+    ),
+    overdueLedgerCents: overdueEntries.reduce(
+      (sum, entry) => sum + entry.amountCents,
+      0
+    ),
     paidThisMonthCents: entries
       .filter(isPaidThisMonth)
       .reduce((sum, entry) => sum + entry.amountCents, 0),
@@ -1263,7 +1684,8 @@ function summarizeFinanceRows(entries: FinanceLedgerEntry[]): FinanceLedgerData[
     overdueEntries: overdueEntries.length,
     postedEntries: entries.filter((entry) => entry.postedAt).length,
     restrictedUnits,
-    legalAccounts: overdueEntries.filter((entry) => entry.status === "overdue").length,
+    legalAccounts: overdueEntries.filter((entry) => entry.status === "overdue")
+      .length,
     agingBuckets,
   }
 }
@@ -1273,7 +1695,10 @@ function buildFinanceLedgerQuality(
   summary: FinanceLedgerData["summary"]
 ): OperationalQualityReport {
   const uniqueIds = new Set(entries.map((entry) => entry.id).filter(Boolean))
-  const agingTotalCents = summary.agingBuckets.reduce((sum, bucket) => sum + bucket.cents, 0)
+  const agingTotalCents = summary.agingBuckets.reduce(
+    (sum, bucket) => sum + bucket.cents,
+    0
+  )
   const postedEntriesWithoutControlKey = entries.filter(
     (entry) => entry.postedAt && !entry.idempotencyKey && !entry.reversalOf
   )
@@ -1305,7 +1730,10 @@ function buildFinanceLedgerQuality(
     {
       id: "finance.overdue-contained-in-open",
       label: "Overdue balance is contained in open balance",
-      status: summary.overdueLedgerCents <= summary.openLedgerCents ? "passed" : "failed",
+      status:
+        summary.overdueLedgerCents <= summary.openLedgerCents
+          ? "passed"
+          : "failed",
       detail: `Overdue ${summary.overdueLedgerCents} of open ${summary.openLedgerCents} cents.`,
     },
     {
@@ -1322,7 +1750,8 @@ function buildFinanceLedgerQuality(
     {
       id: "finance.posted-entry-controls",
       label: "Posted entries carry an idempotency or reversal reference",
-      status: postedEntriesWithoutControlKey.length === 0 ? "passed" : "warning",
+      status:
+        postedEntriesWithoutControlKey.length === 0 ? "passed" : "warning",
       detail: `${postedEntriesWithoutControlKey.length} posted entries need stronger write-control metadata.`,
     },
   ])
@@ -1342,10 +1771,15 @@ function paymentPlanPriority(status: string) {
   return 3
 }
 
-function buildPaymentPlanQueue(plans: PaymentPlanRecord[], limit: number): Phase7PaymentPlan[] {
+function buildPaymentPlanQueue(
+  plans: PaymentPlanRecord[],
+  limit: number
+): Phase7PaymentPlan[] {
   return plans
     .slice()
-    .sort((a, b) => paymentPlanPriority(a.status) - paymentPlanPriority(b.status))
+    .sort(
+      (a, b) => paymentPlanPriority(a.status) - paymentPlanPriority(b.status)
+    )
     .slice(0, limit)
     .map((plan) => {
       const remainingEur = Math.max(plan.listPriceEur - plan.paidEur, 0)
@@ -1375,18 +1809,33 @@ function buildPaymentPlanQueue(plans: PaymentPlanRecord[], limit: number): Phase
     })
 }
 
-function depositActionFor(booking: Pick<BookingRecord, "depositStatus" | "accessCodeStatus" | "cleaningStatus">) {
-  if (booking.depositStatus === "deduction_pending") return "Hasar ve temizlik kanitini muhasebe onayina bagla"
-  if (booking.depositStatus === "refund_ready") return "Iade emrini finans onay kuyruguna al"
-  if (booking.accessCodeStatus === "restricted" || booking.accessCodeStatus === "disabled") {
+function depositActionFor(
+  booking: Pick<
+    BookingRecord,
+    "depositStatus" | "accessCodeStatus" | "cleaningStatus"
+  >
+) {
+  if (booking.depositStatus === "deduction_pending")
+    return "Hasar ve temizlik kanitini muhasebe onayina bagla"
+  if (booking.depositStatus === "refund_ready")
+    return "Iade emrini finans onay kuyruguna al"
+  if (
+    booking.accessCodeStatus === "restricted" ||
+    booking.accessCodeStatus === "disabled"
+  ) {
     return "Erisim kodunu depozito ve borc kontrolu kapanana kadar acma"
   }
-  if (booking.cleaningStatus === "blocked") return "Temizlik blokajini operasyonla eslestir"
-  if (booking.depositStatus === "held") return "Depozito tutarini checkout takibinde izle"
+  if (booking.cleaningStatus === "blocked")
+    return "Temizlik blokajini operasyonla eslestir"
+  if (booking.depositStatus === "held")
+    return "Depozito tutarini checkout takibinde izle"
   return "Rezervasyon on kontrolunu tamamla"
 }
 
-function buildDepositQueue(records: BookingRecord[], limit: number): Phase7DepositDecision[] {
+function buildDepositQueue(
+  records: BookingRecord[],
+  limit: number
+): Phase7DepositDecision[] {
   return records
     .filter(
       (booking) =>
@@ -1411,14 +1860,23 @@ function buildDepositQueue(records: BookingRecord[], limit: number): Phase7Depos
     }))
 }
 
-function riskForDebt(account: Pick<DebtAccount, "paymentStatus" | "accessStatus" | "balanceTry">): Phase7RestrictionDecision["riskLevel"] {
-  if (account.paymentStatus === "legal" || account.accessStatus === "restricted") return "critical"
+function riskForDebt(
+  account: Pick<DebtAccount, "paymentStatus" | "accessStatus" | "balanceTry">
+): Phase7RestrictionDecision["riskLevel"] {
+  if (
+    account.paymentStatus === "legal" ||
+    account.accessStatus === "restricted"
+  )
+    return "critical"
   if (account.paymentStatus === "overdue") return "high"
   if (account.balanceTry >= 5000) return "medium"
   return "low"
 }
 
-function buildRestrictionQueue(accounts: DebtAccount[], limit: number): Phase7RestrictionDecision[] {
+function buildRestrictionQueue(
+  accounts: DebtAccount[],
+  limit: number
+): Phase7RestrictionDecision[] {
   return accounts
     .filter(
       (account) =>
@@ -1443,9 +1901,15 @@ function buildRestrictionQueue(accounts: DebtAccount[], limit: number): Phase7Re
     }))
 }
 
-function buildLocalReconciliationQueue(accounts: DebtAccount[], limit: number): Phase7ReconciliationItem[] {
+function buildLocalReconciliationQueue(
+  accounts: DebtAccount[],
+  limit: number
+): Phase7ReconciliationItem[] {
   return accounts
-    .filter((account) => account.paymentStatus === "overdue" || account.paymentStatus === "legal")
+    .filter(
+      (account) =>
+        account.paymentStatus === "overdue" || account.paymentStatus === "legal"
+    )
     .slice(0, Math.min(limit, 6))
     .map((account) => ({
       id: `recon-${account.flatId}`,
@@ -1471,13 +1935,21 @@ function buildPaymentRestrictionSummary(
   return {
     currency: "TRY",
     openPaymentPlans: paymentPlans.length,
-    paymentPlansAtRisk: paymentPlans.filter((plan) => plan.status !== "on_track").length,
+    paymentPlansAtRisk: paymentPlans.filter(
+      (plan) => plan.status !== "on_track"
+    ).length,
     openPlanExposureEur: getPaymentPlanSummary().openExposureEur,
     depositQueue: deposits.length,
-    depositExposureCents: deposits.reduce((sum, item) => sum + item.depositCents, 0),
+    depositExposureCents: deposits.reduce(
+      (sum, item) => sum + item.depositCents,
+      0
+    ),
     restrictionQueue: restrictions.length,
-    restrictedUnits: restrictions.filter((item) => item.accessStatus === "restricted").length,
-    reconciliationQueue: reconciliation.filter((item) => item.needsReview).length,
+    restrictedUnits: restrictions.filter(
+      (item) => item.accessStatus === "restricted"
+    ).length,
+    reconciliationQueue: reconciliation.filter((item) => item.needsReview)
+      .length,
     approvalQueue:
       plans.filter((plan) => plan.requiresFinanceApproval).length +
       deposits.filter((item) => item.depositStatus !== "held").length +
@@ -1499,11 +1971,14 @@ function buildPaymentRestrictionQuality(
     ...restrictions.map((item) => item.id),
     ...reconciliation.map((item) => item.id),
   ])
-  const allIdsCount = plans.length + deposits.length + restrictions.length + reconciliation.length
+  const allIdsCount =
+    plans.length + deposits.length + restrictions.length + reconciliation.length
   const depositsWithoutAmount = deposits.filter(
     (item) => item.depositStatus !== "not_required" && item.depositCents <= 0
   )
-  const autonomousRestrictions = restrictions.filter((item) => !item.requiresHumanApproval)
+  const autonomousRestrictions = restrictions.filter(
+    (item) => !item.requiresHumanApproval
+  )
 
   return qualityReport([
     {
@@ -1545,13 +2020,19 @@ function buildPaymentRestrictionQuality(
     {
       id: "phase7.reconciliation-queue",
       label: "Reconciliation queue is represented",
-      status: reconciliation.length > 0 || summary.paymentPlansAtRisk > 0 ? "passed" : "warning",
+      status:
+        reconciliation.length > 0 || summary.paymentPlansAtRisk > 0
+          ? "passed"
+          : "warning",
       detail: `${reconciliation.length} reconciliation records, ${summary.paymentPlansAtRisk} at-risk payment plans.`,
     },
   ])
 }
 
-function localSeedPaymentRestrictionData(limit = 8, warning?: string): PaymentRestrictionData {
+function localSeedPaymentRestrictionData(
+  limit = 8,
+  warning?: string
+): PaymentRestrictionData {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
   const accounts = getDebtAccounts()
   const planQueue = buildPaymentPlanQueue(paymentPlans, safeLimit)
@@ -1602,6 +2083,47 @@ function mapTicketStatus(value: string): ServiceTicket["status"] {
   return "open"
 }
 
+export interface TicketAvailableUnit {
+  id: string
+  unitNo: string
+  siteId: string | null
+}
+
+const LOCAL_ACCESS_PROFILE_ID = "00000000-0000-0000-0000-000000000000"
+
+function isLocalTicketAccessProfile(actor: TicketMutationActor) {
+  return isAccessProfileEnabled() && actor.id === LOCAL_ACCESS_PROFILE_ID
+}
+
+function workflowMetadataFromEvents(events: unknown[]) {
+  const ordered = events
+    .map(asRecord)
+    .sort((left, right) =>
+      asString(right.created_at, "").localeCompare(
+        asString(left.created_at, "")
+      )
+    )
+  return (
+    ordered
+      .map((event) => asRecord(event.metadata))
+      .find(
+        (metadata) =>
+          metadata.workflowState ||
+          metadata.dispatchStatus ||
+          metadata.paymentStatus
+      ) ?? {}
+  )
+}
+
+function ticketApprovalState(
+  value: unknown,
+  rawStatus: string
+): TicketApprovalState {
+  if (value === "pending_owner" || value === "approved" || value === "rejected")
+    return value
+  return rawStatus === "waiting_approval" ? "pending_owner" : "not_required"
+}
+
 function slaHoursRemaining(value: string | null) {
   if (!value) return 0
   const dueAt = new Date(value).getTime()
@@ -1616,18 +2138,28 @@ function catalogCategoryKey(value: string) {
     .toLowerCase()
 }
 
-function catalogItemForTicket(ticket: ServiceTicket, index: number) {
-  const category = catalogCategoryKey(ticket.category)
-  const hasCategory = (...terms: string[]) => terms.some((term) => category.includes(term))
+function catalogItemForTicket(
+  ticket: Pick<ServiceTicket, "category" | "title" | "description">,
+  index: number
+) {
+  const requestContent = catalogCategoryKey(
+    [ticket.category, ticket.title, ticket.description ?? ""].join(" ")
+  )
+  const hasCategory = (...terms: string[]) =>
+    terms.some((term) => requestContent.includes(term))
   let matchedCode: string | null = null
 
-  if (hasCategory("life", "can guven", "gaz", "duman", "yangin", "smoke", "fire")) {
+  if (
+    hasCategory("life", "can guven", "gaz", "duman", "yangin", "smoke", "fire")
+  ) {
     matchedCode = "EMERG-LIFE-SAFETY"
   } else if (hasCategory("asansor", "elevator", "lift")) {
     matchedCode = "MAINT-ELEVATOR"
   } else if (hasCategory("elektrik", "electric", "power", "spark")) {
     matchedCode = "MAINT-ELEC"
-  } else if (hasCategory("gider", "kanalizasyon", "sewer", "sewage", "toilet")) {
+  } else if (
+    hasCategory("gider", "kanalizasyon", "sewer", "sewage", "toilet")
+  ) {
     matchedCode = "MAINT-SEWER"
   } else if (hasCategory("tesisat", "su", "plumb")) {
     matchedCode = "MAINT-PLUMB"
@@ -1639,13 +2171,33 @@ function catalogItemForTicket(ticket: ServiceTicket, index: number) {
     matchedCode = "CLEAN-STD"
   } else if (hasCategory("depozito", "hasar")) {
     matchedCode = "INSP-DAMAGE"
-  } else if (hasCategory("lockout", "kapida kal", "acil erisim", "bariyer", "barrier")) {
+  } else if (
+    hasCategory(
+      "lockout",
+      "locked out",
+      "access-maintenance",
+      "access maintenance",
+      "kapida kal",
+      "acil erisim",
+      "bariyer",
+      "barrier"
+    )
+  ) {
     matchedCode = "SEC-LOCKOUT"
   } else if (hasCategory("erisim", "guven", "kamera")) {
     matchedCode = "SEC-ACCESS"
-  } else if (hasCategory("restoran olayi", "food", "restaurant incident", "etkinlik olayi")) {
+  } else if (
+    hasCategory(
+      "restoran olayi",
+      "food",
+      "restaurant incident",
+      "etkinlik olayi"
+    )
+  ) {
     matchedCode = "AMENITY-FOOD-EVENT-INCIDENT"
-  } else if (hasCategory("tiyatro", "theatre", "theater", "etkinlik", "event")) {
+  } else if (
+    hasCategory("tiyatro", "theatre", "theater", "etkinlik", "event")
+  ) {
     matchedCode = "AMENITY-THEATRE"
   } else if (hasCategory("restoran", "restaurant", "dining")) {
     matchedCode = "AMENITY-RESTAURANT"
@@ -1703,9 +2255,30 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "life_safety",
     catalogCode: "EMERG-LIFE-SAFETY",
     label: "Life-safety / gas / smoke",
-    triggerTerms: ["gas", "smoke", "fire", "alarm", "yangin", "duman", "gaz", "can guven", "rauch", "feuer", "gasgeruch", "пожар", "дым", "газ"],
+    triggerTerms: [
+      "gas",
+      "smoke",
+      "fire",
+      "alarm",
+      "yangin",
+      "duman",
+      "gaz",
+      "can guven",
+      "rauch",
+      "feuer",
+      "gasgeruch",
+      "пожар",
+      "дым",
+      "газ",
+    ],
     routeSlot: "Immediate / 1h safety SLA",
-    checklist: ["Confirm life-safety risk and affected area", "Notify security and manager duty line", "Block unsafe access if needed", "Record authority/vendor handoff", "Upload incident closure proof"],
+    checklist: [
+      "Confirm life-safety risk and affected area",
+      "Notify security and manager duty line",
+      "Block unsafe access if needed",
+      "Record authority/vendor handoff",
+      "Upload incident closure proof",
+    ],
     notificationChannel: "Push",
     managerApprovalRequired: true,
   },
@@ -1713,9 +2286,24 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "elevator",
     catalogCode: "MAINT-ELEVATOR",
     label: "Elevator / trapped resident",
-    triggerTerms: ["elevator", "lift", "asansor", "asansör", "stuck in lift", "kabinde", "aufzug", "лифт"],
+    triggerTerms: [
+      "elevator",
+      "lift",
+      "asansor",
+      "asansör",
+      "stuck in lift",
+      "kabinde",
+      "aufzug",
+      "лифт",
+    ],
     routeSlot: "Immediate / 1h elevator SLA",
-    checklist: ["Confirm whether anyone is trapped", "Notify security desk and elevator vendor", "Mark elevator out of service", "Log vendor arrival and action", "Upload restart or closure proof"],
+    checklist: [
+      "Confirm whether anyone is trapped",
+      "Notify security desk and elevator vendor",
+      "Mark elevator out of service",
+      "Log vendor arrival and action",
+      "Upload restart or closure proof",
+    ],
     notificationChannel: "Push",
     managerApprovalRequired: true,
   },
@@ -1723,9 +2311,30 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "electrical",
     catalogCode: "MAINT-ELEC",
     label: "Electrical outage / sparking",
-    triggerTerms: ["electric", "power", "outage", "spark", "short circuit", "pano", "kivilcim", "kıvılcım", "elektrik", "strom", "kurzschluss", "искра", "электр", "свет"],
+    triggerTerms: [
+      "electric",
+      "power",
+      "outage",
+      "spark",
+      "short circuit",
+      "pano",
+      "kivilcim",
+      "kıvılcım",
+      "elektrik",
+      "strom",
+      "kurzschluss",
+      "искра",
+      "электр",
+      "свет",
+    ],
     routeSlot: "Immediate / 2h electrical SLA",
-    checklist: ["Confirm outage scope and safety risk", "Check panel/common-area impact", "Assign electrician or technical lead", "Upload before/after proof", "Confirm power restored"],
+    checklist: [
+      "Confirm outage scope and safety risk",
+      "Check panel/common-area impact",
+      "Assign electrician or technical lead",
+      "Upload before/after proof",
+      "Confirm power restored",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1733,9 +2342,29 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "sewer",
     catalogCode: "MAINT-SEWER",
     label: "Sewage / drain overflow",
-    triggerTerms: ["sewage", "sewer", "drain overflow", "blocked toilet", "toilet overflow", "gider tas", "gider tikan", "tuvalet", "kanalizasyon", "abfluss", "toilette", "канал", "унитаз"],
+    triggerTerms: [
+      "sewage",
+      "sewer",
+      "drain overflow",
+      "blocked toilet",
+      "toilet overflow",
+      "gider tas",
+      "gider tikan",
+      "tuvalet",
+      "kanalizasyon",
+      "abfluss",
+      "toilette",
+      "канал",
+      "унитаз",
+    ],
     routeSlot: "Immediate / 3h hygiene SLA",
-    checklist: ["Confirm hygiene risk and water shutoff need", "Assign plumbing vendor queue", "Protect affected unit/common area", "Upload cleanup and repair proof", "Request resident confirmation"],
+    checklist: [
+      "Confirm hygiene risk and water shutoff need",
+      "Assign plumbing vendor queue",
+      "Protect affected unit/common area",
+      "Upload cleanup and repair proof",
+      "Request resident confirmation",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1743,9 +2372,33 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "plumbing",
     catalogCode: "MAINT-PLUMB",
     label: "Water leak / no water",
-    triggerTerms: ["plumbing", "water leak", "no water", "leak", "pipe", "burst", "su kacagi", "su kaçağı", "su yok", "tesisat", "wasser", "leck", "kein wasser", "rohr", "вод", "протеч", "сантех"],
+    triggerTerms: [
+      "plumbing",
+      "water leak",
+      "no water",
+      "leak",
+      "pipe",
+      "burst",
+      "su kacagi",
+      "su kaçağı",
+      "su yok",
+      "tesisat",
+      "wasser",
+      "leck",
+      "kein wasser",
+      "rohr",
+      "вод",
+      "протеч",
+      "сантех",
+    ],
     routeSlot: "Immediate / 4h SLA",
-    checklist: ["Confirm water leak or no-water scope", "Secure the affected area before repair", "Upload before photo/video evidence", "Record plumber action and material use", "Upload closure proof and resident confirmation"],
+    checklist: [
+      "Confirm water leak or no-water scope",
+      "Secure the affected area before repair",
+      "Upload before photo/video evidence",
+      "Record plumber action and material use",
+      "Upload closure proof and resident confirmation",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1753,9 +2406,36 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "access_security",
     catalogCode: "SEC-LOCKOUT",
     label: "Access / lockout / gate",
-    triggerTerms: ["lockout", "locked out", "access", "key", "door lock", "gate", "barrier", "qr", "card", "kapida kal", "kapıda kal", "kapi acilm", "bariyer", "plaka", "zugang", "tuer", "schloss", "доступ", "замок", "ключ"],
+    triggerTerms: [
+      "lockout",
+      "locked out",
+      "access",
+      "key",
+      "door lock",
+      "gate",
+      "barrier",
+      "qr",
+      "card",
+      "kapida kal",
+      "kapıda kal",
+      "kapi acilm",
+      "bariyer",
+      "plaka",
+      "zugang",
+      "tuer",
+      "schloss",
+      "доступ",
+      "замок",
+      "ключ",
+    ],
     routeSlot: "Immediate / 2h access SLA",
-    checklist: ["Verify identity and unit authority", "Notify security desk", "Check card/QR/gate log", "Restore access or issue temporary handoff", "Record audit note and proof"],
+    checklist: [
+      "Verify identity and unit authority",
+      "Notify security desk",
+      "Check card/QR/gate log",
+      "Restore access or issue temporary handoff",
+      "Record audit note and proof",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1763,9 +2443,28 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "hvac",
     catalogCode: "MAINT-HVAC-URGENT",
     label: "Urgent AC / comfort risk",
-    triggerTerms: ["ac not working", "air conditioning", "hvac", "too hot", "klima", "sicak", "sıcak", "iklim", "klimaanlage", "heiss", "жарко", "кондиционер"],
+    triggerTerms: [
+      "ac not working",
+      "air conditioning",
+      "hvac",
+      "too hot",
+      "klima",
+      "sicak",
+      "sıcak",
+      "iklim",
+      "klimaanlage",
+      "heiss",
+      "жарко",
+      "кондиционер",
+    ],
     routeSlot: "Same day / 8h comfort SLA",
-    checklist: ["Confirm guest/resident comfort risk", "Check AC power and drainage symptoms", "Assign technical AC queue", "Upload service proof", "Confirm cooling restored"],
+    checklist: [
+      "Confirm guest/resident comfort risk",
+      "Check AC power and drainage symptoms",
+      "Assign technical AC queue",
+      "Upload service proof",
+      "Confirm cooling restored",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1773,9 +2472,29 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "amenity_spa_pool",
     catalogCode: "AMENITY-SPA-INCIDENT",
     label: "Spa / pool / shared-area incident",
-    triggerTerms: ["spa incident", "pool", "fitness", "hygiene", "slip", "havuz", "ortak alan", "hijyen", "kayma", "wellness", "schwimmbad", "бассейн", "спа"],
+    triggerTerms: [
+      "spa incident",
+      "pool",
+      "fitness",
+      "hygiene",
+      "slip",
+      "havuz",
+      "ortak alan",
+      "hijyen",
+      "kayma",
+      "wellness",
+      "schwimmbad",
+      "бассейн",
+      "спа",
+    ],
     routeSlot: "Immediate / 2h amenity SLA",
-    checklist: ["Confirm guest safety and area status", "Notify amenity owner and manager", "Pause capacity if needed", "Upload incident proof", "Publish resident/guest update"],
+    checklist: [
+      "Confirm guest safety and area status",
+      "Notify amenity owner and manager",
+      "Pause capacity if needed",
+      "Upload incident proof",
+      "Publish resident/guest update",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
@@ -1783,19 +2502,44 @@ const emergencyScenarios: EmergencyScenarioDefinition[] = [
     code: "amenity_food_event",
     catalogCode: "AMENITY-FOOD-EVENT-INCIDENT",
     label: "Restaurant / event incident",
-    triggerTerms: ["restaurant", "food", "event", "theatre", "crowd", "reservation conflict", "restoran", "yemek", "etkinlik", "tiyatro", "kalabalik", "veranstaltung", "ресторан", "мероприят"],
+    triggerTerms: [
+      "restaurant",
+      "food",
+      "event",
+      "theatre",
+      "crowd",
+      "reservation conflict",
+      "restoran",
+      "yemek",
+      "etkinlik",
+      "tiyatro",
+      "kalabalik",
+      "veranstaltung",
+      "ресторан",
+      "мероприят",
+    ],
     routeSlot: "Immediate / 2h guest SLA",
-    checklist: ["Confirm guest impact and service owner", "Check booking/capacity context", "Notify restaurant or event queue", "Record resolution or compensation note", "Close with manager review"],
+    checklist: [
+      "Confirm guest impact and service owner",
+      "Check booking/capacity context",
+      "Notify restaurant or event queue",
+      "Record resolution or compensation note",
+      "Close with manager review",
+    ],
     notificationChannel: "Portal",
     managerApprovalRequired: true,
   },
 ]
 
-function detectEmergencyScenario(value: string): EmergencyScenarioDefinition | null {
+function detectEmergencyScenario(
+  value: string
+): EmergencyScenarioDefinition | null {
   const text = catalogCategoryKey(value)
   return (
     emergencyScenarios.find((scenario) =>
-      scenario.triggerTerms.some((term) => text.includes(catalogCategoryKey(term)))
+      scenario.triggerTerms.some((term) =>
+        text.includes(catalogCategoryKey(term))
+      )
     ) ?? null
   )
 }
@@ -1831,8 +2575,9 @@ function serviceCatalogItemForAction(
 
   if (emergencyScenario) {
     return (
-      serviceCatalogItems.find((item) => item.code === emergencyScenario.catalogCode) ??
-      serviceCatalogItems[fallbackIndex % serviceCatalogItems.length]
+      serviceCatalogItems.find(
+        (item) => item.code === emergencyScenario.catalogCode
+      ) ?? serviceCatalogItems[fallbackIndex % serviceCatalogItems.length]
     )
   }
 
@@ -1845,87 +2590,70 @@ function serviceCatalogItemForAction(
 
   return catalogItemForTicket(
     {
-      id: "action-preview",
-      flatId: "",
-      flatNumber: asNullableString(proposedPayload.unitNo) ?? "Unassigned",
       title: asString(proposedPayload.title, "Approved service ticket"),
       category: asString(proposedPayload.category, "general"),
-      priority: ticketPriorityForView(proposedPayload.priority),
-      status: "open",
-      assignee: "Operations queue",
-      requester: "Approved workflow",
-      openedAt: new Date().toISOString(),
-      dueAt: "",
-      slaHoursRemaining: 0,
-      debtBlocked: false,
-      paymentVerified: true,
-      mediaCount: 0,
-      estimatedCostTry: 0,
+      description: asNullableString(proposedPayload.description),
     },
     fallbackIndex
   )
 }
 
-function emergencyProviderQueue(catalogItem: ServiceCatalogItem) {
-  const scenario = emergencyScenarios.find((item) => item.catalogCode === catalogItem.code)
-  if (scenario?.code === "life_safety") return "Guvenlik / duty manager queue"
-  if (scenario?.code === "elevator") return "Teknik / elevator vendor queue"
-  if (scenario?.code === "electrical") return "Teknik / electrician queue"
-  if (scenario?.code === "sewer") return "Teknik / plumbing vendor queue"
-  if (catalogItem.code === "MAINT-PLUMB") return "Teknik / plumber vendor queue"
-  if (scenario?.code === "access_security") return "Guvenlik / access desk queue"
-  if (scenario?.code === "amenity_spa_pool") return "Sakin destek / amenity duty queue"
-  if (scenario?.code === "amenity_food_event") return "Restoran / event duty queue"
-  if (catalogItem.providerType === "vendor") return `${catalogItem.team} / vendor queue`
-  if (catalogItem.providerType === "mixed") return `${catalogItem.team} / mixed provider queue`
-  return `${catalogItem.team} queue`
-}
-
-function emergencyScenarioForCatalog(catalogItem: ServiceCatalogItem) {
-  return (
-    emergencyScenarios.find((scenario) => scenario.catalogCode === catalogItem.code) ?? {
-      code: "general_service" as const,
-      catalogCode: catalogItem.code,
-      label: `${catalogItem.team} service`,
-      triggerTerms: [],
-      routeSlot:
-        catalogItem.serviceLevel === "emergency"
-          ? `Immediate / ${catalogItem.slaHours}h SLA`
-          : "Next available",
-      checklist:
-        defaultChecklistByTeam[catalogItem.team] ??
-        ["Verify request", "Add field note", "Upload media proof", "Request closure approval"],
-      notificationChannel: "Portal" as const,
-      managerApprovalRequired: catalogItem.serviceLevel === "emergency",
-    }
-  )
-}
-
-function serviceOrderPaymentDecisionForCatalog(
-  catalogItem: ServiceCatalogItem
-): ServiceOrderRecord["paymentDecision"] {
-  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
-  if (catalogItem.debtPolicy === "allow") return "debit_to_account"
-  if (catalogItem.debtPolicy === "block_until_clear") return "collect_before_dispatch"
-  return "collect_before_dispatch"
-}
-
 function servicePaymentDecisionForTicket(
-  ticket: ServiceTicket,
+  ticket: Pick<
+    ServiceTicket,
+    "emergency" | "estimatedCostTry" | "debtBlocked" | "paymentVerified"
+  >,
   catalogItem: ServiceCatalogItem
 ): ServiceOrderRecord["paymentDecision"] {
+  if (ticket.emergency) {
+    return ticket.estimatedCostTry > 0 || catalogItem.basePriceTry > 0
+      ? "post_emergency_review"
+      : "no_charge"
+  }
   if (ticket.debtBlocked) return "hold"
-  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
+  if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0)
+    return "no_charge"
   if (ticket.paymentVerified) return "paid_or_debit_approved"
   if (catalogItem.debtPolicy === "allow") return "debit_to_account"
   return "collect_before_dispatch"
 }
 
-function serviceOrderStatusForTicket(ticket: ServiceTicket): ServiceOrderRecord["status"] {
+function emergencyPaymentStateForTicket(
+  ticket: Pick<
+    ServiceTicket,
+    | "category"
+    | "title"
+    | "description"
+    | "emergency"
+    | "estimatedCostTry"
+    | "debtBlocked"
+    | "paymentVerified"
+  >,
+  index = 0
+): TicketPaymentState {
+  const decision = servicePaymentDecisionForTicket(
+    ticket,
+    catalogItemForTicket(ticket, index)
+  )
+  return decision === "no_charge" ? "not_required" : "post_emergency_review"
+}
+
+function serviceOrderStatusForTicket(
+  ticket: ServiceTicket
+): ServiceOrderRecord["status"] {
+  if (ticket.emergency) {
+    if (ticket.status === "resolved" || ticket.status === "closed")
+      return "completed"
+    if (ticket.status === "assigned" || ticket.status === "in_progress")
+      return "assigned"
+    return "draft"
+  }
   if (ticket.debtBlocked) return "blocked"
   if (ticket.status === "waiting_payment") return "payment_pending"
-  if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
-  if (ticket.status === "assigned" || ticket.status === "in_progress") return "assigned"
+  if (ticket.status === "resolved" || ticket.status === "closed")
+    return "completed"
+  if (ticket.status === "assigned" || ticket.status === "in_progress")
+    return "assigned"
   return "debt_check"
 }
 
@@ -1933,21 +2661,36 @@ function serviceOrderNextAction(
   ticket: ServiceTicket,
   paymentDecision: ServiceOrderRecord["paymentDecision"]
 ) {
+  if (ticket.emergency) {
+    if (paymentDecision === "no_charge") {
+      return "Continue emergency containment and complete the field safety checklist."
+    }
+    return "Continue emergency containment; complete finance review afterwards."
+  }
   if (ticket.debtBlocked) return "Finance approval must clear before dispatch."
-  if (paymentDecision === "collect_before_dispatch") return "Collect payment or approve debit-to-account before dispatch."
-  if (ticket.status === "open") return "Assign the task by SLA and field team capacity."
-  if (ticket.status === "assigned") return "Send route slot and media checklist to staff."
-  if (ticket.status === "in_progress") return "Review field note and closure evidence."
-  if (ticket.status === "resolved") return "Collect resident confirmation and close."
+  if (paymentDecision === "collect_before_dispatch")
+    return "Collect payment or approve debit-to-account before dispatch."
+  if (ticket.status === "open")
+    return "Assign the task by SLA and field team capacity."
+  if (ticket.status === "assigned")
+    return "Send route slot and media checklist to staff."
+  if (ticket.status === "in_progress")
+    return "Review field note and closure evidence."
+  if (ticket.status === "resolved")
+    return "Collect resident confirmation and close."
   return "Archive and include in service reporting."
 }
 
-function buildServiceOrdersFromTickets(tickets: ServiceTicket[]): ServiceOrderRecord[] {
+function buildServiceOrdersFromTickets(
+  tickets: ServiceTicket[]
+): ServiceOrderRecord[] {
   return tickets.map((ticket, index) => {
     const catalogItem = catalogItemForTicket(ticket, index)
     const paymentDecision = servicePaymentDecisionForTicket(ticket, catalogItem)
     const quotedPriceTry =
-      ticket.estimatedCostTry > 0 ? ticket.estimatedCostTry : catalogItem.basePriceTry
+      ticket.estimatedCostTry > 0
+        ? ticket.estimatedCostTry
+        : catalogItem.basePriceTry
 
     return {
       id: `ORD-${ticket.id.replace(/^SRV-/, "")}`,
@@ -1958,17 +2701,20 @@ function buildServiceOrdersFromTickets(tickets: ServiceTicket[]): ServiceOrderRe
       flatNumber: ticket.flatNumber,
       requester: ticket.requester,
       status: serviceOrderStatusForTicket(ticket),
-      debtCheckStatus: ticket.debtBlocked
-        ? "blocked"
-        : ticket.paymentVerified
-          ? "clear"
-          : "minor_debt_review",
+      debtCheckStatus: ticket.emergency
+        ? "clear"
+        : ticket.debtBlocked
+          ? "blocked"
+          : ticket.paymentVerified
+            ? "clear"
+            : "minor_debt_review",
       paymentDecision,
       quotedPriceTry,
       currency: "TRY",
       slaHours: catalogItem.slaHours,
       assignedTeam: catalogItem.team,
-      taskCreated: ticket.status !== "open" && !ticket.debtBlocked,
+      taskCreated:
+        ticket.status !== "open" && (ticket.emergency || !ticket.debtBlocked),
       requestedForAt: ticket.dueAt || ticket.openedAt,
       createdAt: ticket.openedAt,
       nextAction: serviceOrderNextAction(ticket, paymentDecision),
@@ -1977,14 +2723,54 @@ function buildServiceOrdersFromTickets(tickets: ServiceTicket[]): ServiceOrderRe
 }
 
 const defaultChecklistByTeam: Record<string, string[]> = {
-  Teknik: ["Verify issue", "Upload before photo", "Add work note", "Upload closure proof"],
-  Guvenlik: ["Verify authority", "Update access record", "Check access log", "Confirm closure"],
-  "Kat hizmetleri": ["Inspect unit", "Complete cleaning checklist", "Upload photo proof", "Add handover note"],
-  Operasyon: ["Mark damage area", "Record deposit impact", "Request manager approval", "Publish closure report"],
-  Rezervasyon: ["Confirm arrival time", "Assign provider", "Notify guest", "Confirm completion"],
-  "Sakin destek": ["Verify scope", "Check slot availability", "Send notification", "Collect feedback"],
-  Restoran: ["Confirm guest impact", "Check capacity and booking", "Notify venue lead", "Record resolution note"],
-  "Sosyal tesis": ["Secure shared area", "Check capacity or hygiene risk", "Notify facility lead", "Publish resident update"],
+  Teknik: [
+    "Verify issue",
+    "Upload before photo",
+    "Add work note",
+    "Upload closure proof",
+  ],
+  Guvenlik: [
+    "Verify authority",
+    "Update access record",
+    "Check access log",
+    "Confirm closure",
+  ],
+  "Kat hizmetleri": [
+    "Inspect unit",
+    "Complete cleaning checklist",
+    "Upload photo proof",
+    "Add handover note",
+  ],
+  Operasyon: [
+    "Mark damage area",
+    "Record deposit impact",
+    "Request manager approval",
+    "Publish closure report",
+  ],
+  Rezervasyon: [
+    "Confirm arrival time",
+    "Assign provider",
+    "Notify guest",
+    "Confirm completion",
+  ],
+  "Sakin destek": [
+    "Verify scope",
+    "Check slot availability",
+    "Send notification",
+    "Collect feedback",
+  ],
+  Restoran: [
+    "Confirm guest impact",
+    "Check capacity and booking",
+    "Notify venue lead",
+    "Record resolution note",
+  ],
+  "Sosyal tesis": [
+    "Secure shared area",
+    "Check capacity or hygiene risk",
+    "Notify facility lead",
+    "Publish resident update",
+  ],
 }
 
 function taskCompletionReadiness(ticket: ServiceTicket) {
@@ -1998,15 +2784,23 @@ function taskCompletionReadiness(ticket: ServiceTicket) {
           ? 18
           : 8
   const financePenalty = ticket.debtBlocked ? 35 : 0
-  return Math.max(0, Math.min(100, evidenceScore + statusScore - financePenalty))
+  return Math.max(
+    0,
+    Math.min(100, evidenceScore + statusScore - financePenalty)
+  )
 }
 
-function buildWorkforceTasksFromTickets(tickets: ServiceTicket[]): WorkforceTaskRecord[] {
+function buildWorkforceTasksFromTickets(
+  tickets: ServiceTicket[]
+): WorkforceTaskRecord[] {
   return tickets.map((ticket, index) => {
     const catalogItem = catalogItemForTicket(ticket, index)
-    const checklist =
-      defaultChecklistByTeam[catalogItem.team] ??
-      ["Verify request", "Add field note", "Upload media proof", "Request closure approval"]
+    const checklist = defaultChecklistByTeam[catalogItem.team] ?? [
+      "Verify request",
+      "Add field note",
+      "Upload media proof",
+      "Request closure approval",
+    ]
 
     return {
       id: `TASK-${ticket.id.replace(/^SRV-/, "")}`,
@@ -2029,7 +2823,8 @@ function buildWorkforceTasksFromTickets(tickets: ServiceTicket[]): WorkforceTask
       checklist,
       requiresMedia: ticket.status !== "closed",
       mediaCount: ticket.mediaCount,
-      managerApprovalRequired: ticket.debtBlocked || ticket.estimatedCostTry >= 7000,
+      managerApprovalRequired:
+        ticket.debtBlocked || ticket.estimatedCostTry >= 7000,
       lastUpdateAt: ticket.openedAt,
       fieldNote: ticket.debtBlocked
         ? "Finance approval is pending; field work is locked."
@@ -2037,125 +2832,6 @@ function buildWorkforceTasksFromTickets(tickets: ServiceTicket[]): WorkforceTask
           ? "SLA breach; team lead escalation is required."
           : "Assignment and evidence flow are ready.",
       completionReadiness: taskCompletionReadiness(ticket),
-    }
-  })
-}
-
-const serviceFieldTeamFallback = [
-  "Teknik",
-  "Kat hizmetleri",
-  "Guvenlik",
-  "Operasyon",
-  "Rezervasyon",
-  "Sakin destek",
-  "Restoran",
-  "Sosyal tesis",
-]
-
-function serviceFieldTeamFromText(value: string, index: number): string {
-  const text = catalogCategoryKey(value)
-
-  if (
-    text.includes("temiz") ||
-    text.includes("clean") ||
-    text.includes("housekeep")
-  ) {
-    return "Kat hizmetleri"
-  }
-  if (
-    text.includes("guven") ||
-    text.includes("security") ||
-    text.includes("access") ||
-    text.includes("erisim") ||
-    text.includes("kamera") ||
-    text.includes("kapi")
-  ) {
-    return "Guvenlik"
-  }
-  if (
-    text.includes("hasar") ||
-    text.includes("damage") ||
-    text.includes("deposit") ||
-    text.includes("depozito") ||
-    text.includes("inspection")
-  ) {
-    return "Operasyon"
-  }
-  if (
-    text.includes("rezerv") ||
-    text.includes("booking") ||
-    text.includes("transfer") ||
-    text.includes("guest") ||
-    text.includes("misafir")
-  ) {
-    return "Rezervasyon"
-  }
-  if (
-    text.includes("restoran") ||
-    text.includes("restaurant") ||
-    text.includes("event") ||
-    text.includes("etkinlik") ||
-    text.includes("tiyatro")
-  ) {
-    return "Restoran"
-  }
-  if (
-    text.includes("tesisat") ||
-    text.includes("klima") ||
-    text.includes("sensor") ||
-    text.includes("yangin") ||
-    text.includes("havuz") ||
-    text.includes("pool") ||
-    text.includes("maintenance") ||
-    text.includes("plumb") ||
-    text.includes("electric") ||
-    text.includes("asansor") ||
-    text.includes("teknik")
-  ) {
-    return "Teknik"
-  }
-  if (
-    text.includes("finance") ||
-    text.includes("tahsilat") ||
-    text.includes("sakin") ||
-    text.includes("owner") ||
-    text.includes("tenant")
-  ) {
-    return "Sakin destek"
-  }
-
-  return serviceFieldTeamFallback[index % serviceFieldTeamFallback.length]
-}
-
-function ensureWorkforceTeamCoverage(
-  tasks: WorkforceTaskRecord[],
-  tickets: ServiceTicket[],
-  orders: ServiceOrderRecord[]
-): WorkforceTaskRecord[] {
-  const currentTeams = new Set(tasks.map((task) => task.team).filter(Boolean))
-  if (tasks.length < 2 || currentTeams.size >= 2) return tasks
-
-  const ticketById = new Map(tickets.map((ticket) => [ticket.id, ticket]))
-  const orderByTicketId = new Map(orders.map((order) => [order.ticketId, order]))
-
-  return tasks.map((task, index) => {
-    const ticket = ticketById.get(task.ticketId)
-    const order = orderByTicketId.get(task.ticketId)
-    const context = [
-      ticket?.category,
-      ticket?.title,
-      order?.catalogItemName,
-      task.title,
-    ]
-      .filter(Boolean)
-      .join(" ")
-    const team = serviceFieldTeamFromText(context, index)
-    const checklist = defaultChecklistByTeam[team] ?? task.checklist
-
-    return {
-      ...task,
-      team,
-      checklist: checklist.length > 0 ? checklist : task.checklist,
     }
   })
 }
@@ -2199,14 +2875,19 @@ function mapOrderStatus(value: string): ServiceOrderRecord["status"] {
   return "debt_check"
 }
 
-function mapDebtCheckStatus(value: string): ServiceOrderRecord["debtCheckStatus"] {
+function mapDebtCheckStatus(
+  value: string
+): ServiceOrderRecord["debtCheckStatus"] {
   if (value === "minor_debt_review") return "minor_debt_review"
   if (value === "blocked") return "blocked"
   return "clear"
 }
 
-function mapPaymentDecision(value: string): ServiceOrderRecord["paymentDecision"] {
+function mapPaymentDecision(
+  value: string
+): ServiceOrderRecord["paymentDecision"] {
   if (value === "no_charge") return "no_charge"
+  if (value === "post_emergency_review") return "post_emergency_review"
   if (value === "debit_to_account") return "debit_to_account"
   if (value === "paid_or_debit_approved") return "paid_or_debit_approved"
   if (value === "hold") return "hold"
@@ -2261,8 +2942,12 @@ function normalizeServiceOrderRows(rows: unknown): ServiceOrderRecord[] {
     const unit = relatedRecord(record.units)
     const resident = relatedRecord(record.residents)
     const status = mapOrderStatus(asString(record.status, "debt_check"))
-    const debtCheckStatus = mapDebtCheckStatus(asString(record.debt_check_status, "clear"))
-    const paymentDecision = mapPaymentDecision(asString(record.payment_decision, "collect_before_dispatch"))
+    const debtCheckStatus = mapDebtCheckStatus(
+      asString(record.debt_check_status, "clear")
+    )
+    const paymentDecision = mapPaymentDecision(
+      asString(record.payment_decision, "collect_before_dispatch")
+    )
 
     return {
       id: asString(record.id, `order-${index + 1}`),
@@ -2279,30 +2964,43 @@ function normalizeServiceOrderRows(rows: unknown): ServiceOrderRecord[] {
       currency: "TRY",
       slaHours: asNumber(catalog.sla_hours, 24),
       assignedTeam: asString(catalog.team, "Operations"),
-      taskCreated: status === "task_created" || status === "assigned" || status === "completed",
-      requestedForAt: asString(record.requested_for_at, asString(record.created_at, new Date().toISOString())),
+      taskCreated:
+        status === "task_created" ||
+        status === "assigned" ||
+        status === "completed",
+      requestedForAt: asString(
+        record.requested_for_at,
+        asString(record.created_at, new Date().toISOString())
+      ),
       createdAt: asString(record.created_at, new Date().toISOString()),
-      nextAction: asString(record.next_action, serviceOrderNextAction(
-        {
-          id: asString(ticket.ticket_no, `ticket-${index + 1}`),
-          flatId: asString(record.unit_id),
-          flatNumber: asString(unit.unit_no, "Unassigned"),
-          title: asString(catalog.name, "Service order"),
-          category: asString(catalog.category, "maintenance"),
-          priority: "medium",
-          status: "open",
-          assignee: "Operations queue",
-          requester: asString(resident.full_name, "Site management"),
-          openedAt: asString(record.created_at, new Date().toISOString()),
-          dueAt: asString(record.requested_for_at),
-          slaHoursRemaining: 0,
-          debtBlocked: debtCheckStatus === "blocked",
-          paymentVerified: paymentDecision === "paid_or_debit_approved" || paymentDecision === "no_charge",
-          mediaCount: 0,
-          estimatedCostTry: Math.round(asNumber(record.quoted_price_cents) / 100),
-        },
-        paymentDecision
-      )),
+      nextAction: asString(
+        record.next_action,
+        serviceOrderNextAction(
+          {
+            id: asString(ticket.ticket_no, `ticket-${index + 1}`),
+            flatId: asString(record.unit_id),
+            flatNumber: asString(unit.unit_no, "Unassigned"),
+            title: asString(catalog.name, "Service order"),
+            category: asString(catalog.category, "maintenance"),
+            priority: "medium",
+            status: "open",
+            assignee: "Operations queue",
+            requester: asString(resident.full_name, "Site management"),
+            openedAt: asString(record.created_at, new Date().toISOString()),
+            dueAt: asString(record.requested_for_at),
+            slaHoursRemaining: 0,
+            debtBlocked: debtCheckStatus === "blocked",
+            paymentVerified:
+              paymentDecision === "paid_or_debit_approved" ||
+              paymentDecision === "no_charge",
+            mediaCount: 0,
+            estimatedCostTry: Math.round(
+              asNumber(record.quoted_price_cents) / 100
+            ),
+          },
+          paymentDecision
+        )
+      ),
     }
   })
 }
@@ -2326,7 +3024,10 @@ function normalizeWorkforceTaskRows(rows: unknown): WorkforceTaskRecord[] {
       flatNumber: asString(unit.unit_no, "Unassigned"),
       title: asString(record.title, "Workforce task"),
       team: asString(record.team, "Operations"),
-      assignee: asString(staff.name, asString(metadata.assigneeLabel, "Operations queue")),
+      assignee: asString(
+        staff.name,
+        asString(metadata.assigneeLabel, "Operations queue")
+      ),
       status,
       priority: mapTicketPriority(asString(record.priority, "medium")),
       slaHoursRemaining: slaHoursRemaining(dueAt),
@@ -2335,19 +3036,39 @@ function normalizeWorkforceTaskRows(rows: unknown): WorkforceTaskRecord[] {
       requiresMedia: asBoolean(record.requires_media, true),
       mediaCount: asNumber(record.media_count),
       managerApprovalRequired: asBoolean(record.manager_approval_required),
-      lastUpdateAt: asString(record.updated_at, asString(record.created_at, new Date().toISOString())),
+      lastUpdateAt: asString(
+        record.updated_at,
+        asString(record.created_at, new Date().toISOString())
+      ),
       fieldNote: asString(record.field_note),
       completionReadiness: asNumber(record.completion_readiness),
     }
   })
 }
 
+/** Empty live tables are authoritative. Synthetic operational records are
+ * reserved for the explicit local QA adapter and must never mask RLS or live
+ * data gaps. */
+export function normalizeLiveServiceOperationRows(
+  orderRows: unknown,
+  taskRows: unknown
+): { orders: ServiceOrderRecord[]; workforceTasks: WorkforceTaskRecord[] } {
+  return {
+    orders: normalizeServiceOrderRows(orderRows),
+    workforceTasks: normalizeWorkforceTaskRows(taskRows),
+  }
+}
+
 function ticketStrategy(): ServiceTicketQueueData["strategy"] {
   return {
-    systemOfRecord: "1Cati keeps the operational service catalogue, service orders, SLA tasks and ticket events inside Supabase.",
-    crmRole: "Twenty CRM remains the relationship/contact system; 1Cati remains the resident-service and field-operations system.",
-    escalationPolicy: "Debt-blocked orders, overdue SLA tasks, access/security work and high-cost repairs create manager approval actions before closure.",
-    externalHelpdeskDecision: "Use the internal ticketing system first; add Zendesk/Freshdesk/Jira Service Management later only if public omnichannel support becomes a client requirement.",
+    systemOfRecord:
+      "1Cati keeps the operational service catalogue, service orders, SLA tasks and ticket events inside Supabase.",
+    crmRole:
+      "Twenty CRM remains the relationship/contact system; 1Cati remains the resident-service and field-operations system.",
+    escalationPolicy:
+      "Debt-blocked orders, overdue SLA tasks, access/security work and high-cost repairs create manager approval actions before closure.",
+    externalHelpdeskDecision:
+      "Use the internal ticketing system first; add Zendesk/Freshdesk/Jira Service Management later only if public omnichannel support becomes a client requirement.",
   }
 }
 
@@ -2357,21 +3078,43 @@ function summarizeServiceTickets(
   orders: ServiceOrderRecord[],
   tasks: WorkforceTaskRecord[]
 ): ServiceTicketQueueData["summary"] {
-  const openTickets = tickets.filter((ticket) => ticket.status !== "closed" && ticket.status !== "resolved")
-  const totalSla = tickets.reduce((sum, ticket) => sum + ticket.slaHoursRemaining, 0)
+  const openTickets = tickets.filter(
+    (ticket) => ticket.status !== "closed" && ticket.status !== "resolved"
+  )
+  const totalSla = tickets.reduce(
+    (sum, ticket) => sum + ticket.slaHoursRemaining,
+    0
+  )
   const fieldTeams = new Set(tasks.map((task) => task.team).filter(Boolean))
-  const totalReadiness = tasks.reduce((sum, task) => sum + task.completionReadiness, 0)
+  const totalReadiness = tasks.reduce(
+    (sum, task) => sum + task.completionReadiness,
+    0
+  )
 
   return {
     totalTickets: tickets.length,
     openTickets: openTickets.length,
-    overdueTickets: tickets.filter((ticket) => ticket.slaHoursRemaining < 0).length,
-    urgentTickets: tickets.filter((ticket) => ticket.priority === "urgent").length,
-    financeBlockedTickets: tickets.filter((ticket) => ticket.debtBlocked).length,
-    approvalRequiredTickets: tickets.filter((ticket) => ticket.debtBlocked || !ticket.paymentVerified).length,
-    mediaEvidenceCount: tickets.reduce((sum, ticket) => sum + ticket.mediaCount, 0),
-    estimatedCostCents: tickets.reduce((sum, ticket) => sum + ticket.estimatedCostTry * 100, 0),
-    averageSlaHoursRemaining: tickets.length > 0 ? Math.round(totalSla / tickets.length) : 0,
+    overdueTickets: tickets.filter((ticket) => ticket.slaHoursRemaining < 0)
+      .length,
+    urgentTickets: tickets.filter((ticket) => ticket.priority === "urgent")
+      .length,
+    financeBlockedTickets: tickets.filter(
+      (ticket) => ticket.debtBlocked && !ticket.emergency
+    ).length,
+    approvalRequiredTickets: tickets.filter(
+      (ticket) =>
+        !ticket.emergency && (ticket.debtBlocked || !ticket.paymentVerified)
+    ).length,
+    mediaEvidenceCount: tickets.reduce(
+      (sum, ticket) => sum + ticket.mediaCount,
+      0
+    ),
+    estimatedCostCents: tickets.reduce(
+      (sum, ticket) => sum + ticket.estimatedCostTry * 100,
+      0
+    ),
+    averageSlaHoursRemaining:
+      tickets.length > 0 ? Math.round(totalSla / tickets.length) : 0,
     catalogItems: catalog.length,
     activeCatalogItems: catalog.filter((item) => item.active).length,
     serviceOrders: orders.length,
@@ -2383,13 +3126,15 @@ function summarizeServiceTickets(
         order.paymentDecision === "no_charge"
     ).length,
     blockedOrders: orders.filter(
-      (order) => order.status === "blocked" || order.debtCheckStatus === "blocked"
+      (order) =>
+        order.status === "blocked" || order.debtCheckStatus === "blocked"
     ).length,
     openWorkforceTasks: tasks.filter(
       (task) => task.status !== "closed" && task.status !== "resolved"
     ).length,
     slaBreachTasks: tasks.filter((task) => task.slaHoursRemaining < 0).length,
-    managerApprovalTasks: tasks.filter((task) => task.managerApprovalRequired).length,
+    managerApprovalTasks: tasks.filter((task) => task.managerApprovalRequired)
+      .length,
     fieldTeams: fieldTeams.size,
     averageCompletionReadiness:
       tasks.length > 0 ? Math.round(totalReadiness / tasks.length) : 0,
@@ -2404,10 +3149,15 @@ function buildServiceTicketingQuality(
   summary: ServiceTicketQueueData["summary"]
 ): OperationalQualityReport {
   const openWithoutSla = tickets.filter(
-    (ticket) => ticket.status !== "closed" && ticket.status !== "resolved" && !ticket.dueAt
+    (ticket) =>
+      ticket.status !== "closed" &&
+      ticket.status !== "resolved" &&
+      !ticket.dueAt
   )
   const closedWithoutEvidence = tickets.filter(
-    (ticket) => (ticket.status === "closed" || ticket.status === "resolved") && ticket.mediaCount === 0
+    (ticket) =>
+      (ticket.status === "closed" || ticket.status === "resolved") &&
+      ticket.mediaCount === 0
   )
   const autonomousFinanceWork = tickets.filter(
     (ticket) => ticket.debtBlocked && ticket.paymentVerified
@@ -2419,7 +3169,9 @@ function buildServiceTicketingQuality(
   const blockedButDispatchable = orders.filter(
     (order) => order.debtCheckStatus === "blocked" && order.taskCreated
   )
-  const taskWithoutChecklist = tasks.filter((task) => task.checklist.length === 0)
+  const taskWithoutChecklist = tasks.filter(
+    (task) => task.checklist.length === 0
+  )
 
   return qualityReport([
     {
@@ -2437,7 +3189,10 @@ function buildServiceTicketingQuality(
     {
       id: "service.order-ticket-link",
       label: "Service orders link to ticket workflow",
-      status: orderWithoutTicket.length === 0 && orders.length > 0 ? "passed" : "warning",
+      status:
+        orderWithoutTicket.length === 0 && orders.length > 0
+          ? "passed"
+          : "warning",
       detail: `${orders.length} service orders returned; ${orderWithoutTicket.length} are missing ticket links.`,
     },
     {
@@ -2473,7 +3228,10 @@ function buildServiceTicketingQuality(
     {
       id: "ticketing.priority-covered",
       label: "Priority and overdue queues are visible",
-      status: summary.urgentTickets > 0 || summary.overdueTickets > 0 ? "passed" : "warning",
+      status:
+        summary.urgentTickets > 0 || summary.overdueTickets > 0
+          ? "passed"
+          : "warning",
       detail: `${summary.urgentTickets} urgent and ${summary.overdueTickets} overdue tickets.`,
     },
     {
@@ -2491,9 +3249,15 @@ function buildServiceTicketingQuality(
   ])
 }
 
-function localMergedServiceTickets(limit = 24) {
+function localMergedServiceTickets(
+  limit = 24,
+  search = "",
+  scope?: LocalTicketQueueScope
+) {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
-  const materializedIds = new Set(localMaterializedTickets.map((ticket) => ticket.id))
+  const materializedIds = new Set(
+    localMaterializedTickets.map((ticket) => ticket.id)
+  )
   const dynamicTickets = localMaterializedTickets.map(
     (ticket) => localTicketOverrides.get(ticket.id) ?? ticket
   )
@@ -2501,43 +3265,184 @@ function localMergedServiceTickets(limit = 24) {
     .map((ticket) => localTicketOverrides.get(ticket.id) ?? ticket)
     .filter((ticket) => !materializedIds.has(ticket.id))
 
-  return [...dynamicTickets, ...seedTickets].slice(0, safeLimit)
+  const merged = [...dynamicTickets, ...seedTickets]
+  const scopedTicketIds =
+    scope?.ticketIds === undefined
+      ? null
+      : new Set(scope.ticketIds.map((ticketId) => ticketId.trim()))
+  const scopedUnitNos =
+    scope?.unitNos === undefined
+      ? null
+      : new Set(
+          scope.unitNos.map((unitNo) =>
+            unitNo.trim().toLocaleUpperCase("tr-TR")
+          )
+        )
+  const scopedAssignee = scope?.assignee?.trim()
+  const roleScoped = scope
+    ? merged.filter((ticket) => {
+        const ticketMatches =
+          scopedTicketIds === null || scopedTicketIds.has(ticket.id)
+        const unitMatches =
+          scopedUnitNos === null ||
+          scopedUnitNos.has(ticket.flatNumber.trim().toLocaleUpperCase("tr-TR"))
+        const assigneeMatches =
+          !scopedAssignee || ticket.assignee.trim() === scopedAssignee
+        return ticketMatches && unitMatches && assigneeMatches
+      })
+    : merged
+
+  const normalizedSearch = normalizeSearchText(search)
+  const filtered = normalizedSearch
+    ? roleScoped.filter((ticket) =>
+        normalizeSearchText(
+          `${ticket.id} ${ticket.flatNumber} ${ticket.title} ${ticket.description ?? ""} ${ticket.category} ${ticket.requester}`
+        ).includes(normalizedSearch)
+      )
+    : roleScoped
+
+  return filtered.slice(0, safeLimit)
 }
 
 function localMergedBookings(limit = 24) {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
-  const dynamicIds = new Set(localMaterializedBookings.map((booking) => booking.id))
+  const dynamicIds = new Set(
+    localMaterializedBookings.map((booking) => booking.id)
+  )
   return [
     ...localMaterializedBookings,
     ...bookings.filter((booking) => !dynamicIds.has(booking.id)),
   ].slice(0, safeLimit)
 }
 
-function localSeedServiceTicketQueueData(limit = 24, warning?: string): ServiceTicketQueueData {
+function localSeedServiceTicketQueueDataInMemory(
+  limit = 24,
+  warning?: string,
+  search = "",
+  scope?: LocalTicketQueueScope
+): ServiceTicketQueueData {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
-  const tickets = localMergedServiceTickets(safeLimit)
+  const tickets = localMergedServiceTickets(safeLimit, search, scope)
   const catalog = serviceCatalogItems
-  const orders = [...localMaterializedServiceOrders, ...serviceOrders].slice(0, safeLimit)
-  const tasks = [...localMaterializedWorkforceTasks, ...workforceTasks].slice(0, safeLimit)
+  const ticketIds = new Set(tickets.map((ticket) => ticket.id))
+  const mergedOrders = [...localMaterializedServiceOrders, ...serviceOrders]
+  const mergedTasks = [...localMaterializedWorkforceTasks, ...workforceTasks]
+  const orders = (
+    scope
+      ? mergedOrders.filter((order) => ticketIds.has(order.ticketId))
+      : mergedOrders
+  ).slice(0, safeLimit)
+  const tasks = (
+    scope
+      ? mergedTasks.filter((task) => ticketIds.has(task.ticketId))
+      : mergedTasks
+  ).slice(0, safeLimit)
   const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
   return {
     contractVersion: SERVICE_TICKETING_CONTRACT_VERSION,
     source: "local-seed",
     generatedAt: new Date().toISOString(),
-    quality: buildServiceTicketingQuality(tickets, catalog, orders, tasks, summary),
+    quality: buildServiceTicketingQuality(
+      tickets,
+      catalog,
+      orders,
+      tasks,
+      summary
+    ),
     summary,
     tickets,
     catalog,
     orders,
     workforceTasks: tasks,
     strategy: ticketStrategy(),
-    recentActions: [...localActionRows(5), ...siteActivities.slice(0, 4)].slice(0, 5),
+    recentActions: [...localActionRows(5), ...siteActivities.slice(0, 4)].slice(
+      0,
+      5
+    ),
     warning,
   }
 }
 
-function normalizeServiceTicketRows(rows: unknown, limit: number): ServiceTicket[] {
+function localSeedServiceTicketQueueData(
+  limit = 24,
+  warning?: string,
+  search = "",
+  scope?: LocalTicketQueueScope
+): ServiceTicketQueueData {
+  return withLocalQaState(false, () =>
+    localSeedServiceTicketQueueDataInMemory(limit, warning, search, scope)
+  )
+}
+
+function normalizeServiceTicketHistory(events: unknown) {
+  if (!Array.isArray(events)) return []
+
+  return events
+    .map((event, index) => {
+      const record = asRecord(event)
+      const metadata = asRecord(record.metadata)
+      const rawAudience = asNullableString(record.visibility)
+      const audience: ServiceTicketHistoryEvent["audience"] =
+        rawAudience === "resident" ||
+        rawAudience === "internal" ||
+        rawAudience === "finance"
+          ? rawAudience
+          : undefined
+      const occurredAt = asString(record.created_at, new Date(0).toISOString())
+      const version =
+        asNullableString(record.ticket_version) ??
+        asNullableString(metadata.workflowVersion)
+
+      return {
+        id: asString(record.id, `ticket-event-${index + 1}`),
+        type: asString(record.event_type, "ticket_updated"),
+        message: asString(record.body, "Service request updated."),
+        occurredAt,
+        audience,
+        version: version ?? undefined,
+        fromState:
+          asNullableString(metadata.fromWorkflowState) ??
+          asNullableString(metadata.fromStatus),
+        toState:
+          asNullableString(metadata.toWorkflowState) ??
+          asNullableString(metadata.toStatus) ??
+          asNullableString(metadata.workflowState),
+      }
+    })
+    .sort((left, right) => left.occurredAt.localeCompare(right.occurredAt))
+}
+
+/**
+ * Ticket assignment UUIDs are relationship keys, never user-facing labels.
+ * Keep a stable, non-identifying fallback when a responder is assigned but no
+ * approved display label is available in the safe projection.
+ */
+export function safeServiceTicketAssigneeLabel({
+  assignmentLabel,
+  eventAssignmentLabel,
+  assignedProfileId,
+}: {
+  assignmentLabel?: unknown
+  eventAssignmentLabel?: unknown
+  assignedProfileId?: unknown
+}): string {
+  const candidates = [assignmentLabel, eventAssignmentLabel]
+    .map((value) => asNullableString(value)?.trim() ?? "")
+    .filter(Boolean)
+  const publicLabel = candidates.find((candidate) => !isUuid(candidate))
+  if (publicLabel) return publicLabel
+
+  const hasPrivateAssignment =
+    candidates.some((candidate) => isUuid(candidate)) ||
+    Boolean(asNullableString(assignedProfileId)?.trim())
+  return hasPrivateAssignment ? "Assigned responder" : "Operations queue"
+}
+
+function normalizeServiceTicketRows(
+  rows: unknown,
+  limit: number
+): ServiceTicket[] {
   if (!Array.isArray(rows)) return []
   return rows.slice(0, limit).map((row, index) => {
     const record = asRecord(row)
@@ -2546,46 +3451,314 @@ function normalizeServiceTicketRows(rows: unknown, limit: number): ServiceTicket
     const events = Array.isArray(record.service_ticket_events)
       ? record.service_ticket_events
       : []
+    const mediaReports = Array.isArray(record.media_reports)
+      ? record.media_reports.map(asRecord)
+      : []
     const rawStatus = asString(record.status, "open")
     const requiresFinanceApproval = asBoolean(record.requires_finance_approval)
     const ticketNo = asString(record.ticket_no, `TICKET-${index + 1}`)
     const dueAt = asNullableString(record.sla_due_at)
+    const workflowMetadata = workflowMetadataFromEvents(events)
+    const routingMetadata = asRecord(record.routing_metadata)
+    const emergency =
+      asString(record.emergency_classification) === "rule_matched_p0" ||
+      asBoolean(routingMetadata.emergency)
+    const workflowState = primaryStateFromPersistedStatus(
+      rawStatus,
+      record.workflow_state ?? workflowMetadata.workflowState
+    )
+    const approvalStatus = ticketApprovalState(
+      record.approval_status,
+      rawStatus
+    )
+    const priority = mapTicketPriority(asString(record.priority, "normal"))
     const assignmentEvent = events
       .map((event) => asRecord(asRecord(event).metadata))
-      .find((metadata) => asNullableString(metadata.assigneeLabel))
+      .find(
+        (metadata) =>
+          asNullableString(metadata.assignmentLabel) ??
+          asNullableString(metadata.assigneeLabel)
+      )
+    const assignee = safeServiceTicketAssigneeLabel({
+      assignmentLabel: record.assignment_label,
+      eventAssignmentLabel:
+        assignmentEvent?.assignmentLabel ?? assignmentEvent?.assigneeLabel,
+      assignedProfileId: record.assigned_to,
+    })
     const creationEvent = events
       .map(asRecord)
       .find((event) => asString(event.event_type) === "portal_ticket_created")
     const creationMetadata = asRecord(creationEvent?.metadata)
+    const title = asString(record.title, "Service ticket")
+    const description = asNullableString(record.description)
+    const category = asString(record.category, "general")
+    const estimatedCostTry = Math.round(
+      asNumber(record.estimated_cost_cents) / 100
+    )
 
-    return {
+    const ticket: ServiceTicket = {
       id: ticketNo,
       flatId: asString(unit.id, asString(record.unit_id, `unit-${index + 1}`)),
       flatNumber: asString(unit.unit_no, "Unassigned"),
-      title: asString(record.title, "Service ticket"),
-      description: asNullableString(record.description),
-      category: asString(record.category, "general"),
-      priority: mapTicketPriority(asString(record.priority, "normal")),
+      title,
+      description,
+      category,
+      priority,
       status: mapTicketStatus(rawStatus),
-      assignee:
-        asNullableString(record.assignment_label) ??
-        asNullableString(assignmentEvent?.assigneeLabel) ??
-        asNullableString(record.assigned_to) ??
-        "Operations queue",
+      assignee,
       requester: asNullableString(resident.full_name) ?? "Site management",
-      requesterRole: asNullableString(creationMetadata.requestedByRole) ?? undefined,
+      requesterRole:
+        asNullableString(creationMetadata.requestedByRole) ?? undefined,
+      requesterProfileId: asNullableString(record.created_by),
+      assigneeProfileId: asNullableString(record.assigned_to),
       openedAt: asString(record.created_at, new Date().toISOString()),
       dueAt: dueAt ?? "",
       slaHoursRemaining: slaHoursRemaining(dueAt),
-      debtBlocked: requiresFinanceApproval || rawStatus === "waiting_approval",
-      paymentVerified: !requiresFinanceApproval && rawStatus !== "waiting_approval",
-      mediaCount: events.length,
-      estimatedCostTry: Math.round(asNumber(record.estimated_cost_cents) / 100),
+      debtBlocked:
+        !emergency &&
+        (requiresFinanceApproval || rawStatus === "waiting_approval"),
+      paymentVerified:
+        !emergency &&
+        !requiresFinanceApproval &&
+        rawStatus !== "waiting_approval",
+      mediaCount: mediaReports.filter(
+        (media) => asString(media.verification_status, "pending") !== "rejected"
+      ).length,
+      estimatedCostTry,
+      version: asString(
+        record.workflow_version,
+        asString(record.updated_at, "1")
+      ),
+      workflowState,
+      approvalStatus,
+      dispatchStatus: deriveDispatchState(
+        workflowState,
+        assignee,
+        workflowMetadata.dispatchStatus
+      ),
+      paymentWorkflowStatus: emergency
+        ? emergencyPaymentStateForTicket(
+            {
+              title,
+              description,
+              category,
+              emergency,
+              estimatedCostTry,
+              debtBlocked: false,
+              paymentVerified: false,
+            },
+            index
+          )
+        : derivePaymentState(
+            requiresFinanceApproval,
+            false,
+            workflowMetadata.paymentStatus
+          ),
+      severity: ticketSeverityForPriority(priority, emergency),
+      emergency,
+      history: normalizeServiceTicketHistory(events),
     }
+    return ticket
   })
 }
 
-function normalizePaymentTransactionRows(rows: unknown, limit: number): Phase7ReconciliationItem[] {
+/**
+ * Final browser-bound ticket projection. RLS remains authoritative for row
+ * scope; this mapper independently removes relationship and finance metadata
+ * that resident roles do not need.
+ */
+export function serviceTicketApiViewForRole(
+  ticket: ServiceTicket,
+  role: Role
+): Record<string, unknown> {
+  const clientRole = role === "owner" || role === "tenant"
+  const visibleHistory = visibleTicketHistoryForRole(role, ticket.history)
+  const result: Record<string, unknown> = {
+    ...ticket,
+    assignee: safeServiceTicketAssigneeLabel({
+      assignmentLabel: ticket.assignee,
+      assignedProfileId: ticket.assigneeProfileId,
+    }),
+    history: clientRole
+      ? visibleHistory.map((event, index) => ({
+          ...event,
+          id: `${ticket.id}:event:${index + 1}`,
+        }))
+      : visibleHistory,
+  }
+
+  delete result.requesterProfileId
+  delete result.assigneeProfileId
+  if (clientRole) {
+    delete result.flatId
+    delete result.debtBlocked
+    delete result.paymentVerified
+    delete result.paymentWorkflowStatus
+    // An owner must see who raised the request and the estimated cost of a ticket on
+    // their own unit that is awaiting their approval decision — that sign-off is the
+    // whole point of the owner-approval gate. The ticket set is already scoped to the
+    // owner's units upstream, so every other client-role ticket keeps finance masked.
+    const ownerDecisionPending =
+      role === "owner" && ticket.approvalStatus === "pending_owner"
+    if (!ownerDecisionPending) {
+      delete result.requesterRole
+      delete result.estimatedCostTry
+    }
+  }
+  return result
+}
+
+function isMissingTicketWorkflowSchemaError(error: unknown) {
+  const record = asRecord(error)
+  const code = asString(record.code, "")
+  const message = asString(record.message, "").toLowerCase()
+  return (
+    code === "PGRST202" ||
+    code === "PGRST204" ||
+    code === "42703" ||
+    code === "42883" ||
+    (message.includes("schema cache") &&
+      (message.includes("workflow_version") || message.includes("function")))
+  )
+}
+
+function normalizeSafeTicketProjectionRows(rows: unknown) {
+  if (!Array.isArray(rows)) return []
+  return rows.map((row) => {
+    const record = asRecord(row)
+    const wrapped = record.read_service_ticket_queue_safe
+    return wrapped && typeof wrapped === "object" && !Array.isArray(wrapped)
+      ? wrapped
+      : row
+  })
+}
+
+async function readSafeTicketProjection(
+  supabase: DataClient,
+  {
+    limit,
+    search,
+    identifier,
+  }: { limit: number; search: string | null; identifier: string | null }
+) {
+  const response = await supabase.rpc("read_service_ticket_queue_safe", {
+    p_limit: limit,
+    p_search: search,
+    p_identifier: identifier,
+  })
+  return {
+    data: normalizeSafeTicketProjectionRows(response.data),
+    error: response.error,
+  }
+}
+
+async function getTicketQueueRows(
+  supabase: DataClient,
+  limit: number,
+  search: string
+) {
+  return readSafeTicketProjection(supabase, {
+    limit,
+    search: search.trim() || null,
+    identifier: null,
+  })
+}
+
+function workflowRecordFromTicket(
+  ticket: ServiceTicket,
+  databaseId: string | null,
+  rawStatus: string = ticket.status,
+  createdBy: string | null = null
+): ServiceTicketWorkflowRecord {
+  const workflowState = primaryStateFromPersistedStatus(
+    rawStatus,
+    ticket.workflowState
+  )
+  const approvalStatus =
+    ticket.approvalStatus ??
+    (rawStatus === "waiting_approval" ? "pending_owner" : "not_required")
+  const emergency = ticket.emergency ?? false
+  const dispatchStatus =
+    ticket.dispatchStatus ?? deriveDispatchState(workflowState, ticket.assignee)
+  const paymentStatus = emergency
+    ? emergencyPaymentStateForTicket(ticket)
+    : (ticket.paymentWorkflowStatus ??
+      derivePaymentState(ticket.debtBlocked, false))
+  const version = ticket.version ?? "1"
+
+  return {
+    databaseId,
+    createdBy,
+    assignedTo: ticket.assigneeProfileId ?? null,
+    ticket: {
+      ...ticket,
+      version,
+      workflowState,
+      approvalStatus,
+      dispatchStatus,
+      paymentWorkflowStatus: paymentStatus,
+      severity:
+        ticket.severity ??
+        ticketSeverityForPriority(ticket.priority, emergency),
+      emergency,
+    },
+    rawStatus,
+    workflowState,
+    approvalStatus,
+    dispatchStatus,
+    paymentStatus,
+    severity:
+      ticket.severity ?? ticketSeverityForPriority(ticket.priority, emergency),
+    emergency,
+    requiresFinanceApproval: ticket.debtBlocked,
+    version,
+  }
+}
+
+export async function getServiceTicketWorkflowRecord(
+  ticketId: string,
+  { useLocalAccessProfile = false }: { useLocalAccessProfile?: boolean } = {}
+): Promise<ServiceTicketWorkflowRecord | null> {
+  if (!isSupabaseConfigured() || useLocalAccessProfile) {
+    return withLocalQaState(false, () => {
+      const ticket =
+        localMaterializedTickets.find(
+          (candidate) => candidate.id === ticketId
+        ) ??
+        localTicketOverrides.get(ticketId) ??
+        serviceTickets.find((candidate) => candidate.id === ticketId)
+      return ticket ? workflowRecordFromTicket(ticket, null) : null
+    })
+  }
+
+  const supabase = await createClient()
+  const safeProjection = await readSafeTicketProjection(supabase, {
+    limit: 1,
+    search: null,
+    identifier: ticketId,
+  })
+  const response: { data: unknown; error: unknown } = {
+    data: safeProjection.data[0] ?? null,
+    error: safeProjection.error,
+  }
+  if (response.error) throw response.error
+  if (!response.data) return null
+
+  const record = asRecord(response.data)
+  const ticket = normalizeServiceTicketRows([record], 1)[0]
+  if (!ticket) return null
+  return workflowRecordFromTicket(
+    ticket,
+    asNullableString(record.id),
+    asString(record.status, "open"),
+    asNullableString(record.created_by)
+  )
+}
+
+function normalizePaymentTransactionRows(
+  rows: unknown,
+  limit: number
+): Phase7ReconciliationItem[] {
   if (!Array.isArray(rows)) return []
   return rows.slice(0, limit).map((row, index) => {
     const record = asRecord(row)
@@ -2605,12 +3778,15 @@ function normalizePaymentTransactionRows(rows: unknown, limit: number): Phase7Re
       ledgerEntryId: asNullableString(record.ledger_entry_id),
       unitNo: asNullableString(unit.unit_no),
       residentName: asNullableString(resident.full_name),
-      needsReview: status === "pending" || status === "failed" || status === "cancelled",
+      needsReview:
+        status === "pending" || status === "failed" || status === "cancelled",
     }
   })
 }
 
-function normalizeDepositLedgerRows(rows: unknown): Map<string, { amountCents: number; currency: string }> {
+function normalizeDepositLedgerRows(
+  rows: unknown
+): Map<string, { amountCents: number; currency: string }> {
   const deposits = new Map<string, { amountCents: number; currency: string }>()
   if (!Array.isArray(rows)) return deposits
 
@@ -2632,7 +3808,10 @@ function normalizeDepositLedgerRows(rows: unknown): Map<string, { amountCents: n
 function normalizeReservationRows(
   rows: unknown,
   limit: number,
-  depositLedgerByUnit = new Map<string, { amountCents: number; currency: string }>()
+  depositLedgerByUnit = new Map<
+    string,
+    { amountCents: number; currency: string }
+  >()
 ): Phase7DepositDecision[] {
   if (!Array.isArray(rows)) return []
   return rows
@@ -2666,28 +3845,50 @@ function normalizeReservationRows(
             : "Depozito ve erisim kararini finans onayina bagla",
       }
     })
-    .filter((item) => item.depositStatus !== "not_required" || item.accessCodeStatus !== "issued")
+    .filter(
+      (item) =>
+        item.depositStatus !== "not_required" ||
+        item.accessCodeStatus !== "issued"
+    )
 }
 
-function buildSupabaseRestrictionQueue(units: Array<Record<string, unknown>>, limit: number): Phase7RestrictionDecision[] {
+function buildSupabaseRestrictionQueue(
+  units: Array<Record<string, unknown>>,
+  limit: number
+): Phase7RestrictionDecision[] {
   return units
     .filter((unit) => {
       const balanceCents = asNumber(unit.balanceCents ?? unit.balance_cents)
       const accessStatus = asString(unit.accessStatus ?? unit.access_status)
       const paymentStatus = asString(unit.paymentStatus ?? unit.payment_status)
-      return balanceCents > 0 || accessStatus === "restricted" || paymentStatus === "overdue"
+      return (
+        balanceCents > 0 ||
+        accessStatus === "restricted" ||
+        paymentStatus === "overdue"
+      )
     })
     .slice(0, limit)
     .map((unit) => {
       const balanceCents = asNumber(unit.balanceCents ?? unit.balance_cents)
-      const paymentStatus = asString(unit.paymentStatus ?? unit.payment_status, "minor_debt")
-      const accessStatus = asString(unit.accessStatus ?? unit.access_status, "active")
+      const paymentStatus = asString(
+        unit.paymentStatus ?? unit.payment_status,
+        "minor_debt"
+      )
+      const accessStatus = asString(
+        unit.accessStatus ?? unit.access_status,
+        "active"
+      )
 
       return {
         id: `restriction-${asString(unit.id, asString(unit.unitNo ?? unit.unit_no, "unit"))}`,
         unitId: asNullableString(unit.id),
         unitNo: asNullableString(unit.unitNo ?? unit.unit_no),
-        residentName: asNullableString(unit.residentName ?? unit.resident_name ?? unit.ownerName ?? unit.owner_name),
+        residentName: asNullableString(
+          unit.residentName ??
+            unit.resident_name ??
+            unit.ownerName ??
+            unit.owner_name
+        ),
         balanceCents,
         currency: "TRY",
         agingBucket: paymentStatus === "overdue" ? "61-90" : "31-60",
@@ -2718,16 +3919,27 @@ function operationalSearchText(record: OperationalSearchResult) {
   )
 }
 
-function operationalSearchRank(record: OperationalSearchResult, normalizedQuery: string) {
+function operationalSearchRank(
+  record: OperationalSearchResult,
+  normalizedQuery: string
+) {
   const externalId = normalizeOperationalSearch(record.entityExternalId ?? "")
   const title = normalizeOperationalSearch(record.title)
   if (externalId === normalizedQuery || title === normalizedQuery) return 0
-  if (externalId.startsWith(normalizedQuery) || title.startsWith(normalizedQuery)) return 0.25
-  if (operationalSearchText(record).includes(normalizedQuery)) return record.rank
+  if (
+    externalId.startsWith(normalizedQuery) ||
+    title.startsWith(normalizedQuery)
+  )
+    return 0.25
+  if (operationalSearchText(record).includes(normalizedQuery))
+    return record.rank
   return 99
 }
 
-function localSeedSearch(query: string, limit: number): OperationalSearchResult[] {
+function localSeedSearch(
+  query: string,
+  limit: number
+): OperationalSearchResult[] {
   const normalized = normalizeOperationalSearch(query.trim())
   if (!normalized) return []
 
@@ -2825,7 +4037,10 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${handoff.id} ${handoff.credential}`,
       summary: `${handoff.bookingId} ${handoff.flatNumber} ${handoff.status} ${handoff.provider} ${handoff.blocker}`,
       rank: 1,
-      metadata: { bookingId: handoff.bookingId, flatNumber: handoff.flatNumber },
+      metadata: {
+        bookingId: handoff.bookingId,
+        flatNumber: handoff.flatNumber,
+      },
     })),
     ...depositSettlements.map((settlement) => ({
       entityTable: "deposit_settlements",
@@ -2834,7 +4049,10 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${settlement.id} ${settlement.guestName}`,
       summary: `${settlement.bookingId} ${settlement.flatNumber} ${settlement.status} ${settlement.nextAction}`,
       rank: 1,
-      metadata: { bookingId: settlement.bookingId, flatNumber: settlement.flatNumber },
+      metadata: {
+        bookingId: settlement.bookingId,
+        flatNumber: settlement.flatNumber,
+      },
     })),
     ...residents.map((resident) => ({
       entityTable: "residents",
@@ -2852,7 +4070,10 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${thread.id} ${thread.subject}`,
       summary: `${thread.channel} ${thread.audience} ${thread.status} ${thread.priority} ${thread.relatedEntity} ${thread.nextAction}`,
       rank: 1,
-      metadata: { channel: thread.channel, relatedEntity: thread.relatedEntity },
+      metadata: {
+        channel: thread.channel,
+        relatedEntity: thread.relatedEntity,
+      },
     })),
     ...notificationDeliveries.map((delivery) => ({
       entityTable: "notification_deliveries",
@@ -2861,7 +4082,10 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${delivery.id} ${delivery.recipient}`,
       summary: `${delivery.ruleId} ${delivery.channel} ${delivery.status} ${delivery.relatedEntity} ${delivery.providerMode}`,
       rank: 1,
-      metadata: { relatedEntity: delivery.relatedEntity, channel: delivery.channel },
+      metadata: {
+        relatedEntity: delivery.relatedEntity,
+        channel: delivery.channel,
+      },
     })),
     ...guestLifecycleEvents.map((event) => ({
       entityTable: "guest_lifecycle_events",
@@ -2870,7 +4094,11 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${event.id} ${event.title}`,
       summary: `${event.bookingId} ${event.flatNumber} ${event.guestName} ${event.stage} ${event.channel} ${event.status} ${event.edgeCase} ${event.body}`,
       rank: 1,
-      metadata: { bookingId: event.bookingId, flatNumber: event.flatNumber, stage: event.stage },
+      metadata: {
+        bookingId: event.bookingId,
+        flatNumber: event.flatNumber,
+        stage: event.stage,
+      },
     })),
     ...messageTemplates.map((template) => ({
       entityTable: "message_templates",
@@ -2915,7 +4143,11 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${item.id} ${item.provider}`,
       summary: `${item.category} ${item.mode} ${item.status} ${item.idealNow} ${item.scalePath} ${item.requiredFromClient} ${item.fallback}`,
       rank: 1,
-      metadata: { category: item.category, status: item.status, riskLevel: item.riskLevel },
+      metadata: {
+        category: item.category,
+        status: item.status,
+        riskLevel: item.riskLevel,
+      },
     })),
     ...aiPremiumRecommendations.map((item) => ({
       entityTable: "ai_recommendations",
@@ -2924,7 +4156,11 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${item.id} ${item.title}`,
       summary: `${item.mode} ${item.audience} ${item.status} confidence ${item.confidence} ${item.languageSupport.join(" ")} ${item.recommendation} ${item.humanApproval}`,
       rank: 1,
-      metadata: { mode: item.mode, audience: item.audience, status: item.status },
+      metadata: {
+        mode: item.mode,
+        audience: item.audience,
+        status: item.status,
+      },
     })),
     ...aiImageWorkflows.map((item) => ({
       entityTable: "ai_image_workflows",
@@ -2951,7 +4187,10 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       title: `${packet.id} ${packet.title}`,
       summary: `${packet.audience} ${packet.relatedEntity} ${packet.status} ${packet.signatureStatus} ${packet.nextAction}`,
       rank: 1,
-      metadata: { relatedEntity: packet.relatedEntity, audience: packet.audience },
+      metadata: {
+        relatedEntity: packet.relatedEntity,
+        audience: packet.audience,
+      },
     })),
   ]
 
@@ -2961,7 +4200,11 @@ function localSeedSearch(query: string, limit: number): OperationalSearchResult[
       ...record,
       rank: operationalSearchRank(record, normalized),
     }))
-    .sort((a, b) => a.rank - b.rank || a.title.localeCompare(b.title, "tr", { numeric: true }))
+    .sort(
+      (a, b) =>
+        a.rank - b.rank ||
+        a.title.localeCompare(b.title, "tr", { numeric: true })
+    )
     .slice(0, Math.min(Math.max(limit, 1), 50))
 }
 
@@ -2978,8 +4221,7 @@ function localSeedPhase4SiteData(
       if (!normalized) return true
       return normalizeSearchText(
         `${flat.number} ${flat.displayNumber} ${flat.block} ${flat.floorLabel} ${flat.type} ${flat.ownerName} ${flat.residentName} ${flat.paymentStatus} ${flat.status} ${flat.saleStatus} ${flat.accessStatus} ${flat.priceSource ?? ""} ${flat.areaText ?? ""} ${flat.sourceNotes ?? ""}`
-      )
-        .includes(normalized)
+      ).includes(normalized)
     })
     .slice(0, Math.min(Math.max(limit, 1), 1000))
 
@@ -3001,7 +4243,8 @@ function localSeedPhase4SiteData(
       vacantUnits: summary.vacantFlats,
       blockedUnits: summary.blockedFlats,
       blockCount: getBlockOverview().length,
-      floorCount: new Set(flats.map((flat) => `${flat.block}-${flat.floor}`)).size,
+      floorCount: new Set(flats.map((flat) => `${flat.block}-${flat.floor}`))
+        .size,
     },
     blocks: getBlockOverview().map((block, index) => ({
       name: block.block,
@@ -3017,9 +4260,13 @@ function localSeedPhase4SiteData(
       soldUnits: block.sold,
       sourceMissingUnits: block.sourceMissing,
       minBuyNowEurCents:
-        block.minBuyNowEur === null ? null : Math.round(block.minBuyNowEur * 100),
+        block.minBuyNowEur === null
+          ? null
+          : Math.round(block.minBuyNowEur * 100),
       maxBuyNowEurCents:
-        block.maxBuyNowEur === null ? null : Math.round(block.maxBuyNowEur * 100),
+        block.maxBuyNowEur === null
+          ? null
+          : Math.round(block.maxBuyNowEur * 100),
       priceSourceStatus: block.priceSourceStatus,
       numberingSource: block.numberingSource,
     })),
@@ -3037,7 +4284,9 @@ function localSeedPhase4SiteData(
       saleStatus: flat.saleStatus,
       listPriceEurCents:
         flat.buyNowEur === null ? null : Math.round(flat.buyNowEur * 100),
-      nextPriceEurCents: flat.nextPriceEur.map((price) => Math.round(price * 100)),
+      nextPriceEurCents: flat.nextPriceEur.map((price) =>
+        Math.round(price * 100)
+      ),
       priceSource: flat.priceSource,
       numberingSource: flat.numberingSource,
       sourceNotes: flat.sourceNotes,
@@ -3087,39 +4336,50 @@ function localSeedPhase4SiteData(
   }
 }
 
-function localSeedFinanceLedgerData(limit = 16, warning?: string): FinanceLedgerData {
+function localSeedFinanceLedgerData(
+  limit = 16,
+  warning?: string
+): FinanceLedgerData {
   const summary = getSummary()
   const accounts = getDebtAccounts()
   const latestCashFlow = cashFlow.at(-1)
-  const entries = accounts.slice(0, Math.min(Math.max(limit, 1), 100)).map((account) => ({
-    id: `seed-ledger-${account.flatId}`,
-    entryType: "dues",
-    period: "2026-06",
-    dueDate: account.lastPaymentAt,
-    paidAt: null,
-    postedAt: account.lastPaymentAt,
-    status: account.paymentStatus === "minor_debt" ? "open" : "overdue",
-    amountCents: account.balanceTry * 100,
-    currency: "TRY",
-    description: account.suggestedAction,
-    unitNo: account.flatNumber,
-    residentName: account.ownerName,
-    idempotencyKey: `seed-ledger-${account.flatId}-2026-06`,
-    reversalOf: null,
-  }))
+  const entries = accounts
+    .slice(0, Math.min(Math.max(limit, 1), 100))
+    .map((account) => ({
+      id: `seed-ledger-${account.flatId}`,
+      entryType: "dues",
+      period: "2026-06",
+      dueDate: account.lastPaymentAt,
+      paidAt: null,
+      postedAt: account.lastPaymentAt,
+      status: account.paymentStatus === "minor_debt" ? "open" : "overdue",
+      amountCents: account.balanceTry * 100,
+      currency: "TRY",
+      description: account.suggestedAction,
+      unitNo: account.flatNumber,
+      residentName: account.ownerName,
+      idempotencyKey: `seed-ledger-${account.flatId}-2026-06`,
+      reversalOf: null,
+    }))
   const overdueAccounts = accounts.filter(
-    (account) => account.paymentStatus === "overdue" || account.paymentStatus === "legal"
+    (account) =>
+      account.paymentStatus === "overdue" || account.paymentStatus === "legal"
   )
   const ledgerSummary: FinanceLedgerData["summary"] = {
     currency: "TRY",
     openLedgerCents: summary.totalDebtTry * 100,
-    overdueLedgerCents: overdueAccounts.reduce((sum, account) => sum + account.balanceTry * 100, 0),
+    overdueLedgerCents: overdueAccounts.reduce(
+      (sum, account) => sum + account.balanceTry * 100,
+      0
+    ),
     paidThisMonthCents: (latestCashFlow?.collectedTry ?? 0) * 100,
     openEntries: accounts.length,
     overdueEntries: overdueAccounts.length,
     postedEntries: accounts.length,
     restrictedUnits: summary.restrictedAccess,
-    legalAccounts: accounts.filter((account) => account.paymentStatus === "legal").length,
+    legalAccounts: accounts.filter(
+      (account) => account.paymentStatus === "legal"
+    ).length,
     agingBuckets: getDebtAging().map((bucket) => ({
       label: bucket.label,
       cents: bucket.value * 100,
@@ -3138,7 +4398,10 @@ function localSeedFinanceLedgerData(limit = 16, warning?: string): FinanceLedger
   }
 }
 
-function localSeedPeopleDirectoryData(limit = 80, warning?: string): PeopleDirectoryData {
+function localSeedPeopleDirectoryData(
+  limit = 80,
+  warning?: string
+): PeopleDirectoryData {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 250)
   const residentSummary = getResidentSummary()
   const staffSummary = getStaffSummary()
@@ -3185,7 +4448,11 @@ function localSeedPeopleDirectoryData(limit = 80, warning?: string): PeopleDirec
     contractVersion: PEOPLE_DIRECTORY_CONTRACT_VERSION,
     source: "local-seed",
     generatedAt: new Date().toISOString(),
-    quality: buildPeopleDirectoryQuality(localSeedStaff, localSeedResidents, localSeedRoles),
+    quality: buildPeopleDirectoryQuality(
+      localSeedStaff,
+      localSeedResidents,
+      localSeedRoles
+    ),
     summary: {
       staffTotal: staffSummary.total,
       activeStaff: staffSummary.active,
@@ -3213,7 +4480,9 @@ function isUuid(value: string | null | undefined) {
   )
 }
 
-function normalizeActionRequestRow(row: unknown): ClientActionRequestRecord | null {
+function normalizeActionRequestRow(
+  row: unknown
+): ClientActionRequestRecord | null {
   const record = asRecord(row)
   const id = asString(record.id)
   const actionType = asString(record.action_type)
@@ -3234,7 +4503,7 @@ function normalizeActionRequestRow(row: unknown): ClientActionRequestRecord | nu
   }
 }
 
-function storeLocalClientAction(
+function storeLocalClientActionInMemory(
   input: ClientActionInput,
   status: ClientActionResult["status"] = "locally-logged"
 ): ClientActionResult {
@@ -3248,7 +4517,9 @@ function storeLocalClientAction(
     entityExternalId: input.entityExternalId ?? null,
     title: input.title ?? null,
     status,
-    requestedBy: asNullableString(asRecord(input.metadata?.workflow).requestedById),
+    requestedBy: asNullableString(
+      asRecord(input.metadata?.workflow).requestedById
+    ),
     metadata: input.metadata ?? {},
     createdAt: new Date().toISOString(),
   })
@@ -3262,7 +4533,9 @@ function storeLocalClientAction(
 
 function localActionRows(limit = 5) {
   return Array.from(localClientActionRequests.values())
-    .sort((a, b) => Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? ""))
+    .sort(
+      (a, b) => Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? "")
+    )
     .slice(0, limit)
     .map((action) => ({
       id: action.id,
@@ -3279,15 +4552,27 @@ function localActionRows(limit = 5) {
 function isTicketCreateRequest(action: ClientActionRequestRecord) {
   return (
     action.entityTable === "service_tickets" &&
-    (action.actionType === "ticket.create.request" ||
-      action.actionType === "ticket.create.ai_draft")
+    action.actionType === "ticket.create.ai_draft"
+  )
+}
+
+function storeLocalClientAction(
+  input: ClientActionInput,
+  status: ClientActionResult["status"] = "locally-logged"
+): ClientActionResult {
+  return withLocalQaState(true, () =>
+    storeLocalClientActionInMemory(input, status)
   )
 }
 
 function actionProposedPayload(action: ClientActionRequestRecord) {
   const proposedPayload = asRecord(action.metadata.proposedPayload)
-  const workflowPayload = asRecord(asRecord(action.metadata.workflow).proposedPayload)
-  return Object.keys(proposedPayload).length > 0 ? proposedPayload : workflowPayload
+  const workflowPayload = asRecord(
+    asRecord(action.metadata.workflow).proposedPayload
+  )
+  return Object.keys(proposedPayload).length > 0
+    ? proposedPayload
+    : workflowPayload
 }
 
 function materializedTicketIdFromAction(action: ClientActionRequestRecord) {
@@ -3299,12 +4584,16 @@ function materializedTicketIdFromAction(action: ClientActionRequestRecord) {
 
 function ticketTitleFromAction(action: ClientActionRequestRecord) {
   const proposedPayload = actionProposedPayload(action)
-  return asString(proposedPayload.title, action.title ?? "Approved service ticket")
+  return asString(
+    proposedPayload.title,
+    action.title ?? "Approved service ticket"
+  )
 }
 
 function ticketPriorityForDb(value: unknown) {
   const priority = asString(value, "normal")
-  if (priority === "urgent" || priority === "high" || priority === "low") return priority
+  if (priority === "urgent" || priority === "high" || priority === "low")
+    return priority
   return "normal"
 }
 
@@ -3316,7 +4605,8 @@ function ticketStatusForDb(value: unknown) {
   if (status === "resolved") return "resolved"
   if (status === "closed") return "closed"
   if (status === "cancelled") return "cancelled"
-  if (status === "waiting_payment" || status === "waiting_approval") return "waiting_approval"
+  if (status === "waiting_payment" || status === "waiting_approval")
+    return "waiting_approval"
   if (status === "triage") return "triage"
   return "open"
 }
@@ -3325,144 +4615,20 @@ function ticketPriorityForView(value: unknown): ServiceTicket["priority"] {
   return mapTicketPriority(ticketPriorityForDb(value))
 }
 
-function workforcePriorityForDb(priority: string) {
-  if (priority === "urgent" || priority === "high" || priority === "low") return priority
-  return "medium"
-}
-
 function ticketDueAt(priority: string, serviceSlaHours?: number) {
-  const priorityHours = priority === "urgent" ? 4 : priority === "high" ? 12 : 48
-  const hours = serviceSlaHours ? Math.min(priorityHours, serviceSlaHours) : priorityHours
+  const priorityHours =
+    priority === "urgent" ? 4 : priority === "high" ? 12 : 48
+  const hours = serviceSlaHours
+    ? Math.min(priorityHours, serviceSlaHours)
+    : priorityHours
   return new Date(Date.now() + hours * 3_600_000).toISOString()
-}
-
-function localMaterializeTicket(
-  action: ClientActionRequestRecord,
-  decidedByRole = "manager",
-  decidedAt = new Date().toISOString(),
-  assignee?: string | null
-): MaterializedTicketResult {
-  const existingTicketId = materializedTicketIdFromAction(action)
-  const existingTicket = existingTicketId
-    ? localMaterializedTickets.find((ticket) => ticket.id === existingTicketId)
-    : null
-
-  if (existingTicket) {
-    return {
-      id: existingTicket.id,
-      ticketNo: existingTicket.id,
-      source: "local-seed",
-    }
-  }
-
-  const proposedPayload = actionProposedPayload(action)
-  const priority = ticketPriorityForDb(proposedPayload.priority)
-  const catalogItem = serviceCatalogItemForAction(proposedPayload)
-  const emergencyScenario = emergencyScenarioForCatalog(catalogItem)
-  const providerQueue = emergencyProviderQueue(catalogItem)
-  const assignmentTarget = assignee?.trim() || providerQueue
-  const dueAt = ticketDueAt(priority, catalogItem.slaHours)
-  const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}-${localMaterializedTickets.length + 1}`
-  const unitNo = asNullableString(proposedPayload.unitNo) ?? action.entityExternalId ?? "Unassigned"
-  const paymentDecision = serviceOrderPaymentDecisionForCatalog(catalogItem)
-  const orderNo = `ORD-${ticketNo.replace(/^REQ-/, "")}`
-  const taskNo = `TASK-${ticketNo.replace(/^REQ-/, "")}`
-
-  localMaterializedTickets.unshift({
-    id: ticketNo,
-    flatId: `unit-${unitNo}`,
-    flatNumber: unitNo,
-    title: ticketTitleFromAction(action),
-    category: asString(proposedPayload.category, "general"),
-    priority: ticketPriorityForView(priority),
-    status: "assigned",
-    assignee: assignmentTarget,
-    requester: "Approved workflow",
-    openedAt: new Date().toISOString(),
-    dueAt,
-    slaHoursRemaining: slaHoursRemaining(dueAt),
-    debtBlocked: false,
-    paymentVerified: true,
-    mediaCount: 1,
-    estimatedCostTry: catalogItem.basePriceTry,
-  })
-
-  localMaterializedServiceOrders.unshift({
-    id: orderNo,
-    orderNo,
-    catalogItemId: catalogItem.id,
-    catalogItemName: catalogItem.name,
-    ticketId: ticketNo,
-    flatNumber: unitNo,
-    requester: "Approved workflow",
-    status: "task_created",
-    debtCheckStatus: "clear",
-    paymentDecision,
-    quotedPriceTry: catalogItem.basePriceTry,
-    currency: "TRY",
-    slaHours: catalogItem.slaHours,
-    assignedTeam: catalogItem.team,
-    taskCreated: true,
-    requestedForAt: dueAt,
-    createdAt: decidedAt,
-    nextAction: `${emergencyScenario.label} routed to ${assignmentTarget}. SLA ${catalogItem.slaHours}h; media proof and manager closure review required.`,
-  })
-
-  localMaterializedWorkforceTasks.unshift({
-    id: taskNo,
-    ticketId: ticketNo,
-    flatNumber: unitNo,
-    title: `${catalogItem.name} - ${unitNo}`,
-    team: catalogItem.team,
-    assignee: assignmentTarget,
-    status: "assigned",
-    priority: ticketPriorityForView(priority),
-    slaHoursRemaining: slaHoursRemaining(dueAt),
-    routeSlot: emergencyScenario.routeSlot,
-    checklist: emergencyScenario.checklist,
-    requiresMedia: true,
-    mediaCount: 0,
-    managerApprovalRequired: emergencyScenario.managerApprovalRequired,
-    lastUpdateAt: decidedAt,
-    fieldNote: `Human approval completed by ${decidedByRole}; ${assignmentTarget} notified in demo mode.`,
-    completionReadiness: 18,
-  })
-
-  return {
-    id: ticketNo,
-    ticketNo,
-    source: "local-seed",
-    serviceOrder: {
-      id: orderNo,
-      orderNo,
-      catalogCode: catalogItem.code,
-      team: catalogItem.team,
-      providerQueue: assignmentTarget,
-      slaHours: catalogItem.slaHours,
-    },
-    workforceTask: {
-      id: taskNo,
-      taskNo,
-      team: catalogItem.team,
-      assignee: assignmentTarget,
-      slaHours: catalogItem.slaHours,
-    },
-    notification: {
-      channel: emergencyScenario.notificationChannel,
-      status: "queued",
-      recipient: assignmentTarget,
-    },
-    humanApprovalBoundary: {
-      required: true,
-      approvedByRole: decidedByRole,
-      approvedAt: decidedAt,
-    },
-  }
 }
 
 export async function getDashboardSnapshot(): Promise<DashboardSnapshot> {
   if (!isSupabaseConfigured()) {
-    return localSeedSnapshot("External data service is not configured; using local seed data.")
+    return localSeedSnapshot(
+      "External data service is not configured; using local seed data."
+    )
   }
 
   try {
@@ -3565,7 +4731,8 @@ export async function getFinanceLedgerData({
     const [entryResponse, summaryResponse, actionResponse] = await Promise.all([
       supabase
         .from("finance_ledger_entries")
-        .select(`
+        .select(
+          `
           id,
           entry_type,
           period,
@@ -3580,12 +4747,14 @@ export async function getFinanceLedgerData({
           reversal_of,
           units(unit_no),
           residents(full_name)
-        `)
+        `
+        )
         .order("due_date", { ascending: false, nullsFirst: false })
         .limit(safeLimit),
       supabase
         .from("finance_ledger_entries")
-        .select(`
+        .select(
+          `
           id,
           entry_type,
           period,
@@ -3600,11 +4769,14 @@ export async function getFinanceLedgerData({
           reversal_of,
           units(unit_no),
           residents(full_name)
-        `)
+        `
+        )
         .limit(1000),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
+        .select(
+          "id, action_type, title, status, entity_table, entity_external_id, metadata, created_at"
+        )
         .eq("entity_table", "finance_ledger_entries")
         .order("created_at", { ascending: false })
         .limit(5),
@@ -3666,12 +4838,15 @@ export async function getPeopleDirectoryData({
     ] = await Promise.all([
       supabase
         .from("staff_members")
-        .select("id, profile_id, name, role, team, phone, language, active_tasks, approval_limit_cents, access_scope, status")
+        .select(
+          "id, profile_id, name, role, team, phone, language, active_tasks, approval_limit_cents, access_scope, status"
+        )
         .order("active_tasks", { ascending: false })
         .limit(100),
       supabase
         .from("unit_residents")
-        .select(`
+        .select(
+          `
           id,
           resident_id,
           relationship,
@@ -3680,22 +4855,35 @@ export async function getPeopleDirectoryData({
           end_date,
           units(unit_no),
           residents(id, full_name, phone, email, preferred_language, preferred_channel, identity_status, risk_score, status)
-        `)
+        `
+        )
         .order("start_date", { ascending: false, nullsFirst: false })
         .limit(safeLimit),
       supabase
         .from("residents")
-        .select("id, full_name, phone, email, preferred_language, preferred_channel, identity_status, risk_score, status")
+        .select(
+          "id, full_name, phone, email, preferred_language, preferred_channel, identity_status, risk_score, status"
+        )
         .order("risk_score", { ascending: false })
         .limit(safeLimit),
       supabase
         .from("role_coverage")
-        .select("id, role_label, users_count, can_approve_finance, can_restrict_access, can_manage_users, can_export_data")
+        .select(
+          "id, role_label, users_count, can_approve_finance, can_restrict_access, can_manage_users, can_export_data"
+        )
         .order("users_count", { ascending: false }),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
-        .in("entity_table", ["profiles", "staff_members", "role_coverage", "residents", "unit_residents"])
+        .select(
+          "id, action_type, title, status, entity_table, entity_external_id, metadata, created_at"
+        )
+        .in("entity_table", [
+          "profiles",
+          "staff_members",
+          "role_coverage",
+          "residents",
+          "unit_residents",
+        ])
         .order("created_at", { ascending: false })
         .limit(5),
     ])
@@ -3708,7 +4896,8 @@ export async function getPeopleDirectoryData({
     const staff = normalizeStaffRows(staffResponse.data)
     const linkedResidents = normalizeResidentLinkRows(residentLinkResponse.data)
     const directResidents = normalizeResidentRows(directResidentResponse.data)
-    const people = linkedResidents.length > 0 ? linkedResidents : directResidents
+    const people =
+      linkedResidents.length > 0 ? linkedResidents : directResidents
     const roles = normalizeRoleCoverageRows(roleResponse.data)
 
     return {
@@ -3753,36 +4942,50 @@ export async function getPaymentRestrictionData({
 
   try {
     const supabase = await createDataClient()
-    const [transactionResponse, reservationResponse, depositLedgerResponse, actionResponse, phase4Data] =
-      await Promise.all([
-        supabase
-          .from("payment_transactions")
-          .select(
-            "id, provider, provider_reference, status, amount_cents, currency, paid_at, ledger_entry_id, finance_ledger_entries(id, unit_id, resident_id, units(id, unit_no), residents(id, full_name))"
-          )
-          .order("created_at", { ascending: false })
-          .limit(safeLimit),
-        supabase
-          .from("reservations")
-          .select(
-            "id, guest_name, check_in_at, check_out_at, status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)"
-          )
-          .order("check_out_at", { ascending: true })
-          .limit(safeLimit),
-        supabase
-          .from("finance_ledger_entries")
-          .select("id, entry_type, amount_cents, currency, unit_id, units(id, unit_no)")
-          .in("entry_type", ["deposit", "refund"])
-          .order("created_at", { ascending: false })
-          .limit(safeLimit * 3),
-        supabase
-          .from("client_action_requests")
-          .select("id, action_type, title, status, entity_table, entity_external_id, created_at")
-          .in("entity_table", ["payment_transactions", "finance_ledger_entries", "reservations", "access_events"])
-          .order("created_at", { ascending: false })
-          .limit(5),
-        getPhase4SiteData({ limit: 1000 }),
-      ])
+    const reservationProjection = getBookingLifecycleWorkspace()
+      .then((workspace) => ({
+        data: roleProjectedReservationRows(workspace),
+        error: null,
+      }))
+      .catch((error: unknown) => ({ data: null, error }))
+    const [
+      transactionResponse,
+      reservationResponse,
+      depositLedgerResponse,
+      actionResponse,
+      phase4Data,
+    ] = await Promise.all([
+      supabase
+        .from("payment_transactions")
+        .select(
+          "id, provider, provider_reference, status, amount_cents, currency, paid_at, ledger_entry_id, finance_ledger_entries(id, unit_id, resident_id, units(id, unit_no), residents(id, full_name))"
+        )
+        .order("created_at", { ascending: false })
+        .limit(safeLimit),
+      reservationProjection,
+      supabase
+        .from("finance_ledger_entries")
+        .select(
+          "id, entry_type, amount_cents, currency, unit_id, units(id, unit_no)"
+        )
+        .in("entry_type", ["deposit", "refund"])
+        .order("created_at", { ascending: false })
+        .limit(safeLimit * 3),
+      supabase
+        .from("client_action_requests")
+        .select(
+          "id, action_type, title, status, entity_table, entity_external_id, created_at"
+        )
+        .in("entity_table", [
+          "payment_transactions",
+          "finance_ledger_entries",
+          "reservations",
+          "access_events",
+        ])
+        .order("created_at", { ascending: false })
+        .limit(5),
+      getPhase4SiteData({ limit: 1000 }),
+    ])
 
     if (transactionResponse.error) throw transactionResponse.error
     if (reservationResponse.error) throw reservationResponse.error
@@ -3795,7 +4998,9 @@ export async function getPaymentRestrictionData({
       normalizeDepositLedgerRows(depositLedgerResponse.data)
     )
     const restrictionQueue = buildSupabaseRestrictionQueue(
-      phase4Data.units.map((unit) => unit as unknown as Record<string, unknown>),
+      phase4Data.units.map(
+        (unit) => unit as unknown as Record<string, unknown>
+      ),
       safeLimit
     )
     const reconciliationQueue = normalizePaymentTransactionRows(
@@ -3844,20 +5049,30 @@ export async function getPaymentRestrictionData({
 
 export async function getServiceTicketQueueData({
   limit = 24,
+  search = "",
+  allowLocalSeedFallback = isAccessProfileEnabled(),
+  useLocalAccessProfile = false,
+  localTicketScope,
 }: {
   limit?: number
+  search?: string
+  allowLocalSeedFallback?: boolean
+  useLocalAccessProfile?: boolean
+  localTicketScope?: LocalTicketQueueScope
 } = {}): Promise<ServiceTicketQueueData> {
   const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 100)
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || useLocalAccessProfile) {
     return localSeedServiceTicketQueueData(
       safeLimit,
-      "External data service is not configured; using local ticket seed data."
+      "External data service is not configured; using local ticket seed data.",
+      search,
+      useLocalAccessProfile ? localTicketScope : undefined
     )
   }
 
   try {
-    const supabase = await createDataClient()
+    const supabase = await createClient()
     const [
       ticketResponse,
       catalogResponse,
@@ -3865,13 +5080,7 @@ export async function getServiceTicketQueueData({
       taskResponse,
       actionResponse,
     ] = await Promise.all([
-      supabase
-        .from("service_tickets")
-        .select(
-          "id, ticket_no, title, description, category, priority, status, sla_due_at, estimated_cost_cents, requires_finance_approval, unit_id, resident_id, assigned_to, assignment_label, routing_source, created_at, units(id, unit_no), residents(id, full_name), service_ticket_events(id, event_type, metadata)"
-        )
-        .order("sla_due_at", { ascending: true })
-        .limit(safeLimit),
+      getTicketQueueRows(supabase, safeLimit, search),
       supabase
         .from("service_catalog")
         .select(
@@ -3894,8 +5103,16 @@ export async function getServiceTicketQueueData({
         .limit(safeLimit),
       supabase
         .from("client_action_requests")
-        .select("id, action_type, title, status, entity_table, entity_external_id, metadata, created_at")
-        .in("entity_table", ["service_tickets", "service_catalog", "service_orders", "workforce_tasks", "media_reports"])
+        .select(
+          "id, action_type, title, status, entity_table, entity_external_id, metadata, created_at"
+        )
+        .in("entity_table", [
+          "service_tickets",
+          "service_catalog",
+          "service_orders",
+          "workforce_tasks",
+          "media_reports",
+        ])
         .order("created_at", { ascending: false })
         .limit(5),
     ])
@@ -3904,28 +5121,31 @@ export async function getServiceTicketQueueData({
 
     const tickets = normalizeServiceTicketRows(ticketResponse.data, safeLimit)
     const catalog = ensureServiceCatalogCoverage(
-      catalogResponse.error || !Array.isArray(catalogResponse.data) || catalogResponse.data.length === 0
+      catalogResponse.error ||
+        !Array.isArray(catalogResponse.data) ||
+        catalogResponse.data.length === 0
         ? serviceCatalogItems
         : normalizeServiceCatalogRows(catalogResponse.data)
     )
-    const derivedOrders = buildServiceOrdersFromTickets(tickets)
-    const orders =
-      orderResponse.error || !Array.isArray(orderResponse.data) || orderResponse.data.length === 0
-        ? derivedOrders
-        : normalizeServiceOrderRows(orderResponse.data)
-    const derivedTasks = buildWorkforceTasksFromTickets(tickets)
-    const rawTasks =
-      taskResponse.error || !Array.isArray(taskResponse.data) || taskResponse.data.length === 0
-        ? derivedTasks
-        : normalizeWorkforceTaskRows(taskResponse.data)
-    const tasks = ensureWorkforceTeamCoverage(rawTasks, tickets, orders)
+    if (orderResponse.error) throw orderResponse.error
+    if (taskResponse.error) throw taskResponse.error
+    const { orders, workforceTasks: tasks } = normalizeLiveServiceOperationRows(
+      orderResponse.data,
+      taskResponse.data
+    )
     const summary = summarizeServiceTickets(tickets, catalog, orders, tasks)
 
     return {
       contractVersion: SERVICE_TICKETING_CONTRACT_VERSION,
       source: "supabase",
       generatedAt: new Date().toISOString(),
-      quality: buildServiceTicketingQuality(tickets, catalog, orders, tasks, summary),
+      quality: buildServiceTicketingQuality(
+        tickets,
+        catalog,
+        orders,
+        tasks,
+        summary
+      ),
       summary,
       tickets,
       catalog,
@@ -3939,14 +5159,66 @@ export async function getServiceTicketQueueData({
           : [],
     }
   } catch {
-    if (canUseLocalSeedFallback()) {
+    if (allowLocalSeedFallback && canUseLocalSeedFallback()) {
       return localSeedServiceTicketQueueData(
         safeLimit,
-        "Live ticket query failed; local seed data is available for this environment."
+        "Live ticket query failed; local seed data is available for this environment.",
+        search
       )
     }
     throw new Error("Service ticket queue is unavailable.")
   }
+}
+
+export async function getTicketAvailableUnits({
+  fallbackUnitNos = null,
+  useLocalAccessProfile = false,
+}: {
+  /**
+   * Explicit QA/local scope. `null` means the operational roles may use the
+   * local unit catalogue; an array means client roles may use only those units.
+   * This value is never used to broaden a real authenticated RLS query.
+   */
+  fallbackUnitNos?: readonly string[] | null
+  useLocalAccessProfile?: boolean
+} = {}): Promise<TicketAvailableUnit[]> {
+  if (!isSupabaseConfigured() || useLocalAccessProfile) {
+    const normalizedScope =
+      fallbackUnitNos === null
+        ? null
+        : new Set(
+            fallbackUnitNos.map((unitNo) =>
+              unitNo.trim().toLocaleUpperCase("tr-TR")
+            )
+          )
+    return flats
+      .filter(
+        (flat) => normalizedScope === null || normalizedScope.has(flat.number)
+      )
+      .map((flat) => ({
+        id: flat.id,
+        unitNo: flat.number,
+        siteId: "seed-site",
+      }))
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("units")
+    .select("id, unit_no, site_id")
+    .order("unit_no", { ascending: true })
+    .limit(1000)
+
+  if (error) throw error
+  if (!Array.isArray(data)) return []
+  return data
+    .map(asRecord)
+    .map((unit) => ({
+      id: asString(unit.id),
+      unitNo: asString(unit.unit_no),
+      siteId: asNullableString(unit.site_id),
+    }))
+    .filter((unit) => Boolean(unit.id && unit.unitNo))
 }
 
 function buildTicketViewFromInput({
@@ -3962,6 +5234,10 @@ function buildTicketViewFromInput({
   requesterRole,
   dueAt,
   estimatedCostTry,
+  version = "1",
+  workflowState,
+  approvalStatus = "not_required",
+  emergency = false,
 }: {
   id: string
   title: string
@@ -3975,7 +5251,15 @@ function buildTicketViewFromInput({
   requesterRole?: string
   dueAt: string
   estimatedCostTry: number
+  version?: string
+  workflowState?: TicketPrimaryState
+  approvalStatus?: TicketApprovalState
+  emergency?: boolean
 }): ServiceTicket {
+  const normalizedPriority = ticketPriorityForView(priority)
+  const normalizedAssignee = assignee?.trim() || "Operations queue"
+  const normalizedWorkflowState =
+    workflowState ?? primaryStateFromPersistedStatus(ticketStatusForDb(status))
   return {
     id,
     flatId: unitNo ? `unit-${unitNo}` : "unit-unassigned",
@@ -3983,22 +5267,71 @@ function buildTicketViewFromInput({
     title,
     description: description ?? null,
     category,
-    priority: ticketPriorityForView(priority),
+    priority: normalizedPriority,
     status: mapTicketStatus(ticketStatusForDb(status)),
-    assignee: assignee?.trim() || "Operations queue",
+    assignee: normalizedAssignee,
     requester,
     requesterRole,
     openedAt: new Date().toISOString(),
     dueAt,
     slaHoursRemaining: slaHoursRemaining(dueAt),
     debtBlocked: false,
-    paymentVerified: true,
+    paymentVerified: !emergency,
     mediaCount: 0,
     estimatedCostTry,
+    version,
+    workflowState: normalizedWorkflowState,
+    approvalStatus,
+    dispatchStatus: deriveDispatchState(
+      normalizedWorkflowState,
+      normalizedAssignee
+    ),
+    paymentWorkflowStatus: emergency
+      ? emergencyPaymentStateForTicket({
+          title,
+          description: description ?? null,
+          category,
+          emergency,
+          estimatedCostTry,
+          debtBlocked: false,
+          paymentVerified: false,
+        })
+      : "not_required",
+    severity: ticketSeverityForPriority(normalizedPriority, emergency),
+    emergency,
+    history: [
+      {
+        id: `local:${id}:created`,
+        type: "ticket_created",
+        message: "Service request received.",
+        occurredAt: new Date().toISOString(),
+        audience: "resident",
+        version,
+        fromState: null,
+        toState: normalizedWorkflowState,
+      },
+    ],
   }
 }
 
-function localCreateServiceTicket(input: CreateServiceTicketInput): ServiceTicketMutationResult {
+function localCreateServiceTicketInMemory(
+  input: CreateServiceTicketInput
+): ServiceTicketMutationResult {
+  const idempotencyScope = `${input.actor.companyId ?? "local"}:${input.idempotencyKey ?? ""}`
+  const requestFingerprint = serviceTicketCreateFingerprint(input)
+  if (input.idempotencyKey) {
+    const receipt = localTicketCreateIdempotency.get(idempotencyScope)
+    if (receipt) {
+      if (receipt.fingerprint !== requestFingerprint) {
+        throw new TicketRepositoryError(
+          "TICKET_IDEMPOTENCY_CONFLICT",
+          "The idempotency key was already used for a different ticket submission.",
+          409
+        )
+      }
+      return { ...receipt.result, replayed: true }
+    }
+  }
   const catalogItem = serviceCatalogItemForAction({
     title: input.title,
     description: input.description,
@@ -4010,31 +5343,88 @@ function localCreateServiceTicket(input: CreateServiceTicketInput): ServiceTicke
   const dueAt = ticketDueAt(priority, catalogItem.slaHours)
   const ticketNo = `TCK-${Date.now().toString(36).toUpperCase()}-${localMaterializedTickets.length + 1}`
   const routedAssignee = input.assignee?.trim() || "Operations queue"
-  const assignee = input.requiresOwnerApproval ? "Owner approval queue" : routedAssignee
+  const assignee = input.requiresOwnerApproval
+    ? "Owner approval queue"
+    : routedAssignee
+  const workflowState: TicketPrimaryState = input.requiresOwnerApproval
+    ? "submitted"
+    : assignee === "Operations queue"
+      ? "submitted"
+      : "assigned"
   const ticket = buildTicketViewFromInput({
     id: ticketNo,
     title: input.title,
     description: input.description,
     category: input.category,
     priority,
-    status: input.requiresOwnerApproval ? "waiting_approval" : assignee === "Operations queue" ? "open" : "assigned",
+    status: input.requiresOwnerApproval
+      ? "waiting_approval"
+      : assignee === "Operations queue"
+        ? "open"
+        : "assigned",
     unitNo: input.unitNo,
     assignee,
     requester: input.actor.displayName ?? input.actor.email ?? input.actor.role,
     requesterRole: input.actor.role,
     dueAt,
     estimatedCostTry: catalogItem.basePriceTry,
+    version: "1",
+    workflowState,
+    approvalStatus: input.requiresOwnerApproval
+      ? "pending_owner"
+      : "not_required",
+    emergency: Boolean(input.emergency),
   })
 
   localMaterializedTickets.unshift(ticket)
 
-  return {
+  // Emergency intake is operational immediately, even before assignment. Keep
+  // a single draft order visible so P0 containment never inherits debt/payment
+  // blocking semantics; assignment upgrades this same order and creates the
+  // workforce task through the normal command path below.
+  if (ticket.emergency) {
+    const emergencyOrder = buildServiceOrdersFromTickets([ticket])[0]
+    if (emergencyOrder) {
+      localMaterializedServiceOrders.unshift(emergencyOrder)
+    }
+  }
+
+  const result: ServiceTicketMutationResult = {
     source: "local-seed",
     ticket,
+    version: "1",
   }
+  if (input.idempotencyKey) {
+    localTicketCreateIdempotency.set(idempotencyScope, {
+      fingerprint: requestFingerprint,
+      result,
+    })
+  }
+  return result
 }
 
-function localUpdateServiceTicket(input: UpdateServiceTicketInput): ServiceTicketMutationResult | null {
+function localCreateServiceTicket(input: CreateServiceTicketInput) {
+  return withLocalQaState(true, () => localCreateServiceTicketInMemory(input))
+}
+
+function localUpdateServiceTicketInMemory(
+  input: UpdateServiceTicketInput
+): ServiceTicketMutationResult | null {
+  const idempotencyScope = `${input.actor.companyId ?? "local"}:${input.idempotencyKey ?? ""}`
+  const requestFingerprint = serviceTicketMutationFingerprint(input)
+  if (input.idempotencyKey) {
+    const receipt = localTicketMutationIdempotency.get(idempotencyScope)
+    if (receipt) {
+      if (receipt.fingerprint !== requestFingerprint) {
+        throw new TicketRepositoryError(
+          "TICKET_IDEMPOTENCY_CONFLICT",
+          "The idempotency key was already used for a different ticket command.",
+          409
+        )
+      }
+      return { ...receipt.result, replayed: true }
+    }
+  }
   const existing =
     localMaterializedTickets.find((ticket) => ticket.id === input.ticketId) ??
     localTicketOverrides.get(input.ticketId) ??
@@ -4042,43 +5432,345 @@ function localUpdateServiceTicket(input: UpdateServiceTicketInput): ServiceTicke
 
   if (!existing) return null
 
+  const currentVersion = existing.version ?? "1"
+  if (input.expectedVersion && input.expectedVersion !== currentVersion) {
+    throw new TicketRepositoryError(
+      "TICKET_VERSION_CONFLICT",
+      "The ticket changed after it was loaded.",
+      409,
+      { expectedVersion: input.expectedVersion, currentVersion }
+    )
+  }
+
+  const nextVersion = String(Math.max(Number(currentVersion) || 1, 1) + 1)
+  const workflowState =
+    input.workflowState ??
+    (input.status
+      ? primaryStateFromPersistedStatus(ticketStatusForDb(input.status))
+      : primaryStateFromPersistedStatus(
+          existing.status,
+          existing.workflowState
+        ))
+  const nextStatus = input.workflowState
+    ? mapTicketStatus(persistedStatusForPrimaryState(input.workflowState))
+    : input.status
+      ? mapTicketStatus(ticketStatusForDb(input.status))
+      : existing.status
+
   const next: ServiceTicket = {
     ...existing,
     title: input.title ?? existing.title,
-    description: input.clearDescription ? null : input.description ?? existing.description ?? null,
+    description: input.clearDescription
+      ? null
+      : (input.description ?? existing.description ?? null),
     category: input.category ?? existing.category,
-    priority: input.priority ? ticketPriorityForView(input.priority) : existing.priority,
-    status: input.status ? mapTicketStatus(ticketStatusForDb(input.status)) : existing.status,
+    priority: input.priority
+      ? ticketPriorityForView(input.priority)
+      : existing.priority,
+    status: nextStatus,
     assignee: input.assignee?.trim() || existing.assignee,
+    assigneeProfileId:
+      input.command === "assign"
+        ? (input.assigneeProfileId ?? null)
+        : (existing.assigneeProfileId ?? null),
+    version: nextVersion,
+    workflowState,
+    approvalStatus:
+      input.approvalStatus ?? existing.approvalStatus ?? "not_required",
+    dispatchStatus:
+      input.dispatchStatus ??
+      deriveDispatchState(
+        workflowState,
+        input.assignee?.trim() || existing.assignee,
+        existing.dispatchStatus
+      ),
+    paymentWorkflowStatus: existing.emergency
+      ? emergencyPaymentStateForTicket({
+          title: input.title ?? existing.title,
+          description: input.clearDescription
+            ? null
+            : (input.description ?? existing.description ?? null),
+          category: input.category ?? existing.category,
+          emergency: true,
+          estimatedCostTry: existing.estimatedCostTry,
+          debtBlocked: false,
+          paymentVerified: false,
+        })
+      : (input.paymentStatus ??
+        existing.paymentWorkflowStatus ??
+        "not_required"),
+    history: [
+      ...(existing.history?.length
+        ? existing.history
+        : [
+            {
+              id: `local:${existing.id}:created`,
+              type: "ticket_created",
+              message: "Service request received.",
+              occurredAt: existing.openedAt,
+              audience: "resident" as const,
+              version: currentVersion,
+              fromState: null,
+              toState: existing.workflowState ?? "submitted",
+            },
+          ]),
+      {
+        id: `local:${existing.id}:${nextVersion}`,
+        type:
+          input.command === "assign"
+            ? "ticket_assigned"
+            : input.command === "approve_owner_request" ||
+                input.command === "reject_owner_request"
+              ? "owner_approval_decided"
+              : input.command
+                ? "workflow_command"
+                : "ticket_details_updated",
+        message:
+          input.command === "assign"
+            ? "Ticket assignment updated."
+            : input.command === "approve_owner_request"
+              ? "The owner approved this service request."
+              : input.command === "reject_owner_request"
+                ? "The owner rejected this service request."
+                : input.command === "cancel"
+                  ? "Service request cancelled."
+                  : input.command === "reopen"
+                    ? "Service request reopened."
+                    : input.command === "request_owner_approval"
+                      ? "Owner approval requested after review."
+                      : input.command
+                        ? "Service request workflow updated."
+                        : "Service request details updated.",
+        occurredAt: new Date().toISOString(),
+        audience: "resident",
+        version: nextVersion,
+        fromState: existing.workflowState ?? null,
+        toState: workflowState,
+      },
+    ],
   }
 
-  const materializedIndex = localMaterializedTickets.findIndex((ticket) => ticket.id === input.ticketId)
+  const materializedIndex = localMaterializedTickets.findIndex(
+    (ticket) => ticket.id === input.ticketId
+  )
   if (materializedIndex >= 0) {
     localMaterializedTickets[materializedIndex] = next
   } else {
     localTicketOverrides.set(input.ticketId, next)
   }
 
-  localMaterializedWorkforceTasks.forEach((task, index) => {
-    if (task.ticketId !== input.ticketId || !input.assignee?.trim()) return
-    localMaterializedWorkforceTasks[index] = {
-      ...task,
-      assignee: input.assignee.trim(),
-      status: next.status,
-      lastUpdateAt: new Date().toISOString(),
+  // Acceptance is the business boundary that turns a request into executable
+  // work. Persist the local QA order/task exactly once as well, so the demo
+  // proves the same cross-role hand-off as the transactional database path.
+  if (input.command === "accept" || input.command === "assign") {
+    const derivedOrder = buildServiceOrdersFromTickets([next])[0]
+    const orderIndex = localMaterializedServiceOrders.findIndex(
+      (order) => order.ticketId === input.ticketId
+    )
+    if (orderIndex >= 0) {
+      const existingOrder = localMaterializedServiceOrders[orderIndex]
+      localMaterializedServiceOrders[orderIndex] = {
+        ...derivedOrder,
+        id: existingOrder.id,
+        orderNo: existingOrder.orderNo,
+        createdAt: existingOrder.createdAt,
+      }
+    } else {
+      localMaterializedServiceOrders.unshift(derivedOrder)
     }
-  })
 
-  return {
+    const derivedTask = buildWorkforceTasksFromTickets([next])[0]
+    const taskIndex = localMaterializedWorkforceTasks.findIndex(
+      (task) => task.ticketId === input.ticketId
+    )
+    if (taskIndex >= 0) {
+      const existingTask = localMaterializedWorkforceTasks[taskIndex]
+      localMaterializedWorkforceTasks[taskIndex] = {
+        ...derivedTask,
+        id: existingTask.id,
+        lastUpdateAt: new Date().toISOString(),
+      }
+    } else {
+      localMaterializedWorkforceTasks.unshift(derivedTask)
+    }
+  } else {
+    localMaterializedWorkforceTasks.forEach((task, index) => {
+      if (task.ticketId !== input.ticketId) return
+      localMaterializedWorkforceTasks[index] = {
+        ...task,
+        status: next.status,
+        lastUpdateAt: new Date().toISOString(),
+      }
+    })
+  }
+
+  const result: ServiceTicketMutationResult = {
     source: "local-seed",
     ticket: next,
+    version: nextVersion,
   }
+  if (input.idempotencyKey) {
+    localTicketMutationIdempotency.set(idempotencyScope, {
+      fingerprint: requestFingerprint,
+      result,
+    })
+  }
+  return result
+}
+
+function localUpdateServiceTicket(input: UpdateServiceTicketInput) {
+  return withLocalQaState(true, () => localUpdateServiceTicketInMemory(input))
+}
+
+function ticketMutationFromRpc(
+  data: unknown,
+  fallback: ServiceTicket
+): ServiceTicketMutationResult {
+  const row = asRecord(Array.isArray(data) ? data[0] : data)
+  const priority = ticketPriorityForView(row.priority ?? fallback.priority)
+  const rawStatus = asString(row.status, fallback.status)
+  const workflowState = primaryStateFromPersistedStatus(
+    rawStatus,
+    row.workflow_state ?? fallback.workflowState
+  )
+  const emergency = asString(row.emergency_classification) === "rule_matched_p0"
+  const requiresFinanceApproval =
+    !emergency && asBoolean(row.requires_finance_approval, fallback.debtBlocked)
+  const assignee = safeServiceTicketAssigneeLabel({
+    assignmentLabel: row.assignment_label ?? fallback.assignee,
+    assignedProfileId: row.assigned_to ?? fallback.assigneeProfileId,
+  })
+  const approvalStatus = ticketApprovalState(row.approval_status, rawStatus)
+  const version = asString(row.workflow_version, fallback.version ?? "1")
+  const paymentWorkflowStatus = emergency
+    ? "not_required"
+    : derivePaymentState(
+        requiresFinanceApproval,
+        false,
+        fallback.paymentWorkflowStatus
+      )
+  const ticket: ServiceTicket = {
+    ...fallback,
+    id: asString(row.ticket_no, fallback.id),
+    title: asString(row.title, fallback.title),
+    description:
+      row.description === null
+        ? null
+        : (asNullableString(row.description) ?? fallback.description),
+    category: asString(row.category, fallback.category),
+    priority,
+    status: mapTicketStatus(rawStatus),
+    assignee,
+    assigneeProfileId:
+      asNullableString(row.assigned_to) ?? fallback.assigneeProfileId ?? null,
+    dueAt: asString(row.sla_due_at, fallback.dueAt),
+    slaHoursRemaining: slaHoursRemaining(
+      asNullableString(row.sla_due_at) ?? fallback.dueAt
+    ),
+    debtBlocked: requiresFinanceApproval,
+    paymentVerified: !emergency && !requiresFinanceApproval,
+    estimatedCostTry: Math.round(
+      asNumber(row.estimated_cost_cents, fallback.estimatedCostTry * 100) / 100
+    ),
+    version,
+    workflowState,
+    approvalStatus,
+    dispatchStatus: deriveDispatchState(
+      workflowState,
+      assignee,
+      fallback.dispatchStatus
+    ),
+    paymentWorkflowStatus,
+    severity: ticketSeverityForPriority(priority, emergency),
+    emergency,
+  }
+  if (emergency) {
+    ticket.paymentWorkflowStatus = emergencyPaymentStateForTicket(ticket)
+  }
+  return { source: "supabase", ticket, version }
+}
+
+function throwTicketRepositoryCommandError(error: unknown): never {
+  const record = asRecord(error)
+  const code = asString(record.code, "")
+  const message = asString(record.message, "Ticket workflow command failed.")
+  if (isMissingTicketWorkflowSchemaError(error)) {
+    throw new TicketRepositoryError(
+      "TICKET_WORKFLOW_UNAVAILABLE",
+      "The hardened ticket workflow is not deployed in this environment.",
+      503
+    )
+  }
+  if (code === "40001" || /version conflict/i.test(message)) {
+    throw new TicketRepositoryError(
+      "TICKET_VERSION_CONFLICT",
+      "The ticket changed after it was loaded. Refresh it before retrying.",
+      409,
+      { databaseCode: code }
+    )
+  }
+  if (code === "23505" || /idempotency key/i.test(message)) {
+    throw new TicketRepositoryError(
+      "TICKET_IDEMPOTENCY_CONFLICT",
+      "This idempotency key was already used for a different ticket command.",
+      409,
+      { databaseCode: code }
+    )
+  }
+  if (/not found/i.test(message)) {
+    throw new TicketRepositoryError(
+      "TICKET_NOT_FOUND",
+      "Ticket was not found.",
+      404,
+      { databaseCode: code }
+    )
+  }
+  if (
+    code === "42501" ||
+    /permission|forbidden|(?:role|actor|account|user).{0,30}not allowed|^only .+ (?:may|can)|outside (?:the )?authorized|not the requester|not the unit owner/i.test(
+      message
+    )
+  ) {
+    throw new TicketRepositoryError(
+      "TICKET_TRANSITION_FORBIDDEN",
+      "Your account is not allowed to run this ticket command.",
+      403,
+      { databaseCode: code }
+    )
+  }
+  if (
+    /invalid transition|current state|already (?:approved|rejected|closed)|must be (?:accepted|approved)|not pending|approval (?:is )?(?:pending|rejected)|payment.{0,30}pending|cannot .{0,40}(?:state|approval|payment)/i.test(
+      message
+    )
+  ) {
+    throw new TicketRepositoryError(
+      "TICKET_INVALID_TRANSITION",
+      "The ticket command is not valid in its current workflow state.",
+      409,
+      { databaseCode: code }
+    )
+  }
+  if (
+    code === "22023" ||
+    code === "23514" ||
+    /invalid input|context|reason (?:is )?required|required field|must be provided/i.test(
+      message
+    )
+  ) {
+    throw new TicketRepositoryError(
+      "TICKET_INPUT_INVALID",
+      "The ticket command is missing required or valid workflow data.",
+      422,
+      { databaseCode: code }
+    )
+  }
+  throw error
 }
 
 export async function createServiceTicket(
   input: CreateServiceTicketInput
 ): Promise<ServiceTicketMutationResult> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || isLocalTicketAccessProfile(input.actor)) {
     return localCreateServiceTicket(input)
   }
 
@@ -4090,167 +5782,300 @@ export async function createServiceTicket(
     unitNo: input.unitNo,
   })
   const priority = ticketPriorityForDb(input.priority)
-  const routedAssignee = input.assignee?.trim() || "Operations queue"
-  const assignee = input.requiresOwnerApproval ? "Owner approval queue" : routedAssignee
   const dueAt = ticketDueAt(priority, catalogItem.slaHours)
   const ticketNo = `TCK-${Date.now().toString(36).toUpperCase()}`
 
   try {
-    const supabase = await createDataClient()
+    const supabase = await createClient()
     const context = await resolveOperationalContext(supabase, {
       companyId: input.actor.companyId,
       unitNo: input.unitNo,
     })
 
-    const { data, error } = await supabase
-      .from("service_tickets")
-      .insert({
-        company_id: context.companyId,
-        site_id: context.siteId,
-        unit_id: context.unitId,
-        ticket_no: ticketNo,
-        title: input.title,
-        description: input.description ?? null,
-        category: input.category,
-        priority,
-        status: input.requiresOwnerApproval ? "waiting_approval" : assignee === "Operations queue" ? "open" : "assigned",
-        sla_due_at: dueAt,
-        estimated_cost_cents: catalogItem.basePriceTry * 100,
-        requires_finance_approval: false,
-        assignment_label: assignee,
-        routing_source: "portal",
-        approval_status: input.requiresOwnerApproval ? "pending_owner" : "not_required",
-        routing_metadata: { suggestedAssignee: input.suggestedAssignee ?? routedAssignee },
-        created_by: isUuid(input.actor.id) ? input.actor.id : null,
-      })
-      .select("id, ticket_no")
-      .single()
-
-    if (error) throw error
-
-    const ticketId = asString(asRecord(data).id, ticketNo)
-    const eventResult = await supabase.from("service_ticket_events").insert({
-      company_id: context.companyId,
-      ticket_id: ticketId,
-      event_type: "portal_ticket_created",
-      body: input.description ?? "Ticket created from portal workflow.",
-      actor_profile_id: isUuid(input.actor.id) ? input.actor.id : null,
-      metadata: {
-        assigneeLabel: assignee,
-        suggestedAssignee: input.suggestedAssignee ?? routedAssignee,
-        approvalStatus: input.requiresOwnerApproval ? "pending_owner" : "not_required",
-        requestedByRole: input.actor.role,
-        source: "portal",
-      },
-    })
-
-    if (eventResult.error) throw eventResult.error
-
-    return {
-      source: "supabase",
-      ticket: buildTicketViewFromInput({
-        id: asString(asRecord(data).ticket_no, ticketNo),
-        title: input.title,
-        description: input.description,
-        category: input.category,
-        priority,
-        status: input.requiresOwnerApproval ? "waiting_approval" : assignee === "Operations queue" ? "open" : "assigned",
-        unitNo: context.unitNo,
-        assignee,
-        requester: input.actor.displayName ?? input.actor.email ?? input.actor.role,
-        requesterRole: input.actor.role,
-        dueAt,
-        estimatedCostTry: catalogItem.basePriceTry,
-      }),
+    if (!input.idempotencyKey) {
+      throw new TicketRepositoryError(
+        "TICKET_WORKFLOW_UNAVAILABLE",
+        "An idempotency key is required for ticket submission.",
+        400
+      )
     }
+    const requestFingerprint = serviceTicketCreateFingerprint(input)
+
+    const { data, error } = await supabase.rpc(
+      "create_service_ticket_command",
+      {
+        p_idempotency_key: input.idempotencyKey,
+        p_site_id: context.siteId,
+        p_unit_id: context.unitId,
+        p_title: input.title,
+        p_description: input.description ?? null,
+        p_category: input.category,
+        p_priority: priority,
+        p_resident_id: null,
+        p_ticket_no: ticketNo,
+        p_sla_due_at: dueAt,
+        p_emergency_policy_code: input.emergencyPolicyCode ?? null,
+        p_request_fingerprint: requestFingerprint,
+      }
+    )
+    if (error) throwTicketRepositoryCommandError(error)
+
+    const fallback = buildTicketViewFromInput({
+      id: ticketNo,
+      title: input.title,
+      description: input.description,
+      category: input.category,
+      priority,
+      status: "open",
+      unitNo: context.unitNo,
+      assignee: "Operations triage queue",
+      requester:
+        input.actor.displayName ?? input.actor.email ?? input.actor.role,
+      requesterRole: input.actor.role,
+      dueAt,
+      estimatedCostTry: catalogItem.basePriceTry,
+      version: "1",
+      workflowState: "submitted",
+      approvalStatus: "not_required",
+      emergency: Boolean(input.emergencyPolicyCode),
+    })
+    return ticketMutationFromRpc(data, fallback)
   } catch (error) {
-    if (canUseLocalSeedFallback()) return localCreateServiceTicket(input)
+    if (error instanceof TicketRepositoryError) throw error
     throw error
+  }
+}
+
+export async function replayServiceTicketMutation(
+  input: UpdateServiceTicketInput
+): Promise<ServiceTicketMutationResult | null> {
+  if (!input.idempotencyKey) return null
+  const requestFingerprint = serviceTicketMutationFingerprint(input)
+  const idempotencyScope = `${input.actor.companyId ?? "local"}:${input.idempotencyKey}`
+
+  if (!isSupabaseConfigured() || isLocalTicketAccessProfile(input.actor)) {
+    return withLocalQaState(false, () => {
+      const receipt = localTicketMutationIdempotency.get(idempotencyScope)
+      if (!receipt) return null
+      if (receipt.fingerprint !== requestFingerprint) {
+        throw new TicketRepositoryError(
+          "TICKET_IDEMPOTENCY_CONFLICT",
+          "The idempotency key was already used for a different ticket command.",
+          409
+        )
+      }
+      return { ...receipt.result, replayed: true }
+    })
+  }
+
+  const record = await getServiceTicketWorkflowRecord(input.ticketId)
+  if (!record?.databaseId) return null
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("service_ticket_transitions")
+    .select("ticket_id, metadata")
+    .eq("ticket_id", record.databaseId)
+    .eq("idempotency_key", input.idempotencyKey)
+    .maybeSingle()
+  if (error) {
+    throw new TicketRepositoryError(
+      "TICKET_WORKFLOW_UNAVAILABLE",
+      "Ticket retry evidence could not be verified.",
+      503,
+      { databaseCode: error.code }
+    )
+  }
+  if (!data) return null
+
+  const metadata = asRecord(data.metadata)
+  if (
+    asString(data.ticket_id) !== record.databaseId ||
+    asString(metadata.requestFingerprint) !== requestFingerprint
+  ) {
+    throw new TicketRepositoryError(
+      "TICKET_IDEMPOTENCY_CONFLICT",
+      "The idempotency key was already used for a different ticket command.",
+      409
+    )
+  }
+
+  return {
+    source: "supabase",
+    ticket: record.ticket,
+    version: record.version,
+    replayed: true,
   }
 }
 
 export async function updateServiceTicket(
   input: UpdateServiceTicketInput
 ): Promise<ServiceTicketMutationResult | null> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || isLocalTicketAccessProfile(input.actor)) {
     return localUpdateServiceTicket(input)
   }
 
-  try {
-    const supabase = await createDataClient()
-    const ticketQuery = supabase
-      .from("service_tickets")
-      .select("id, company_id, site_id, ticket_no, title, description, category, priority, status, sla_due_at, estimated_cost_cents, requires_finance_approval, assigned_to, assignment_label, routing_source, created_at, units(id, unit_no), residents(id, full_name), service_ticket_events(id, event_type, metadata)")
-
-    const ticketResponse = isUuid(input.ticketId)
-      ? await ticketQuery.eq("id", input.ticketId).maybeSingle()
-      : await ticketQuery.eq("ticket_no", input.ticketId).maybeSingle()
-
-    if (ticketResponse.error) throw ticketResponse.error
-    const existing = asRecord(ticketResponse.data)
-    const ticketId = asNullableString(existing.id)
-    const companyId = asNullableString(existing.company_id)
-    if (!ticketId || !companyId) return null
-
-    const updatePayload: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    }
-    if (input.title !== undefined) updatePayload.title = input.title
-    if (input.category !== undefined) updatePayload.category = input.category
-    if (input.priority !== undefined) updatePayload.priority = ticketPriorityForDb(input.priority)
-    if (input.status !== undefined) updatePayload.status = ticketStatusForDb(input.status)
-    if (input.description !== undefined || input.clearDescription) {
-      updatePayload.description = input.clearDescription ? null : input.description
-    }
-    if (input.assignee?.trim() && !input.status) {
-      updatePayload.status = "assigned"
-    }
-    if (input.assignee?.trim()) updatePayload.assignment_label = input.assignee.trim()
-
-    const { data, error } = await supabase
-      .from("service_tickets")
-      .update(updatePayload)
-      .eq("id", ticketId)
-      .select("id, ticket_no, title, description, category, priority, status, sla_due_at, estimated_cost_cents, requires_finance_approval, assigned_to, assignment_label, routing_source, created_at, units(id, unit_no), residents(id, full_name), service_ticket_events(id, event_type, metadata)")
-      .single()
-
-    if (error) throw error
-
-    const assignee = input.assignee?.trim()
-    if (assignee || input.description !== undefined || input.clearDescription || input.status) {
-      const eventResult = await supabase.from("service_ticket_events").insert({
-        company_id: companyId,
-        ticket_id: ticketId,
-        event_type: assignee ? "portal_ticket_assigned" : "portal_ticket_updated",
-        body: input.clearDescription
-          ? "Description removed from portal workflow."
-          : input.description ?? "Ticket updated from portal workflow.",
-        actor_profile_id: isUuid(input.actor.id) ? input.actor.id : null,
-        metadata: {
-          assigneeLabel: assignee ?? undefined,
-          requestedByRole: input.actor.role,
-          clearDescription: Boolean(input.clearDescription),
-          status: input.status ?? null,
-        },
-      })
-
-      if (eventResult.error) throw eventResult.error
-    }
-
-    const ticket = normalizeServiceTicketRows([data], 1)[0]
-    if (!ticket) return null
-
-    return {
-      source: "supabase",
-      ticket: assignee ? { ...ticket, assignee } : ticket,
-    }
-  } catch (error) {
-    if (canUseLocalSeedFallback()) return localUpdateServiceTicket(input)
-    throw error
+  const record = await getServiceTicketWorkflowRecord(input.ticketId)
+  if (!record?.databaseId) return null
+  if (!input.idempotencyKey) {
+    throw new TicketRepositoryError(
+      "TICKET_WORKFLOW_UNAVAILABLE",
+      "An idempotency key is required for ticket mutation.",
+      400
+    )
   }
+  const expectedVersion = Number(input.expectedVersion ?? record.version)
+  if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 1) {
+    throw new TicketRepositoryError(
+      "TICKET_VERSION_CONFLICT",
+      "A valid expected workflow version is required.",
+      409
+    )
+  }
+  const requestFingerprint = serviceTicketMutationFingerprint(input)
+
+  const hasDetails =
+    input.title !== undefined ||
+    input.description !== undefined ||
+    Boolean(input.clearDescription) ||
+    input.category !== undefined ||
+    input.priority !== undefined
+  const supabase = await createClient()
+  let data: unknown
+  let error: unknown
+
+  if (hasDetails) {
+    const response = await supabase.rpc(
+      "update_service_ticket_details_command",
+      {
+        p_ticket_id: record.databaseId,
+        p_expected_version: expectedVersion,
+        p_idempotency_key: input.idempotencyKey,
+        p_title: input.title ?? null,
+        p_description: input.description ?? null,
+        p_clear_description: Boolean(input.clearDescription),
+        p_category: input.category ?? null,
+        p_priority: input.priority ? ticketPriorityForDb(input.priority) : null,
+        p_reason: input.reason ?? null,
+        p_metadata: {
+          requestedByRole: input.actor.role,
+          requestFingerprint,
+        },
+      }
+    )
+    data = response.data
+    error = response.error
+  } else if (input.command === "assign") {
+    const response = await supabase.rpc("assign_service_ticket_command", {
+      p_ticket_id: record.databaseId,
+      p_expected_version: expectedVersion,
+      p_assigned_profile_id: input.assigneeProfileId ?? null,
+      p_assignment_label: input.assignee ?? null,
+      p_idempotency_key: input.idempotencyKey,
+      p_reason: input.reason ?? null,
+      p_request_fingerprint: requestFingerprint,
+    })
+    data = response.data
+    error = response.error
+  } else if (
+    input.command === "approve_owner_request" ||
+    input.command === "reject_owner_request"
+  ) {
+    const response = await supabase.rpc(
+      "decide_ticket_owner_approval_command",
+      {
+        p_ticket_id: record.databaseId,
+        p_expected_version: expectedVersion,
+        p_decision:
+          input.command === "approve_owner_request" ? "approved" : "rejected",
+        p_idempotency_key: input.idempotencyKey,
+        p_reason: input.reason ?? null,
+        p_request_fingerprint: requestFingerprint,
+      }
+    )
+    data = response.data
+    error = response.error
+  } else if (input.command) {
+    const commandAliases: Partial<Record<TicketCommand, string>> = {
+      triage: "start_triage",
+      accept: "accept",
+      acknowledge: "acknowledge",
+      start_work: "start_work",
+      wait_for_resident: "wait_resident",
+      resume_work: "resume_work",
+      submit_for_review: "submit_for_review",
+      request_owner_approval: "request_owner_approval",
+      request_rework: "request_rework",
+      approve_resolution: "resolve",
+      close: "close",
+      cancel: "cancel",
+      reopen: "reopen",
+    }
+    const databaseCommand = commandAliases[input.command]
+    if (!databaseCommand) {
+      throw new TicketRepositoryError(
+        "TICKET_WORKFLOW_UNAVAILABLE",
+        `No database command is mapped for ${input.command}.`,
+        422
+      )
+    }
+    const response = await supabase.rpc(
+      "execute_service_ticket_workflow_command",
+      {
+        p_ticket_id: record.databaseId,
+        p_expected_version: expectedVersion,
+        p_command: databaseCommand,
+        p_idempotency_key: input.idempotencyKey,
+        p_reason: input.reason ?? null,
+        p_metadata: {
+          requestedByRole: input.actor.role,
+          requestFingerprint,
+          workflowState: input.workflowState ?? null,
+          dispatchStatus: input.dispatchStatus ?? null,
+          paymentStatus: input.paymentStatus ?? null,
+          transitionPurpose: record.emergency
+            ? "emergency_containment"
+            : "ordinary",
+          ...(input.ownerApprovalContext ?? {}),
+        },
+      }
+    )
+    data = response.data
+    error = response.error
+  } else {
+    throw new TicketRepositoryError(
+      "TICKET_WORKFLOW_UNAVAILABLE",
+      "A ticket command or versioned detail update is required.",
+      422
+    )
+  }
+
+  if (error) throwTicketRepositoryCommandError(error)
+  const fallbackTicket: ServiceTicket = {
+    ...record.ticket,
+    workflowState: input.workflowState ?? record.workflowState,
+    approvalStatus: input.approvalStatus ?? record.approvalStatus,
+    dispatchStatus: input.dispatchStatus ?? record.dispatchStatus,
+    paymentWorkflowStatus: record.emergency
+      ? emergencyPaymentStateForTicket(record.ticket)
+      : (input.paymentStatus ?? record.paymentStatus),
+    assignee:
+      input.command === "assign"
+        ? (input.assignee ??
+          (input.assigneeProfileId
+            ? "Assigned responder"
+            : record.ticket.assignee))
+        : record.ticket.assignee,
+    assigneeProfileId:
+      input.command === "assign"
+        ? (input.assigneeProfileId ?? null)
+        : record.assignedTo,
+  }
+  return ticketMutationFromRpc(data, fallbackTicket)
 }
 
-function bookingStatusForView(record: Record<string, unknown>): BookingRecord["status"] {
+function bookingStatusForView(
+  record: Record<string, unknown>
+): BookingRecord["status"] {
   const status = asString(record.status, "scheduled")
   const checkInAt = asNullableString(record.check_in_at)
   const checkOutAt = asNullableString(record.check_out_at)
@@ -4262,21 +6087,28 @@ function bookingStatusForView(record: Record<string, unknown>): BookingRecord["s
   if (status === "cancelled" || status === "no_show") return "cancelled"
   if (status === "checked_out") return "deposit_review"
   if (status === "checked_in") return "move_in_today"
-  if (Number.isFinite(checkOut) && Math.abs(checkOut - now) <= dayMs) return "checkout_today"
-  if (Number.isFinite(checkIn) && Math.abs(checkIn - now) <= dayMs) return "move_in_today"
+  if (Number.isFinite(checkOut) && Math.abs(checkOut - now) <= dayMs)
+    return "checkout_today"
+  if (Number.isFinite(checkIn) && Math.abs(checkIn - now) <= dayMs)
+    return "move_in_today"
   if (Number.isFinite(checkIn) && checkIn > now) return "precheck_pending"
   return "confirmed"
 }
 
-function reservationAccessForView(value: unknown): BookingRecord["accessCodeStatus"] {
+function reservationAccessForView(
+  value: unknown
+): BookingRecord["accessCodeStatus"] {
   const status = asString(value, "pending")
   if (status === "issued" || status === "active") return "active"
-  if (status === "revoked" || status === "expired" || status === "restricted") return "restricted"
+  if (status === "revoked" || status === "expired" || status === "restricted")
+    return "restricted"
   if (status === "disabled") return "disabled"
   return "pending"
 }
 
-function reservationDepositForView(value: unknown): BookingRecord["depositStatus"] {
+function reservationDepositForView(
+  value: unknown
+): BookingRecord["depositStatus"] {
   const status = asString(value, "not_required")
   if (status === "held") return "held"
   if (status === "pending" || status === "reserved") return "reserved"
@@ -4285,7 +6117,9 @@ function reservationDepositForView(value: unknown): BookingRecord["depositStatus
   return "not_required"
 }
 
-function reservationCleaningForView(value: unknown): BookingRecord["cleaningStatus"] {
+function reservationCleaningForView(
+  value: unknown
+): BookingRecord["cleaningStatus"] {
   const status = asString(value, "pending")
   if (status === "done") return "done"
   if (status === "blocked") return "blocked"
@@ -4316,36 +6150,59 @@ function normalizeBookingRows(rows: unknown, limit: number): BookingRecord[] {
             : "approved",
       channel: "Direct",
       checkIn: asString(record.check_in_at, new Date().toISOString()),
-      checkOut: asString(record.check_out_at, new Date(Date.now() + 3_600_000).toISOString()),
+      checkOut: asString(
+        record.check_out_at,
+        new Date(Date.now() + 3_600_000).toISOString()
+      ),
       status: bookingStatusForView(record),
       depositStatus: reservationDepositForView(record.deposit_status),
-      depositTry: reservationDepositForView(record.deposit_status) === "not_required" ? 0 : 5000,
+      depositTry:
+        reservationDepositForView(record.deposit_status) === "not_required"
+          ? 0
+          : 5000,
       accessCodeStatus: reservationAccessForView(record.access_code_status),
       cleaningStatus: reservationCleaningForView(record.cleaning_status),
     }
   })
 }
 
-function summarizeBookingOperations(records: BookingRecord[]): BookingOperationsData["summary"] {
+function summarizeBookingOperations(
+  records: BookingRecord[]
+): BookingOperationsData["summary"] {
   return {
-    totalBookings: records.filter((booking) => booking.status !== "cancelled").length,
-    moveInsToday: records.filter((booking) => booking.status === "move_in_today").length,
-    checkoutsToday: records.filter((booking) => booking.status === "checkout_today").length,
+    totalBookings: records.filter((booking) => booking.status !== "cancelled")
+      .length,
+    moveInsToday: records.filter(
+      (booking) => booking.status === "move_in_today"
+    ).length,
+    checkoutsToday: records.filter(
+      (booking) => booking.status === "checkout_today"
+    ).length,
     readinessBlocked: bookingReadinessRecords.filter(
       (record) => record.riskLevel === "critical" || record.riskLevel === "high"
     ).length,
     averageReadiness: Math.round(
-      bookingReadinessRecords.reduce((sum, record) => sum + record.readinessScore, 0) /
-        Math.max(bookingReadinessRecords.length, 1)
+      bookingReadinessRecords.reduce(
+        (sum, record) => sum + record.readinessScore,
+        0
+      ) / Math.max(bookingReadinessRecords.length, 1)
     ),
     turnoverTasks: turnoverTasks.length,
-    blockedTurnoverTasks: turnoverTasks.filter((task) => task.status === "blocked").length,
+    blockedTurnoverTasks: turnoverTasks.filter(
+      (task) => task.status === "blocked"
+    ).length,
     accessPending: records.filter(
       (booking) =>
-        booking.accessCodeStatus === "pending" || booking.accessCodeStatus === "restricted"
+        booking.accessCodeStatus === "pending" ||
+        booking.accessCodeStatus === "restricted"
     ).length,
-    settlementsOpen: depositSettlements.filter((settlement) => settlement.status !== "closed").length,
-    settlementExposureTry: depositSettlements.reduce((sum, settlement) => sum + settlement.depositTry, 0),
+    settlementsOpen: depositSettlements.filter(
+      (settlement) => settlement.status !== "closed"
+    ).length,
+    settlementExposureTry: depositSettlements.reduce(
+      (sum, settlement) => sum + settlement.depositTry,
+      0
+    ),
   }
 }
 
@@ -4370,7 +6227,8 @@ function buildBookingOperationsData({
     accessHandoffs,
     depositSettlements,
     quality: {
-      availabilityGuard: "unit window conflict checked before portal reservation insert",
+      availabilityGuard:
+        "unit window conflict checked before portal reservation insert",
       settlementMath: "itemized_demo",
       accessSafety: "manual_approval_before_live_provider",
       liveProviderConnected: source === "supabase",
@@ -4379,7 +6237,10 @@ function buildBookingOperationsData({
   }
 }
 
-function localSeedBookingOperationsData(limit = 24, warning?: string): BookingOperationsData {
+function localSeedBookingOperationsData(
+  limit = 24,
+  warning?: string
+): BookingOperationsData {
   return buildBookingOperationsData({
     source: "local-seed",
     bookings: localMergedBookings(limit),
@@ -4387,13 +6248,16 @@ function localSeedBookingOperationsData(limit = 24, warning?: string): BookingOp
   })
 }
 
-function localCreateReservation(input: CreateReservationInput): ReservationMutationResult {
+function localCreateReservation(
+  input: CreateReservationInput
+): ReservationMutationResult {
   const existingConflict = localMergedBookings(100).some((booking) => {
     if (booking.resourceName !== input.resourceName) return false
     if (booking.status === "cancelled") return false
     if (booking.approvalStatus === "rejected") return false
     return (
-      new Date(booking.checkIn).getTime() < new Date(input.checkOutAt).getTime() &&
+      new Date(booking.checkIn).getTime() <
+        new Date(input.checkOutAt).getTime() &&
       new Date(booking.checkOut).getTime() > new Date(input.checkInAt).getTime()
     )
   })
@@ -4409,7 +6273,8 @@ function localCreateReservation(input: CreateReservationInput): ReservationMutat
     guestName: `${input.guestName} - ${input.resourceName}`,
     resourceName: input.resourceName,
     notes: input.notes ?? null,
-    approvalStatus: input.actor.role === "tenant" ? "pending_owner" : "approved",
+    approvalStatus:
+      input.actor.role === "tenant" ? "pending_owner" : "approved",
     channel: "Direct",
     checkIn: input.checkInAt,
     checkOut: input.checkOutAt,
@@ -4443,14 +6308,8 @@ export async function getBookingOperationsData({
   }
 
   try {
-    const supabase = await createDataClient()
-    const { data, error } = await supabase
-      .from("reservations")
-      .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
-      .order("check_in_at", { ascending: true })
-      .limit(safeLimit)
-
-    if (error) throw error
+    const workspace = await getBookingLifecycleWorkspace()
+    const data = roleProjectedReservationRows(workspace).slice(0, safeLimit)
 
     const liveBookings = normalizeBookingRows(data, safeLimit)
     const mergedBookings =
@@ -4459,7 +6318,9 @@ export async function getBookingOperationsData({
             ...localMaterializedBookings,
             ...liveBookings.filter(
               (booking) =>
-                !localMaterializedBookings.some((localBooking) => localBooking.id === booking.id)
+                !localMaterializedBookings.some(
+                  (localBooking) => localBooking.id === booking.id
+                )
             ),
           ].slice(0, safeLimit)
         : localMergedBookings(safeLimit)
@@ -4467,7 +6328,10 @@ export async function getBookingOperationsData({
     return buildBookingOperationsData({
       source: liveBookings.length > 0 ? "supabase" : "local-seed",
       bookings: mergedBookings,
-      warning: liveBookings.length > 0 ? undefined : "No live reservations returned; local seed bookings are shown.",
+      warning:
+        liveBookings.length > 0
+          ? undefined
+          : "No live reservations returned; local seed bookings are shown.",
     })
   } catch (error) {
     if (canUseLocalSeedFallback()) {
@@ -4484,69 +6348,108 @@ export async function createReservation(
   input: CreateReservationInput
 ): Promise<ReservationMutationResult> {
   if (!isSupabaseConfigured()) {
-    return localCreateReservation(input)
+    // Persist through the shared QA state so the conflict scan hydrates prior
+    // reservations and the new booking survives later hydrations (otherwise a
+    // subsequent read overwrites this in-memory-only write and cross-unit
+    // shared-resource conflicts are missed).
+    return withLocalQaState(true, () => localCreateReservation(input))
   }
 
   try {
-    const supabase = await createDataClient()
-    const context = await resolveOperationalContext(supabase, {
-      companyId: input.actor.companyId,
-      unitNo: input.unitNo,
-      requireUnit: true,
+    const workspace = await getBookingLifecycleWorkspace()
+    const resource = workspace.resources.find((value) => {
+      const row = asRecord(value)
+      return (
+        asString(row.name).localeCompare(input.resourceName, undefined, {
+          sensitivity: "accent",
+        }) === 0
+      )
     })
+    if (!resource) throw new Error("The requested resource is not bookable.")
 
-    if (!context.unitId) {
-      throw new Error("The requested unit is not available for reservation.")
+    const resourceRow = asRecord(resource)
+    const siteId = asString(resourceRow.siteId)
+    const unit = workspace.eligibleUnits.find((value) => {
+      const row = asRecord(value)
+      return (
+        asString(row.siteId) === siteId && asString(row.label) === input.unitNo
+      )
+    })
+    const unitId = unit ? asString(asRecord(unit).id) : ""
+    if (!unitId)
+      throw new Error("The requested unit is outside the booking scope.")
+
+    const eligibleResidentsForUnit = workspace.eligibleResidents.filter(
+      (value) => {
+        const row = asRecord(value)
+        return asString(row.unitId) === unitId
+      }
+    )
+    const primaryResidents = eligibleResidentsForUnit.filter((value) =>
+      asBoolean(asRecord(value).isPrimary)
+    )
+    const resident =
+      primaryResidents.length === 1
+        ? primaryResidents[0]
+        : eligibleResidentsForUnit.length === 1
+          ? eligibleResidentsForUnit[0]
+          : undefined
+    const residentId = resident ? asString(asRecord(resident).id) : ""
+    if (!residentId) {
+      throw new Error(
+        "The requested unit needs one eligible primary resident before a reservation can be created."
+      )
     }
 
-    const conflictResponse = await supabase
-      .from("reservations")
-      .select("id")
-      .eq("company_id", context.companyId)
-      .eq("resource_name", input.resourceName)
-      .lt("check_in_at", input.checkOutAt)
-      .gt("check_out_at", input.checkInAt)
-      .not("status", "in", "(cancelled,no_show)")
-      .neq("approval_status", "rejected")
-      .limit(1)
+    const requestFingerprint = createHash("sha256")
+      .update(
+        JSON.stringify({
+          actor: input.actor.id,
+          resourceId: asString(resourceRow.id),
+          unitId,
+          residentId,
+          guestName: input.guestName,
+          startsAt: input.checkInAt,
+          endsAt: input.checkOutAt,
+        })
+      )
+      .digest("hex")
+    const hold = await createBookingHold({
+      resourceId: asString(resourceRow.id),
+      unitId,
+      residentId,
+      partySize: 1,
+      startsAt: input.checkInAt,
+      endsAt: input.checkOutAt,
+      waitlistIfFull: false,
+      idempotencyKey: `legacy-booking-hold:${requestFingerprint}`,
+    })
+    if (hold.entityType !== "hold")
+      throw new Error("The requested reservation window is unavailable.")
 
-    if (conflictResponse.error) throw conflictResponse.error
-    if (Array.isArray(conflictResponse.data) && conflictResponse.data.length > 0) {
-      throw new Error("Reservation window is already occupied.")
-    }
-
-    const { data, error } = await supabase
-      .from("reservations")
-      .insert({
-        company_id: context.companyId,
-        site_id: context.siteId,
-        unit_id: context.unitId,
-        resident_id: null,
-        guest_name: input.guestName,
-        resource_name: input.resourceName,
-        notes: input.notes ?? null,
-        check_in_at: input.checkInAt,
-        check_out_at: input.checkOutAt,
-        status: "scheduled",
-        approval_status: input.actor.role === "tenant" ? "pending_owner" : "approved",
-        access_code_status: "pending",
-        cleaning_status: "pending",
-        deposit_status: "not_required",
-      })
-      .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
-      .single()
-
-    if (error) throw error
-
-    const booking = normalizeBookingRows([data], 1)[0]
-    if (!booking) throw new Error("Reservation was created but could not be normalized.")
+    const committed = await commitResourceBooking({
+      holdId: hold.holdId ?? hold.entityId,
+      expectedVersion: hold.version,
+      guestName: input.guestName,
+      notes: input.notes ?? null,
+      idempotencyKey: `legacy-booking-commit:${requestFingerprint}`,
+    })
+    const refreshed = await getBookingLifecycleWorkspace(siteId)
+    const reservationId = committed.reservationId ?? committed.entityId
+    const data = roleProjectedReservationRows(refreshed).find(
+      (row) => asString(row.id) === reservationId
+    )
+    const booking = normalizeBookingRows(data ? [data] : [], 1)[0]
+    if (!booking)
+      throw new Error("Reservation was created but could not be normalized.")
 
     return {
       source: "supabase",
       booking,
     }
   } catch (error) {
-    if (canUseLocalSeedFallback()) return localCreateReservation(input)
+    if (canUseLocalSeedFallback())
+      return withLocalQaState(true, () => localCreateReservation(input))
     throw error
   }
 }
@@ -4554,41 +6457,86 @@ export async function createReservation(
 export async function updateReservationApproval(
   input: UpdateReservationApprovalInput
 ): Promise<ReservationMutationResult | null> {
-  const local = localMaterializedBookings.find((booking) => booking.id === input.reservationId)
+  const local = localMaterializedBookings.find(
+    (booking) => booking.id === input.reservationId
+  )
   if (!isSupabaseConfigured()) {
-    if (!local) return null
-    const booking = { ...local, approvalStatus: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" as const : local.status }
-    localMaterializedBookings[localMaterializedBookings.findIndex((item) => item.id === local.id)] = booking
-    return { source: "local-seed", booking }
+    // Hydrate the shared QA state, then mutate and persist so an approval/rejection
+    // survives later hydrations (a rejected slot must stay rejected so it frees up
+    // for a same-resource replacement booking).
+    return withLocalQaState(true, () => {
+      const current = localMaterializedBookings.find(
+        (item) => item.id === input.reservationId
+      )
+      if (!current) return null
+      const booking = {
+        ...current,
+        approvalStatus: input.approvalStatus,
+        status:
+          input.approvalStatus === "rejected"
+            ? ("cancelled" as const)
+            : current.status,
+      }
+      localMaterializedBookings[
+        localMaterializedBookings.findIndex((item) => item.id === current.id)
+      ] = booking
+      return { source: "local-seed", booking }
+    })
   }
 
-  const supabase = await createDataClient()
-  const query = supabase
-    .from("reservations")
-    .update({ approval_status: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" : "scheduled", updated_at: new Date().toISOString() })
-    .select("id, unit_id, guest_name, resource_name, notes, check_in_at, check_out_at, status, approval_status, access_code_status, cleaning_status, deposit_status, units(id, unit_no)")
+  if (!isUuid(input.reservationId)) return null
 
-  const response = isUuid(input.reservationId)
-    ? await query.eq("id", input.reservationId).maybeSingle()
-    : null
-  if (!response || response.error) {
-    if (canUseLocalSeedFallback() && local) return { source: "local-seed", booking: { ...local, approvalStatus: input.approvalStatus, status: input.approvalStatus === "rejected" ? "cancelled" : local.status } }
-    if (response?.error) throw response.error
-    return null
+  try {
+    const workspace = await getBookingLifecycleWorkspace()
+    const current = workspace.bookings.find(
+      (value) => asString(asRecord(value).id) === input.reservationId
+    )
+    if (!current) return null
+    const currentRow = asRecord(current)
+    const expectedVersion = asNumber(currentRow.version)
+    if (!Number.isSafeInteger(expectedVersion) || expectedVersion < 1)
+      throw new Error("Reservation version is unavailable.")
+
+    await decideResourceBooking({
+      reservationId: input.reservationId,
+      expectedVersion,
+      decision: input.approvalStatus === "approved" ? "approve" : "reject",
+      reason:
+        input.approvalStatus === "rejected"
+          ? "Rejected through the role-projected booking adapter."
+          : "Approved through the role-projected booking adapter.",
+      idempotencyKey: `legacy-booking-decision:${input.reservationId}:${expectedVersion}:${input.approvalStatus}`,
+    })
+    const refreshed = await getBookingLifecycleWorkspace()
+    const data = roleProjectedReservationRows(refreshed).find(
+      (row) => asString(row.id) === input.reservationId
+    )
+    const booking = normalizeBookingRows(data ? [data] : [], 1)[0]
+    return booking ? { source: "supabase", booking } : null
+  } catch (error) {
+    if (canUseLocalSeedFallback() && local)
+      return {
+        source: "local-seed",
+        booking: {
+          ...local,
+          approvalStatus: input.approvalStatus,
+          status:
+            input.approvalStatus === "rejected" ? "cancelled" : local.status,
+        },
+      }
+    throw error
   }
-  const booking = normalizeBookingRows([response.data], 1)[0]
-  return booking ? { source: "supabase", booking } : null
 }
 
 export async function logClientAction(
   input: ClientActionInput
 ): Promise<ClientActionResult> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || input.useLocalAccessProfile) {
     return storeLocalClientAction(input)
   }
 
   try {
-    const supabase = await createDataClient()
+    const supabase = await createClient()
     const { data, error } = await supabase.rpc("log_client_action", {
       p_action_type: input.actionType,
       p_entity_table: input.entityTable ?? null,
@@ -4612,348 +6560,203 @@ export async function logClientAction(
 }
 
 export async function getClientActionRequest(
-  id: string
+  id: string,
+  { useLocalAccessProfile = false }: { useLocalAccessProfile?: boolean } = {}
 ): Promise<ClientActionRequestRecord | null> {
-  const localAction = localClientActionRequests.get(id)
+  const localAction = withLocalQaState(false, () =>
+    localClientActionRequests.get(id)
+  )
   if (localAction) return localAction
 
-  if (!isSupabaseConfigured() || !isUuid(id)) return null
+  if (useLocalAccessProfile || !isSupabaseConfigured() || !isUuid(id))
+    return null
 
   try {
-    const supabase = await createDataClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("client_action_requests")
-      .select("id, company_id, action_type, entity_table, entity_id, entity_external_id, title, status, requested_by, metadata, created_at")
+      .select(
+        "id, company_id, action_type, entity_table, entity_id, entity_external_id, title, status, requested_by, metadata, created_at"
+      )
       .eq("id", id)
       .single()
 
     if (error) throw error
     return normalizeActionRequestRow(data)
   } catch (error) {
-    if (canUseLocalSeedFallback()) return localClientActionRequests.get(id) ?? null
+    if (canUseLocalSeedFallback()) {
+      return withLocalQaState(
+        false,
+        () => localClientActionRequests.get(id) ?? null
+      )
+    }
     throw error
   }
 }
 
 export async function materializeApprovedTicketRequest({
   request,
-  decidedById,
-  decidedByRole,
-  assignee,
+  actor,
+  idempotencyKey,
 }: {
   request: ClientActionRequestRecord
-  decidedById: string
-  decidedByRole: string
-  assignee?: string | null
-}): Promise<MaterializedTicketResult | null> {
+  actor: TicketMutationActor
+  idempotencyKey?: string | null
+}): Promise<ServiceTicketMutationResult | null> {
   if (!isTicketCreateRequest(request)) return null
 
+  const useLocalAccessProfile = isLocalTicketAccessProfile(actor)
   const existingTicketId = materializedTicketIdFromAction(request)
   if (existingTicketId) {
-    return {
-      id: existingTicketId,
-      ticketNo: existingTicketId,
-      source: isSupabaseConfigured() && isUuid(existingTicketId) ? "supabase" : "local-seed",
-    }
+    const existing = await getServiceTicketWorkflowRecord(existingTicketId, {
+      useLocalAccessProfile,
+    })
+    return existing
+      ? {
+          source:
+            useLocalAccessProfile || !isSupabaseConfigured()
+              ? "local-seed"
+              : "supabase",
+          ticket: existing.ticket,
+          version: existing.version,
+          replayed: true,
+        }
+      : null
   }
 
   const proposedPayload = actionProposedPayload(request)
-  const unitNo = asNullableString(proposedPayload.unitNo)
-  const priority = ticketPriorityForDb(proposedPayload.priority)
-  const catalogItem = serviceCatalogItemForAction(proposedPayload)
-  const emergencyScenario = emergencyScenarioForCatalog(catalogItem)
-  const providerQueue = emergencyProviderQueue(catalogItem)
-  const dueAt = ticketDueAt(priority, catalogItem.slaHours)
-  const decidedAt = new Date().toISOString()
+  const routingSuggestion = asRecord(request.metadata.routingSuggestion)
+  const proposedEmergencyPolicyCode = asNullableString(
+    routingSuggestion.emergencyPolicyCode
+  )
+  const emergencyPolicyCodes = new Set([
+    "life_safety",
+    "fire_smoke",
+    "gas_leak",
+    "medical_emergency",
+    "electrical_hazard",
+    "elevator_entrapment",
+    "flooding_active",
+    "security_threat",
+  ])
+  const emergencyPolicyCode =
+    proposedEmergencyPolicyCode &&
+    emergencyPolicyCodes.has(proposedEmergencyPolicyCode)
+      ? proposedEmergencyPolicyCode
+      : null
+  const persistedIdempotencyKey =
+    idempotencyKey ??
+    asNullableString(request.metadata.idempotencyKey) ??
+    `ticket-action:${request.id}`
 
-  if (!isSupabaseConfigured() || !isUuid(request.id) || !request.companyId) {
-    return localMaterializeTicket(request, decidedByRole, decidedAt, assignee)
-  }
-
-  try {
-    const supabase = await createDataClient()
-    const unitResponse = unitNo
-      ? await supabase
-          .from("units")
-          .select("id, site_id")
-          .eq("company_id", request.companyId)
-          .eq("unit_no", unitNo)
-          .maybeSingle()
-      : { data: null, error: null }
-
-    if (unitResponse.error) throw unitResponse.error
-
-    const unit = asRecord(unitResponse.data)
-    let siteId = asNullableString(unit.site_id)
-
-    if (!siteId) {
-      const { data: siteData, error: siteError } = await supabase
-        .from("sites")
-        .select("id")
-        .eq("company_id", request.companyId)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle()
-
-      if (siteError) throw siteError
-      siteId = asNullableString(asRecord(siteData).id)
-    }
-
-    if (!siteId) throw new Error("No site is available for approved ticket materialization.")
-
-    const catalogResponse = await supabase
-      .from("service_catalog")
-      .select("id, code, name, base_price_cents, sla_hours, team, provider_type, service_level, requires_payment, debt_policy")
-      .eq("company_id", request.companyId)
-      .eq("code", catalogItem.code)
-      .maybeSingle()
-
-    if (catalogResponse.error) throw catalogResponse.error
-
-    const catalogRecord = asRecord(catalogResponse.data)
-    const catalogId = asNullableString(catalogRecord.id)
-    const liveCatalogCode = asString(catalogRecord.code, catalogItem.code)
-    const liveCatalogName = asString(catalogRecord.name, catalogItem.name)
-    const liveSlaHours = asNumber(catalogRecord.sla_hours, catalogItem.slaHours)
-    const liveTeam = asString(catalogRecord.team, catalogItem.team)
-    const liveProviderQueue = providerQueue
-    const liveAssignmentTarget = assignee?.trim() || liveProviderQueue
-    const quotedPriceCents =
-      asNumber(catalogRecord.base_price_cents, catalogItem.basePriceTry * 100)
-    const paymentDecision = serviceOrderPaymentDecisionForCatalog({
-      ...catalogItem,
-      requiresPayment: asBoolean(catalogRecord.requires_payment, catalogItem.requiresPayment),
-      debtPolicy: asString(catalogRecord.debt_policy, catalogItem.debtPolicy) as ServiceCatalogItem["debtPolicy"],
-      basePriceTry: Math.round(quotedPriceCents / 100),
-    })
-
-    const ticketNo = `REQ-${Date.now().toString(36).toUpperCase()}`
-    const { data: ticketData, error: ticketError } = await supabase
-      .from("service_tickets")
-      .insert({
-        company_id: request.companyId,
-        site_id: siteId,
-        unit_id: asNullableString(unit.id),
-        ticket_no: ticketNo,
-        title: ticketTitleFromAction(request),
-        description: asNullableString(proposedPayload.description),
-        category: asString(proposedPayload.category, "general"),
-        priority,
-        status: "assigned",
-        assignment_label: liveAssignmentTarget,
-        sla_due_at: dueAt,
-        estimated_cost_cents: quotedPriceCents,
-        requires_finance_approval: false,
-        created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
-      })
-      .select("id, ticket_no")
-      .single()
-
-    if (ticketError) throw ticketError
-
-    const ticketId = asString(asRecord(ticketData).id, ticketNo)
-    const orderNo = `ORD-${ticketNo.replace(/^REQ-/, "")}`
-    const { data: orderData, error: orderError } = await supabase
-      .from("service_orders")
-      .insert({
-        company_id: request.companyId,
-        site_id: siteId,
-        service_catalog_id: catalogId && isUuid(catalogId) ? catalogId : null,
-        ticket_id: ticketId,
-        unit_id: asNullableString(unit.id),
-        resident_id: null,
-        order_no: orderNo,
-        status: "task_created",
-        debt_check_status: "clear",
-        payment_decision: paymentDecision,
-        quoted_price_cents: quotedPriceCents,
-        currency: "TRY",
-        requested_for_at: dueAt,
-        next_action: `${emergencyScenario.label} routed to ${liveAssignmentTarget}. SLA ${liveSlaHours}h; media proof and manager closure review required.`,
-        created_by: isUuid(request.requestedBy) ? request.requestedBy : null,
-        approved_by: isUuid(decidedById) ? decidedById : null,
-        approved_at: decidedAt,
-        metadata: {
-          actionRequestId: request.id,
-          catalogCode: liveCatalogCode,
-          assignmentQueue: liveAssignmentTarget,
-          emergencyScenario: emergencyScenario.code,
-          slaHours: liveSlaHours,
-          humanApprovalBoundary: {
-            required: true,
-            approvedByRole: decidedByRole,
-            approvedAt: decidedAt,
-          },
-          notificationPlaceholder: {
-            channel: emergencyScenario.notificationChannel,
-            status: "queued",
-            recipient: liveAssignmentTarget,
-          },
-        },
-      })
-      .select("id, order_no")
-      .single()
-
-    if (orderError) throw orderError
-
-    const orderId = asString(asRecord(orderData).id, orderNo)
-    const taskNo = `TASK-${ticketNo.replace(/^REQ-/, "")}`
-    const { data: taskData, error: taskError } = await supabase
-      .from("workforce_tasks")
-      .insert({
-        company_id: request.companyId,
-        site_id: siteId,
-        service_order_id: orderId,
-        ticket_id: ticketId,
-        unit_id: asNullableString(unit.id),
-        assigned_staff_member_id: null,
-        task_no: taskNo,
-        title: `${liveCatalogName} - ${unitNo ?? "Unassigned"}`,
-        team: liveTeam,
-        status: "assigned",
-        priority: workforcePriorityForDb(priority),
-        sla_due_at: dueAt,
-        route_slot: emergencyScenario.routeSlot,
-        checklist: emergencyScenario.checklist,
-        requires_media: true,
-        media_count: 0,
-        manager_approval_required: emergencyScenario.managerApprovalRequired,
-        completion_readiness: 18,
-        field_note: `Human approval completed by ${decidedByRole}; ${liveAssignmentTarget} notified in demo mode.`,
-        metadata: {
-          actionRequestId: request.id,
-          assigneeLabel: liveAssignmentTarget,
-          catalogCode: liveCatalogCode,
-          emergencyScenario: emergencyScenario.code,
-          serviceOrderId: orderId,
-          slaHours: liveSlaHours,
-          providerMode: "demo",
-        },
-      })
-      .select("id, task_no")
-      .single()
-
-    if (taskError) throw taskError
-
-    const taskId = asString(asRecord(taskData).id, taskNo)
-    const notificationResult = await supabase
-      .from("notification_deliveries")
-      .upsert(
-        {
-          company_id: request.companyId,
-          site_id: siteId,
-          recipient_ref: liveAssignmentTarget,
-          channel: emergencyScenario.notificationChannel,
-          status: "queued",
-          related_entity_table: "service_tickets",
-          related_entity_id: ticketId,
-          idempotency_key: `ticket:${ticketId}:${emergencyScenario.code}-dispatch`,
-          attempts: 0,
-          provider_mode: "demo",
-          provider_response: {
-            placeholder: true,
-            message: `${liveCatalogName} assigned to ${liveAssignmentTarget}`,
-            humanApprovalBoundary: "manager_approved_before_dispatch",
-          },
-        },
-        { onConflict: "company_id,idempotency_key" }
-      )
-      .select("id, status")
-      .maybeSingle()
-
-    const auditResult = await supabase.from("service_ticket_events").insert({
-      company_id: request.companyId,
-      ticket_id: ticketId,
-      event_type: "created_from_approved_request",
-      body: `Approved by ${decidedByRole}; ${liveCatalogCode} order and ${liveTeam} task created.`,
-      actor_profile_id: isUuid(decidedById) ? decidedById : null,
-      metadata: {
-        actionRequestId: request.id,
-        actionType: request.actionType,
-        catalogCode: liveCatalogCode,
-        serviceOrderId: orderId,
-        serviceOrderNo: asString(asRecord(orderData).order_no, orderNo),
-        workforceTaskId: taskId,
-        workforceTaskNo: asString(asRecord(taskData).task_no, taskNo),
-        assignmentQueue: liveAssignmentTarget,
-        slaHours: liveSlaHours,
-        notificationPlaceholder: {
-          channel: emergencyScenario.notificationChannel,
-          status: notificationResult.error ? "manual_review" : "queued",
-          recipient: liveAssignmentTarget,
-          deliveryId: asNullableString(asRecord(notificationResult.data).id),
-        },
-        humanApprovalBoundary: {
-          required: true,
-          approvedByRole: decidedByRole,
-          approvedAt: decidedAt,
-        },
-      },
-    })
-
-    if (auditResult.error) throw auditResult.error
-
-    return {
-      id: ticketId,
-      ticketNo: asString(asRecord(ticketData).ticket_no, ticketNo),
-      source: "supabase",
-      serviceOrder: {
-        id: orderId,
-        orderNo: asString(asRecord(orderData).order_no, orderNo),
-        catalogCode: liveCatalogCode,
-        team: liveTeam,
-        providerQueue: liveAssignmentTarget,
-        slaHours: liveSlaHours,
-      },
-      workforceTask: {
-        id: taskId,
-        taskNo: asString(asRecord(taskData).task_no, taskNo),
-        team: liveTeam,
-        assignee: liveAssignmentTarget,
-        slaHours: liveSlaHours,
-      },
-      notification: {
-        channel: emergencyScenario.notificationChannel,
-        status: notificationResult.error ? "manual_review" : "queued",
-        recipient: liveAssignmentTarget,
-      },
-      humanApprovalBoundary: {
-        required: true,
-        approvedByRole: decidedByRole,
-        approvedAt: decidedAt,
-      },
-    }
-  } catch (error) {
-    if (canUseLocalSeedFallback()) return localMaterializeTicket(request, decidedByRole, decidedAt, assignee)
-    throw error
-  }
+  return createServiceTicket({
+    title: ticketTitleFromAction(request),
+    description: asNullableString(proposedPayload.description),
+    category: asString(proposedPayload.category, "general"),
+    priority: emergencyPolicyCode
+      ? "urgent"
+      : ticketPriorityForView(proposedPayload.priority),
+    unitNo: asNullableString(proposedPayload.unitNo),
+    assignee: null,
+    suggestedAssignee: asNullableString(routingSuggestion.assignee),
+    requiresOwnerApproval: false,
+    emergency: Boolean(emergencyPolicyCode),
+    emergencyPolicyCode,
+    routingReason:
+      asNullableString(routingSuggestion.reason) ??
+      "AI draft approved for ordinary human triage",
+    idempotencyKey: persistedIdempotencyKey,
+    actor,
+  })
 }
 
+function roleProjectedReservationRows(
+  workspace: BookingLifecycleWorkspace
+): Record<string, unknown>[] {
+  const unitLabels = new Map(
+    workspace.eligibleUnits.map((value) => {
+      const unit = asRecord(value)
+      return [
+        asString(unit.id),
+        asString(unit.label, "Authorized unit"),
+      ] as const
+    })
+  )
+
+  return workspace.bookings.map((value) => {
+    const booking = asRecord(value)
+    const lifecycle = asString(booking.lifecycleStatus, "requested")
+    const approval = asString(booking.approvalState, "not_required")
+    const deposit = asString(booking.depositTruthState, "not_required")
+    const access = asString(
+      booking.accessPreparationState,
+      "blocked_until_confirmed"
+    )
+    const unitId = asString(booking.unitId)
+    const status =
+      lifecycle === "checked_in"
+        ? "checked_in"
+        : lifecycle === "completed"
+          ? "checked_out"
+          : lifecycle === "cancelled" ||
+              lifecycle === "no_show" ||
+              lifecycle === "rejected" ||
+              lifecycle === "revoked"
+            ? "cancelled"
+            : "scheduled"
+
+    return {
+      id: booking.id,
+      unit_id: unitId || null,
+      guest_name: booking.guestName ?? null,
+      resource_name: booking.resourceName ?? "Amenity",
+      check_in_at: booking.startsAt,
+      check_out_at: booking.endsAt,
+      status,
+      approval_status:
+        approval === "rejected"
+          ? "rejected"
+          : approval === "pending_owner" || approval === "pending_manager"
+            ? "pending_owner"
+            : "approved",
+      access_code_status: access === "revoked" ? "revoked" : "pending",
+      cleaning_status: "pending",
+      deposit_status:
+        deposit === "not_required"
+          ? "not_required"
+          : deposit === "manual_verified"
+            ? "held"
+            : "pending",
+      units: unitId
+        ? { id: unitId, unit_no: unitLabels.get(unitId) ?? "Authorized unit" }
+        : null,
+    }
+  })
+}
 export async function updateClientActionRequestStatus({
   id,
   status,
   metadata,
+  useLocalAccessProfile = false,
 }: {
   id: string
   status: "approved" | "rejected" | "completed" | "failed"
   metadata?: Record<string, unknown>
+  useLocalAccessProfile?: boolean
 }): Promise<ClientActionResult> {
-  const localAction = localClientActionRequests.get(id)
-  if (localAction) {
+  const localResult = withLocalQaState(true, () => {
+    const localAction = localClientActionRequests.get(id)
+    if (!localAction) return null
     localClientActionRequests.set(id, {
       ...localAction,
       status,
       metadata: metadata ?? localAction.metadata,
     })
+    return { id, source: "local-seed" as const, status }
+  })
+  if (localResult) return localResult
 
-    return {
-      id,
-      source: "local-seed",
-      status,
-    }
-  }
-
-  if (!isSupabaseConfigured() || !isUuid(id)) {
+  if (useLocalAccessProfile || !isSupabaseConfigured() || !isUuid(id)) {
     return {
       id,
       source: "local-seed",
@@ -4962,7 +6765,7 @@ export async function updateClientActionRequestStatus({
   }
 
   try {
-    const supabase = await createDataClient()
+    const supabase = await createClient()
     const { data, error } = await supabase
       .from("client_action_requests")
       .update(metadata ? { status, metadata } : { status })
@@ -4993,26 +6796,6 @@ export interface PublicIntakeResult {
   reference: string
   source: DataSource
   status: "received"
-}
-
-export interface RegistrationRequestInput {
-  role: "owner" | "tenant" | "staff"
-  fullName: string
-  email: string
-  phone?: string | null
-  language?: string | null
-  unitClaim?: string | null
-  proofType?: string | null
-  proofReference?: string | null
-  inviteCode?: string | null
-  position?: string | null
-  idType?: string | null
-  idNumber?: string | null
-  issuingCountry?: string | null
-  idVerificationRef?: string | null
-  idVerificationStatus?: string | null
-  consent: boolean
-  metadata?: Record<string, unknown>
 }
 
 export interface PublicReportInput {
@@ -5092,7 +6875,10 @@ async function submitPublicIntake(
     })
     if (error) throw error
     return {
-      reference: typeof data === "string" ? data : publicIntakeReference(referencePrefix),
+      reference:
+        typeof data === "string"
+          ? data
+          : publicIntakeReference(referencePrefix),
       source: "supabase",
       status: "received",
     }
@@ -5106,38 +6892,6 @@ async function submitPublicIntake(
     }
     throw error
   }
-}
-
-export async function submitRegistrationRequest(
-  input: RegistrationRequestInput
-): Promise<PublicIntakeResult> {
-  const metadata: Record<string, unknown> = {
-    role: input.role,
-    fullName: input.fullName,
-    email: input.email,
-    phone: input.phone ?? null,
-    language: input.language ?? null,
-    unitClaim: input.unitClaim ?? null,
-    proofType: input.proofType ?? null,
-    proofReference: input.proofReference ?? null,
-    inviteCode: input.inviteCode ?? null,
-    position: input.position ?? null,
-    idType: input.idType ?? null,
-    idNumber: input.idNumber ?? null,
-    issuingCountry: input.issuingCountry ?? null,
-    idVerificationRef: input.idVerificationRef ?? null,
-    idVerificationStatus: input.idVerificationStatus ?? null,
-    consent: input.consent,
-    channel: "new-level-premium-landing",
-    ...(input.metadata ?? {}),
-  }
-
-  return submitPublicIntake(
-    `registration.request.${input.role}`,
-    `${input.role} access request - ${input.fullName}`,
-    metadata,
-    "NLP-REG"
-  )
 }
 
 export async function submitPublicReport(

@@ -54,7 +54,7 @@ async function waitForServer(baseUrl, timeoutMs = 90_000) {
   let lastError = ""
   while (Date.now() - started < timeoutMs) {
     try {
-      const response = await fetch(apiUrl(baseUrl, "/api/site-management/phase-status"), {
+      const response = await fetch(apiUrl(baseUrl, "/tr"), {
         cache: "no-store",
       })
       if (response.ok) return { status: response.status }
@@ -147,8 +147,8 @@ async function runApiChecks(baseUrl) {
   await run("phase-status-10-11", "/api/site-management/phase-status", { role: "admin" }, (payload) => {
     const phase10 = payload.phases?.find((phase) => phase.phase === 10)
     const phase11 = payload.phases?.find((phase) => phase.phase === 11)
-    assert(phase10?.status === "ready_for_uat", "Phase 10 must be ready_for_uat")
-    assert(phase11?.status === "ready_for_uat", "Phase 11 must be ready_for_uat")
+    assert(phase10?.status === "in_progress", "Phase 10 must expose remaining live/RLS gates")
+    assert(phase11?.status === "in_progress", "Phase 11 must expose remaining provider/storage gates")
   })
 
   await run("phase10-booking-manager", "/api/site-management/booking-operations", { role: "manager" }, validatePhase10)

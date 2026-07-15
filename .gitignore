@@ -4,10 +4,17 @@ node_modules/
 
 # Build outputs
 .next/
+.next-root-focused-*/
 dist/
 out/
 *.tsbuildinfo
 .turbo/
+
+# Large local media (training videos are served from Supabase storage, not git)
+Videos/
+
+# Local documentation build scratch
+.tmp_doc_merge/
 
 # QA / temporary artifacts
 qa_*.png

@@ -348,6 +348,9 @@ export default function ListingsPage() {
         </div>
       </Card3D>
 
+      {/* Legacy seed-only KPI/matrix controls stay out of the business UI. The
+          live Phase4 projection below is now the single visible source. */}
+      <div hidden aria-hidden="true">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {signalCards.map((metric) => {
           const Icon = metric.icon
@@ -383,9 +386,11 @@ export default function ListingsPage() {
           )
         })}
       </div>
+      </div>
 
       <Phase4LiveOperations />
 
+      <div hidden aria-hidden="true">
       <Card3D glow={false}>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -846,6 +851,7 @@ export default function ListingsPage() {
           },
         ]}
       />
+      </div>
     </div>
   )
 }

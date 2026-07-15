@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>1Çatı Executive Cost One-Pager — 15 July 2026</title>
+  <meta name="description" content="Executive one-page view of 1Çatı demo, production, provider, transaction, implementation, compliance and operating costs.">
+  <style>
+    :root {
+      --navy: #0b2545;
+      --blue: #1f5f8b;
+      --cyan: #e8f2f7;
+      --ink: #1f2937;
+      --muted: #5f6b7a;
+      --line: #d7dee7;
+      --paper: #ffffff;
+      --canvas: #edf2f6;
+      --gold: #a67816;
+      --gold-bg: #fff8e8;
+      --red: #9b1c1c;
+      --red-bg: #fdecec;
+      --green: #17633a;
+      --green-bg: #eaf5ef;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; color: var(--ink); background: var(--canvas); }
+    body { font-family: Calibri, Arial, sans-serif; font-size: 12px; line-height: 1.28; }
+    a { color: var(--blue); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+    .sheet {
+      width: min(1440px, calc(100% - 24px));
+      margin: 12px auto;
+      padding: 18px 20px 12px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 16px 42px rgba(11, 37, 69, 0.12);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 18px;
+      align-items: end;
+      border-bottom: 3px solid var(--navy);
+      padding-bottom: 9px;
+    }
+    .kicker { margin: 0 0 3px; color: var(--gold); font-size: 10px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    h1 { margin: 0; color: var(--navy); font-size: 25px; line-height: 1.04; letter-spacing: -.02em; }
+    .subtitle { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    .control { text-align: right; color: var(--muted); font-size: 10.5px; }
+    .control strong { display: block; color: var(--red); font-size: 11px; letter-spacing: .04em; }
+
+    .verdicts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 9px 0; }
+    .verdict { padding: 7px 9px; border-radius: 7px; border: 1px solid var(--line); }
+    .verdict b { display: block; font-size: 12px; }
+    .verdict span { display: block; margin-top: 2px; color: var(--muted); font-size: 9.5px; }
+    .conditional { background: var(--gold-bg); border-color: #e5c67c; }
+    .conditional b { color: #775200; }
+    .nogo { background: var(--red-bg); border-color: #ebaaaa; }
+    .nogo b { color: var(--red); }
+
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; }
+    .card { border: 1px solid var(--line); border-radius: 8px; padding: 8px 9px; background: #fff; break-inside: avoid; }
+    .card h2 { margin: 0 0 5px; color: var(--navy); font-size: 12px; line-height: 1.15; }
+    .card h3 { margin: 0 0 3px; color: var(--blue); font-size: 10.5px; }
+    .card p { margin: 3px 0; }
+    .card ul, .card ol { margin: 3px 0 0; padding-left: 16px; }
+    .card li { margin: 1.5px 0; }
+    .scenario { grid-column: span 7; }
+    .truth { grid-column: span 5; background: linear-gradient(135deg, #f7fafc, #eef5f8); }
+    .bucket { grid-column: span 2; }
+    .third { grid-column: span 4; }
+
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border-bottom: 1px solid var(--line); padding: 4px 5px; vertical-align: middle; }
+    th { background: var(--cyan); color: var(--navy); text-align: left; font-size: 9px; }
+    td { font-size: 9.5px; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr:last-child td { border-bottom: 0; }
+    .strong { color: var(--navy); font-weight: 800; }
+    .quote { display: inline-block; padding: 1px 5px; border-radius: 999px; background: var(--gold-bg); color: #775200; font-size: 8.5px; font-weight: 800; }
+
+    .formula { margin: 5px 0; padding: 6px 7px; border-left: 4px solid var(--gold); background: var(--gold-bg); color: var(--navy); font-weight: 700; }
+    .micro { color: var(--muted); font-size: 8.7px; line-height: 1.22; }
+    .mini-label { color: var(--gold); font-size: 8.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .current-demo { margin-top: 5px; padding: 5px 7px; border-radius: 6px; background: var(--green-bg); color: var(--green); font-weight: 700; }
+
+    footer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 8.5px;
+    }
+    footer p { margin: 0; }
+
+    @media (max-width: 980px) {
+      header { grid-template-columns: 1fr; }
+      .control { text-align: left; }
+      .verdicts { grid-template-columns: 1fr; }
+      .scenario, .truth, .bucket, .third { grid-column: 1 / -1; }
+      .sheet { width: min(760px, calc(100% - 16px)); padding: 16px; }
+    }
+
+    @page { size: A4 landscape; margin: 6mm; }
+    @media print {
+      html, body { width: 297mm; height: 210mm; background: #fff; }
+      body { font-size: 8.2pt; line-height: 1.18; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .sheet {
+        width: 285mm;
+        height: 198mm;
+        margin: 0;
+        padding: 4mm 5mm 3mm;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        overflow: hidden;
+      }
+      header { gap: 5mm; padding-bottom: 2mm; }
+      h1 { font-size: 19pt; }
+      .kicker { font-size: 7.4pt; }
+      .subtitle { font-size: 8.2pt; }
+      .control { font-size: 7.3pt; }
+      .control strong { font-size: 7.8pt; }
+      .verdicts { gap: 2mm; margin: 2.2mm 0; }
+      .verdict { padding: 1.6mm 2mm; }
+      .verdict b { font-size: 8.1pt; }
+      .verdict span { font-size: 6.8pt; }
+      .grid { gap: 2mm; }
+      .card { padding: 1.7mm 2mm; border-radius: 1.5mm; }
+      .card h2 { margin-bottom: 1mm; font-size: 8.2pt; }
+      .card h3 { font-size: 7.3pt; }
+      .card p, .card li { font-size: 6.7pt; }
+      .card ul, .card ol { padding-left: 3.6mm; }
+      th { font-size: 6.3pt; padding: .9mm 1mm; }
+      td { font-size: 6.7pt; padding: .9mm 1mm; }
+      .formula { margin: 1mm 0; padding: 1.2mm 1.5mm; font-size: 6.7pt; }
+      .micro { font-size: 6.1pt; }
+      .mini-label, .quote { font-size: 6pt; }
+      .current-demo { margin-top: 1mm; padding: 1mm 1.4mm; font-size: 6.6pt; }
+      footer { margin-top: 1.8mm; padding-top: 1.3mm; font-size: 5.9pt; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet" aria-labelledby="page-title">
+    <header>
+      <div>
+        <p class="kicker">Executive cost one-pager</p>
+        <h1 id="page-title">1Çatı: the full cost picture at a glance</h1>
+        <p class="subtitle">Known monthly subtotals, transaction economics, quote-only dependencies and the decisions required before production.</p>
+      </div>
+      <div class="control">
+        <strong>STRICTLY CONFIDENTIAL</strong>
+        Snapshot: 15 July 2026<br>
+        Currency lines stay separate; public prices may change.<br>
+        Planning baseline — not a quotation, contract or approved budget.
+      </div>
+    </header>
+
+    <section class="verdicts" aria-label="Readiness verdicts">
+      <div class="verdict conditional"><b>Controlled local/QA demo: CONDITIONAL GO</b><span>Synthetic/isolated data, approved profiles, disclosed limitations.</span></div>
+      <div class="verdict nogo"><b>Public deployment at cut-off: NO-GO</b><span>Build, auth, route guards and security require current revalidation.</span></div>
+      <div class="verdict nogo"><b>Production launch: NO-GO</b><span>Database, provider, identity, scale, restore, monitoring and UAT gates remain.</span></div>
+    </section>
+
+    <section class="grid">
+      <article class="card scenario">
+        <h2>1. Dated scenario snapshot — known monthly subtotals only</h2>
+        <table aria-label="Cost scenarios by monthly active users">
+          <thead>
+            <tr>
+              <th scope="col">Monthly active users</th>
+              <th scope="col" class="num">Internal CRM staff</th>
+              <th scope="col" class="num">Known USD / month</th>
+              <th scope="col" class="num">Known local TRY / month</th>
+              <th scope="col" class="num">Worked payment fee / month</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="strong">1,000</td><td class="num">10</td><td class="num strong">$429.46</td><td class="num">TRY 4,212.72</td><td class="num">TRY 10,737.50</td></tr>
+            <tr><td class="strong">5,000</td><td class="num">25</td><td class="num strong">$901.96</td><td class="num">TRY 7,196.39</td><td class="num">TRY 53,687.50</td></tr>
+            <tr><td class="strong">10,000</td><td class="num">50</td><td class="num strong">$1,604.46</td><td class="num">TRY 10,976.39</td><td class="num">TRY 107,375.00</td></tr>
+          </tbody>
+        </table>
+        <p class="micro">Default model: 5 AI actions and 2 OTP messages per active user/month; 10/25/50 managed CRM seats; optimised portfolio-image storage; worked payment case = 5% of users × TRY 5,000 at 4.29% + TRY 0.25. The detailed blueprint controls all formulas and source IDs. These financial scenarios do not prove technical capacity.</p>
+        <div class="current-demo">Synthetic demo reference: typically $20–45/month before optional tools — deliberately not production-safe.</div>
+      </article>
+
+      <aside class="card truth">
+        <h2>2. The number management must budget</h2>
+        <div class="formula">Total cost = recurring platform + usage + transaction fees + annual/prepaid fees + implementation/hardware + compliance/operations + contingency.</div>
+        <p><span class="mini-label">Known subtotal</span><br>Only priced, modelled lines. It is not the final budget while quotation items remain.</p>
+        <p><span class="mini-label">Keep currencies separate</span><br>USD SaaS, TRY local services, percentage-of-money fees and one-time cash must not be hidden inside one converted headline.</p>
+        <p><span class="mini-label">Largest variable</span><br>Payment and OTA/tour commissions can exceed hosting. Every 1% costs TRY 10,000 per TRY 1 million processed.</p>
+        <p><span class="mini-label">Quote required</span><br><span class="quote">Not zero</span> means supplier/legal input is missing; it must stay visible outside the known subtotal.</p>
+        <p><span class="mini-label">Commercial claim conflict</span><br>The pitch page's €5/user/month and “zero development cost” are unapproved selling propositions, not total cost of ownership. Management must decide who absorbs every provider, transaction, hardware, compliance, onboarding and support line.</p>
+      </aside>
+
+      <article class="card bucket">
+        <h2>3A. Fixed/capacity platform</h2>
+        <ul>
+          <li>Vercel/CDN/WAF and deployment seats</li>
+          <li>Supabase database, auth, realtime and PITR</li>
+          <li>Monitoring, email, storage and disaster recovery</li>
+          <li>Twenty Cloud seats <i>or</i> self-hosted operations</li>
+        </ul>
+      </article>
+      <article class="card bucket">
+        <h2>3B. Turkish/local statutory</h2>
+        <ul>
+          <li>OTP/message packages and sender approvals</li>
+          <li>GİB/e-document credits and certificates</li>
+          <li>TTYS/EİDS, KEP, e-sign and domains</li>
+          <li>Package prepayment and expiry/renewal cash</li>
+        </ul>
+      </article>
+      <article class="card bucket">
+        <h2>3C. Usage & transactions</h2>
+        <ul>
+          <li>AI tokens, images, grounding and retries</li>
+          <li>WhatsApp, email, push, maps and identity checks</li>
+          <li>Image traffic, documents and retained storage</li>
+          <li>Payment, refund, chargeback and settlement fees</li>
+          <li>Channel manager, OTA and tour commissions</li>
+        </ul>
+      </article>
+      <article class="card bucket">
+        <h2>3D. One-time delivery</h2>
+        <ul>
+          <li>WP0–WP13 engineering, integration and UAT</li>
+          <li>Data cleansing, migration and reconciliation</li>
+          <li>Penetration test, load/race tests and restore drill</li>
+          <li>Provider onboarding, cutover and rollback</li>
+        </ul>
+      </article>
+      <article class="card bucket">
+        <h2>3E. Physical/site systems</h2>
+        <ul>
+          <li>Locks, barriers, readers, cards and installers</li>
+          <li>Cameras, VMS/NVR, meters and gateways</li>
+          <li>Cabling, SIM/network, licences and spares</li>
+          <li>Maintenance, inspections and replacement</li>
+        </ul>
+      </article>
+      <article class="card bucket">
+        <h2>3F. Governance & operations</h2>
+        <ul>
+          <li>Turkish legal, KVKK/SCC, MASAK and accountant</li>
+          <li>24/7 support, on-call, incident response and audits</li>
+          <li>Training, hypercare, translation and content</li>
+          <li>Cyber insurance, tax, VAT, FX and contingency</li>
+        </ul>
+      </article>
+
+      <article class="card third">
+        <h2>4. Main cost drivers</h2>
+        <ol>
+          <li>Money processed and commission rate</li>
+          <li>Internal staff seats, support and SLA</li>
+          <li>AI actions and context/document size</li>
+          <li>SMS/WhatsApp and identity-check volume</li>
+          <li>Images, maps, files and retention</li>
+          <li>Sites, doors, cameras and field hardware</li>
+        </ol>
+      </article>
+      <article class="card third">
+        <h2>5. Activation waves</h2>
+        <ol>
+          <li><b>Decide:</b> entity, data location, merchant and inventory authority</li>
+          <li><b>Foundation:</b> production cloud, auth, storage, monitoring, restore</li>
+          <li><b>Operate:</b> payments, messaging, accounting, consent and bank matching</li>
+          <li><b>Automate:</b> PMS/OTA, KBS/ID, access, calendar and field work</li>
+          <li><b>Scale:</b> AI gateway, marketplace, tours and advanced providers</li>
+        </ol>
+      </article>
+      <article class="card third">
+        <h2>6. Decisions required now</h2>
+        <ol>
+          <li>Define what “10,000 users” means and the required SLA.</li>
+          <li>Approve cloud/data-transfer and Turkish compliance route.</li>
+          <li>Select merchant-of-record, invoicing, refund and payout model.</li>
+          <li>Issue comparable RFPs; separate public price, assumption and quote.</li>
+          <li>Approve clean-DB, concurrency, backup/restore and UAT release gates.</li>
+        </ol>
+      </article>
+    </section>
+
+    <footer>
+      <p><b>Unpriced/quote-only examples:</b> legal and accounting, KEP/WhatsApp, bank APIs, secure property-payment route, portals, smart access/camera hardware, data migration, security testing, support, training, tax and contingency. Provider candidates are not selected or live until contracted and production-evidenced.</p>
+      <p>Detailed model: <a href="requirements/option-3-ai-site-crm/1Cati-Interactive-Cost-Scale-Estimator-2026-07-15.html">interactive estimator</a></p>
+    </footer>
+  </main>
+</body>
+</html>

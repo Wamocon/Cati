@@ -202,32 +202,13 @@
     "rights": "© 2026 Ataberk Estate. Tüm hakları saklıdır.",
     "description": "Türkiye'de emlak satışı ve yönetimi; yerel ve yabancı malikler için güvenilir çözüm ortağı.",
     "companyTitle": "Şirket",
-    "company": [
-      "Hakkımızda",
-      "Platform",
-      "Ekibimiz",
-      "Kariyer",
-      "İletişim"
-    ],
+    "company": ["Hakkımızda", "Platform", "Ekibimiz", "Kariyer", "İletişim"],
     "catalogTitle": "Katalog",
-    "catalog": [
-      "Tüm İlanlar",
-      "Yeni Projeler",
-      "Kiralık",
-      "VIP İlanlar"
-    ],
+    "catalog": ["Tüm İlanlar", "Yeni Projeler", "Kiralık", "VIP İlanlar"],
     "servicesTitle": "Hizmetler",
-    "services": [
-      "Satın Alma",
-      "Satış",
-      "Kiralama Yönetimi",
-      "Vatandaşlık"
-    ],
+    "services": ["Satın Alma", "Satış", "Kiralama Yönetimi", "Vatandaşlık"],
     "legalTitle": "Yasal",
-    "legal": [
-      "Gizlilik Politikası",
-      "Kullanım Koşulları"
-    ],
+    "legal": ["Gizlilik Politikası", "Kullanım Koşulları"],
     "securityNote": "Güvenli operasyon platformu — WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
@@ -251,7 +232,7 @@
       "users": "Kullanıcılar & Roller",
       "settings": "Ayarlar",
       "deals": "İş Akışları",
-      "offline_sync": "Offline Senkron"
+      "offline_sync": "Çevrimdışı Eşitleme"
     },
     "modules": {
       "activeListings": "Aktif İlanlar",
@@ -277,12 +258,12 @@
     "owner": "Malik",
     "tenant": "Kiracı",
     "descriptions": {
-      "admin": "Sistemin tamamından sorumlu yönetim rolü. Kullanıcılar, ayarlar, finans, erişim ve audit kontrollerini yönetir.",
+      "admin": "Yalnızca atandığı şirket için organizasyon yöneticisi. O şirketin kullanıcı, ayar, finans, erişim ve audit süreçlerini yönetir; kuruluşlar arası veya platform genelinde yetkisi yoktur. Platform süper yöneticisi ayrı, korumalı bir break-glass kimliğidir.",
       "manager": "Saha ve operasyon sorumlusu. Servis, görev, personel, rezervasyon, iletişim ve günlük riskleri takip eder.",
-      "accountant": "Buchhaltung/finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
-      "staff": "Mitarbeiter/personel rolü. Atanan işleri kabul eder, işi kapatır, fotoğraf/video raporu ekler.",
-      "owner": "Eigentümer/malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
-      "tenant": "Mieter/kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, chat, bildirim ve belgeleri görür."
+      "accountant": "Muhasebe ve finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
+      "staff": "Saha personeli rolü. Atanan işleri kabul eder, işi kapatır ve fotoğraf/video raporu ekler.",
+      "owner": "Malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
+      "tenant": "Kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, sohbet, bildirim ve belgeleri görür."
     }
   },
   "login": {
@@ -667,110 +648,38 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": [
-        "Aday",
-        "Durum",
-        "Kaynak",
-        "Temsilci"
-      ],
+      "columns": ["Aday", "Durum", "Kaynak", "Temsilci"],
       "rows": [
-        [
-          "Anna K. - Alanya daire",
-          "Sıcak",
-          "WhatsApp",
-          "Mehmet"
-        ],
-        [
-          "Sergey P. - Villa",
-          "Yeni",
-          "Web form",
-          "Ayşe"
-        ],
-        [
-          "Li W. - Yatırım",
-          "Görüşme",
-          "Referans",
-          "Can"
-        ]
+        ["Anna K. - Alanya daire", "Sıcak", "WhatsApp", "Mehmet"],
+        ["Sergey P. - Villa", "Yeni", "Web form", "Ayşe"],
+        ["Li W. - Yatırım", "Görüşme", "Referans", "Can"]
       ]
     },
     "listings": {
       "name": "İlanlar",
-      "columns": [
-        "İlan",
-        "Fiyat",
-        "EİDS",
-        "Durum"
-      ],
+      "columns": ["İlan", "Fiyat", "EİDS", "Durum"],
       "rows": [
-        [
-          "Villa #4021 - Kargıcak",
-          "€ 420.000",
-          "Onaylı",
-          "Aktif"
-        ],
-        [
-          "Daire #1847 - Mahmutlar",
-          "€ 95.000",
-          "Bekliyor",
-          "Aktif"
-        ],
-        [
-          "Penthouse #990 - Alanya",
-          "€ 310.000",
-          "Onaylı",
-          "Rezerve"
-        ]
+        ["Villa #4021 - Kargıcak", "€ 420.000", "Onaylı", "Aktif"],
+        ["Daire #1847 - Mahmutlar", "€ 95.000", "Bekliyor", "Aktif"],
+        ["Penthouse #990 - Alanya", "€ 310.000", "Onaylı", "Rezerve"]
       ]
     },
     "tickets": {
       "name": "Talepler",
-      "columns": [
-        "Talep",
-        "Öncelik",
-        "Son Güncelleme"
-      ],
+      "columns": ["Talep", "Öncelik", "Son Güncelleme"],
       "rows": [
-        [
-          "Su kaçağı - Villa #4021",
-          "Yüksek",
-          "2 saat önce"
-        ],
-        [
-          "Klima bakımı - Daire #1847",
-          "Orta",
-          "Dün"
-        ],
-        [
-          "Boyama - Penthouse #990",
-          "Düşük",
-          "3 gün önce"
-        ]
+        ["Su kaçağı - Villa #4021", "Yüksek", "2 saat önce"],
+        ["Klima bakımı - Daire #1847", "Orta", "Dün"],
+        ["Boyama - Penthouse #990", "Düşük", "3 gün önce"]
       ]
     },
     "calendar": {
       "name": "Takvim",
-      "columns": [
-        "Saat",
-        "Etkinlik",
-        "Yer"
-      ],
+      "columns": ["Saat", "Etkinlik", "Yer"],
       "rows": [
-        [
-          "10:00",
-          "Villa turu - Anna K.",
-          "Kargıcak"
-        ],
-        [
-          "14:00",
-          "Tapu randevusu",
-          "Alanya Tapu"
-        ],
-        [
-          "16:30",
-          "Bakım kontrolü",
-          "Mahmutlar"
-        ]
+        ["10:00", "Villa turu - Anna K.", "Kargıcak"],
+        ["14:00", "Tapu randevusu", "Alanya Tapu"],
+        ["16:30", "Bakım kontrolü", "Mahmutlar"]
       ]
     }
   },
@@ -780,5 +689,127 @@
     "ready": "{source} hazır",
     "retry": "Tekrar deneyin",
     "sourceFallback": "Veri"
+  },
+  "manualPayments": {
+    "loading": "Manuel ödeme kontrolleri hazırlanıyor...",
+    "loadErrorTitle": "Manuel ödemeler geçici olarak kullanılamıyor",
+    "loadErrorBody": "Hiçbir kayıt değişmedi. Çalışma alanını yenileyin veya kısa süre sonra tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "title": "Alınan ödemeyi kaydet",
+    "unreconciledBadge": "Manuel / mutabakat bekliyor",
+    "readOnlyBadge": "Yönetici salt okunur görünümü",
+    "subtitle": "Alındığı bildirilen ödemeyi doğru daire ve malik hesabına kaydedin. Kayıt dengeli bir geçici hesaba işlenir ve ayrı banka kontrolü tamamlanana kadar mutabakatsız kalır.",
+    "liveTruth": "Canlı veritabanı kaydıdır; banka veya kart sağlayıcısı onayı değildir.",
+    "demoTruth": "Kalıcı yerel QA kaydıdır; harici banka veya ödeme sağlayıcısı bağlı değildir.",
+    "refreshing": "Yenileniyor",
+    "refresh": "Yenile",
+    "postedCount": "Aktif manuel tahsilat",
+    "unreconciledTotal": "Mutabakat bekleyen",
+    "accountCount": "Uygun malik hesabı",
+    "formTitle": "Ödeme bilgileri",
+    "managerTitle": "Ödeme incelemesi",
+    "account": "Daire ve malik hesabı",
+    "selectAccount": "Hesap seçin",
+    "amount": "Alınan tutar",
+    "currency": "Para birimi",
+    "receivedAt": "Alınma tarihi ve saati",
+    "method": "Bildirilen yöntem",
+    "methods": {
+      "bank_transfer": "Banka havalesi",
+      "cash": "Nakit",
+      "card_terminal": "Kart terminali",
+      "other": "Diğer"
+    },
+    "reference": "Makbuz veya transfer referansı",
+    "businessNote": "İş açıklaması",
+    "noteHelp": "Neyin kontrol edildiğini ve kaydın neden açıldığını açıklayın. Kart bilgisi veya parola girmeyin.",
+    "saving": "Güvenli şekilde kaydediliyor...",
+    "submit": "Manuel ödemeyi kaydet",
+    "managerBody": "Yöneticiler atandıkları sitelerdeki manuel tahsilatları inceleyebilir; muhasebe kaydı oluşturamaz veya ters kayıt açamaz. Bu işlemleri kurum yöneticisi ya da muhasebeci tamamlar.",
+    "historyTitle": "Manuel ödeme geçmişi",
+    "saveError": "Ödeme kaydedilemedi. Bilgileri kontrol edip aynı istekle tekrar deneyin.",
+    "saveSuccess": "Ödeme manuel ve mutabakatsız olarak kaydedildi. Malik ekstresi ve finans defteri yenilenecek.",
+    "replaySuccess": "Daha önce başarılı olan ödeme döndürüldü; mükerrer kayıt oluşmadı.",
+    "reverseError": "Ters kayıt tamamlanamadı. Tekrar denemeden önce kaydı yenileyin.",
+    "reverseSuccess": "Karşı kayıt oluşturuldu. İlk tahsilat denetim geçmişinde korunur.",
+    "status": {
+      "posted": "Kaydedildi",
+      "reversed": "Ters kayıt açıldı"
+    },
+    "reversalReason": "Ters kayıt gerekçesi",
+    "confirmReverse": "Karşı kaydı oluştur",
+    "cancel": "İptal",
+    "reverse": "Gerekçeyle ters kayıt",
+    "empty": "Bu çalışma alanında henüz manuel ödeme kaydı yok."
+  },
+  "ownerFinance": {
+    "title": "Mali durumum",
+    "subtitle": "Sahibi olduğunuz dairelerin güncel aidat bakiyesini ve kayıtlı ödeme geçmişini tek yerde görün.",
+    "readOnly": "Salt okunur",
+    "verifiedScope": "Yalnızca doğrulanmış daireleriniz",
+    "liveSource": "Veritabanı anlık görünümü",
+    "demoSource": "Yerel demo verisi",
+    "lastUpdated": "Son güncelleme",
+    "notAvailable": "—",
+    "refresh": "Güncelle",
+    "refreshing": "Güncelleniyor",
+    "pollRecovery": "Bu görünüm açıkken yetkili hesap özeti API'si en geç 30 saniyede bir yeniden kontrol edilir; Yenile düğmesi hemen kontrol eder.",
+    "sourceNoteLive": "Bu salt okunur anlık görünüm, doğrulanmış malik-daire ilişkinize bağlı finans kayıtlarından sunucu tarafında hesaplanır.",
+    "sourceNoteDemo": "Bu rol demosundaki tutarlar, gerçek ödeme sağlayıcısı verisi değil, sabit demo kayıtlarıdır.",
+    "backgroundRefreshError": "Son güncelleme alınamadı. Ekrandaki mevcut kayıtlar korunuyor; yeniden deneyebilirsiniz.",
+    "loading": "Mali durumunuz hazırlanıyor…",
+    "errorTitle": "Mali durumunuz şu anda açılamıyor",
+    "errorBody": "Kayıtlarınız değişmedi. Birkaç saniye sonra yeniden deneyin; sorun sürerse site yönetimiyle iletişime geçin.",
+    "retry": "Yeniden dene",
+    "noUnitTitle": "Doğrulanmış bir daire bağlantısı bulunamadı",
+    "noUnitBody": "Mali kayıt gösterebilmemiz için malik profilinizin dairenizle doğrulanması gerekir. Site yönetimi bu bağlantıyı kontrol edebilir.",
+    "filters": "Hesap özeti filtreleri",
+    "unitFilter": "Daire",
+    "allUnits": "Tüm dairelerim",
+    "unitLabel": "Daire {unit}",
+    "historyFilter": "Kayıt türü",
+    "allHistory": "Tüm kayıtlar",
+    "dueHistory": "Açık ve gecikmiş",
+    "paidHistory": "Ödenmiş ve tahsilatlar",
+    "openBalance": "Açık bakiye",
+    "overdueBalance": "Gecikmiş bakiye",
+    "recordedPayments": "Kayıtlı ödemeler",
+    "ownedUnits": "Seçili daire",
+    "mixedCurrencies": "çoklu para birimi",
+    "statement": "Hesap hareketleri",
+    "entryCount": "{count, plural, one {# kayıt} other {# kayıt}}",
+    "historyPageStatus": "{total} kaydın {loaded} adedi yüklendi",
+    "loadMore": "Daha fazla hareket yükle",
+    "loadingMore": "Hareketler yükleniyor…",
+    "loadMoreError": "Ek hesap hareketleri yüklenemedi. Tekrar deneyin.",
+    "noEntriesTitle": "Bu filtreye uygun hareket yok",
+    "noEntriesBody": "Başka bir daire veya kayıt türü seçerek hesap geçmişinizi kontrol edebilirsiniz.",
+    "tableCaption": "Doğrulanmış daireleriniz için aidat ve ödeme geçmişi",
+    "unit": "Daire",
+    "description": "İşlem",
+    "period": "Dönem",
+    "dueDate": "Tarih",
+    "statusColumn": "Durum",
+    "amount": "Tutar",
+    "entryType": {
+      "dues": "Aidat",
+      "service_charge": "Servis bedeli",
+      "deposit": "Depozito",
+      "refund": "İade",
+      "penalty": "Gecikme bedeli",
+      "adjustment": "Düzeltme",
+      "payment": "Ödeme",
+      "manual_payment": "Manuel ödeme (mutabakat bekliyor)",
+      "manual_payment_reversal": "Manuel ödeme karşı kaydı"
+    },
+    "status": {
+      "paid": "Ödendi",
+      "open": "Açık",
+      "partially_paid": "Kısmen ödendi",
+      "overdue": "Gecikmiş",
+      "draft": "Taslak",
+      "cancelled": "İptal",
+      "reversed": "Ters kayıt"
+    }
   }
 }

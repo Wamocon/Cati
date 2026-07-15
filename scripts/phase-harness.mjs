@@ -82,8 +82,21 @@ const gatesByProfile = {
     { name: "lint", ...shellCommand(npmScript("lint")) },
     { name: "typecheck", ...shellCommand(npmScript("typecheck")) },
     { name: "build", ...shellCommand(npmScript("build")) },
-    { name: "playwright-e2e", ...shellCommand(npmScript("test:e2e"), { PLAYWRIGHT_SERVER_MODE: "production" }) },
-    { name: "browser-audit", ...shellCommand("node scripts/browser-audit.mjs --start-server --server-mode start") },
+    {
+      name: "production-access-profile-security",
+      ...shellCommand(npmScript("test:e2e:production-access"), {
+        PLAYWRIGHT_SERVER_MODE: "production",
+        PLAYWRIGHT_REUSE_SERVER: "false",
+        PLAYWRIGHT_PORT: "3197",
+        PLAYWRIGHT_BASE_URL: "http://127.0.0.1:3197",
+        PLAYWRIGHT_SERVER_URL: "http://127.0.0.1:3197/tr",
+        ENABLE_ACCESS_PROFILES: "true",
+      }),
+    },
+    {
+      name: "synthetic-release-demo",
+      ...shellCommand("node scripts/release-demo-harness.mjs"),
+    },
   ],
 }
 
@@ -138,8 +151,13 @@ async function verifyRequirementsDocs() {
 }
 
 function shouldSkipGate(gate, args) {
-  if (args.skipBrowser && gate.name === "browser-audit") return true
-  if (args.skipE2e && gate.name === "playwright-e2e") return true
+  if (args.skipBrowser && gate.name === "synthetic-release-demo") return true
+  if (
+    args.skipE2e &&
+    ["production-access-profile-security", "synthetic-release-demo"].includes(gate.name)
+  ) {
+    return true
+  }
   return false
 }
 
@@ -188,7 +206,8 @@ async function runGate(gate, args, outDir) {
       dryRun: true,
       command: gate.command ?? "builtin",
       attempts: [],
-      passed: true,
+      passed: false,
+      incomplete: true,
     }
   }
 
@@ -258,13 +277,31 @@ async function main() {
     }
   }
 
+  const incomplete =
+    args.dryRun ||
+    gateResults.length !== selectedGates.length ||
+    gateResults.some((result) => result.skipped || result.dryRun || result.incomplete)
   const report = {
     generatedAt: new Date().toISOString(),
     phase: args.phase,
     phaseName,
     profile: args.profile,
     maxAttempts: args.maxAttempts,
-    passed: gateResults.every((result) => result.passed || result.skipped),
+    verificationScope:
+      args.profile === "full"
+        ? "source-build plus production-denial and isolated-synthetic QA"
+        : "source-only phase diagnostics",
+    incomplete,
+    passed:
+      !incomplete &&
+      gateResults.length === selectedGates.length &&
+      gateResults.every((result) => result.passed === true),
+    productionReady: false,
+    productionLimitations: [
+      "Synthetic role profiles do not prove successful Supabase Auth sessions for six real users.",
+      "Clean-database migrations, RLS/action authorization, provider delivery, backup/restore, and client UAT remain separate gates.",
+      "A skipped or dry-run gate is diagnostic only and can never produce a passing release report.",
+    ],
     resultsDir: outDir,
     gateResults,
     manualNextStep: `Record manual QA notes in quality/results/phase-${String(args.phase).padStart(2, "0")}-manual-notes.md`,
@@ -272,7 +309,13 @@ async function main() {
   const reportPath = path.join(outDir, "phase-report.json")
   await fs.writeFile(reportPath, JSON.stringify(report, null, 2), "utf8")
   console.log(`\nPhase report: ${reportPath}`)
-  console.log(report.passed ? "Phase harness passed." : "Phase harness failed.")
+  console.log(
+    report.passed
+      ? "Phase harness passed for its scoped evidence only."
+      : report.incomplete
+        ? "Phase harness is incomplete; skipped/dry-run gates are not release evidence."
+        : "Phase harness failed."
+  )
   if (!report.passed) process.exitCode = 1
 }
 

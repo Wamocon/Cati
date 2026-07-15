@@ -1,20 +1,18 @@
 "use client"
 
-import { Bell, CheckCircle2, Eye, FileClock, Globe, PlugZap, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
+import { Bell, CheckCircle2, Eye, FileClock, Globe, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
 import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
+import { IntegrationHealthPanel } from "@/components/integration-health-panel"
 import { StatusBadge } from "@/components/status-badge"
 import { LocaleSwitcher } from "@/components/locale-switcher"
 import {
   auditEvents,
-  getIntegrationSummary,
   getPlatformControlSummary,
-  integrationProviders,
   platformControls,
   roleCoverage,
   type AuditEvent,
-  type IntegrationProviderRecord,
   type PlatformControl,
 } from "@/lib/site-management-data"
 import { localizeDashboardTextPart } from "@/lib/operational-copy"
@@ -382,23 +380,6 @@ function riskLabel(risk: AuditEvent["risk"], copy: (typeof settingsCopy)[keyof t
   return copy.risk[risk]
 }
 
-function integrationVariant(status: IntegrationProviderRecord["status"]) {
-  if (status === "connected") return "success"
-  if (status === "demo_ready") return "info"
-  if (status === "blocked_pending_client") return "warning"
-  return "neutral"
-}
-
-function integrationLabel(status: IntegrationProviderRecord["status"], copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
-  return copy.integrationStatus[status]
-}
-
-function integrationRiskVariant(risk: IntegrationProviderRecord["riskLevel"]) {
-  if (risk === "high") return "danger"
-  if (risk === "medium") return "warning"
-  return "success"
-}
-
 function booleanBadge(value: boolean, copy: (typeof settingsCopy)[keyof typeof settingsCopy]) {
   return <StatusBadge variant={value ? "success" : "neutral"}>{value ? copy.yes : copy.no}</StatusBadge>
 }
@@ -410,7 +391,6 @@ export default function SettingsPage() {
   const localizeValue = (value: string) =>
     localizeDashboardTextPart(value, locale)
   const summary = getPlatformControlSummary()
-  const integrationSummary = getIntegrationSummary()
 
   const configurationItems = [
     {
@@ -533,39 +513,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <Card3D glow={false}>
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-card-foreground">{copy.integrationsTitle}</h2>
-            <p className="mt-1 max-w-3xl text-xs text-muted-foreground">
-              {localizeValue(copy.integrationsBody)}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <StatusBadge variant="success">{copy.live} {integrationSummary.liveProviders}</StatusBadge>
-            <StatusBadge variant="info">{copy.demo} {integrationSummary.demoReady}</StatusBadge>
-            <StatusBadge variant="warning">{copy.waitingClient} {integrationSummary.blockedPendingClient}</StatusBadge>
-          </div>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {integrationProviders.slice(0, 6).map((provider) => (
-            <div key={provider.id} className="rounded-xl border border-border bg-muted/30 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase text-muted-foreground">{localizeValue(provider.category)}</p>
-                  <h3 className="mt-1 text-sm font-black text-foreground">{provider.provider}</h3>
-                </div>
-                <PlugZap className="h-4 w-4 shrink-0 text-primary" />
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge>
-                <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{provider.riskLevel}</StatusBadge>
-              </div>
-              <p className="mt-3 text-xs text-muted-foreground">{localizeValue(provider.idealNow)}</p>
-            </div>
-          ))}
-        </div>
-      </Card3D>
+      <IntegrationHealthPanel />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <DataTable
@@ -595,23 +543,6 @@ export default function SettingsPage() {
           ]}
         />
       </div>
-
-      <DataTable
-        data={integrationProviders}
-        searchValue={(provider) =>
-          `${provider.id} ${provider.category} ${provider.provider} ${provider.status} ${provider.requiredFromClient} ${provider.fallback}`
-        }
-        pageSize={10}
-        columns={[
-          { key: "id", header: "ID", sortable: true, render: (provider) => provider.id },
-          { key: "category", header: copy.headers.service, sortable: true, render: (provider) => localizeValue(provider.category) },
-          { key: "provider", header: copy.headers.provider, render: (provider) => provider.provider },
-          { key: "status", header: copy.headers.status, render: (provider) => <StatusBadge variant={integrationVariant(provider.status)}>{integrationLabel(provider.status, copy)}</StatusBadge> },
-          { key: "risk", header: copy.headers.risk, render: (provider) => <StatusBadge variant={integrationRiskVariant(provider.riskLevel)}>{copy.risk[provider.riskLevel]}</StatusBadge> },
-          { key: "required", header: copy.headers.required, render: (provider) => localizeValue(provider.requiredFromClient) },
-          { key: "fallback", header: copy.headers.fallback, render: (provider) => localizeValue(provider.fallback) },
-        ]}
-      />
 
       <Card3D innerClassName="p-5" glow={false}>
         <div className="flex items-center gap-3">

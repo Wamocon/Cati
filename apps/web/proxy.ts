@@ -2,6 +2,7 @@ import createIntlMiddleware from "next-intl/middleware"
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { locales, defaultLocale } from "./i18n"
+import { accessProfilesEnabledForEnvironment } from "./lib/access-profile-policy"
 
 const intlMiddleware = createIntlMiddleware({
   locales,
@@ -33,28 +34,6 @@ function signInUrl(locale: string, request: NextRequest): URL {
   return url
 }
 
-function accessProfilesEnabledForRequest() {
-  const productionDeployment =
-    process.env.VERCEL_ENV === "production" ||
-    process.env.CATI_ENV === "production"
-  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const localDevelopment =
-    process.env.NODE_ENV !== "production" &&
-    !process.env.VERCEL_ENV &&
-    !process.env.VERCEL_URL &&
-    process.env.CATI_ENV !== "production"
-  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
-  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
-
-  // Keep in sync with isAccessProfileEnabled() in lib/auth.ts.
-  // CATI_ALLOW_REMOTE_ACCESS_PROFILES=true is the explicit, documented approval
-  // that lets access profiles run on remote/production; without it, remote and
-  // production deployments stay locked to real authentication.
-  if (localDevelopment) return true
-
-  return (!productionDeployment || remoteQaAllowed) && (!remoteDeployment || remoteQaAllowed) && serverQaFlag
-}
-
 export default async function proxy(request: NextRequest) {
   // 1. Apply next-intl routing (locale prefix, redirects, rewrites).
   const intlResponse = intlMiddleware(request)
@@ -66,7 +45,7 @@ export default async function proxy(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const accessProfilesEnabled = accessProfilesEnabledForRequest()
+  const accessProfilesEnabled = accessProfilesEnabledForEnvironment()
   const { locale, pathWithoutLocale } = getLocaleAndPath(
     request.nextUrl.pathname
   )

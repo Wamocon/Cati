@@ -69,7 +69,7 @@ export const roleDefinitions: RoleDefinition[] = [
     level: 90,
     scope: "company",
     responsibilities: [
-      "Full platform configuration",
+      "Full organization configuration",
       "User and role administration",
       "Sensitive finance, access, audit, and integration oversight",
     ],
@@ -134,6 +134,7 @@ export const roleDefinitions: RoleDefinition[] = [
     responsibilities: [
       "View owned-unit documents, reservations, communications, and service status",
       "Create service requests and communicate with management",
+      "Sponsor and revoke time-boxed tenant access for owned units",
     ],
     constraints: [
       "Can only access own units and authorized tenants",
@@ -213,6 +214,7 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("tickets", "assign"),
     permission("tickets", "approve"),
     ...crud("calendar"),
+    permission("calendar", "approve"),
     ...crud("documents"),
     permission("eids_compliance", "view"),
     permission("eids_compliance", "update"),
@@ -223,13 +225,13 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("reports", "create"),
     permission("reports", "export"),
     permission("users", "view"),
-    permission("users", "assign"),
     permission("settings", "view"),
     ...crud("communications"),
     ...crud("offline_sync"),
   ],
   accountant: [
     ...view("dashboard"),
+    permission("tickets", "view"),
     permission("documents", "view"),
     permission("documents", "create"),
     permission("documents", "update"),
@@ -263,14 +265,16 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("tickets", "view"),
     permission("tickets", "create"),
     permission("tickets", "approve"),
-    permission("tickets", "assign"),
     permission("calendar", "view"),
     permission("calendar", "create"),
     permission("calendar", "approve"),
     permission("documents", "view"),
     permission("documents", "create"),
+    permission("finance", "view"),
     permission("communications", "view"),
     permission("communications", "create"),
+    permission("offline_sync", "view"),
+    permission("offline_sync", "create"),
   ],
   tenant: [
     ...view("dashboard"),
@@ -282,6 +286,8 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("documents", "create"),
     permission("communications", "view"),
     permission("communications", "create"),
+    permission("offline_sync", "view"),
+    permission("offline_sync", "create"),
   ],
 }
 
@@ -325,6 +331,18 @@ export function getAccessibleResources(
 
 export function isAdmin(role: Role | null | undefined): boolean {
   return role === "admin"
+}
+
+/**
+ * Internal accounting workspaces expose organization/site controls that are
+ * intentionally broader than the owner's own-unit statement projection.
+ * Keep this boundary explicit when a route or API returns ledger operations,
+ * payment controls, reconciliation data, or provider metadata.
+ */
+export function canViewInternalFinance(
+  role: Role | null | undefined
+): boolean {
+  return role === "admin" || role === "manager" || role === "accountant"
 }
 
 export function isManagerOrAbove(role: Role | null | undefined): boolean {

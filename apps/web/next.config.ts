@@ -3,6 +3,10 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n.ts")
 const supabaseProjectOrigin = "https://hczmbaqofxyusellxhyp.supabase.co"
+const qaDistDir =
+  process.env.CATI_ENV === "qa"
+    ? process.env.CATI_NEXT_DIST_DIR?.trim()
+    : undefined
 
 const securityHeaders = [
   {
@@ -31,7 +35,8 @@ const securityHeaders = [
   { key: "Origin-Agent-Cluster", value: "?1" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
+    value:
+      "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",
   },
 ]
 
@@ -41,6 +46,7 @@ const privateNoStoreHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  ...(qaDistDir ? { distDir: qaDistDir } : {}),
   allowedDevOrigins: ["127.0.0.1"],
   devIndicators: false,
   async headers() {

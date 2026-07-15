@@ -52,6 +52,10 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   rowLabel?: (row: T) => string
   rowKey?: (row: T) => string
+  /** Optional controlled query for server-backed datasets. */
+  searchQuery?: string
+  onSearchQueryChange?: (query: string) => void
+  searchPending?: boolean
 }
 
 interface OptionsPosition {
@@ -168,12 +172,17 @@ export function DataTable<T>({
   onRowClick,
   rowLabel,
   rowKey,
+  searchQuery,
+  onSearchQueryChange,
+  searchPending = false,
 }: DataTableProps<T>) {
   const t = useTranslations("dataTable")
   const locale = resolveDashboardLocale(useLocale())
   const optionsId = useId()
+  const optionsTitleId = `${optionsId}-title`
   const optionsButtonRef = useRef<HTMLButtonElement>(null)
   const optionsMenuRef = useRef<HTMLDivElement>(null)
+  const optionsFirstControlRef = useRef<HTMLButtonElement>(null)
   const [query, setQuery] = useState("")
   const [sort, setSort] = useState<{
     key: string
@@ -187,8 +196,11 @@ export function DataTable<T>({
   const [optionsOpen, setOptionsOpen] = useState(false)
   const [optionsPosition, setOptionsPosition] = useState<OptionsPosition>({})
   const portalRoot = typeof document === "undefined" ? null : document.body
-  const normalizedQuery = normalizeSearchText(query)
-  const visibleColumns = columns.filter((column) => !hiddenColumns.has(column.key))
+  const activeQuery = searchQuery ?? query
+  const normalizedQuery = normalizeSearchText(activeQuery)
+  const visibleColumns = columns.filter(
+    (column) => !hiddenColumns.has(column.key)
+  )
   const pageSizeOptions = Array.from(new Set([pageSize, 6, 10, 20, 50, 100]))
     .filter((value) => value > 0)
     .sort((a, b) => a - b)
@@ -243,7 +255,9 @@ export function DataTable<T>({
     const spaceBelow = viewportHeight - box.bottom - 12
     const spaceAbove = box.top - 12
     const opensAbove = spaceBelow < estimatedHeight && spaceAbove > spaceBelow
-    const preferredTop = opensAbove ? box.top - estimatedHeight - 8 : box.bottom + 8
+    const preferredTop = opensAbove
+      ? box.top - estimatedHeight - 8
+      : box.bottom + 8
     const top = clamp(
       preferredTop,
       12,
@@ -266,6 +280,10 @@ export function DataTable<T>({
   useEffect(() => {
     if (!optionsOpen) return undefined
 
+    const focusFrame = window.requestAnimationFrame(() => {
+      optionsFirstControlRef.current?.focus()
+    })
+
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node
       if (
@@ -283,6 +301,7 @@ export function DataTable<T>({
     window.addEventListener("scroll", handleReposition, true)
 
     return () => {
+      window.cancelAnimationFrame(focusFrame)
       document.removeEventListener("pointerdown", handlePointerDown)
       window.removeEventListener("resize", handleReposition)
       window.removeEventListener("scroll", handleReposition, true)
@@ -314,6 +333,7 @@ export function DataTable<T>({
 
   function resetTable() {
     setQuery("")
+    onSearchQueryChange?.("")
     setSort(null)
     setPage(1)
     setPageSizeValue(pageSize)
@@ -321,9 +341,13 @@ export function DataTable<T>({
   }
 
   function exportCsv() {
-    const header = visibleColumns.map((column) => escapeCsv(columnLabel(column.header)))
+    const header = visibleColumns.map((column) =>
+      escapeCsv(columnLabel(column.header))
+    )
     const rows = sorted.map((row) =>
-      visibleColumns.map((column) => escapeCsv(textFromNode(renderCell(column, row))))
+      visibleColumns.map((column) =>
+        escapeCsv(textFromNode(renderCell(column, row)))
+      )
     )
     const csv = [header, ...rows].map((row) => row.join(",")).join("\n")
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
@@ -349,8 +373,9 @@ export function DataTable<T>({
           <div
             id={optionsId}
             ref={optionsMenuRef}
-            role="menu"
-            aria-label={t("tableTools")}
+            role="dialog"
+            aria-modal="false"
+            aria-labelledby={optionsTitleId}
             style={optionsStyle}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
@@ -361,10 +386,14 @@ export function DataTable<T>({
             className="fixed z-[85] max-h-[min(520px,calc(100vh-24px))] overflow-auto rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl shadow-black/20 sm:max-w-[min(320px,calc(100vw-24px))]"
           >
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-black uppercase tracking-[0.12em] text-muted-foreground">
+              <p
+                id={optionsTitleId}
+                className="text-xs font-black tracking-[0.12em] text-muted-foreground uppercase"
+              >
                 {t("tableTools")}
               </p>
               <button
+                ref={optionsFirstControlRef}
                 type="button"
                 onClick={resetTable}
                 className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-[11px] font-bold hover:bg-muted"
@@ -409,7 +438,9 @@ export function DataTable<T>({
                       suppressHydrationWarning
                       className="h-3.5 w-3.5 accent-primary"
                     />
-                    <span className="min-w-0 truncate">{columnLabel(column.header)}</span>
+                    <span className="min-w-0 truncate">
+                      {columnLabel(column.header)}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -430,20 +461,19 @@ export function DataTable<T>({
 
   return (
     <div
-      className={cn(
-        "premium-surface min-w-0 rounded-xl",
-        className
-      )}
+      className={cn("premium-surface min-w-0 rounded-xl", className)}
       data-testid="data-table"
+      aria-busy={searchPending}
     >
       {(searchKey || searchValue) && (
         <div className="flex flex-col gap-3 border-b border-border/70 p-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg border border-border/70 bg-background/70 px-3 py-2">
             <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
-              value={query}
+              value={activeQuery}
               onChange={(event) => {
                 setQuery(event.target.value)
+                onSearchQueryChange?.(event.target.value)
                 setPage(1)
               }}
               placeholder={t("search")}
@@ -459,17 +489,17 @@ export function DataTable<T>({
                 text={t("stickyHint")}
               />
             )}
-            <span className="whitespace-nowrap rounded-full border border-border/70 bg-muted/50 px-3 py-1 text-xs font-semibold text-muted-foreground">
+            <span className="rounded-full border border-border/70 bg-muted/50 px-3 py-1 text-xs font-semibold whitespace-nowrap text-muted-foreground">
               {t("count", { count: sorted.length })}
             </span>
             <button
               ref={optionsButtonRef}
               type="button"
-              aria-haspopup="menu"
+              aria-haspopup="dialog"
               aria-expanded={optionsOpen}
               aria-controls={optionsOpen ? optionsId : undefined}
               onClick={() => (optionsOpen ? closeOptions() : openOptions())}
-              className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+              className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:outline-none"
             >
               <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
               {t("options")}
@@ -494,19 +524,21 @@ export function DataTable<T>({
               aria-label={onRowClick ? rowLabel?.(row) : undefined}
               onClick={() => onRowClick?.(row)}
               onKeyDown={(event) => {
-                if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) return
+                if (!onRowClick || (event.key !== "Enter" && event.key !== " "))
+                  return
                 event.preventDefault()
                 onRowClick(row)
               }}
               className={cn(
                 "rounded-xl border border-border/70 bg-background/72 p-3 shadow-sm",
-                onRowClick && "cursor-pointer transition hover:border-primary/35 hover:bg-primary/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+                onRowClick &&
+                  "cursor-pointer transition hover:border-primary/35 hover:bg-primary/[0.045] focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:outline-none"
               )}
             >
               <dl className="space-y-3">
                 {visibleColumns.map((col) => (
                   <div key={col.key} className="min-w-0">
-                    <dt className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+                    <dt className="text-[11px] font-bold tracking-[0.08em] text-muted-foreground uppercase">
                       {columnLabel(col.header)}
                     </dt>
                     <dd className="mt-1 min-w-0 text-sm font-medium text-foreground [&_*]:max-w-full [&_*]:min-w-0 [&_*]:break-words">
@@ -525,7 +557,7 @@ export function DataTable<T>({
       </div>
 
       <div className="hidden min-w-0 overflow-x-auto overscroll-x-contain md:block">
-        <table className="min-w-max w-full text-left text-sm">
+        <table className="w-full min-w-max text-left text-sm">
           <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur">
             <tr>
               {visibleColumns.map((col) => (
@@ -541,7 +573,7 @@ export function DataTable<T>({
                       : undefined
                   }
                   className={cn(
-                    "px-4 py-3 text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground",
+                    "px-4 py-3 text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase",
                     col.sticky === "right" &&
                       "sticky right-0 z-20 bg-muted/95 shadow-[-14px_0_18px_-18px_rgba(15,23,42,0.75)] backdrop-blur",
                     col.headerClassName
@@ -550,7 +582,7 @@ export function DataTable<T>({
                   {col.sortable ? (
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1 rounded-md text-left uppercase tracking-[0.12em] transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      className="inline-flex items-center gap-1 rounded-md text-left tracking-[0.12em] uppercase transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none"
                       onClick={() => toggleSort(col.key)}
                     >
                       {columnLabel(col.header)}
@@ -562,7 +594,9 @@ export function DataTable<T>({
                         ))}
                     </button>
                   ) : (
-                    <div className="flex items-center gap-1">{columnLabel(col.header)}</div>
+                    <div className="flex items-center gap-1">
+                      {columnLabel(col.header)}
+                    </div>
                   )}
                 </th>
               ))}
@@ -577,13 +611,18 @@ export function DataTable<T>({
                   aria-label={onRowClick ? rowLabel?.(row) : undefined}
                   onClick={() => onRowClick?.(row)}
                   onKeyDown={(event) => {
-                    if (!onRowClick || (event.key !== "Enter" && event.key !== " ")) return
+                    if (
+                      !onRowClick ||
+                      (event.key !== "Enter" && event.key !== " ")
+                    )
+                      return
                     event.preventDefault()
                     onRowClick(row)
                   }}
                   className={cn(
                     "transition-colors hover:bg-primary/[0.045]",
-                    onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/35"
+                    onRowClick &&
+                      "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:outline-none focus-visible:ring-inset"
                   )}
                 >
                   {visibleColumns.map((col) => (
@@ -617,7 +656,8 @@ export function DataTable<T>({
       {sorted.length > pageSizeValue && (
         <div className="flex flex-col gap-3 border-t border-border p-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <span>
-            {pageStart + 1}-{Math.min(pageStart + pageSizeValue, sorted.length)} / {sorted.length}
+            {pageStart + 1}-{Math.min(pageStart + pageSizeValue, sorted.length)}{" "}
+            / {sorted.length}
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -633,7 +673,9 @@ export function DataTable<T>({
             </span>
             <button
               type="button"
-              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              onClick={() =>
+                setPage((value) => Math.min(totalPages, value + 1))
+              }
               disabled={currentPage === totalPages}
               className="rounded-lg border border-border px-3 py-1 font-semibold text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
             >

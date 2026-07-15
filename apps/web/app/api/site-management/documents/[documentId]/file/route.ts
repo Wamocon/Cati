@@ -7,6 +7,7 @@ import {
   type DocumentFileDisposition,
 } from "@/lib/document-storage"
 import { hasAnyPermission } from "@/lib/rbac"
+import { logClientAction } from "@/lib/site-management-repository"
 
 export const dynamic = "force-dynamic"
 
@@ -54,13 +55,30 @@ export async function GET(
     return fileError("Document is not approved for portal access.", 409)
   }
 
+  const disposition = dispositionFromRequest(request)
   const signedUrl = await createDocumentSignedUrl({
     reference,
-    disposition: dispositionFromRequest(request),
+    disposition,
   })
 
   if (!signedUrl) {
     return fileError("Document file is not attached yet.", 404)
+  }
+
+  try {
+    await logClientAction({
+      actionType: "document.signed_url.issued",
+      entityTable: "documents",
+      entityExternalId: reference.id,
+      title: reference.title,
+      metadata: {
+        disposition,
+        source: reference.source,
+        expiresInSeconds: 60,
+      },
+    })
+  } catch {
+    return fileError("Document access could not be audited.", 503)
   }
 
   return NextResponse.redirect(signedUrl)

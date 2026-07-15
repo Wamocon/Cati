@@ -111,7 +111,9 @@ async function main() {
   const outDir = path.join(args.outDir, `${timestamp}-phase-02-04`)
   await fs.mkdir(outDir, { recursive: true })
 
-  const apiResponse = await fetch(new URL("/api/site-management/phase-status", args.baseUrl))
+  const apiResponse = await fetch(new URL("/api/site-management/phase-status", args.baseUrl), {
+    headers: { Cookie: "access_profile_role=admin" },
+  })
   if (!apiResponse.ok) throw new Error(`Phase API failed with HTTP ${apiResponse.status}`)
   const apiPayload = await apiResponse.json()
   const phases = apiPayload.phases ?? []

@@ -1,4 +1,5 @@
--- Video library metadata for the public product-video page.
+-- Migration 21: video library metadata for the public product-video page.
+-- Migration version 15 is already deployed for the emergency/service catalog.
 -- Media files stay in a private Supabase Storage bucket and are signed by the app server.
 
 CREATE TABLE IF NOT EXISTS public.video_library (

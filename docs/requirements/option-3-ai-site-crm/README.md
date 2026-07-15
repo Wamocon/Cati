@@ -23,6 +23,8 @@ For current delivery control, use the 15-phase ERP model in `../../PROJECT-HANDB
 |---:|---|---|
 | 0 | `Anforderungsdokument-1Cati.md` | v1 (04.07.2026): consolidated German client-facing requirements document (WAMOCON standard format) covering current implementation state, fresh dated market/competitor research and the forward roadmap in one document. Does not replace the detailed BRD/PRD/TRD/QA package below — use it for a single-document overview, use the documents below for implementation detail. Exported as `Anforderungsdokument-1Cati.docx` and additionally published at `apps/web/public/Anforderungsdokument_1Cati.docx`. Superseded for implementation-status detail by v2 below; kept as the historical market-analysis record. |
 | 0b | `Anforderungsdokument-1Cati-v2.md` | v2 (07.07.2026): adds a full code-verified functional inventory (14 parallel audits against migrations 0000–0013, all API routes, all dashboard pages), a corrected Phase 10–14 status (Foundation-with-disconnected-layers, not "planned"), a Demo chapter explaining the maturity-tier legend, a line-by-line status comparison against the original client requirements document, and a prioritized next-steps chapter. Market analysis (Ch. 2–5) is carried over unchanged from v1. Exported as `Anforderungsdokument-1Cati-v2.docx`, also published at `apps/web/public/Anforderungsdokument-1Cati-v2.docx`. |
+| 0c | `1Cati-External-Integration-Cost-Scale-Management-Blueprint-2026-07-15.docx` | Dated executive management brief: multilingual overview, external-provider catalogue, Turkish compliance gates, 1k/5k/10k cost model, AI economics, risks, procurement gates and 14 work packages. This is a planning aid, not a supplier offer or legal/accounting opinion. |
+| 0d | `1Cati-Interactive-Cost-Scale-Estimator-2026-07-15.html` | Standalone EN/DE/TR/RU cost controller with 1,000-user steps, scenario presets, editable assumptions, formula ledger, quote-gap visibility and export/print controls. |
 | 1 | `BRD.md` | Business requirements, market context, workflows and business acceptance logic. |
 | 2 | `PRD.md` | Product scope, personas, user stories, module requirements and product roadmap. |
 | 3 | `TRD.md` | Technical architecture, data model, security controls, APIs and integration approach. |
@@ -40,6 +42,7 @@ For current delivery control, use the 15-phase ERP model in `../../PROJECT-HANDB
 | Folder | Contents |
 |---|---|
 | `qa` | Markdown QA notes for generated documentation exports. |
+| Package root | The dated management DOCX and standalone interactive estimator listed above are retained stakeholder deliverables. |
 
 Generated PNG/SVG diagrams, Mermaid sidecar files, HTML previews, JSON manifests and screenshots are not retained in the repository. The Markdown files contain the relevant workflow sources. DOCX files are generated reading copies of the Markdown set.
 

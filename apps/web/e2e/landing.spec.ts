@@ -52,8 +52,8 @@ test.describe("Landing page journey", () => {
     await expect(compliance.getByText("KBS/e-GUEST", { exact: true })).toBeVisible()
     await screenshot(page, testInfo, "05-compliance")
 
-    await scrollToSection(page, "section#platform")
-    const platform = page.locator("section#platform")
+    await scrollToSection(page, "section#modules")
+    const platform = page.locator("section#modules")
     await expect(platform.getByText(/ERP iş akışı/i).filter({ visible: true }).first()).toBeVisible()
     await expect(platform.getByRole("button", { name: "CRM", exact: true })).toBeVisible()
     await screenshot(page, testInfo, "06-platform-workflow")

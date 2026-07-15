@@ -50,6 +50,59 @@ test.describe("Site concierge (WhatsApp + public AI assistant)", () => {
     await screenshot(page, testInfo, "07-concierge-answer")
   })
 
+  test("assistant dialog is named, modal, keyboard-contained and returns focus", async ({
+    page,
+  }) => {
+    await page.goto("/en/new-level-premium")
+    const launcher = page.getByTestId("concierge-toggle")
+    await launcher.click()
+    await page.getByTestId("concierge-ai-open").click()
+
+    const dialog = page.getByRole("dialog", { name: "1Çatı Assistant" })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toHaveAttribute("aria-modal", "true")
+
+    const textbox = dialog.getByRole("textbox", {
+      name: "Ask the 1Çatı assistant",
+    })
+    await expect(textbox).toBeFocused()
+
+    const conversation = dialog.getByRole("log", { name: "1Çatı Assistant" })
+    await expect(conversation).toHaveAttribute("aria-live", "polite")
+    await expect(conversation).toHaveAttribute("aria-relevant", "additions text")
+    await expect(conversation).toHaveAttribute("aria-busy", "false")
+
+    expect(
+      await dialog.evaluate((element) =>
+        Array.from(document.body.children)
+          .filter((sibling) => !sibling.contains(element))
+          .every((sibling) => sibling.hasAttribute("inert"))
+      )
+    ).toBe(true)
+
+    const close = dialog.getByRole("button", { name: "Close" })
+    await close.focus()
+    await page.keyboard.press("Shift+Tab")
+    expect(
+      await dialog.evaluate((element) => element.contains(document.activeElement))
+    ).toBe(true)
+
+    await dialog.evaluate((element) => {
+      const focusable = Array.from(
+        element.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((candidate) => candidate.offsetParent !== null)
+      focusable.at(-1)?.focus()
+    })
+    await page.keyboard.press("Tab")
+    await expect(close).toBeFocused()
+
+    await page.keyboard.press("Escape")
+    await expect(dialog).toBeHidden()
+    await expect(launcher).toBeFocused()
+  })
+
   test("public chat API answers product questions and guards private data", async ({
     page,
   }) => {

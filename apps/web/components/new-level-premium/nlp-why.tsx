@@ -15,67 +15,185 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 const copy = {
   tr: {
     eyebrow: "Neden 1Çatı",
-    title: "Binayı her gün çalıştıran sistem, broşür değil.",
+    title: "Günlük operasyon için kapsamı ve sınırları açık platform.",
     intro:
-      "1Çatı, satış vaadini günlük operasyona bağlar. Her rol yalnızca yetkili olduğu veriyi görür; hiçbir kullanıcı kendi kapsamının dışına çıkamaz.",
+      "1Çatı, satış vaadini rol bazlı operasyon akışlarına bağlar. Aşağıda hangi özelliklerin yerel demoda doğrulandığı ve hangilerinin üretim girişi, onaylı veri erişimi veya canlı sağlayıcı bağlantısı beklediği açıkça belirtilir.",
     benefits: [
-      ["Bakiyeniz, her an, telefon gerekmez", "Dairenizin muhasebe kaydı, ödeme geçmişi ve borç durumu doğrudan görünür. Size okunan bir özet değil.", Wallet],
-      ["Kaybolmayan servis talepleri", "Talep açın; durumu, SLA'yı ve işin foto/video kanıtını görün. Sohbette kaybolan bir mesaj değil.", Wrench],
-      ["Belgeleriniz, doğrulanabilir", "TAPU, sözleşme ve daire belgeleri tek yerde, net durumla: doğrulandı / bekliyor / süresi doldu.", FileCheck2],
-      ["Gerekçeli erişim kararları", "Bir bölge kısıtlıysa nedenini ve çözümünü görürsünüz. Gerekçesiz kapalı bir kapı değil.", KeyRound],
-      ["Tek sistem, dört dil", "Türkçe, İngilizce, Almanca, Rusça, hepsi aynı derinlikte. Uluslararası mülkiyet tabanı için tasarlandı.", Languages],
-      ["Yönetime doğrudan, kayıtlı hat", "İletişim sistem içinde, kayıtla ilerler. Telefon, e-posta ve mesaj arasında dağılmaz.", MessagesSquare],
-      ["Kaynak gösteren asistan", "Yapay zekâ, yalnızca kendi dairenize dair sorulara dayanağıyla cevap verir; yetkiniz dışındaki veriyi asla gösteremez.", Sparkles],
+      [
+        "Malik finans özeti — yerel doğrulandı",
+        "Malik ekranı, yalnızca doğrulanmış daire ilişkisine bağlı bakiye ve ödeme geçmişini gösterir. Gerçek tutarlar üretim girişi, onaylı daire bağlantısı ve canlı finans kayıtları açıldığında gösterilir.",
+        Wallet,
+      ],
+      [
+        "Servis akışı — yerel doğrulandı",
+        "Talep durumu ve hizmet süresi takibi yerel demoda çalışır. Fotoğraf/video dosyaları, güvenli özel depolama ve dosya taraması canlı kullanım için henüz bağlı değildir.",
+        Wrench,
+      ],
+      [
+        "Belge listesi — dosyalar bekliyor",
+        "Belge kayıtları ve durumları demoda görülebilir. Yüklenen dosyalar ve “doğrulandı” işareti, güvenli depolama, dosya taraması ve yetkili incelemesi canlı olduğunda kullanılacaktır.",
+        FileCheck2,
+      ],
+      [
+        "Erişim kararları — sağlayıcı kapılı",
+        "İç kayıttaki gerekçe ve durum gösterilebilir; fiziksel kapı veya kart işlemi, onaylı erişim sağlayıcısı olmadan çalıştırılmaz.",
+        KeyRound,
+      ],
+      [
+        "Dört dil — kritik akış kapsamı",
+        "Bu genel ürün sayfası ve seçili kritik akışlar TR/EN/DE/RU sunulur. Uygulamanın tamamında eşit dil derinliği hâlâ release QA kapısıdır.",
+        Languages,
+      ],
+      [
+        "Portal iletişimi — içeride hazır",
+        "Portal mesajlaşması içeride hazırdır; müşteri hesabında kalıcı kullanım üretim girişi ve onaylı veri erişimini bekler. E-posta, SMS, WhatsApp ve push teslimatı henüz bağlı değildir.",
+        MessagesSquare,
+      ],
+      [
+        "Genel ürün asistanı — sınırlı kapsam",
+        "Genel asistan yalnızca onaylı ürün bilgisini yanıtlar ve hesap verisi kullanmaz. Hesaba özel asistan, güvenli giriş, onaylı veri erişimi ve kaynak kontrollerinden sonra açılacaktır.",
+        Sparkles,
+      ],
     ],
-    footnote: "Yukarıdakilerin tümü mevcut sistemde çalışır. Ödeme, banka ve fiziksel erişim otomasyonu sağlayıcı kararlarına bağlıdır ve 'canlı' olarak sunulmaz.",
+    footnote:
+      "“Yerel doğrulandı” üretimde canlı anlamına gelmez. Teknik release kapıları: üretim Auth, veritabanı göçleri, RLS, gerçek kayıtlar, özel depolama ve onaylı dış sağlayıcılar.",
   },
   en: {
     eyebrow: "Why 1Çatı",
-    title: "The system that runs the building every day, not a brochure.",
+    title: "A platform for daily operations—with scope and limits made clear.",
     intro:
-      "1Çatı connects the sales promise to daily operations. Every role sees only the data it is entitled to; no user can step outside their own scope.",
+      "1Çatı connects the sales promise to role-based operations. Each capability below says what is verified in the local demo and what still needs production login, approved data access or a live provider connection.",
     benefits: [
-      ["Your balance, any time, no phone call", "Your unit's ledger, payment history and debt status show directly. Nobody has to read you a summary.", Wallet],
-      ["Service requests that don't disappear", "Submit a request, then follow its status, SLA and photo/video proof of the work. Nothing gets lost in a thread.", Wrench],
-      ["Your documents, verifiably", "TAPU, contracts and unit documents in one place with a clear status: verified / pending / expired.", FileCheck2],
-      ["Access decisions with a reason", "If a zone is restricted you see why and what resolves it. It is never a locked door with no explanation.", KeyRound],
-      ["One system, four languages", "Turkish, English, German and Russian, each with the same depth. Built for an international ownership base.", Languages],
-      ["A direct, logged line to management", "Communication happens inside the system, with a record. Nothing is scattered across phone, email and chat.", MessagesSquare],
-      ["An assistant that cites its sources", "The AI answers questions about your own unit with its basis, and can never show data outside your permissions.", Sparkles],
+      [
+        "Owner finance summary — locally verified",
+        "The owner workspace shows balance and payment history only for a verified unit relationship. Real figures appear once production login, the approved unit link and live finance records are enabled.",
+        Wallet,
+      ],
+      [
+        "Service workflow — locally verified",
+        "Request status and service-time tracking work in the local demo. Photo/video files, secure private storage and file scanning are not yet connected for live use.",
+        Wrench,
+      ],
+      [
+        "Document list — files pending",
+        "Document records and statuses can be demonstrated. Uploaded files and a “verified” mark become available only when secure storage, file scanning and authorized review are live.",
+        FileCheck2,
+      ],
+      [
+        "Access decisions — provider-gated",
+        "A reason and status from the internal record can be shown; no physical door or card action runs without an approved access provider.",
+        KeyRound,
+      ],
+      [
+        "Four languages — critical-flow scope",
+        "This public product page and selected critical flows support TR/EN/DE/RU. Equal depth across the whole app remains a release QA gate.",
+        Languages,
+      ],
+      [
+        "Portal communication — internally ready",
+        "Portal messaging is ready internally; persistent use in a customer account awaits production login and approved data access. Email, SMS, WhatsApp and push delivery are not yet connected.",
+        MessagesSquare,
+      ],
+      [
+        "Public product assistant — limited scope",
+        "The public assistant answers only approved product information and uses no account data. An account-specific assistant will open only after secure login, approved data access and source checks.",
+        Sparkles,
+      ],
     ],
-    footnote: "All of the above works in the current system. Payment, bank and physical-access automation depend on provider decisions and are not presented as live.",
+    footnote:
+      "“Locally verified” does not mean live in production. Technical release gates remain: production Auth, database migrations, RLS, real records, private storage and approved external providers.",
   },
   de: {
     eyebrow: "Warum 1Çatı",
-    title: "Das System, das das Haus täglich betreibt, keine Broschüre.",
+    title:
+      "Eine Plattform für den täglichen Betrieb – mit klar benanntem Umfang und Grenzen.",
     intro:
-      "1Çatı verbindet das Verkaufsversprechen mit dem täglichen Betrieb. Jede Rolle sieht nur die Daten, zu denen sie berechtigt ist; kein Nutzer kann seinen Bereich verlassen.",
+      "1Çatı verbindet das Verkaufsversprechen mit rollenbasierten Abläufen. Jede Fähigkeit unten nennt, was in der lokalen Demo geprüft ist und was noch Produktionsanmeldung, freigegebenen Datenzugriff oder eine Live-Anbindung benötigt.",
     benefits: [
-      ["Ihr Saldo, jederzeit, ohne Anruf", "Kontostand, Zahlungshistorie und Schuldenstatus Ihrer Einheit sind direkt sichtbar. Niemand liest Ihnen eine Zusammenfassung vor.", Wallet],
-      ["Serviceanfragen, die nicht verschwinden", "Anfrage stellen, dann Status, SLA und Foto-/Video-Nachweis verfolgen. Nichts geht im Chat verloren.", Wrench],
-      ["Ihre Dokumente, nachprüfbar", "TAPU, Verträge und Unterlagen an einem Ort mit klarem Status: verifiziert / offen / abgelaufen.", FileCheck2],
-      ["Zutrittsentscheidungen mit Begründung", "Ist eine Zone gesperrt, sehen Sie warum und was sie löst. Es ist nie eine Tür ohne Erklärung.", KeyRound],
-      ["Ein System, vier Sprachen", "Türkisch, Englisch, Deutsch und Russisch, jeweils gleich tief. Für eine internationale Eigentümerbasis gebaut.", Languages],
-      ["Direkte, protokollierte Linie zur Verwaltung", "Kommunikation läuft im System, mit Nachweis. Nichts ist über Telefon, E-Mail und Chat verstreut.", MessagesSquare],
-      ["Ein Assistent, der seine Quellen nennt", "Die KI beantwortet Fragen zu Ihrer eigenen Einheit mit Beleg und zeigt nie Daten außerhalb Ihrer Rechte.", Sparkles],
+      [
+        "Eigentümer-Finanzübersicht – lokal verifiziert",
+        "Das Eigentümerportal zeigt Saldo und Zahlungsverlauf nur für eine verifizierte Einheitenbeziehung. Echte Beträge erscheinen nach Produktionsanmeldung, freigegebener Einheitenzuordnung und Aktivierung der Live-Finanzdaten.",
+        Wallet,
+      ],
+      [
+        "Serviceablauf – lokal verifiziert",
+        "Anfragestatus und Bearbeitungszeit funktionieren in der lokalen Demo. Foto-/Videodateien, sicherer privater Speicher und Dateiprüfung sind für Live-Nutzung noch nicht verbunden.",
+        Wrench,
+      ],
+      [
+        "Dokumentenliste – Dateien ausstehend",
+        "Dokumenteinträge und Status lassen sich demonstrieren. Uploads und die Kennzeichnung „verifiziert“ sind erst mit sicherem Speicher, Dateiprüfung und autorisierter Freigabe live.",
+        FileCheck2,
+      ],
+      [
+        "Zutrittsentscheidungen – Anbieter-Gate",
+        "Begründung und Status aus dem internen Datensatz können gezeigt werden; physische Tür- oder Kartenaktionen laufen ohne freigegebenen Zutrittsanbieter nicht.",
+        KeyRound,
+      ],
+      [
+        "Vier Sprachen – kritische Abläufe",
+        "Diese öffentliche Produktseite und ausgewählte kritische Abläufe gibt es in TR/EN/DE/RU. Gleiche Tiefe in der gesamten App bleibt ein Release-QA-Gate.",
+        Languages,
+      ],
+      [
+        "Portal-Kommunikation – intern bereit",
+        "Portalnachrichten sind intern vorbereitet; dauerhafte Nutzung im Kundenkonto wartet auf Produktionsanmeldung und freigegebenen Datenzugriff. E-Mail, SMS, WhatsApp und Push sind noch nicht verbunden.",
+        MessagesSquare,
+      ],
+      [
+        "Öffentlicher Produktassistent – begrenzt",
+        "Der öffentliche Assistent beantwortet nur freigegebene Produktinformationen und nutzt keine Kontodaten. Ein kontobezogener Assistent folgt erst nach sicherer Anmeldung, freigegebenem Datenzugriff und Quellenprüfung.",
+        Sparkles,
+      ],
     ],
-    footnote: "All dies funktioniert im aktuellen System. Zahlungs-, Bank- und physische Zutrittsautomatisierung hängen von Anbieterentscheidungen ab und werden nicht als 'live' dargestellt.",
+    footnote:
+      "„Lokal verifiziert“ bedeutet nicht live in Produktion. Technische Release-Gates bleiben: Produktions-Auth, DB-Migrationen, RLS, echte Datensätze, privater Speicher und freigegebene externe Anbieter.",
   },
   ru: {
     eyebrow: "Почему 1Çatı",
-    title: "Система, которая ведёт дом каждый день, а не брошюра.",
+    title:
+      "Платформа для ежедневной работы — с честно обозначенными возможностями и ограничениями.",
     intro:
-      "1Çatı связывает обещание продаж с ежедневной работой. Каждая роль видит только положенные ей данные; никто не выходит за пределы своей зоны.",
+      "1Çatı связывает обещание продаж с ролевыми рабочими процессами. Для каждой возможности ниже указано, что проверено в локальной демоверсии, а что ещё требует защищённого рабочего входа, разрешённого доступа к данным или подключения действующего поставщика.",
     benefits: [
-      ["Ваш баланс в любой момент, без звонка", "Реестр вашей квартиры, история платежей и статус задолженности видны напрямую. Никто не пересказывает вам сводку.", Wallet],
-      ["Заявки, которые не теряются", "Создайте заявку и следите за статусом, SLA и фото/видео-подтверждением работ. Ничего не пропадёт в чате.", Wrench],
-      ["Ваши документы, с проверкой", "TAPU, договоры и документы квартиры в одном месте с чётким статусом: подтверждён / ожидает / истёк.", FileCheck2],
-      ["Решения о доступе с обоснованием", "Если зона ограничена, вы видите причину и способ решения. Это не запертая дверь без объяснений.", KeyRound],
-      ["Одна система, четыре языка", "Турецкий, английский, немецкий и русский, с одинаковой глубиной. Для международной базы собственников.", Languages],
-      ["Прямая, фиксируемая связь с управлением", "Общение внутри системы, с записью. Ничего не разбросано по телефону, почте и чатам.", MessagesSquare],
-      ["Ассистент, указывающий источники", "ИИ отвечает по вашей квартире с обоснованием и никогда не покажет данные вне ваших прав.", Sparkles],
+      [
+        "Финансы собственника — проверено локально",
+        "Кабинет собственника показывает баланс и историю платежей только для подтверждённой связи с квартирой. Реальные суммы появятся после защищённого рабочего входа, одобренной привязки квартиры и подключения актуальных финансовых записей.",
+        Wallet,
+      ],
+      [
+        "Сервисный процесс — проверено локально",
+        "Статус заявки и срок обработки работают в локальной демоверсии. Фото-/видеофайлы, защищённое приватное хранилище и проверка файлов ещё не подключены для рабочего использования.",
+        Wrench,
+      ],
+      [
+        "Список документов — файлы ожидают",
+        "Записи документов и статусы можно показать в демоверсии. Загруженные файлы и отметка «подтверждён» станут доступны только после подключения защищённого хранилища, проверки файлов и одобрения сотрудником.",
+        FileCheck2,
+      ],
+      [
+        "Решения о доступе — провайдер закрыт",
+        "Причину и статус из внутренней записи можно показать; физические действия с дверью или картой не выполняются без одобренного провайдера доступа.",
+        KeyRound,
+      ],
+      [
+        "Четыре языка — критические процессы",
+        "Эта публичная страница продукта и отдельные критические процессы поддерживают TR/EN/DE/RU. Одинаковая глубина во всём приложении остаётся обязательной проверкой перед выпуском.",
+        Languages,
+      ],
+      [
+        "Портальная коммуникация — готова внутри",
+        "Сообщения портала подготовлены внутри; постоянная работа в клиентском аккаунте ждёт защищённого рабочего входа и разрешённого доступа к данным. Электронная почта, SMS, WhatsApp и мобильные уведомления ещё не подключены.",
+        MessagesSquare,
+      ],
+      [
+        "Публичный продуктовый ассистент — ограничен",
+        "Публичный ассистент отвечает только по одобренной информации о продукте и не использует данные аккаунта. Ассистент по аккаунту появится после безопасного входа, разрешённого доступа к данным и проверки источников.",
+        Sparkles,
+      ],
     ],
-    footnote: "Всё вышеперечисленное работает в текущей системе. Автоматизация платежей, банка и физического доступа зависит от решений по поставщикам и не подаётся как «работающая».",
+    footnote:
+      "«Проверено локально» не означает готовность к рабочей эксплуатации. До выпуска требуются защищённая аутентификация, миграции БД, политики RLS, реальные записи, приватное хранилище и одобренные внешние провайдеры.",
   },
 } satisfies Record<
   LocaleKey,
@@ -102,7 +220,9 @@ export function NlpWhy({ locale }: { locale: LocaleKey }) {
           <h2 className="mt-5 text-3xl leading-tight font-black text-foreground md:text-4xl">
             {t.title}
           </h2>
-          <p className="mt-4 text-base leading-8 text-muted-foreground">{t.intro}</p>
+          <p className="mt-4 text-base leading-8 text-muted-foreground">
+            {t.intro}
+          </p>
         </ScrollReveal>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -115,13 +235,19 @@ export function NlpWhy({ locale }: { locale: LocaleKey }) {
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" />
               </span>
-              <h3 className="mt-5 text-lg font-black text-card-foreground">{title}</h3>
-              <p className="mt-2 text-sm leading-7 text-muted-foreground">{body}</p>
+              <h3 className="mt-5 text-lg font-black text-card-foreground">
+                {title}
+              </h3>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                {body}
+              </p>
             </ScrollReveal>
           ))}
         </div>
 
-        <p className="mt-8 max-w-3xl text-xs leading-6 text-muted-foreground">{t.footnote}</p>
+        <p className="mt-8 max-w-3xl text-xs leading-6 text-muted-foreground">
+          {t.footnote}
+        </p>
       </div>
     </section>
   )
