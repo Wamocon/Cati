@@ -1,0 +1,96 @@
+name: CI
+
+# Quality gates for every pull request and every push to main.
+#
+# The `database` job exists because the Playwright suite runs against the
+# app's local-seed fallback: it never executes supabase/migrations/*.sql and
+# never exercises Postgres RLS. Three real defects reached main that way
+# (two plpgsql syntax bugs and a circular-RLS recursion). Applying the
+# migrations to a real Postgres and running the existing pgTAP security tests
+# is what actually catches that class of bug.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same ref supersedes an in-flight run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  database:
+    name: Database (migrations + pgTAP security)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      # Boots Postgres and applies every migration in repository order.
+      # A migration that only parses on paper (but not in plpgsql) fails here.
+      - name: Start Supabase (applies migrations + seed)
+        run: supabase start -x studio,imgproxy,edge-runtime,functions,inbucket,vector
+
+      # Explicit, from-scratch re-apply: proves the full chain is reproducible
+      # and ordered, not just that the current container happens to be running.
+      - name: Re-apply all migrations from scratch
+        run: supabase db reset
+
+      # supabase/tests/*.sql are pgTAP contracts that assert RLS/privilege
+      # boundaries. They were already written but nothing ever ran them.
+      - name: Run pgTAP security/RLS tests
+        run: supabase test db
+
+      - name: Dump database logs on failure
+        if: failure()
+        run: supabase status || true
+
+  web:
+    name: Web (typecheck, lint, build, e2e)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --dir apps/web typecheck
+
+      - name: Lint
+        run: pnpm --dir apps/web lint
+
+      - name: Build
+        run: pnpm --dir apps/web build
+
+      - name: Install Playwright browsers
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+
+      - name: E2E (chromium)
+        run: pnpm --dir apps/web exec playwright test --project=chromium
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
