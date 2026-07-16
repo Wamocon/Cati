@@ -854,7 +854,7 @@ BEGIN
   WHERE e.company_id = v_request.company_id AND e.idempotency_key = v_key;
   IF FOUND THEN
     IF v_existing.registration_request_id IS DISTINCT FROM v_request.id
-       OR v_existing.event_type IS DISTINCT FROM CASE v_decision WHEN 'approve' THEN 'approved' ELSE 'rejected' END
+       OR v_existing.event_type IS DISTINCT FROM (CASE v_decision WHEN 'approve' THEN 'approved' ELSE 'rejected' END)
        OR v_existing.actor_profile_id IS DISTINCT FROM v_actor_id
        OR v_existing.request_version IS DISTINCT FROM p_expected_version + 1
        OR v_existing.reason IS DISTINCT FROM v_reason
@@ -1211,14 +1211,18 @@ BEGIN
   END IF;
   v_token_digest := extensions.digest(convert_to(v_token, 'UTF8'), 'sha256');
 
-  SELECT r, a INTO v_request, v_activation
-  FROM public.registration_requests r
-  JOIN public.registration_activation_invitations a ON a.registration_request_id = r.id
+  SELECT a.* INTO v_activation
+  FROM public.registration_activation_invitations a
+  JOIN public.registration_requests r ON r.id = a.registration_request_id
   WHERE upper(r.public_reference) = v_reference
-  FOR UPDATE OF r, a;
+  FOR UPDATE OF a, r;
   IF NOT FOUND OR v_activation.activation_token_digest IS DISTINCT FROM v_token_digest THEN
     RAISE EXCEPTION USING ERRCODE = 'P0002', MESSAGE = 'Activation invitation was not found';
   END IF;
+
+  SELECT r.* INTO v_request
+  FROM public.registration_requests r
+  WHERE r.id = v_activation.registration_request_id;
 
   SELECT * INTO v_existing_event
   FROM public.registration_request_events e

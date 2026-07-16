@@ -613,7 +613,7 @@ BEGIN
   IF FOUND THEN
     IF v_existing_event.evidence_id IS DISTINCT FROM v_evidence.id
        OR v_existing_event.event_type IS DISTINCT FROM
-           CASE WHEN v_outcome = 'stored' THEN 'upload_stored' ELSE 'upload_failed' END
+           (CASE WHEN v_outcome = 'stored' THEN 'upload_stored' ELSE 'upload_failed' END)
        OR v_existing_event.payload ->> 'uploadStatus' IS DISTINCT FROM v_outcome
     THEN
       RAISE EXCEPTION USING ERRCODE = '23505', MESSAGE = 'The idempotency key was already used for another upload result';
@@ -701,7 +701,7 @@ BEGIN
   IF FOUND THEN
     IF v_existing_event.evidence_id IS DISTINCT FROM v_evidence.id
        OR v_existing_event.event_type IS DISTINCT FROM
-          CASE WHEN v_status = 'clean' THEN 'scan_clean' ELSE 'scan_rejected' END
+          (CASE WHEN v_status = 'clean' THEN 'scan_clean' ELSE 'scan_rejected' END)
        OR v_existing_event.payload ->> 'virusScanStatus' IS DISTINCT FROM v_status
     THEN
       RAISE EXCEPTION USING ERRCODE = '23505', MESSAGE = 'The idempotency key was already used for another scan result';
@@ -1328,7 +1328,12 @@ BEGIN
       )
   $policy$;
 EXCEPTION
-  WHEN undefined_object OR undefined_function OR invalid_schema_name THEN
+  WHEN undefined_object OR undefined_function OR invalid_schema_name
+    OR insufficient_privilege THEN
+    -- On hosted Supabase, realtime.messages is owned by supabase_realtime_admin,
+    -- so the postgres migration role cannot attach RLS here. Skip gracefully; the
+    -- private-broadcast policies are applied out-of-band via the dashboard SQL
+    -- editor (see docs), and the app falls back to authenticated polling.
     RAISE NOTICE 'Skipping service evidence private Broadcast policy; Supabase Realtime authorization is unavailable.';
 END;
 $$;
@@ -1471,6 +1476,13 @@ BEGIN
       USING (bucket_id <> 'cati-service-evidence')
       WITH CHECK (bucket_id <> 'cati-service-evidence');
   END IF;
+EXCEPTION
+  WHEN insufficient_privilege OR undefined_table OR undefined_object THEN
+    -- On hosted Supabase, storage.objects/buckets are owned by
+    -- supabase_storage_admin, so the postgres migration role cannot attach the
+    -- bucket or its restrictive guard here. Skip gracefully; apply the private
+    -- storage bucket + policy out-of-band via the dashboard SQL editor (see docs).
+    RAISE NOTICE 'Skipping service evidence storage bucket/policy; storage-admin privileges are required.';
 END;
 $$;
 
