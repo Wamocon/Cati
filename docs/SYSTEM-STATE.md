@@ -21,9 +21,10 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
 | Branches | ✅ All 9 branches synced to `main` (one keeps extra safe cleanup) |
 | Line endings | ✅ `.gitattributes` enforces LF cross-platform |
 | Dead code | ✅ 11 dead files + 178 dead lines removed |
-| Supabase Cloud | ✅ **37/37 migrations applied** · 127 tables · 442 functions |
+| Supabase Cloud | ✅ **38/38 migrations applied** · 127 tables · 442 functions |
 | Realtime | ✅ 34 tables published to `supabase_realtime` (live dashboard) |
 | Cloud data | ✅ Real "New Level Premium" dataset present (769 units) |
+| Cloud login | ✅ **All 6 roles verified end-to-end against cloud** — real password login, RBAC-correct workspace, `source: "supabase"` live data |
 
 ## 3. Cloud / infrastructure
 
@@ -43,6 +44,25 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
 - **App wiring**: `apps/web/lib/site-management-repository.ts` is Supabase-first
   with a deterministic local-seed fallback. Every response carries
   `source: "supabase" | "local-seed"` — check that field first when debugging data.
+
+### Verified against cloud (real login, not seed)
+
+Each role signs in with a real password and receives live Supabase data:
+
+| Role | Endpoint | Result |
+|---|---|---|
+| admin / manager | `/api/site-management/dashboard` | 200 · `source=supabase` · global operations centre (18 nav entries) |
+| accountant / staff / owner / tenant | `/api/site-management/role-dashboard` | 200 · `source=supabase` · `role-dashboard.v1` scoped workspace (7–8 nav entries) |
+
+The focused roles receive **403** on the *global* dashboard by design — that is the
+RBAC boundary; they use the scoped `role-dashboard` contract instead. `owner`
+resolves unit **A-097** and `tenant` resolves **G-014** in both API and page.
+
+> ⚠️ **Testing gap worth knowing**: the Playwright suite runs against the
+> local-seed fallback with access profiles, so it never executes SQL migrations
+> nor exercises Postgres RLS. Two classes of real defect were only found by
+> applying to cloud (plpgsql bugs in migrations 25/27, and an RLS recursion in
+> migration 37). Validate DB changes against a real Postgres, not just the suite.
 
 ## 4. Feature areas (15-phase model)
 
