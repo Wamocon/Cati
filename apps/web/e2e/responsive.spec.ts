@@ -70,8 +70,21 @@ async function assertVisibleControlsStayInViewport(page: Page) {
 }
 
 async function assertMobileRoute(page: Page, path: string) {
+  // `goto` already waits for `load`, i.e. the images/CSS that affect layout.
+  //
+  // We deliberately do NOT use waitForLoadState("networkidle") here: these specs
+  // run against the Next dev server, which holds an HMR websocket open and
+  // compiles routes on demand, so "network idle" is non-deterministic under
+  // suite load and made this test flaky (it timed out rather than failing an
+  // assertion). Waiting for webfonts plus one paint frame is deterministic and
+  // is all the layout measurement below actually needs.
   await page.goto(path)
-  await page.waitForLoadState("networkidle")
+  await page.evaluate(async () => {
+    await document.fonts?.ready
+  })
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+  )
   await assertNoHorizontalOverflow(page)
   await assertVisibleControlsStayInViewport(page)
 
@@ -121,13 +134,26 @@ test.describe("Responsive mobile checks", () => {
     expect(issues).toEqual([])
   })
 
-  test("demo routes avoid mobile horizontal overflow and clipped controls", async ({ page }) => {
-    test.setTimeout(120_000)
+  // Split from one 10-route test into two: each group gets its own timeout
+  // budget, so a cold dev-server compile in one group cannot starve the other.
+  test("public demo routes avoid mobile horizontal overflow and clipped controls", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000)
     await page.setViewportSize({ width: 390, height: 844 })
 
     for (const route of ["/tr", "/tr/pitch", "/tr/login", "/tr/signup"]) {
       await assertMobileRoute(page, route)
     }
+
+    expect(issues).toEqual([])
+  })
+
+  test("dashboard demo routes avoid mobile horizontal overflow and clipped controls", async ({
+    page,
+  }) => {
+    test.setTimeout(120_000)
+    await page.setViewportSize({ width: 390, height: 844 })
 
     const accessResponse = await page.request.post("/api/access-profile", {
       data: { role: "admin" },
