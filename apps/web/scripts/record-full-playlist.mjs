@@ -34,7 +34,6 @@ const fullTiming = process.env.VIDEO_RECORD_FULL_TIMING === "1" || hasFlag("--fu
 const showLabels = process.env.VIDEO_RECORD_SHOW_LABELS === "1" || hasFlag("--show-labels")
 
 const desktop = { width: 1920, height: 1080 }
-const mobileViewport = { width: 390, height: 844 }
 const mobileVideoSource = { width: 430, height: 764 }
 const mobilePortrait = { width: 1080, height: 1920 }
 
@@ -702,7 +701,7 @@ async function clickSelector(page, selector) {
   await page.waitForTimeout(900)
 }
 
-async function spotlight(page, selector, label) {
+async function spotlight(page, selector) {
   const locator = await locatorFor(page, selector)
   await locator.scrollIntoViewIfNeeded({ timeout: 4000 }).catch(() => {})
   const box = await locator.boundingBox().catch(() => null)
@@ -1183,7 +1182,7 @@ async function recordChapterAttempt(browser, chapter, locale, attempt) {
       ? Math.max(12_000, Math.round(chapterTargetMs / Math.max(1, chapter.segments.length)))
       : 0
 
-    for (const [segmentIndex, segment] of chapter.segments.entries()) {
+    for (const segment of chapter.segments) {
       const segmentStartedAt = Date.now()
       const role = segment.role ?? chapter.role
       await context.clearCookies()
