@@ -29,6 +29,20 @@ BEGIN
 END;
 $$;
 
+-- Migration 14 provisions the default 'ataberk-estate' company with a GENERATED
+-- id. Every fixture below references the canonical fixture UUID, and
+-- "ON CONFLICT (slug) DO UPDATE" cannot change a primary key -- so without this
+-- the seed would attach its fixtures to a company id that does not exist and
+-- fail with profiles_company_id_fkey (23503).
+--
+-- Dropping the generated row first lets the fixture company be created with its
+-- canonical id. This is safe in the only flow that runs this file: `supabase db
+-- reset` starts from an empty database, so migration 14's row has no dependents
+-- yet (its own profile backfill matches nothing -- there are no profiles).
+DELETE FROM public.companies
+WHERE slug = 'ataberk-estate'
+  AND id <> '11111111-1111-4111-8111-111111111111';
+
 INSERT INTO public.companies (id, name, slug, status, primary_locale, timezone, currency)
 VALUES (
   '11111111-1111-4111-8111-111111111111',
