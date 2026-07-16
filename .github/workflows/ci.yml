@@ -56,7 +56,8 @@ jobs:
         run: supabase db reset --no-seed
 
       # supabase/tests/*.sql are pgTAP contracts that assert RLS/privilege
-      # boundaries. They were already written but nothing ever ran them.
+      # boundaries. They were already written but nothing ever ran them -- so
+      # they had never actually passed either. This is a hard gate.
       - name: Run pgTAP security/RLS tests
         run: supabase test db
 
