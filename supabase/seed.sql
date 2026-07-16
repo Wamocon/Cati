@@ -1,6 +1,20 @@
 -- Fixture seed data for the 1Cati Supabase schema.
 -- Cloud runtime uses migrations/import scripts; do not run local reset workflows for production.
 
+-- Declare the seed's provisioning identity.
+--
+-- public.prevent_profile_privilege_escalation() (BEFORE UPDATE ON profiles)
+-- rejects any role/company change that does not come from an authorized admin
+-- command or a verified invitation redemption. Seeding IS platform/service
+-- provisioning, and the guard recognises the service role for exactly this case
+-- (it audit-logs the change as 'profile.platform_authority_provisioned' with
+-- reason 'platform/service provisioning').
+--
+-- Without this, the profile upsert below resolves to an UPDATE -- the
+-- on_auth_user_created trigger has already inserted the row -- the guard raises
+-- P0001, and `supabase db reset` / `supabase start` fails outright.
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', false);
+
 DO $$
 DECLARE
   v_company_id UUID := '11111111-1111-4111-8111-111111111111';
@@ -632,3 +646,6 @@ FROM public.documents
 WHERE company_id = '11111111-1111-4111-8111-111111111111'
 ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
 SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();
+
+-- Drop the provisioning identity again so nothing else inherits it.
+SELECT set_config('request.jwt.claims', '', false);
