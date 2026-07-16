@@ -100,7 +100,11 @@ SELECT is(
       AND cp.table_schema = 'public'
       AND cp.table_name = 'reservations'
       AND cp.privilege_type = 'SELECT'
-    ORDER BY cp.column_name
+    -- Order by the selected expression: with SELECT DISTINCT, ORDER BY must
+    -- reference the select list, and `cp.column_name` (uncast) is not in it.
+    -- This aborted the whole file ("planned 68 tests but ran 7"), so these
+    -- contracts had never actually executed.
+    ORDER BY 1
   ),
   ARRAY[
     'approval_status',
