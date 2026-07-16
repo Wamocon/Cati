@@ -12,6 +12,8 @@ import {
   User,
   Languages,
   ShieldCheck,
+  Maximize2,
+  Minimize2,
 } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import {
@@ -34,6 +36,8 @@ const assistantCopy = {
     inputLabel: "AI asistana mesaj yaz",
     sameLanguage: "Aynı dilde yanıt",
     humanActions: "İnsan onaylı aksiyon",
+    expand: "Asistanı büyüt",
+    shrink: "Asistanı küçült",
     defaultUser: "Operasyon kullanıcısı",
     placeholders: {
       accountant: "Aidat, tahsilat, depozito veya finans raporu sorun...",
@@ -46,6 +50,8 @@ const assistantCopy = {
     inputLabel: "Message the AI assistant",
     sameLanguage: "Same-language replies",
     humanActions: "Human-approved actions",
+    expand: "Expand assistant",
+    shrink: "Shrink assistant",
     defaultUser: "Operations user",
     placeholders: {
       accountant: "Ask about fees, collections, deposits or finance reports...",
@@ -58,6 +64,8 @@ const assistantCopy = {
     inputLabel: "Nachricht an den KI-Assistenten",
     sameLanguage: "Antworten in derselben Sprache",
     humanActions: "Aktionen mit menschlicher Freigabe",
+    expand: "Assistent vergrößern",
+    shrink: "Assistent verkleinern",
     defaultUser: "Betriebsnutzer",
     placeholders: {
       accountant:
@@ -73,6 +81,8 @@ const assistantCopy = {
     inputLabel: "Написать AI-ассистенту",
     sameLanguage: "Ответы на том же языке",
     humanActions: "Действия с подтверждением человеком",
+    expand: "Развернуть ассистента",
+    shrink: "Свернуть ассистента",
     defaultUser: "Операционный пользователь",
     placeholders: {
       accountant:
@@ -135,6 +145,7 @@ export function AiAssistant() {
   const copy = assistantCopy[locale]
   const user = useUser()
   const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -388,7 +399,12 @@ export function AiAssistant() {
                   aria-labelledby={dialogTitleId}
                   aria-describedby={dialogDescriptionId}
                   data-testid="ai-assistant-panel"
-                  className="premium-surface flex max-h-[calc(100svh-1.5rem)] w-[min(440px,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl shadow-2xl"
+                  className={cn(
+                    "premium-surface flex max-h-[calc(100svh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl shadow-2xl",
+                    expanded
+                      ? "h-[calc(100svh-1.5rem)] w-[min(860px,calc(100vw-1.5rem))] sm:h-[min(760px,calc(100svh-2rem))]"
+                      : "w-[min(440px,calc(100vw-1.5rem))]"
+                  )}
                 >
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-amber-500/10 px-4 py-3">
@@ -412,14 +428,30 @@ export function AiAssistant() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setOpen(false)}
-                      className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
-                      aria-label={t("close")}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setExpanded((current) => !current)}
+                        className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label={expanded ? copy.shrink : copy.expand}
+                        aria-pressed={expanded}
+                        title={expanded ? copy.shrink : copy.expand}
+                      >
+                        {expanded ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOpen(false)}
+                        className="rounded-full p-1.5 text-muted-foreground hover:bg-muted"
+                        aria-label={t("close")}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2 border-b border-border/70 bg-muted/20 px-4 py-2">
@@ -445,7 +477,12 @@ export function AiAssistant() {
                     aria-live="polite"
                     aria-relevant="additions text"
                     aria-busy={typing}
-                    className="flex h-[min(20rem,calc(100svh-16rem))] min-h-40 flex-col gap-3 overflow-y-auto p-4"
+                    className={cn(
+                      "flex min-h-40 flex-col gap-3 overflow-y-auto p-4",
+                      expanded
+                        ? "flex-1"
+                        : "h-[min(20rem,calc(100svh-16rem))]"
+                    )}
                   >
                     {messages.map((msg) => (
                       <div

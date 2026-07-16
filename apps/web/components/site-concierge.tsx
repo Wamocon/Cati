@@ -4,7 +4,18 @@ import { useEffect, useId, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useLocale } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
-import { Bot, MessageCircle, Send, Sparkles, ThumbsDown, ThumbsUp, User, X } from "lucide-react"
+import {
+  Bot,
+  Maximize2,
+  MessageCircle,
+  Minimize2,
+  Send,
+  Sparkles,
+  ThumbsDown,
+  ThumbsUp,
+  User,
+  X,
+} from "lucide-react"
 import { publicAiSuggestions } from "@/lib/public-ai-knowledge"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +43,8 @@ const copy = {
     placeholder: "1Çatı hakkında sorun...",
     send: "Gönder",
     close: "Kapat",
+    expand: "Asistanı büyüt",
+    shrink: "Asistanı küçült",
     typing: "Asistan yanıt hazırlıyor",
     error: "Yanıt alınamadı. Lütfen tekrar deneyin.",
   },
@@ -50,6 +63,8 @@ const copy = {
     placeholder: "Ask about 1Çatı...",
     send: "Send",
     close: "Close",
+    expand: "Expand assistant",
+    shrink: "Shrink assistant",
     typing: "The assistant is preparing a response",
     error: "No answer received. Please try again.",
   },
@@ -68,6 +83,8 @@ const copy = {
     placeholder: "Zu 1Çatı fragen...",
     send: "Senden",
     close: "Schließen",
+    expand: "Assistent vergrößern",
+    shrink: "Assistent verkleinern",
     typing: "Der Assistent bereitet eine Antwort vor",
     error: "Keine Antwort erhalten. Bitte erneut versuchen.",
   },
@@ -86,6 +103,8 @@ const copy = {
     placeholder: "Спросите о 1Çatı...",
     send: "Отправить",
     close: "Закрыть",
+    expand: "Развернуть ассистента",
+    shrink: "Свернуть ассистента",
     typing: "Ассистент готовит ответ",
     error: "Ответ не получен. Пожалуйста, попробуйте снова.",
   },
@@ -264,6 +283,7 @@ export function SiteConcierge({ page }: { page: string }) {
 
   const [open, setOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [input, setInput] = useState("")
   const [typing, setTyping] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
@@ -654,7 +674,12 @@ export function SiteConcierge({ page }: { page: string }) {
                   aria-labelledby={dialogTitleId}
                   aria-describedby={dialogDescriptionId}
                   data-testid="concierge-panel"
-                  className="flex max-h-[calc(100dvh-2rem)] w-[min(420px,92vw)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+                  className={cn(
+                    "flex max-h-[calc(100dvh-2rem)] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl",
+                    expanded
+                      ? "h-[calc(100dvh-2rem)] w-[min(860px,calc(100vw-2rem))] sm:h-[min(760px,calc(100svh-3rem))]"
+                      : "w-[min(420px,92vw)]"
+                  )}
                 >
             <div className="flex items-center justify-between border-b border-border/70 bg-gradient-to-r from-primary/[0.12] to-emerald-500/10 px-4 py-3">
               <div className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -666,14 +691,26 @@ export function SiteConcierge({ page }: { page: string }) {
                   <p id={dialogDescriptionId} className="break-words text-[10px] leading-snug text-muted-foreground [overflow-wrap:anywhere]">{t.subtitle}</p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted"
-                aria-label={t.close}
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setExpanded((current) => !current)}
+                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={expanded ? t.shrink : t.expand}
+                  aria-pressed={expanded}
+                  title={expanded ? t.shrink : t.expand}
+                >
+                  {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label={t.close}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div
@@ -683,7 +720,10 @@ export function SiteConcierge({ page }: { page: string }) {
               aria-live="polite"
               aria-relevant="additions text"
               aria-busy={typing}
-              className="flex h-80 min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4"
+              className={cn(
+                "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4",
+                expanded ? "" : "h-80"
+              )}
             >
               {messages.map((msg) => (
                 <div
