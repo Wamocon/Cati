@@ -33,11 +33,13 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
 - **Realtime**: dashboard tables (units, finance ledger, tickets, reservations,
   compliance cases, buyer prospects, portal communications, …) publish live
   updates; the client also has a 30-second polling fallback.
-- **Deferred to dashboard** (`supabase/cloud-privileged-setup.sql`): three RLS
-  objects owned by Supabase-internal roles (`storage.objects` bucket guard,
-  `realtime.messages` private-broadcast authorization). These are defense-in-depth
-  hardening; the primary controls (private buckets, per-table RLS, service-role
-  writes) are fully enforced. Run that file once in Dashboard → SQL Editor.
+- **Storage**: the private `cati-service-evidence` bucket is created (public=false)
+  via the Storage API — direct browser access is denied by default bucket privacy.
+- **Deferred to dashboard** (`supabase/cloud-privileged-setup.sql`): two RLS objects
+  owned by Supabase-internal roles (`storage.objects` restrictive guard,
+  `realtime.messages` private-broadcast authorization) that the `postgres` role
+  cannot attach. These are *defense-in-depth* on top of the already-private bucket
+  and per-table RLS. Run that file once in Dashboard → SQL Editor to add them.
 - **App wiring**: `apps/web/lib/site-management-repository.ts` is Supabase-first
   with a deterministic local-seed fallback. Every response carries
   `source: "supabase" | "local-seed"` — check that field first when debugging data.
@@ -95,9 +97,10 @@ roles change only via authorized admin command or verified invitation).
 ## 6. Demo access — two ways
 
 1. **Real Supabase logins** — six confirmed accounts exist on cloud, one per role
-   (`<role>@cati-demo.com`). Passwords are shared privately (never committed).
-   Owner/tenant see role-correct navigation; their *scoped unit data* may be empty
-   until a unit relationship is linked (optional follow-up).
+   (`<role>@cati-demo.com`). Passwords are shared privately (never committed). The
+   `owner` account is linked as owner of unit **A-097** and the `tenant` account as
+   tenant of **G-014** (both real New Level Premium Avsallar units), so their
+   scoped dashboards resolve live unit relationships.
 2. **Local access profiles** — the login page offers one-click role selection when
    `ENABLE_ACCESS_PROFILES=true` (no password). Frictionless for demos and used by
    the E2E harness. Must **not** be enabled in a real production deployment.
@@ -105,9 +108,8 @@ roles change only via authorized admin command or verified invitation).
 ## 7. Known follow-ups
 
 - Apply `supabase/cloud-privileged-setup.sql` in Dashboard → SQL Editor to add the
-  storage/realtime private-broadcast hardening policies (owner-privileged objects).
-- Optionally link the demo `owner`/`tenant` accounts to a unit + resident record so
-  their scoped dashboards show live unit data.
+  storage/realtime private-broadcast defense-in-depth policies (owner-privileged
+  objects). Optional — the bucket is already private and data-table RLS is enforced.
 - Close the open product decisions in `PROJECT-HANDBOOK.md` §6 (payment provider,
   access-system vendor, data retention, production UAT sign-off) before any
   automation is represented as production-live.
