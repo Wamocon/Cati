@@ -473,7 +473,9 @@ SELECT ok(
   'the canonical reservation-to-handover synchronization trigger is enabled'
 );
 
-SELECT like(
+-- pgTAP's case-sensitive LIKE assertion is alike(); there is no like() function,
+-- so this aborted the file at "planned 68 tests but ran 55".
+SELECT alike(
   (
     SELECT pg_get_triggerdef(trigger.oid)
     FROM pg_trigger trigger
