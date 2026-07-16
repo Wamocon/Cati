@@ -35,22 +35,39 @@ jobs:
         with:
           version: latest
 
+      # This gate exists to prove two things: the migration chain applies to a
+      # real Postgres, and the RLS contracts hold. Fixture seeding is
+      # deliberately excluded from the gate: supabase/seed.sql is independently
+      # stale against migrations 32+ (tracked as a known issue), and a broken
+      # fixture must not be able to block -- or mask -- a real migration/RLS
+      # defect. The seed is still exercised below, non-blocking, so its rot
+      # stays visible.
+      - name: Disable fixture seeding for the gate
+        run: printf '\n[db.seed]\nenabled = false\n' >> supabase/config.toml
+
       # Boots Postgres and applies every migration in repository order.
       # A migration that only parses on paper (but not in plpgsql) fails here.
-      - name: Start Supabase (applies migrations + seed)
+      - name: Start Supabase (applies migrations)
         run: supabase start -x studio,imgproxy,edge-runtime,logflare,mailpit,vector
 
       # Explicit, from-scratch re-apply: proves the full chain is reproducible
       # and ordered, not just that the current container happens to be running.
       - name: Re-apply all migrations from scratch
-        run: supabase db reset
+        run: supabase db reset --no-seed
 
       # supabase/tests/*.sql are pgTAP contracts that assert RLS/privilege
       # boundaries. They were already written but nothing ever ran them.
       - name: Run pgTAP security/RLS tests
         run: supabase test db
 
-      - name: Dump database logs on failure
+      # Non-blocking: surfaces fixture-seed rot without gating the PR. Remove
+      # continue-on-error once supabase/seed.sql is brought back in line with
+      # migrations 32+ (missing bookable_resource_id and friends).
+      - name: Fixture seed (non-blocking - known stale)
+        continue-on-error: true
+        run: supabase db reset --sql-paths seed.sql
+
+      - name: Dump database status on failure
         if: failure()
         run: supabase status || true
 
