@@ -28,6 +28,7 @@ import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { localizeDashboardTextPart } from "@/lib/operational-copy"
 import {
   flats,
   formatEur,
@@ -220,6 +221,8 @@ function UnitActionsMenu({
 export default function ListingsPage() {
   const locale = resolveDashboardLocale(useLocale())
   const copy = unitMatrixCopy[locale]
+  const tRecord = (value: string) => localizeDashboardTextPart(value, locale)
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const summary = getSummary()
   const importSummary = getImportSummary()
   const blocks = getBlockOverview()
@@ -307,7 +310,7 @@ export default function ListingsPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {interpolate(copy.page.subtitle, {
             location: clientProfile.activeLocation,
-            portfolio: clientProfile.activePortfolio,
+            portfolio: portfolioDisplayName,
           })}
         </p>
       </div>
@@ -316,7 +319,7 @@ export default function ListingsPage() {
         <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">{copy.page.projectScope}</p>
-            <h2 className="mt-2 text-xl font-black text-card-foreground">{clientProfile.activePortfolio}</h2>
+            <h2 className="mt-2 text-xl font-black text-card-foreground">{portfolioDisplayName}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
               {copy.page.projectBody}
             </p>
@@ -330,7 +333,7 @@ export default function ListingsPage() {
                 className="rounded-xl border border-border/70 bg-muted/40 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
                 entityTable="units"
                 entityExternalId={pillar.title}
-                metadata={{ detail: pillar.detail, portfolio: clientProfile.activePortfolio }}
+                metadata={{ detail: pillar.detail, portfolio: portfolioDisplayName }}
                 successLabel={copy.actions.detailOpen}
                 title={pillar.title}
               >
@@ -345,6 +348,9 @@ export default function ListingsPage() {
         </div>
       </Card3D>
 
+      {/* Legacy seed-only KPI/matrix controls stay out of the business UI. The
+          live Phase4 projection below is now the single visible source. */}
+      <div hidden aria-hidden="true">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {signalCards.map((metric) => {
           const Icon = metric.icon
@@ -380,9 +386,11 @@ export default function ListingsPage() {
           )
         })}
       </div>
+      </div>
 
       <Phase4LiveOperations />
 
+      <div hidden aria-hidden="true">
       <Card3D glow={false}>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -635,42 +643,46 @@ export default function ListingsPage() {
             ))}
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {importBatches.map((batch) => (
-              <DashboardActionButton
-                key={batch.id}
-                actionType="import.batch.view"
-                ariaLabel={`${batch.id} ${copy.import.batchTitle}`}
-                className="rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"
-                entityExternalId={batch.id}
-                entityTable="import_batches"
-                metadata={{
-                  rejectedRows: batch.rejectedRows,
-                  source: batch.source,
-                  status: batch.status,
-                  totalRows: batch.totalRows,
-                  validRows: batch.validRows,
-                  warningRows: batch.warningRows,
-                }}
-                successLabel={copy.import.batchOpened}
-                title={`${batch.id} ${copy.import.batchTitle}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{batch.source}</h3>
+            {importBatches.map((batch) => {
+              const batchSourceLabel = tRecord(batch.source)
+
+              return (
+                <DashboardActionButton
+                  key={batch.id}
+                  actionType="import.batch.view"
+                  ariaLabel={`${batchSourceLabel} ${copy.import.batchTitle}`}
+                  className="rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"
+                  entityExternalId={batch.id}
+                  entityTable="import_batches"
+                  metadata={{
+                    rejectedRows: batch.rejectedRows,
+                    source: batch.source,
+                    status: batch.status,
+                    totalRows: batch.totalRows,
+                    validRows: batch.validRows,
+                    warningRows: batch.warningRows,
+                  }}
+                  successLabel={copy.import.batchOpened}
+                  title={`${batchSourceLabel} ${copy.import.batchTitle}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
+                      <h3 className="mt-1 text-sm font-black text-foreground">{batchSourceLabel}</h3>
+                    </div>
+                    <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
                   </div>
-                  <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {interpolate(copy.import.rowsSummary, {
-                    rejected: batch.rejectedRows,
-                    total: batch.totalRows,
-                    valid: batch.validRows,
-                    warning: batch.warningRows,
-                  })}
-                </p>
-              </DashboardActionButton>
-            ))}
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {interpolate(copy.import.rowsSummary, {
+                      rejected: batch.rejectedRows,
+                      total: batch.totalRows,
+                      valid: batch.validRows,
+                      warning: batch.warningRows,
+                    })}
+                  </p>
+                </DashboardActionButton>
+              )
+            })}
           </div>
         </Card3D>
 
@@ -703,29 +715,31 @@ export default function ListingsPage() {
               <div>
                 <h2 className="text-sm font-bold text-card-foreground">{copy.import.findingSummary}</h2>
                 <div className="mt-2 space-y-2">
-                  {importFindings.slice(0, 3).map((finding) => (
+                  {importFindings.slice(0, 3).map((finding) => {
+                    const area = tRecord(finding.area)
+                    return (
                     <DashboardActionButton
                       key={finding.id}
                       actionType="import.finding.view"
-                      ariaLabel={`${finding.area} ${copy.import.findingOpened}`}
+                      ariaLabel={`${area} ${copy.import.findingOpened}`}
                       className="w-full rounded-lg bg-muted/40 p-2 text-left transition hover:bg-primary/10"
                       entityExternalId={finding.id}
                       entityTable="import_findings"
                       metadata={{
                         affectedRows: finding.affectedRows,
-                        area: finding.area,
+                        area,
                         severity: finding.severity,
                       }}
                       successLabel={copy.import.findingOpened}
-                      title={`${finding.area} ${copy.import.findingSummary}`}
+                      title={`${area} ${copy.import.findingSummary}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-foreground">{finding.area}</span>
+                        <span className="text-xs font-semibold text-foreground">{area}</span>
                         <StatusBadge variant={findingVariant(finding.severity)}>{findingLabel(finding.severity, copy)}</StatusBadge>
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">{finding.affectedRows} {copy.common.rows}</p>
                     </DashboardActionButton>
-                  ))}
+                  )})}
                 </div>
               </div>
             </div>
@@ -837,6 +851,7 @@ export default function ListingsPage() {
           },
         ]}
       />
+      </div>
     </div>
   )
 }

@@ -21,13 +21,13 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 
 const copy = {
   tr: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Yeni Seviye Premium / Avsallar",
     title: "Projeyi yukarıdan, binadan, daireden ve ERP akışından okuyun",
     intro:
-      "1Çatı, New Level Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
+      "1Çatı, Yeni Seviye Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
     ctaPrimary: "Daire matrisini aç",
     ctaSecondary: "Platform akışını incele",
-    liveLabel: "New Level Premium kontrol gorunumu",
+    liveLabel: "Yeni Seviye Premium kontrol gorunumu",
     metrics: [
       ["52k m2", "proje alani"],
       ["900 m", "plaj mesafesi"],
@@ -103,13 +103,13 @@ const copy = {
     ],
   },
   de: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Neues Niveau Premium / Avsallar",
     title: "Vom Lageplan über das Gebäude bis zum ERP-Ablauf",
     intro:
-      "1Çatı behandelt New Level Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
+      "1Çatı behandelt Neues Niveau Premium als kommerziellen Betrieb: Einheiten, Services, Beiträge, Reservierungen, Dokumente und Zutritt in einem Arbeitsdatensatz.",
     ctaPrimary: "Wohnungsmatrix öffnen",
     ctaSecondary: "Plattformablauf prüfen",
-    liveLabel: "New Level Premium Kontrollansicht",
+    liveLabel: "Neues Niveau Premium Kontrollansicht",
     metrics: [
       ["52k m2", "Projektflache"],
       ["900 m", "zum Strand"],
@@ -144,13 +144,13 @@ const copy = {
     ],
   },
   ru: {
-    eyebrow: "New Level Premium / Avsallar",
+    eyebrow: "Новый уровень Премиум / Авсаллар",
     title: "От генплана и здания до квартиры и ERP-процесса",
     intro:
-      "1Çatı рассматривает New Level Premium как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
+      "1Çatı рассматривает «Новый уровень Премиум» как коммерческую операцию: квартиры, сервис, платежи, бронирования, документы и доступ связаны в одной рабочей записи.",
     ctaPrimary: "Открыть матрицу квартир",
     ctaSecondary: "Посмотреть платформу",
-    liveLabel: "New Level Premium control view",
+    liveLabel: "Контрольный вид «Новый уровень Премиум»",
     metrics: [
       ["52k m2", "site area"],
       ["900 m", "to beach"],
@@ -224,6 +224,8 @@ export function NewLevelImmersion() {
   const rootRef = useRef<HTMLElement>(null)
   const layerRefs = useRef<Array<HTMLDivElement | null>>([])
   const cardRefs = useRef<Array<HTMLDivElement | null>>([])
+  const activeStageRef = useRef(0)
+  const stageTransitionRef = useRef<((stageIndex: number) => void) | null>(null)
   const [activeStage, setActiveStage] = useState(0)
 
   const stages = useMemo(
@@ -254,16 +256,18 @@ export function NewLevelImmersion() {
 
       const layers = layerRefs.current.filter(Boolean)
       const cards = cardRefs.current.filter(Boolean)
+      const initialIndex = Math.min(activeStageRef.current, stages.length - 1)
       gsap.set(layers, { autoAlpha: 0, scale: 1.08 })
-      gsap.set(layers[0], { autoAlpha: 1, scale: 1 })
+      gsap.set(layers[initialIndex], { autoAlpha: 1, scale: 1 })
       gsap.set(cards, { autoAlpha: 0, y: 28 })
-      gsap.set(cards[0], { autoAlpha: 1, y: 0 })
+      gsap.set(cards[initialIndex], { autoAlpha: 1, y: 0 })
 
-      let activeIndex = 0
+      let activeIndex = initialIndex
       const showStage = (nextIndex: number) => {
         if (nextIndex === activeIndex) return
         const previousIndex = activeIndex
         activeIndex = nextIndex
+        activeStageRef.current = nextIndex
         setActiveStage(nextIndex)
 
         gsap.to(layers[previousIndex], {
@@ -291,6 +295,8 @@ export function NewLevelImmersion() {
         )
       }
 
+      stageTransitionRef.current = showStage
+
       const trigger = ScrollTrigger.create({
         trigger: root,
         start: "top top",
@@ -306,6 +312,7 @@ export function NewLevelImmersion() {
       })
 
       cleanup = () => {
+        stageTransitionRef.current = null
         trigger.kill()
       }
     })().catch(() => undefined)
@@ -313,18 +320,46 @@ export function NewLevelImmersion() {
     return () => cleanup?.()
   }, [stages])
 
+  const jumpToStage = (stageIndex: number) => {
+    const nextIndex = Math.max(0, Math.min(stages.length - 1, stageIndex))
+    const transitionStage = stageTransitionRef.current
+
+    if (transitionStage) {
+      transitionStage(nextIndex)
+    } else {
+      activeStageRef.current = nextIndex
+      setActiveStage(nextIndex)
+    }
+
+    const root = rootRef.current
+    if (!root) return
+
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
+    if (!desktop) return
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const scrollable = Math.max(0, root.offsetHeight - window.innerHeight)
+    const segmentProgress = (nextIndex + 0.5) / stages.length
+    const sectionTop = root.getBoundingClientRect().top + window.scrollY
+
+    window.scrollTo({
+      top: sectionTop + scrollable * segmentProgress,
+      behavior: reduced ? "auto" : "smooth",
+    })
+  }
+
   return (
-    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8]">
+    <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8] text-[#061a17]">
       <div className="container pt-8 pb-12 md:pt-10 md:pb-16">
         <ScrollReveal className="max-w-4xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-primary uppercase shadow-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase shadow-sm">
             <Landmark className="h-3.5 w-3.5" />
             {t.eyebrow}
           </span>
-          <h2 className="mt-5 max-w-3xl text-3xl leading-tight font-black text-foreground md:text-5xl">
+          <h2 className="mt-5 max-w-3xl text-3xl leading-tight font-black text-[#061a17] md:text-5xl">
             {t.title}
           </h2>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-muted-foreground md:text-lg">
+          <p className="mt-5 max-w-3xl text-base leading-8 text-slate-700 md:text-lg">
             {t.intro}
           </p>
         </ScrollReveal>
@@ -339,7 +374,10 @@ export function NewLevelImmersion() {
                 ref={(node) => {
                   layerRefs.current[index] = node
                 }}
-                className={cn("absolute inset-0", index > 0 && "opacity-0")}
+                className={cn(
+                  "absolute inset-0 transition-opacity duration-300",
+                  index === activeStage ? "opacity-100" : "opacity-0"
+                )}
               >
                 <Image
                   src={stage.src}
@@ -349,6 +387,9 @@ export function NewLevelImmersion() {
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,16,14,0.82)_0%,rgba(3,16,14,0.48)_42%,rgba(3,16,14,0.14)_100%)]" />
+                {stage.src.includes("resort-exterior") ? (
+                  <div className="pointer-events-none absolute right-0 bottom-0 h-40 w-72 bg-gradient-to-tl from-[#061a17] via-[#061a17]/75 to-transparent" />
+                ) : null}
               </div>
             ))}
           </div>
@@ -373,8 +414,10 @@ export function NewLevelImmersion() {
                         cardRefs.current[index] = node
                       }}
                       className={cn(
-                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl motion-safe:xl:absolute motion-safe:xl:mb-0 xl:p-8",
-                        index === 0 && "opacity-100"
+                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-opacity duration-300 xl:absolute xl:mb-0 xl:p-8",
+                        index === activeStage
+                          ? "xl:opacity-100"
+                          : "xl:pointer-events-none xl:opacity-0"
                       )}
                     >
                       <div className="flex items-center gap-3 text-sm font-black tracking-[0.18em] text-emerald-100 uppercase">
@@ -426,19 +469,21 @@ export function NewLevelImmersion() {
 
             <div className="hidden justify-end xl:flex">
               <div className="relative h-[560px] w-[300px] rounded-[2rem] border border-white/15 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur">
-                <div className="absolute top-8 bottom-8 left-1/2 w-px -translate-x-1/2 bg-white/18" />
                 {stages.map((stage, index) => {
                   const Icon = stage.icon
                   const isActive = activeStage === index
                   return (
-                    <div
+                    <button
                       key={stage.label}
+                      type="button"
+                      onClick={() => jumpToStage(index)}
                       aria-current={isActive ? "step" : undefined}
+                      aria-label={`${index + 1}. ${stage.label}`}
                       className={cn(
-                        "relative z-20 flex items-center gap-3 rounded-2xl border-b border-white/10 px-3 py-5 transition last:border-0",
+                        "relative z-20 flex w-full cursor-pointer items-center gap-3 rounded-2xl border-b border-white/10 px-3 py-5 text-left transition last:border-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200",
                         isActive
                           ? "bg-white/14 text-white shadow-[0_18px_50px_rgba(0,0,0,0.18)] ring-1 ring-white/18"
-                          : "text-white/58"
+                          : "text-white/58 hover:bg-white/10 hover:text-white"
                       )}
                     >
                       <span
@@ -462,7 +507,7 @@ export function NewLevelImmersion() {
                         </div>
                         <div className="text-sm font-bold">{stage.label}</div>
                       </div>
-                    </div>
+                    </button>
                   )
                 })}
               </div>

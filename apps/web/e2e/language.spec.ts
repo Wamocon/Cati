@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test"
 import { collectConsoleIssues, screenshot } from "./helpers"
+import { resetQaState } from "./support/flows"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 async function signInAs(page: import("@playwright/test").Page, role: string) {
   const response = await page.request.post("/api/access-profile", { data: { role } })
@@ -41,6 +46,12 @@ async function expectNoTurkishLeakage(page: import("@playwright/test").Page) {
     "Sakin kaydı bekliyor",
     "Malik kaydı bekliyor",
     "Kaynak bekliyor",
+    "Borç blokeli",
+    "BORÇ BLOKELI",
+    "Hazirlik",
+    "Servis katalogu ve siparis kapisi",
+    "Siparis kontrolu",
+    "blokeli",
   ]
 
   for (const phrase of blockedPhrases) {
@@ -71,8 +82,8 @@ test.describe("Language access", () => {
 
   test("dashboard exposes locale switching after sign-in", async ({ page }, testInfo) => {
     await page.goto("/tr/login")
-    await page.getByText("QA rol profillerini aç").click()
-    await page.getByRole("button", { name: /Yönetim|Sorumlu/ }).first().click()
+    await page.getByTestId("demo-full-access").click()
+    await page.getByTestId("demo-role-option-manager").click()
     await expect(page).toHaveURL(/\/tr\/dashboard/)
 
     const switcher = page.getByTestId("locale-switcher").first()
@@ -101,6 +112,8 @@ test.describe("Language access", () => {
   })
 
   test("focused dashboard workspaces, users and settings do not leak Turkish shell copy", async ({ page }) => {
+    test.setTimeout(90_000)
+
     await signInAs(page, "tenant")
     await page.goto("/en/dashboard")
     await expect(page.getByRole("heading", { name: "Tenant Workspace" })).toBeVisible()
@@ -116,23 +129,27 @@ test.describe("Language access", () => {
     await expectNoTurkishLeakage(page)
 
     await page.goto("/en/dashboard/leads")
-    await expect(page.getByRole("heading", { name: "Customer & Owner CRM" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Buyer pipeline" })).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/de/dashboard/compliance")
-    await expect(page.getByRole("heading", { name: "Zugang & Compliance" })).toBeVisible()
+    await expect(
+      page.getByRole("heading", {
+        name: "Alle prüfbereiten Fälle an einem Ort steuern",
+      })
+    ).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/ru/dashboard/offline")
-    await expect(page.getByRole("heading", { name: "Мобильный веб и офлайн-синхронизация" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Безопасная работа на объекте" })).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/en/dashboard/calendar")
-    await expect(page.getByRole("heading", { name: "Reservations & Check-in/out" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Booking and shared facilities" })).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/de/dashboard/reports")
-    await expect(page.getByRole("heading", { name: "KI-Berichtszentrum" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Dauerhaftes Berichtsarchiv" })).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/ru/dashboard/documents")
@@ -140,7 +157,20 @@ test.describe("Language access", () => {
     await expectNoTurkishLeakage(page)
 
     await page.goto("/en/dashboard/communications")
-    await expect(page.getByRole("heading", { name: "Communication Center" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Communication center" })).toBeVisible()
+    await expectNoTurkishLeakage(page)
+
+    await page.goto("/de/dashboard/tickets")
+    // exact:true avoids also matching "Vollständiges Serviceanfragenregister"; the
+    // tickets page is heavy, so allow extra time for its workspace to render.
+    await expect(
+      page.getByRole("heading", { name: "Serviceanfragen", exact: true })
+    ).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator("body")).toContainText("Finanzsperre")
+    await expect(page.locator("body")).toContainText("Bereitschaft")
+    await expect(page.locator("body")).toContainText("Servicekatalog und Auftragsportal")
+    await expect(page.locator("body")).toContainText("Auftragskontrolle")
+    await expect(page.locator("body")).toContainText(/\d+\s+gesperrt/)
     await expectNoTurkishLeakage(page)
   })
 })

@@ -170,8 +170,8 @@ export function Hero() {
                 <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/14 backdrop-blur">
                   <Map className="h-4 w-4" />
                 </div>
-                <p className="text-sm font-black">New Level Premium</p>
-                <p className="mt-1 text-xs text-white/70">Avsallar masterplan to operating record</p>
+                <p className="text-sm font-black">{t("projectName")}</p>
+                <p className="mt-1 text-xs text-white/70">{t("projectSubtitle")}</p>
                 <ArrowDownRight className="absolute right-1 bottom-1 h-5 w-5 transition group-hover:translate-x-1 group-hover:translate-y-1" />
               </div>
             </Link>

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test"
 import { collectConsoleIssues, screenshot } from "./helpers"
+import { resetQaState } from "./support/flows"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 async function assertNoHorizontalOverflow(page: Page) {
   const overflow = await page.evaluate(() => {
@@ -120,7 +125,7 @@ test.describe("Responsive mobile checks", () => {
     test.setTimeout(120_000)
     await page.setViewportSize({ width: 390, height: 844 })
 
-    for (const route of ["/tr", "/tr/login", "/tr/signup"]) {
+    for (const route of ["/tr", "/tr/pitch", "/tr/login", "/tr/signup"]) {
       await assertMobileRoute(page, route)
     }
 

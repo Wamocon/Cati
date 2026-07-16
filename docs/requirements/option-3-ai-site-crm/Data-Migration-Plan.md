@@ -34,9 +34,9 @@ Primary migration scope: 769 flats, owners, tenants, staff, opening balances, do
 
 ## Current Migration Baseline
 
-As of 26 June 2026, local Supabase migrations and seed data exist for realistic development and review. Production migration still requires client-approved source files, mapping sign-off, reconciliation, cloud Supabase setup, RLS/security verification and UAT acceptance.
+As of 6 July 2026, the hosted Supabase project contains the current schema migrations and the New Level Premium operational baseline for realistic development and review. Production migration still requires client-approved source files, mapping sign-off, reconciliation, final RLS/security verification and UAT acceptance.
 
-Do not treat seeded local data as final production data.
+Do not treat imported review/baseline data as final production data until the client signs off on reconciliation and acceptance.
 
 ## 1. Executive Summary
 

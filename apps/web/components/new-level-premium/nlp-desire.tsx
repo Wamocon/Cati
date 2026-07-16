@@ -1,6 +1,7 @@
 import { ArrowRight, Sparkles, Check, Minus } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { ScrollReveal } from "@/components/scroll-reveal"
+import { accessProfilesEnabledForEnvironment } from "@/lib/access-profile-policy"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
 
@@ -11,7 +12,7 @@ const copy = {
     intro:
       "Satıştan mülkiyete kadar aynı sistemi kullanırsınız. Bu bir broşür değil, her gün dönen operasyon. Her rol yalnızca kendi kapsamını görür.",
     standard: "Standart mülk yazılımı",
-    premium: "1Çatı · New Level Premium",
+    premium: "1Çatı · Yeni Seviye Premium",
     rows: [
       ["Statik panolar", "Her rakamı açıklar, kaynağını gösterir"],
       ["Tek dil", "tr / en / de / ru, dördünde aynı derinlik"],
@@ -20,8 +21,10 @@ const copy = {
       ["İşlem yapabilen chatbot", "Sadece önerir; her aksiyon insan onaylı"],
       ["Kimsenin kapatmadığı kalıcı erişim", "Süreli erişim, kendiliğinden sona erer"],
     ],
-    ctaDemo: "Canlı demoyu görün",
-    demoNote: "Tüm sistemi tek tıkla, şifresiz açın.",
+    ctaDemo: "İzole QA demosunu inceleyin",
+    demoNote: "Yalnızca sentetik verili kontrollü QA ortamında rol seçimi kullanılabilir.",
+    ctaRequest: "Rehberli demo talep edin",
+    requestNote: "Müşteri ortamlarında onaylı kimlik doğrulama gerekir.",
   },
   en: {
     eyebrow: "Why premium",
@@ -38,8 +41,10 @@ const copy = {
       ["Chatbot that can act", "Advises only; every action human-approved"],
       ["Permanent access no one revokes", "Time-boxed access that expires itself"],
     ],
-    ctaDemo: "See the live demo",
-    demoNote: "Open the whole system in one click, no password.",
+    ctaDemo: "Review the isolated QA demo",
+    demoNote: "Role selection is available only in a controlled QA environment with synthetic data.",
+    ctaRequest: "Request a guided demo",
+    requestNote: "Customer environments require approved authentication.",
   },
   de: {
     eyebrow: "Warum premium",
@@ -47,7 +52,7 @@ const copy = {
     intro:
       "Sie nutzen dasselbe System vom Kauf bis zum Eigentum. Das ist keine Broschüre, sondern laufender Betrieb, in dem jede Rolle nur ihren Bereich sieht.",
     standard: "Standard-Immobiliensoftware",
-    premium: "1Çatı · New Level Premium",
+    premium: "1Çatı · Neues Niveau Premium",
     rows: [
       ["Statische Dashboards", "Erklärt jede Zahl, nennt ihre Quelle"],
       ["Eine Sprache", "tr / en / de / ru, überall gleiche Tiefe"],
@@ -56,8 +61,10 @@ const copy = {
       ["Chatbot, der handeln kann", "Berät nur; jede Aktion menschlich freigegeben"],
       ["Dauerzugang, den keiner abschaltet", "Zeitzugang, der von selbst endet"],
     ],
-    ctaDemo: "Live-Demo ansehen",
-    demoNote: "Das ganze System mit einem Klick, ohne Passwort.",
+    ctaDemo: "Isolierte QA-Demo ansehen",
+    demoNote: "Die Rollenauswahl ist nur in einer kontrollierten QA-Umgebung mit synthetischen Daten verfügbar.",
+    ctaRequest: "Geführte Demo anfragen",
+    requestNote: "Kundenumgebungen erfordern eine freigegebene Authentifizierung.",
   },
   ru: {
     eyebrow: "Почему премиум",
@@ -65,7 +72,7 @@ const copy = {
     intro:
       "Вы используете одну систему от покупки до владения. Это не брошюра, а живая работа, где каждая роль видит только свою зону.",
     standard: "Стандартный софт для недвижимости",
-    premium: "1Çatı · New Level Premium",
+    premium: "1Çatı · Новый уровень Премиум",
     rows: [
       ["Статичные панели", "Объясняет каждую цифру, указывает источник"],
       ["Один язык", "tr / en / de / ru, одна глубина в каждом"],
@@ -74,13 +81,16 @@ const copy = {
       ["Чат-бот, который действует", "Только советует; каждое действие одобряет человек"],
       ["Постоянный доступ, который никто не закрывает", "Срочный доступ, истекает сам"],
     ],
-    ctaDemo: "Посмотреть демо",
-    demoNote: "Открыть всю систему одним кликом, без пароля.",
+    ctaDemo: "Посмотреть изолированное QA-демо",
+    demoNote: "Выбор роли доступен только в контролируемой QA-среде с синтетическими данными.",
+    ctaRequest: "Запросить демонстрацию",
+    requestNote: "Клиентские среды требуют утверждённой аутентификации.",
   },
 } satisfies Record<LocaleKey, unknown>
 
 export function NlpDesire({ locale }: { locale: LocaleKey }) {
   const t = copy[locale] as (typeof copy)["tr"]
+  const isolatedQaDemoEnabled = accessProfilesEnabledForEnvironment()
 
   return (
     <section id="desire" className="bg-[#061a17] py-16 text-white md:py-24">
@@ -120,13 +130,16 @@ export function NlpDesire({ locale }: { locale: LocaleKey }) {
 
         <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
           <Link
-            href="/login"
+            href={isolatedQaDemoEnabled ? "/login" : "#register"}
+            data-testid="new-level-demo-cta"
             className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-black text-[#061a17] shadow-lg transition hover:-translate-y-0.5 hover:bg-emerald-50"
           >
-            {t.ctaDemo}
+            {isolatedQaDemoEnabled ? t.ctaDemo : t.ctaRequest}
             <ArrowRight className="h-4 w-4" />
           </Link>
-          <span className="text-xs text-white/60">{t.demoNote}</span>
+          <span className="text-xs text-white/60">
+            {isolatedQaDemoEnabled ? t.demoNote : t.requestNote}
+          </span>
         </div>
       </div>
     </section>

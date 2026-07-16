@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>1Çatı — Benutzerhandbuch</title>
+<style>
+  :root {
+    --teal: #066B63;
+    --teal-deep: #044F49;
+    --teal-bright: #09877C;
+    --gold: #B9822B;
+    --gold-soft: #E2B75D;
+    --ink: #101820;
+    --slate: #33413D;
+    --muted: #64716D;
+    --bg: #F7F9F8;
+    --card: #FFFFFF;
+    --border: #DAE3E0;
+    --secondary: #EAF1EF;
+    --font: "Aptos", "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+
+  @page { size: A4; margin: 20mm 16mm 18mm 16mm; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: var(--font); color: var(--slate); background: var(--bg);
+    margin: 0; font-size: 10.5pt; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+
+  .page-decor {
+    position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      radial-gradient(circle at 92% 6%, color-mix(in srgb, var(--teal) 7%, transparent) 0%, transparent 26%),
+      radial-gradient(circle at 6% 96%, color-mix(in srgb, var(--gold) 6%, transparent) 0%, transparent 24%);
+  }
+  .page-decor svg { position: absolute; right: -10mm; bottom: -6mm; width: 92mm; opacity: 0.05; }
+
+  h1, h2, h3, h4 { font-family: var(--font); color: var(--ink); line-height: 1.2; }
+  p { margin: 0 0 9pt; }
+  a { color: var(--teal); text-decoration: none; }
+  strong { color: var(--ink); }
+
+  /* COVER */
+  .cover {
+    position: relative; height: 257mm; margin: -20mm -16mm 0 -16mm; padding: 30mm 22mm;
+    color: #EAF6F3;
+    background:
+      radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--gold) 34%, transparent) 0%, transparent 42%),
+      radial-gradient(circle at 12% 88%, color-mix(in srgb, var(--teal-bright) 46%, transparent) 0%, transparent 46%),
+      linear-gradient(150deg, #032f2b 0%, var(--teal-deep) 42%, var(--teal) 100%);
+    display: flex; flex-direction: column; overflow: hidden; break-after: page;
+  }
+  .cover-silhouette { position: absolute; right: -14mm; bottom: -8mm; width: 150mm; opacity: 0.14; }
+  .cover-noise {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.04; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .cover-brand { display: flex; align-items: center; gap: 14px; position: relative; z-index: 2; }
+  .cover-brand .name { font-size: 20pt; font-weight: 800; letter-spacing: -0.01em; color: #fff; }
+  .cover-brand .by { font-size: 9pt; color: #B9DBD4; margin-top: 2px; }
+  .cover-mid { margin-top: auto; margin-bottom: auto; position: relative; z-index: 2; }
+  .cover-kicker {
+    display: inline-block; font-size: 9pt; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold-soft); border: 1px solid color-mix(in srgb, var(--gold-soft) 55%, transparent);
+    border-radius: 999px; padding: 5px 14px; margin-bottom: 18px;
+  }
+  .cover h1 { color: #fff; font-size: 36pt; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 14px; max-width: 150mm; line-height: 1.06; }
+  .cover .lead { font-size: 12.5pt; color: #CDE7E1; max-width: 130mm; line-height: 1.5; }
+  .cover-meta {
+    position: relative; z-index: 2; display: grid; grid-template-columns: repeat(2, 1fr);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 14px; overflow: hidden;
+    background: rgba(255,255,255,0.06); backdrop-filter: blur(6px);
+  }
+  .cover-meta div { padding: 11px 16px; border-right: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12); }
+  .cover-meta div:nth-child(2n) { border-right: none; }
+  .cover-meta div:nth-last-child(-n+2) { border-bottom: none; }
+  .cover-meta .k { font-size: 8pt; letter-spacing: 0.12em; text-transform: uppercase; color: #9FCFC6; }
+  .cover-meta .v { font-size: 10.5pt; color: #fff; font-weight: 600; margin-top: 2px; }
+  .cover-conf { position: relative; z-index: 2; margin-top: 14px; font-size: 8.5pt; color: #A9D2CB; letter-spacing: 0.03em; }
+
+  /* CHAPTERS */
+  .chapter { break-before: page; }
+  .chapter:first-of-type { break-before: auto; }
+  .kicker { display: inline-block; font-size: 8.5pt; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+  h2 { font-size: 19pt; font-weight: 800; letter-spacing: -0.015em; color: var(--teal-deep); margin: 3px 0 4px; }
+  .rule { height: 3px; width: 54px; border-radius: 999px; background: linear-gradient(90deg, var(--teal) 0%, var(--gold) 100%); margin: 6px 0 16px; }
+  h3 { font-size: 12.5pt; font-weight: 750; color: var(--teal); margin: 18px 0 6px; }
+  h4 { font-size: 10.5pt; font-weight: 700; color: var(--ink); margin: 12px 0 4px; }
+  .lead-para { font-size: 11.5pt; color: var(--slate); margin-bottom: 14px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.3pt; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { background: var(--teal); color: #fff; text-align: left; font-weight: 700; padding: 7px 10px; font-size: 8.8pt; border: 1px solid var(--teal); }
+  th:first-child { border-top-left-radius: 8px; } th:last-child { border-top-right-radius: 8px; }
+  td { padding: 7px 10px; border: 1px solid var(--border); vertical-align: top; color: var(--slate); }
+  tbody tr:nth-child(2n) td { background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+
+  .pill { display: inline-block; font-size: 8pt; font-weight: 700; padding: 2.5px 9px; border-radius: 999px; white-space: nowrap; }
+  .pill-full { background: color-mix(in srgb, var(--teal) 15%, #fff); color: var(--teal-deep); border: 1px solid color-mix(in srgb, var(--teal) 35%, #fff); }
+  .pill-live { background: color-mix(in srgb, var(--teal-bright) 18%, #fff); color: var(--teal-deep); border: 1px solid color-mix(in srgb, var(--teal-bright) 40%, #fff); }
+  .pill-part { background: color-mix(in srgb, var(--gold) 16%, #fff); color: #7a5410; border: 1px solid color-mix(in srgb, var(--gold) 38%, #fff); }
+  .pill-prep { background: color-mix(in srgb, var(--muted) 14%, #fff); color: #4b5652; border: 1px solid color-mix(in srgb, var(--muted) 32%, #fff); }
+
+  .note { background: color-mix(in srgb, var(--secondary) 60%, #fff); border: 1px solid var(--border); border-left: 4px solid var(--gold); border-radius: 10px; padding: 12px 15px; margin: 12px 0 16px; font-size: 9.8pt; break-inside: avoid; }
+  .note strong { color: var(--teal-deep); }
+  .tip { border-left-color: var(--teal); }
+
+  .cardgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0 16px; }
+  .fcard { border: 1px solid var(--border); border-radius: 12px; padding: 13px 15px; background: var(--card); break-inside: avoid; box-shadow: 0 1px 2px rgba(16,24,32,0.03); }
+  .fcard .ic { font-size: 15pt; margin-bottom: 4px; }
+  .fcard h4 { margin: 0 0 3px; font-size: 10.5pt; color: var(--teal-deep); }
+  .fcard p { font-size: 9pt; color: var(--muted); margin: 0; }
+
+  ul, ol { margin: 4px 0 12px; padding-left: 18px; }
+  li { margin-bottom: 4px; }
+
+  .pagebox { border: 1px solid var(--border); border-radius: 12px; padding: 0; margin: 10px 0 16px; overflow: hidden; background: var(--card); break-inside: avoid; }
+  .pagebox .head { background: color-mix(in srgb, var(--secondary) 70%, #fff); padding: 9px 15px; border-bottom: 1px solid var(--border); }
+  .pagebox .head h4 { margin: 0; color: var(--teal-deep); font-size: 11pt; }
+  .pagebox .head .sub { font-size: 8.6pt; color: var(--muted); margin-top: 2px; }
+  .pagebox .body { padding: 11px 15px; font-size: 9.6pt; }
+  .pagebox .body .lbl { font-weight: 700; color: var(--ink); font-size: 9pt; }
+  .pagebox ul { margin: 3px 0 8px; }
+
+  .toc { columns: 2; column-gap: 26px; font-size: 10pt; }
+  .toc div { break-inside: avoid; margin-bottom: 7px; padding-bottom: 6px; border-bottom: 1px dotted var(--border); }
+  .toc .n { color: var(--gold); font-weight: 800; margin-right: 8px; }
+  .toc .t { color: var(--ink); font-weight: 600; }
+
+  .footer-tag { margin-top: 26px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 8.5pt; color: var(--muted); text-align: center; }
+  .legend { font-size: 8.5pt; color: var(--muted); margin: 6px 0 14px; }
+  .legend .pill { margin-right: 4px; }
+</style>
+</head>
+<body>
+
+<div class="page-decor">
+  <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#066B63" stroke-width="2">
+      <rect x="40" y="70" width="60" height="150" rx="6"/>
+      <rect x="110" y="110" width="42" height="110" rx="5"/>
+      <rect x="10" y="130" width="26" height="90" rx="4"/>
+      <path d="M40 70 L70 40 L100 70"/>
+      <g stroke-width="1.4">
+        <line x1="52" y1="92" x2="88" y2="92"/><line x1="52" y1="116" x2="88" y2="116"/>
+        <line x1="52" y1="140" x2="88" y2="140"/><line x1="52" y1="164" x2="88" y2="164"/>
+        <line x1="120" y1="128" x2="142" y2="128"/><line x1="120" y1="150" x2="142" y2="150"/>
+        <line x1="120" y1="172" x2="142" y2="172"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<!-- COVER -->
+<section class="cover">
+  <div class="cover-noise"></div>
+  <svg class="cover-silhouette" viewBox="0 0 400 320" xmlns="http://www.w3.org/2000/svg" fill="none">
+    <g fill="#ffffff">
+      <rect x="120" y="40" width="150" height="250" rx="10"/>
+      <rect x="270" y="120" width="80" height="170" rx="8"/>
+      <rect x="60" y="150" width="60" height="140" rx="7"/>
+      <path d="M130 40 L195 8 L260 40 Z"/>
+    </g>
+    <g fill="#032f2b" opacity="0.5">
+      <rect x="140" y="70" width="22" height="30" rx="3"/><rect x="172" y="70" width="22" height="30" rx="3"/><rect x="204" y="70" width="22" height="30" rx="3"/><rect x="236" y="70" width="22" height="30" rx="3"/>
+      <rect x="140" y="115" width="22" height="30" rx="3"/><rect x="172" y="115" width="22" height="30" rx="3"/><rect x="204" y="115" width="22" height="30" rx="3"/><rect x="236" y="115" width="22" height="30" rx="3"/>
+      <rect x="140" y="160" width="22" height="30" rx="3"/><rect x="172" y="160" width="22" height="30" rx="3"/><rect x="204" y="160" width="22" height="30" rx="3"/><rect x="236" y="160" width="22" height="30" rx="3"/>
+      <rect x="140" y="205" width="22" height="30" rx="3"/><rect x="172" y="205" width="22" height="30" rx="3"/><rect x="204" y="205" width="22" height="30" rx="3"/><rect x="236" y="205" width="22" height="30" rx="3"/>
+    </g>
+  </svg>
+
+  <div class="cover-brand">
+    <svg viewBox="0 0 128 128" width="52" height="52" aria-label="1Çatı">
+      <rect width="128" height="128" rx="28" fill="#ffffff"/>
+      <path d="M24 65 64 28l40 37v39a8 8 0 0 1-8 8H32a8 8 0 0 1-8-8Z" fill="#066B63"/>
+      <path d="M48 112V72h32v40" fill="#B9822B"/>
+      <path d="M43 51h42" stroke="#066B63" stroke-width="8" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="name">1Çatı</div>
+      <div class="by">Property-Management-Plattform für Ataberk Estate</div>
+    </div>
+  </div>
+
+  <div class="cover-mid">
+    <span class="cover-kicker">Benutzerhandbuch</span>
+    <h1>So bedienen Sie 1Çatı</h1>
+    <p class="lead">Ein verständlicher Leitfaden für Management, Betrieb, Buchhaltung, Außendienst, Eigentümer und Mieter — rollenbasiert, in vier Sprachen, für Demonstration, Schulung und Einführung.</p>
+  </div>
+
+  <div class="cover-meta">
+    <div><div class="k">Portfolio</div><div class="v">New Level Premium, Avsallar/Alanya</div></div>
+    <div><div class="k">Plattform</div><div class="v">cati-blond.vercel.app/tr</div></div>
+    <div><div class="k">Sprachen</div><div class="v">Türkisch · Englisch · Deutsch · Russisch</div></div>
+    <div><div class="k">Zielgruppe</div><div class="v">Alle Rollen &amp; Schulung</div></div>
+    <div><div class="k">Dokument</div><div class="v">Kundenversion</div></div>
+    <div><div class="k">Datum</div><div class="v">07. Juli 2026</div></div>
+  </div>
+  <div class="cover-conf">Vertraulich — ausschließlich für Ataberk Estate bestimmt.</div>
+</section>
+
+<!-- INHALT -->
+<section class="chapter">
+  <span class="kicker">Überblick</span>
+  <h2>Inhalt</h2>
+  <div class="rule"></div>
+  <div class="toc">
+    <div><span class="n">01</span><span class="t">Überblick &amp; aktueller Stand</span></div>
+    <div><span class="n">02</span><span class="t">Rollen und Rechte</span></div>
+    <div><span class="n">03</span><span class="t">Grundbedienung</span></div>
+    <div><span class="n">04</span><span class="t">Die Arbeitsbereiche im Portal</span></div>
+    <div><span class="n">05</span><span class="t">New Level Premium — öffentlicher Bereich</span></div>
+    <div><span class="n">06</span><span class="t">Die KI-Assistenten</span></div>
+    <div><span class="n">07</span><span class="t">Wichtige Arbeitsabläufe</span></div>
+    <div><span class="n">08</span><span class="t">Hilfe, Grenzen &amp; FAQ</span></div>
+  </div>
+
+  <div class="note tip"><strong>Zu diesem Handbuch.</strong> 1Çatı liegt aktuell als vollständig bedienbare Demonstrationsumgebung vor. Dieses Handbuch erklärt jede Funktion in einfacher Sprache und kennzeichnet klar, was heute schon nutzbar ist und was für den Produktivbetrieb noch freigeschaltet wird. So arbeiten Sie von Anfang an mit realistischen Erwartungen.</div>
+</section>
+
+<!-- 01 ÜBERBLICK -->
+<section class="chapter">
+  <span class="kicker">Kapitel 01</span>
+  <h2>Überblick &amp; aktueller Stand</h2>
+  <div class="rule"></div>
+
+  <p class="lead-para">1Çatı ist die zentrale Arbeitsoberfläche für Ihren gesamten Immobilienbetrieb: Portfolio, Eigentümer &amp; Mieter, Service, Finanzen, Reservierung, Dokumente, Kommunikation, Rollen und Berichte — alles in einem System. Der aktuelle Stand ist für Demonstration, Schulung und interne Einführung vorbereitet.</p>
+
+  <h3>Was jetzt verfügbar ist</h3>
+  <ul>
+    <li>Rollenbasierter Zugang inklusive eines passwortfreien Ein-Klick-Zugangs für Vorführungen.</li>
+    <li>Dashboard mit Portfolioübersicht, Statuskarten und rollenabhängiger Navigation.</li>
+    <li>Wohnungs-Matrix für Einheiten, Blöcke, Eigentümer, Bewohner, Preise, Schulden, Dokumente, Service- und Zugangsstatus.</li>
+    <li>Eigene Arbeitsbereiche für Kunden/Bewohner, Tickets, Reservierungen, Finanzen, Dokumente, Berichte, Kommunikation, Offline-Sync, Benutzer und Einstellungen.</li>
+    <li>Ein öffentlicher, kontofreier Bereich „New Level Premium" mit Registrierung, Meldekanal und QR-Poster.</li>
+    <li>Zwei miteinander verbundene KI-Assistenten (intern im Portal, öffentlich auf der Landingpage).</li>
+  </ul>
+
+  <h3>Was für den Produktivbetrieb noch freigegeben wird</h3>
+  <ul>
+    <li>Echte Kundendaten, Zahlungen und offene Salden müssen bestätigt werden.</li>
+    <li>Live-Anbindungen für Zahlung, Bank, SMS, E-Mail, Zugangskarten, Kameras und Dokumentenspeicher benötigen Verträge, Zugangsdaten und Freigabe.</li>
+    <li>Das Anlegen neuer Reservierungen, das Erfassen neuer Finanzbuchungen und das Hochladen von Foto-/Videonachweisen folgen in der nächsten Ausbaustufe.</li>
+    <li>Sicherheitsprüfung, Abnahmetest und Schulung sind vor dem Livegang einzuplanen.</li>
+  </ul>
+
+  <div class="note"><strong>Wichtige Links.</strong> Plattform: cati-blond.vercel.app/tr · Öffentlicher Bereich (ohne Login): /tr/new-level-premium</div>
+</section>
+
+<!-- 02 ROLLEN -->
+<section class="chapter">
+  <span class="kicker">Kapitel 02</span>
+  <h2>Rollen und Rechte</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Die Plattform arbeitet mit sechs Kernrollen. Jede Rolle sieht nur die Seiten und Aktionen, die für ihre Arbeit notwendig sind. So werden Eigentümer-, Mieter-, Finanz- und Betriebsdaten sauber getrennt.</p>
+
+  <table>
+    <thead><tr><th style="width:20%">Rolle</th><th style="width:38%">Zweck</th><th>Hauptbereiche</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Verwaltung</strong></td><td>Gesamtverantwortung für Plattform, Einstellungen, Benutzer und sensible Kontrollen.</td><td>Alle Bereiche</td></tr>
+      <tr><td><strong>Verantwortlicher</strong></td><td>Tägliche Standort- und Betriebsführung.</td><td>Übersicht, Wohnungs-Matrix, Kunden, Tickets, Reservierung, Zugang, Dokumente, Berichte, Kommunikation, Benutzer, Einstellungen</td></tr>
+      <tr><td><strong>Buchhaltung</strong></td><td>Finanz- und Zahlungsprozesse, Gebühren, Kautionen, Berichte.</td><td>Übersicht, Finanzen, Dokumente, Berichte, Kommunikation</td></tr>
+      <tr><td><strong>Mitarbeiter</strong></td><td>Außendienst, Serviceausführung, Nachweise.</td><td>Übersicht, Tickets, Reservierung, Dokumente, Kommunikation, Offline-Sync</td></tr>
+      <tr><td><strong>Eigentümer</strong></td><td>Eigene Wohnung, Dokumente, Services, Reservierungen, Kommunikation.</td><td>Übersicht, Tickets, Reservierung, Dokumente, Kommunikation</td></tr>
+      <tr><td><strong>Mieter</strong></td><td>Berechtigte Wohnung, Services, Reservierungen, Chat, Dokumente.</td><td>Übersicht, Tickets, Reservierung, Dokumente, Kommunikation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Anmelden mit Rollenprofil</h3>
+  <ol>
+    <li>Plattform öffnen und zur Anmeldeseite wechseln.</li>
+    <li>In der Demonstrations-/Schulungsumgebung das passende Rollenprofil auswählen — oder den Ein-Klick-Zugang nutzen (siehe unten).</li>
+    <li>Nach dem Login werden nur die Menüpunkte angezeigt, die zur Rolle passen.</li>
+    <li>Bei fehlender Sichtbarkeit oder Berechtigung die zuständige Projekt- oder Systemverantwortung informieren.</li>
+  </ol>
+
+  <div class="note tip"><strong>Ein-Klick-Demo-Zugang.</strong> Auf der Anmeldeseite gibt es in Demonstrations-/Schulungsumgebungen den Button „Demo starten". Ein Klick meldet sofort mit voller Sicht an — ohne Passwort. Er ist ausschließlich für Präsentationen und Schulungen gedacht und im Produktivbetrieb standardmäßig gesperrt. Für eine realistische Vorführung einer bestimmten Rolle (z. B. Eigentümer) nutzen Sie stattdessen die reguläre Rollenauswahl.</div>
+
+  <h3>Warum sehe ich manche Seiten nicht?</h3>
+  <p>Das ist normal und gewollt: Jede Seite wird zweifach geprüft — in der Anwendung und in der Datenbank. Wer keine Berechtigung hat, sieht die Seite gar nicht erst. Es ist kein „ausgeblendeter Knopf", sondern eine echte Zugriffssperre auf zwei Ebenen.</p>
+</section>
+
+<!-- 03 GRUNDBEDIENUNG -->
+<section class="chapter">
+  <span class="kicker">Kapitel 03</span>
+  <h2>Grundbedienung</h2>
+  <div class="rule"></div>
+
+  <h3>Linke Navigation</h3>
+  <p>Die linke Navigation zeigt die Arbeitsbereiche, die zur aktuellen Rolle passen. Ist eine Seite nicht sichtbar, ist das meist eine bewusste Rollenbeschränkung.</p>
+
+  <h3>Suche und Filter</h3>
+  <p>Die globale Such- und Filterleiste findet Datensätze schnell — nach Einheiten, Personen, Services, Dokumenten, Nachrichten oder Status. Nach dem Anwenden eines Filters wird die Ergebnisliste sichtbar aktualisiert.</p>
+
+  <h3>Sprache</h3>
+  <p>Die Plattform unterstützt Türkisch, Englisch, Deutsch und Russisch. Türkisch ist die Betriebssprache. Die Sprache wird oben rechts gewechselt.</p>
+
+  <h3>Hell-/Dunkelmodus</h3>
+  <p>Im Portal steht oben rechts ein Umschalter für Hell- und Dunkelmodus zur Verfügung. Auf den öffentlichen Seiten folgt die Darstellung automatisch der Systemeinstellung des Geräts.</p>
+
+  <h3>Nachvollziehbarkeit</h3>
+  <p>Kritische Aktionen — Freigaben, Zahlungslogik, Zugangsbeschränkungen, Dokumentprüfungen, Rollenänderungen — bleiben immer mit Nutzer, Rolle, Zeitpunkt, Grund und Status nachvollziehbar.</p>
+</section>
+
+<!-- 04 ARBEITSBEREICHE -->
+<section class="chapter">
+  <span class="kicker">Kapitel 04</span>
+  <h2>Die Arbeitsbereiche im Portal</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Die folgenden Karten beschreiben jeden Bereich: was Sie dort tun, worauf Sie achten sollten und — wo relevant — was aktuell reine Ansicht ist und in der Produktivversion um die Erfassung ergänzt wird.</p>
+  <div class="legend">
+    <span class="pill pill-full">Verfügbar</span> voll bedienbar &nbsp;·&nbsp;
+    <span class="pill pill-part">Teilweise</span> Ansicht vorhanden, Erfassung folgt &nbsp;·&nbsp;
+    <span class="pill pill-prep">In Vorbereitung</span> nächste Ausbaustufe
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Übersicht <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Täglicher Startpunkt mit Portfolio, Risiken und Arbeitskarten.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Portfolio und aktiven Standort prüfen, Blockrisiken und Statuskarten lesen.</li><li>Offene Tickets, Schulden, Zugriffsrisiken und Check-outs priorisieren.</li><li>Rollenabhängige Arbeitskarten öffnen und Daten aktualisieren.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Für Verwaltung und Verantwortliche zeigt das Dashboard live-fähige Kennzahlen. Einzelne Finanzkacheln (z. B. erwartete Monatszahlung) sind aktuell Beispielwerte und werden im Ausbau live berechnet.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Wohnungs-Matrix (Daire Matrix) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Zentrale Übersicht aller Einheiten und operativen Daten.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Einheiten nach Block, Nummer, Eigentümer, Bewohner, Status und Preisquelle suchen.</li><li>Schnellfilter für Daire, Service, Finanzen, Belege, Nachrichten, Compliance und Berichte nutzen.</li><li>Daten aktualisieren, Datenprüfung starten und Änderungswunsch anlegen.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Fehlt eine Angabe, wird ein Änderungswunsch ausgelöst statt einer stillen Änderung — so bleibt alles nachvollziehbar.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Kunden &amp; Bewohner (Müşteri Adayları) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">CRM-Ansicht der Eigentümer- und Bewohnerdaten mit Kommunikationspriorität.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Datensätze nach Risiko, Kommunikationspräferenz und Priorität prüfen.</li><li>Vorgeschlagene nächste Kontaktaufnahme sehen (mehrsprachig für RU/TR/DE/EN).</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Dieser Bereich zeigt Bewohner-/Eigentümerdaten in CRM-Aufmachung — eine praktische Priorisierungshilfe für den täglichen Kontakt.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Service-Tickets (Servis Talepleri) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Interner Ticketbereich für Wartung, Service, SLA und Freigaben.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Tickets nach Priorität, Status, SLA, Kategorie und Verantwortlichem prüfen.</li><li>Einen neuen Serviceauftrag über den Katalog anfragen — die Anfrage läuft in eine Freigabe-Warteschlange.</li></ul>
+      <span class="lbl">In Vorbereitung:</span> Der Foto-/Video-Upload für Außendienstnachweise sowie das Ändern des Aufgabenstatus per Klick folgen in der nächsten Ausbaustufe.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Reservierung (Reservasyon) <span class="pill pill-part">Teilweise</span></h4><div class="sub">Buchung, Check-in, Check-out, Kaution und Aufgaben.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Buchungen und Reservierungsstatus prüfen, Check-in-Aufgaben und Zugangsvorbereitung verfolgen.</li><li>Check-out, Reinigung, Kautionsprüfung und Rückerstattung vorbereiten.</li></ul>
+      <span class="lbl">In Vorbereitung:</span> Das Anlegen einer neuen Reservierung folgt in der nächsten Ausbaustufe; aktuell zeigt der Bereich Beispielbuchungen zur Demonstration.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Zugang &amp; Compliance (Erişim &amp; Uyum) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Zugang, Einschränkungen, Compliance und Käufer-Eignungsprüfung.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Eingeschränkte Einheiten und den Grund der Zugangsbeschränkung prüfen.</li><li>Käufer-Eignungs-Vorprüfung für den Vertrieb einsehen (ohne Rechtsgarantie).</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Eine Zugangssperre wird nie automatisch ausgelöst — sie wird empfohlen und einem Menschen zur Freigabe vorgelegt.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Finanzen &amp; Beiträge (Finans &amp; Aidat) <span class="pill pill-part">Teilweise</span></h4><div class="sub">Gebühren, Salden, Zahlungen, Schulden, Kautionen.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Offene Salden, Zahlungsstatus, Kautions- und Rückerstattungsstatus prüfen.</li><li>Schuldrestriktionen für Service, Zugang oder Reservierung erkennen.</li></ul>
+      <span class="lbl">In Vorbereitung:</span> Das Erfassen neuer Zahlungen/Buchungen folgt im Ausbau; aktuell ist der Bereich ein Kontoauszug über vorhandene Daten. Eine Kaution wird nicht automatisch verrechnet, sondern als Empfehlung geprüft.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Dokumente (Belgeler) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Upload, Dokumentpakete, KYC/TAPU, Verträge, Review, Aufbewahrung.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Dokumente je Einheit/Person/Kategorie/Status suchen; Dokumentpakete prüfen.</li><li>Dateien hochladen und den Reviewstatus verfolgen (Typ-/Größenprüfung inklusive).</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Für Demonstration und Schulung bitte nur Beispieldokumente verwenden. Die produktive, dauerhafte Speicherung wird nach entsprechender Freigabe aktiviert.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Berichte (Raporlar) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Management-, Finanz-, Betriebs- und KI-gestützte Zusammenfassungen.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Berichte nach Bereich, Frequenz und Kennzahl prüfen; Diagramme lesen.</li><li>Exportierte Berichte als kontrollierte, freigabepflichtige Aktion behandeln.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Die KI-Empfehlungskarten sind aktuell als Konzept-/Zielbild dargestellt und sollten in Präsentationen entsprechend eingeordnet werden.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Kommunikation (İletişim) <span class="pill pill-part">Teilweise</span></h4><div class="sub">Nachrichten, Vorlagen, Benachrichtigungen, Sprache.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Nachrichten und Vorlagen nach Sprache und Anwendungsfall prüfen.</li><li>Kommunikation zu Buchung, Check-in/-out, Service, Zahlung und Dokumenten vorbereiten.</li></ul>
+      <span class="lbl">In Vorbereitung:</span> Der tatsächliche Versand (WhatsApp/E-Mail/SMS) wird nach Anbieter-Freigabe aktiviert; aktuell werden Aktionen vorbereitet und protokolliert.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Offline-Sync (Offline Senkron) <span class="pill pill-part">Teilweise</span></h4><div class="sub">Warteschlange für Feldarbeit bei schwacher Verbindung.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Offline-Einträge und Sync-Status prüfen; für den Außendienst testen.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Die Plattform ist bereits als installierbare Web-App nutzbar. Die vollständige Offline-Synchronisation und Push-Benachrichtigungen folgen in der nächsten Ausbaustufe.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Benutzer &amp; Rollen (Kullanıcılar &amp; Roller) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Team, Bewohnerbeziehungen, Rollen und Mieter-Zeitzugang.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Teammitglieder, Rollen, Freigabelimits und Zuständigkeiten prüfen.</li><li>Mieter-Zeitzugang: eigentümer-gesponserte, zeitlich begrenzte Zugangseinladungen einsehen, verlängern oder widerrufen.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Das Zeitzugang-Panel ist in der Demonstration eine Vorführ-Simulation; die dauerhafte Speicherung folgt in der Produktivversion.
+    </div>
+  </div>
+
+  <div class="pagebox">
+    <div class="head"><h4>Einstellungen (Ayarlar) <span class="pill pill-full">Verfügbar</span></h4><div class="sub">Anbieter-Status, Systemkontrollen, Integrationen, Sicherheit.</div></div>
+    <div class="body">
+      <span class="lbl">Was Sie hier tun:</span>
+      <ul><li>Anbieter-Bereitschaft für Zahlung, SMS, E-Mail, Bank, Zugang, Kamera und Dokumentenspeicher prüfen.</li><li>System- und Sicherheitskontrollen lesen.</li></ul>
+      <span class="lbl">Gut zu wissen:</span> Aktuell ist ausschließlich die Datenbank selbst live angebunden; die externen Anbieter-Kategorien sind vorbereitet und werden nach Vertrags-/Anbieterwahl aktiviert. Sensible Werte wie Zugangsschlüssel werden nie angezeigt.
+    </div>
+  </div>
+</section>
+
+<!-- 05 NEW LEVEL PREMIUM -->
+<section class="chapter">
+  <span class="kicker">Kapitel 05</span>
+  <h2>New Level Premium — öffentlicher Bereich</h2>
+  <div class="rule"></div>
+  <p class="lead-para">Dieser Bereich ist <strong>ohne Login</strong> erreichbar und richtet sich an Interessenten, Eigentümer, Mieter, Gäste und Dienstleister, die noch keinen Systemzugang haben. Adresse: /tr/new-level-premium</p>
+
+  <div class="cardgrid">
+    <div class="fcard"><h4>Öffentliche Landingpage</h4><p>Mehrsprachige Projektseite, die das Objekt vorstellt und Besucher zur Registrierung oder Meldung führt.</p></div>
+    <div class="fcard"><h4>Kontofreie Registrierung</h4><p>Bewerbung als Eigentümer, Mieter oder Mitarbeiter ohne bestehendes Konto. Interne Rollen (Verwaltung, Buchhaltung) sind aus Sicherheitsgründen ausgeschlossen. Owner/Tenant geben zusätzlich einen Identitätsnachweis an.</p></div>
+    <div class="fcard"><h4>Öffentlicher Meldekanal</h4><p>Jede Person kann — auch ohne Registrierung — ein Anliegen melden (Reinigung, Technik, Sicherheit, Garten, Lärm u. a.). Die Meldung wird ausschließlich intern weitergeleitet.</p></div>
+    <div class="fcard"><h4>QR-Poster vor Ort</h4><p>Ein druckfertiges Poster mit QR-Code führt direkt zum Meldeformular — ideal für Eingänge, Aufzüge und Gemeinschaftsflächen.</p></div>
+  </div>
+
+  <h3>Identitätsprüfung</h3>
+  <p>Bei der Registrierung als Eigentümer oder Mieter kann die Identität über einen Prüf-Button bestätigt werden. In der Demonstrationsumgebung erfolgt dies simuliert; für den Produktivbetrieb wird ein Prüfdienst angebunden.</p>
+
+  <div class="note"><strong>Nach der Einreichung.</strong> Registrierungen und Meldungen werden in eine interne Warteschlange gestellt und vom Team geprüft. Eine eigene Bearbeitungs-Übersicht dafür wird in der nächsten Ausbaustufe ergänzt; bis dahin wird die Prüfung begleitend organisiert.</p></div>
+</section>
+
+<!-- 06 KI -->
+<section class="chapter">
+  <span class="kicker">Kapitel 06</span>
+  <h2>Die KI-Assistenten</h2>
+  <div class="rule"></div>
+  <p class="lead-para">1Çatı verwendet zwei unterschiedliche, aber miteinander verbundene KI-Assistenten.</p>
+
+  <table>
+    <thead><tr><th style="width:22%"></th><th>Interner Assistent</th><th>Öffentlicher Concierge</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Wo</strong></td><td>Im eingeloggten Portal</td><td>Auf der Landingpage &amp; im öffentlichen Bereich</td></tr>
+      <tr><td><strong>Für wen</strong></td><td>Eingeloggte Rollen</td><td>Anonyme Besucher, ohne Login</td></tr>
+      <tr><td><strong>Datenzugriff</strong></td><td>Kontext der eigenen Rolle (z. B. offene Tickets)</td><td>Bewusst <strong>kein</strong> Zugriff auf interne Daten</td></tr>
+      <tr><td><strong>Zweck</strong></td><td>Zusammenfassungen, Prioritäten, Textentwürfe</td><td>Interessenten begleiten, zur Registrierung führen</td></tr>
+      <tr><td><strong>Verbindung</strong></td><td>Erhält anonymisierte Themen aus den Fragen des öffentlichen Assistenten</td><td>Speist diese Themen an das interne System zurück</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Klare Grenzen beider Assistenten</h3>
+  <ul>
+    <li>Die KI bucht keine Zahlung und gibt keine Rückerstattung frei.</li>
+    <li>Die KI aktiviert keine Zugangssperre und ändert keine Rolle.</li>
+    <li>Die KI antwortet in der Sprache, in der die Frage gestellt wurde.</li>
+    <li>KI-Antworten sind Vorschläge — kritische Entscheidungen bleiben immer bei Menschen.</li>
+  </ul>
+
+  <div class="note tip"><strong>Der Leitgedanke.</strong> Die KI unterstützt und beschleunigt, entscheidet aber nie eigenmächtig über Geld, Zugang oder Rechte. Das ist bewusst so gebaut und macht den Einsatz von KI im Betrieb sicher und vertrauenswürdig.</div>
+</section>
+
+<!-- 07 ABLÄUFE -->
+<section class="chapter">
+  <span class="kicker">Kapitel 07</span>
+  <h2>Wichtige Arbeitsabläufe</h2>
+  <div class="rule"></div>
+
+  <h3>Tagesstart Verantwortlicher</h3>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:42%">Aktion</th><th>Erwartetes Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Übersicht öffnen</td><td>Portfolio, Blockrisiko, offene Tickets, Schulden und Check-outs sind sichtbar.</td></tr>
+      <tr><td>2</td><td>Kritische Karten prüfen</td><td>SLA-Verstoß, Zugangssperre, Zahlung oder Check-out wird priorisiert.</td></tr>
+      <tr><td>3</td><td>In Detailseite wechseln</td><td>Klick auf Karte führt zur passenden Seite.</td></tr>
+      <tr><td>4</td><td>Nächste Aktion dokumentieren</td><td>Aktion ist im Kontext der Rolle nachvollziehbar.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Einheit finden und Auskunft geben</h3>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:42%">Aktion</th><th>Erwartetes Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Wohnungs-Matrix öffnen</td><td>Such- und Filterbereich ist sichtbar.</td></tr>
+      <tr><td>2</td><td>Block, Einheit oder Person suchen</td><td>Passende Einheiten erscheinen; leere Suche zeigt eine verständliche Meldung.</td></tr>
+      <tr><td>3</td><td>Status prüfen</td><td>Preis, Zahlung, Dokumente, Service und Zugang sind zusammen lesbar.</td></tr>
+      <tr><td>4</td><td>Änderung anfordern</td><td>Fehlende Daten lösen einen Änderungswunsch statt einer stillen Änderung aus.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Service-Ticket bearbeiten</h3>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:42%">Aktion</th><th>Erwartetes Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Service-Tickets öffnen</td><td>Ticketliste und Prioritäten sind sichtbar.</td></tr>
+      <tr><td>2</td><td>Ticket auswählen</td><td>Beschreibung, SLA, Verantwortlicher, Schuldregel und nächste Aktion sind verständlich.</td></tr>
+      <tr><td>3</td><td>Nachweis/Notiz ergänzen</td><td>Eine Notiz kann vorbereitet werden (Foto-/Video-Upload folgt im Ausbau).</td></tr>
+      <tr><td>4</td><td>Freigabe prüfen</td><td>Hohe Kosten, Zugang oder Schuldenblock erzeugen eine Manager- oder Buchhaltungsprüfung.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Registrierung aus dem öffentlichen Bereich bearbeiten</h3>
+  <table>
+    <thead><tr><th style="width:8%">#</th><th style="width:42%">Aktion</th><th>Erwartetes Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Interessent registriert sich öffentlich</td><td>Anfrage wird in die interne Warteschlange gestellt.</td></tr>
+      <tr><td>2</td><td>Team prüft Identität und Berechtigung</td><td>Anspruch und Rolle werden bestätigt.</td></tr>
+      <tr><td>3</td><td>Freigabe erteilen</td><td>Nach Freigabe wird der Zugang eingerichtet (Bearbeitungs-Übersicht folgt im Ausbau).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 08 HILFE -->
+<section class="chapter">
+  <span class="kicker">Kapitel 08</span>
+  <h2>Hilfe, Grenzen &amp; FAQ</h2>
+  <div class="rule"></div>
+
+  <h3>Was Sie bei einer Rückfrage angeben sollten</h3>
+  <ul>
+    <li>Welche Seite betroffen ist (z. B. Wohnungs-Matrix, Tickets, Finanzen).</li>
+    <li>Mit welcher Rolle und in welcher Sprache gearbeitet wurde.</li>
+    <li>Welche Einheit, welches Ticket, welche Reservierung oder welches Dokument betroffen war.</li>
+    <li>Was passieren sollte und was tatsächlich passiert ist — wenn möglich mit Screenshot ohne private Daten.</li>
+  </ul>
+
+  <h3>Wichtige Grenzen</h3>
+  <table>
+    <thead><tr><th style="width:24%">Bereich</th><th>Regel</th></tr></thead>
+    <tbody>
+      <tr><td>Finanzen</td><td>Zahlungen, Rückerstattungen und Kautionen brauchen fachliche Prüfung und Freigabe — und sind aktuell als Ansicht/Empfehlung umgesetzt, nicht als automatischer Vollzug.</td></tr>
+      <tr><td>Zugang</td><td>Zugangssperren und sicherheitsrelevante Änderungen erfolgen nie automatisch oder ohne Freigabe.</td></tr>
+      <tr><td>Dokumente</td><td>Produktive Dokumente erst nach Speicher-, Berechtigungs- und Datenschutzfreigabe verwenden.</td></tr>
+      <tr><td>Rollen</td><td>Rollen und Rechte dürfen nur berechtigte Administratoren ändern.</td></tr>
+      <tr><td>KI</td><td>Beide Assistenten unterstützen nur mit Vorschlägen; kritische Entscheidungen bleiben menschlich.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Kurz-FAQ</h3>
+  <table>
+    <thead><tr><th style="width:44%">Frage</th><th>Antwort</th></tr></thead>
+    <tbody>
+      <tr><td>Ist das System produktiv live?</td><td>Nein — es ist ein Demonstrations- und Einführungsstand. Der Livebetrieb braucht finale Daten, Anbieter, Sicherheitsprüfung und Abnahme.</td></tr>
+      <tr><td>Sind Zahlungen echt?</td><td>Nein — Finanzdaten und Zahlungen sind Beispieldaten, bis Live-Anbieter bestätigt sind.</td></tr>
+      <tr><td>Kann ich eine neue Reservierung anlegen?</td><td>Aktuell nicht — die Reservierungsseite zeigt Beispielbuchungen; das Anlegen folgt im Ausbau.</td></tr>
+      <tr><td>Kann ich eine neue Zahlung erfassen?</td><td>Aktuell nicht — der Finanzbereich ist ein Kontoauszug; die Erfassung folgt im Ausbau.</td></tr>
+      <tr><td>Kann ich ein Foto zu einem Ticket hochladen?</td><td>Aktuell nicht — der Foto-/Video-Upload folgt in der nächsten Ausbaustufe.</td></tr>
+      <tr><td>Wie unterscheiden sich die zwei KI-Assistenten?</td><td>Der interne Assistent kennt den Kontext Ihrer Rolle; der öffentliche kennt keine internen Daten und hilft bei allgemeinen Fragen und der Registrierung.</td></tr>
+      <tr><td>Kann sich jemand ohne Konto registrieren?</td><td>Ja — im öffentlichen Bereich als Eigentümer, Mieter oder Mitarbeiter.</td></tr>
+      <tr><td>Warum sehe ich eine Seite nicht?</td><td>Ihre Rolle hat vermutlich keine Berechtigung — das ist Teil des Sicherheitsmodells.</td></tr>
+      <tr><td>Darf die KI Entscheidungen treffen?</td><td>Nein — die KI unterstützt nur. Finanz-, Zugangs- und Rollenentscheidungen bleiben menschlich.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="footer-tag">
+    1Çatı — Benutzerhandbuch (Kundenversion) · Property-Management-Plattform für Ataberk Estate · Vertraulich · 07. Juli 2026
+  </div>
+</section>
+
+</body>
+</html>

@@ -331,7 +331,7 @@ function IsometricScene({
     <div
       aria-hidden="true"
       className={cn(
-        "relative overflow-hidden rounded-[2rem] border border-slate-200 bg-[#f8faf9] shadow-2xl shadow-slate-900/[0.08]",
+        "relative overflow-hidden rounded-[2rem] border border-slate-200 bg-[#f8faf9] shadow-2xl shadow-slate-900/[0.08] dark:border-white/10 dark:bg-[#0b1516]",
         compact ? "h-full min-h-[360px] xl:min-h-full" : "min-h-[420px] lg:min-h-[560px]"
       )}
     >
@@ -589,7 +589,7 @@ export function IsometricErpWorld({
       ref={rootRef}
       id={compact ? "role-map" : "isometric-flow"}
       className={cn(
-        "relative bg-[#f8faf9]",
+        "relative bg-[#f8faf9] dark:bg-transparent",
         compact ? "rounded-2xl" : "overflow-hidden pt-12 pb-6 md:pt-16 md:pb-8 lg:pt-20 lg:pb-8",
         className
       )}
@@ -604,7 +604,7 @@ export function IsometricErpWorld({
           )}
         >
           <div className={cn(compact ? "rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/[0.04]" : "")}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff6b57]/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#c94d3e] shadow-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff6b57]/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#c94d3e] shadow-sm dark:bg-white/[0.06] dark:text-[#ff9a86]">
               <Route className="h-3.5 w-3.5" />
               {compact ? localized.dashboardTitle : localized.eyebrow}
             </span>
@@ -631,7 +631,7 @@ export function IsometricErpWorld({
                 <div
                   key={`${value}-${label}`}
                   className={cn(
-                    "min-w-0 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm",
+                    "min-w-0 rounded-2xl border border-border bg-white px-4 py-3 shadow-sm dark:bg-white/[0.04]",
                     compact && index === displayedMetrics.length - 1 ? "sm:col-span-2" : ""
                   )}
                 >
@@ -654,15 +654,15 @@ export function IsometricErpWorld({
                       "group flex w-full items-start gap-3 rounded-2xl border text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b57]",
                       compact ? "p-2.5" : "p-3",
                       active
-                        ? "border-[#ff6b57]/35 bg-[#fff3f0] shadow-sm"
-                        : "border-border bg-white hover:border-[#ff6b57]/30 hover:bg-[#fff8f6]"
+                        ? "border-[#ff6b57]/35 bg-[#fff3f0] shadow-sm dark:border-[#ff6b57]/40 dark:bg-[#ff6b57]/10"
+                        : "border-border bg-white hover:border-[#ff6b57]/30 hover:bg-[#fff8f6] dark:bg-white/[0.03] dark:hover:bg-white/[0.07]"
                     )}
                   >
                     <span
                       className={cn(
                         "flex shrink-0 items-center justify-center rounded-xl",
                         compact ? "h-9 w-9" : "h-10 w-10",
-                        active ? "bg-[#ff6b57] text-white" : "bg-slate-100 text-slate-600"
+                        active ? "bg-[#ff6b57] text-white" : "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300"
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -696,7 +696,7 @@ export function IsometricErpWorld({
                 </Link>
                 <Link
                   href="/dashboard/listings"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-white px-6 text-sm font-bold text-foreground shadow-sm transition hover:border-[#ff6b57]/30 hover:bg-[#fff8f6]"
+                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-white px-6 text-sm font-bold text-foreground shadow-sm transition hover:border-[#ff6b57]/30 hover:bg-[#fff8f6] dark:bg-white/[0.04] dark:hover:bg-white/[0.08]"
                 >
                   <FileCheck2 className="h-4 w-4" />
                   {localized.secondary}

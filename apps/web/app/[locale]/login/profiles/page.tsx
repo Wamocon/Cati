@@ -1,8 +1,10 @@
 import { ShieldCheck } from "lucide-react"
+import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { StatusBadge } from "@/components/status-badge"
+import { isAccessProfileEnabled } from "@/lib/auth"
 import { roleDefinitions } from "@/lib/rbac"
 
 const copy = {
@@ -41,6 +43,8 @@ export default async function LoginProfilesPage({
 }: {
   params: Promise<{ locale: string }>
 }) {
+  if (!isAccessProfileEnabled()) notFound()
+
   const { locale } = await params
   const t = copy[(locale as keyof typeof copy) in copy ? (locale as keyof typeof copy) : "en"]
   const roleT = await getTranslations("roles")

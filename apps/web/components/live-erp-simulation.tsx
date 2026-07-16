@@ -14,6 +14,7 @@ import {
   LockKeyhole,
   Radio,
   TicketCheck,
+  type LucideIcon,
 } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { AnimatedCounter } from "@/components/animated-counter"
@@ -24,6 +25,7 @@ import {
   formatTryShort,
   type SiteSummary,
 } from "@/lib/site-management-data"
+import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import { cn } from "@/lib/utils"
 
 type SnapshotSource = "supabase" | "local-seed" | undefined
@@ -44,11 +46,19 @@ interface CriticalTicket {
   title: string
 }
 
+export interface SimulationQuickAction {
+  href: string
+  icon: LucideIcon
+  label: string
+}
+
 interface LiveErpSimulationProps {
   activityItems?: SimulationEvent[]
   blocks: BlockOverview[]
   criticalTickets?: CriticalTicket[]
   generatedAt?: string
+  permittedHrefs?: string[]
+  quickActions?: SimulationQuickAction[]
   realtimeState?: "checking" | "connected" | "disabled" | "error"
   requestState?: "idle" | "loading" | "success" | "error"
   roleLabel: string
@@ -340,6 +350,38 @@ function formatGeneratedAt(value: string | undefined, locale: SimulationLocale) 
   }).format(date)
 }
 
+function localizeStreamMessage(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  const localized = localizeDashboardTextPart(value, locale)
+  if (localized !== value) return localized
+  if (locale !== "tr") return value
+
+  return value
+    .replace(/^AI interest - what-is/i, "AI talep sinyali")
+    .replace(/^AI interest/i, "AI talep sinyali")
+    .replace(/\bwhats\b/i, "WhatsApp")
+    .replace(/\baccess update\b/i, "erişim güncelleme")
+    .replace(/\bCamera incident lookup request\b/i, "kamera olay inceleme talebi")
+    .replace(/\bDeposit hold\b/i, "depozito bekletme")
+    .replace(/\bcheckout\b/i, "çıkış")
+    .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
+    .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
+    .replace(/\bservice_ticket\b/gi, "servis talebi")
+    .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+}
+
+function localizeTicketActor(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
+  const localized = localizeDashboardTextPart(value, locale)
+  if (localized !== value) return localized
+
+  if (locale !== "tr") return value
+  return value
+    .replace(/\bwaiting_approval\b/gi, "Onay bekliyor")
+    .replace(/\btriage\b/gi, "Ön inceleme")
+    .replace(/\bassigned\b/gi, "Atandı")
+    .replace(/\bin_progress\b/gi, "İşlemde")
+    .replace(/\bopen\b/gi, "Açık")
+}
+
 function blockRisk(block: BlockOverview, totalDebtTry: number) {
   const debtScore = Math.round((block.debtTry / Math.max(totalDebtTry, 1)) * 100)
   return Math.min(100, debtScore + block.blocked * 5 + block.maintenance * 3)
@@ -350,14 +392,47 @@ export function LiveErpSimulation({
   blocks,
   criticalTickets = [],
   generatedAt,
+  permittedHrefs,
+  quickActions,
   realtimeState = "disabled",
   requestState = "idle",
   roleLabel,
   source,
   summary,
 }: LiveErpSimulationProps) {
-  const locale = resolveSimulationLocale(useLocale())
+  const rawLocale = useLocale()
+  const locale = resolveSimulationLocale(rawLocale)
+  const dashboardLocale = resolveDashboardLocale(rawLocale)
   const copy = simulationCopy[locale]
+  const actionItems = useMemo(
+    () =>
+      quickActions?.slice(0, 4) ?? [
+        { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
+        { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
+        { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
+        { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
+      ],
+    [
+      copy.actions.finance,
+      copy.actions.listings,
+      copy.actions.reports,
+      copy.actions.tickets,
+      quickActions,
+    ]
+  )
+  const allowedHrefSet = useMemo(
+    () => new Set(permittedHrefs?.length ? permittedHrefs : actionItems.map((item) => item.href)),
+    [actionItems, permittedHrefs]
+  )
+  const resolveMetricHref = (preferredHref: string, fallbackHrefs: string[]) => {
+    if (allowedHrefSet.has(preferredHref)) return preferredHref
+
+    return (
+      fallbackHrefs.find((href) => allowedHrefSet.has(href)) ??
+      actionItems.find((item) => allowedHrefSet.has(item.href))?.href ??
+      preferredHref
+    )
+  }
   const prefersReducedMotion = useReducedMotion()
   const visibleBlocks = useMemo(() => blocks.slice(0, 8), [blocks])
   const [activeBlock, setActiveBlock] = useState(visibleBlocks[0]?.block ?? "")
@@ -367,20 +442,29 @@ export function LiveErpSimulation({
   const streamEvents = useMemo(() => {
     const localizedActivityItems = activityItems.slice(0, 3).map((event) => ({
       ...event,
-      actor: copy.events[event.id as keyof typeof copy.events]?.actor ?? event.actor,
-      message: copy.events[event.id as keyof typeof copy.events]?.message ?? event.message,
-      type: copy.events[event.id as keyof typeof copy.events]?.type ?? event.type,
+      actor: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.actor ?? event.actor,
+        dashboardLocale
+      ),
+      message: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.message ?? event.message,
+        dashboardLocale
+      ),
+      type: localizeStreamMessage(
+        copy.events[event.id as keyof typeof copy.events]?.type ?? event.type,
+        dashboardLocale
+      ),
     }))
     const ticketEvents = criticalTickets.slice(0, 3).map((ticket) => ({
       href: "/dashboard/tickets",
       id: `ticket-${ticket.id}`,
-      message: `${ticket.label}: ${ticket.title}`,
+      message: `${ticket.label}: ${localizeStreamMessage(ticket.title, dashboardLocale)}`,
       type: `${ticket.slaHoursRemaining}h SLA`,
-      actor: ticket.assignee,
+      actor: localizeTicketActor(ticket.assignee, dashboardLocale),
     }))
 
     return [...localizedActivityItems, ...ticketEvents].slice(0, 5)
-  }, [activityItems, copy, criticalTickets])
+  }, [activityItems, copy, criticalTickets, dashboardLocale])
 
   useEffect(() => {
     if (visibleBlocks.length <= 1) return
@@ -464,28 +548,48 @@ export function LiveErpSimulation({
           <div className="mt-5 grid grid-cols-2 gap-2">
             {[
               {
-                href: "/dashboard/listings",
+                href: resolveMetricHref("/dashboard/listings", [
+                  "/dashboard/documents",
+                  "/dashboard/calendar",
+                  "/dashboard/tickets",
+                  "/dashboard/communications",
+                ]),
                 icon: Building2,
                 label: copy.units,
                 value: summary.totalFlats,
                 helper: copyText(copy.occupancy, { value: summary.occupancyRate }),
               },
               {
-                href: "/dashboard/tickets",
+                href: resolveMetricHref("/dashboard/tickets", [
+                  "/dashboard/calendar",
+                  "/dashboard/documents",
+                  "/dashboard/communications",
+                ]),
                 icon: TicketCheck,
                 label: copy.openService,
                 value: summary.openTickets,
                 helper: copyText(copy.sla, { value: summary.overdueTickets }),
               },
               {
-                href: "/dashboard/finance",
+                href: resolveMetricHref("/dashboard/finance", [
+                  "/dashboard/documents",
+                  "/dashboard/reports",
+                  "/dashboard/communications",
+                  "/dashboard/tickets",
+                ]),
                 icon: CreditCard,
                 label: copy.debt,
                 value: Math.round(summary.totalDebtTry / 1000),
                 helper: copy.debtUnit,
               },
               {
-                href: "/dashboard/compliance",
+                href: resolveMetricHref("/dashboard/compliance", [
+                  "/dashboard/calendar",
+                  "/dashboard/tickets",
+                  "/dashboard/finance",
+                  "/dashboard/documents",
+                  "/dashboard/communications",
+                ]),
                 icon: LockKeyhole,
                 label: copy.accessRisk,
                 value: summary.restrictedAccess,
@@ -549,7 +653,10 @@ export function LiveErpSimulation({
           </div>
         </div>
 
-        <div className="relative min-h-[460px] overflow-hidden rounded-2xl border border-border bg-[#f8faf9] shadow-inner">
+        <div
+          data-testid="erp-simulation-stage"
+          className="relative min-h-[460px] overflow-hidden rounded-2xl border border-border bg-[#f8faf9] shadow-inner"
+        >
           <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.045)_1px,transparent_1px)] bg-[size:42px_42px]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_20%,rgba(20,184,166,.15),transparent_28%),radial-gradient(circle_at_72%_70%,rgba(255,107,87,.13),transparent_30%)]" />
           {/* Ground line with a single subtle shimmer pass — suggests live data, not decoration. */}
@@ -581,6 +688,7 @@ export function LiveErpSimulation({
                   aria-label={`${copy.block} ${block.block}`}
                   className="absolute bottom-[46%] origin-bottom -translate-x-1/2 focus-visible:outline-none"
                   style={{ left: `${left}%` }}
+                  initial={false}
                   animate={{ y: active ? -10 : 0 }}
                   transition={{ type: "spring", stiffness: 210, damping: 24 }}
                 >
@@ -637,8 +745,11 @@ export function LiveErpSimulation({
           </div>
 
           {selectedBlock && (
-            <div className="absolute bottom-5 left-5 right-5 z-20 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)]">
-              <div className="rounded-2xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/[0.10] backdrop-blur">
+            <div className="absolute bottom-5 left-5 right-5 z-20 grid gap-3 lg:h-[18.5rem] lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.8fr)] lg:items-stretch">
+              <div
+                data-testid="erp-selected-block-card"
+                className="h-full min-h-0 overflow-hidden rounded-2xl border border-white/80 bg-white/90 p-4 shadow-2xl shadow-slate-900/[0.10] backdrop-blur"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
@@ -672,7 +783,10 @@ export function LiveErpSimulation({
                 </div>
               </div>
 
-              <div className="relative overflow-hidden rounded-2xl border border-white/80 bg-slate-950/88 p-4 text-white shadow-2xl shadow-slate-900/[0.16] backdrop-blur">
+              <div
+                data-testid="erp-event-rail"
+                className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/80 bg-slate-950/88 p-4 text-white shadow-2xl shadow-slate-900/[0.16] backdrop-blur"
+              >
                 {!prefersReducedMotion && (
                   <motion.div
                     aria-hidden="true"
@@ -681,7 +795,7 @@ export function LiveErpSimulation({
                     transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut" }}
                   />
                 )}
-                <div className="mb-3 flex items-center justify-between gap-2">
+                <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
                   <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-white/55">
                     {copy.eventRail}
                     <span className="inline-flex items-center gap-1 rounded-full bg-teal-400/15 px-1.5 py-0.5 text-[9px] font-black text-teal-300">
@@ -699,7 +813,7 @@ export function LiveErpSimulation({
                   </p>
                   <Activity className="h-4 w-4 text-teal-300" />
                 </div>
-                <div className="space-y-2">
+                <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
                   {streamEvents.length > 0 ? (
                     <AnimatePresence initial={false}>
                       {streamEvents.map((event, index) => {
@@ -707,7 +821,6 @@ export function LiveErpSimulation({
                         return (
                           <motion.div
                             key={event.id}
-                            layout
                             initial={{ opacity: 0, x: 16 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -16 }}
@@ -763,12 +876,7 @@ export function LiveErpSimulation({
       </div>
 
       <div className="relative z-10 mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          { href: "/dashboard/listings", icon: DatabaseZap, label: copy.actions.listings },
-          { href: "/dashboard/tickets", icon: TicketCheck, label: copy.actions.tickets },
-          { href: "/dashboard/finance", icon: CreditCard, label: copy.actions.finance },
-          { href: "/dashboard/reports", icon: Brain, label: copy.actions.reports },
-        ].map(({ href, icon: Icon, label }) => (
+        {actionItems.map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
             href={href}

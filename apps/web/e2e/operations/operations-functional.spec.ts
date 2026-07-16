@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test"
-import { openDashboardAs } from "../support/flows"
+import { openDashboardAs, resetQaState } from "../support/flows"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 test.describe("Functional tests - operational workflows", () => {
   test("unit matrix search returns visible operational results", async ({ page }) => {
@@ -18,7 +22,9 @@ test.describe("Functional tests - operational workflows", () => {
 
   test("offline sync queue is visible for staff role", async ({ page }) => {
     await openDashboardAs(page, "staff", "/tr/dashboard/offline")
-    await expect(page.locator("main")).toContainText(/Offline|Sync|Queue|Senkron/i)
+    await expect(page.locator("main")).toContainText(
+      /Çevrimdışı|Bekleyen işlem|Eşitle|Sahada güvenli|Offline|Sync|Queue|Senkron/i
+    )
   })
 
   test("document upload policy is visible on documents page", async ({ page }) => {

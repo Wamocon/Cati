@@ -82,7 +82,7 @@ async function waitForServer(baseUrl, timeoutMs = 60_000) {
 
   while (Date.now() - started < timeoutMs) {
     try {
-      const response = await fetch(apiUrl(baseUrl, "/api/site-management/phase-status"), {
+      const response = await fetch(apiUrl(baseUrl, "/tr"), {
         cache: "no-store",
       })
       if (response.ok) return
@@ -136,11 +136,11 @@ async function runApiChecks(baseUrl) {
     return result.payload
   }
 
-  await run("phase-status-1-9", "/api/site-management/phase-status", {}, (payload) => {
+  await run("phase-status-1-9", "/api/site-management/phase-status", { role: "admin" }, (payload) => {
     assert(Array.isArray(payload.phases) && payload.phases.length === 15, "phase-status must expose 15 phases")
     for (const phaseNo of [7, 8, 9]) {
       const phase = payload.phases.find((item) => item.phase === phaseNo)
-      assert(phase?.status === "ready_for_uat", `phase ${phaseNo} must be ready_for_uat`)
+      assert(phase?.status === "in_progress", `phase ${phaseNo} must expose remaining live/UAT gates`)
     }
   })
 

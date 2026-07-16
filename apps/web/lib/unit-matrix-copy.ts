@@ -741,6 +741,8 @@ export function interpolate(template: string, values: Record<string, string | nu
 
 const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
   en: {
+    "New Level Premium": "New Level Premium",
+    "New Level Premium price-list package": "New Level Premium price-list package",
     "Malik kaydı bekliyor": "Owner record pending",
     "Operasyon Kullanıcısı": "Operations User",
     "Sakin kaydı bekliyor": "Resident record pending",
@@ -748,6 +750,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Sales portfolio",
   },
   tr: {
+    "New Level Premium": "Yeni Seviye Premium",
+    "New Level Premium price-list package": "Yeni Seviye Premium fiyat listesi paketi",
     "Malik kaydı bekliyor": "Malik kaydı bekliyor",
     "Operasyon Kullanıcısı": "Operasyon Kullanıcısı",
     "Sakin kaydı bekliyor": "Sakin kaydı bekliyor",
@@ -755,6 +759,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Satış portföyü",
   },
   de: {
+    "New Level Premium": "Neues Niveau Premium",
+    "New Level Premium price-list package": "Neues Niveau Premium Preislisten-Paket",
     "Malik kaydı bekliyor": "Eigentümerdatensatz ausstehend",
     "Operasyon Kullanıcısı": "Operationsbenutzer",
     "Sakin kaydı bekliyor": "Bewohnerdatensatz ausstehend",
@@ -762,6 +768,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Verkaufsportfolio",
   },
   ru: {
+    "New Level Premium": "Новый уровень Премиум",
+    "New Level Premium price-list package": "Пакет прайс-листа «Новый уровень Премиум»",
     "Malik kaydı bekliyor": "Запись владельца ожидается",
     "Operasyon Kullanıcısı": "Операционный пользователь",
     "Sakin kaydı bekliyor": "Запись жильца ожидается",

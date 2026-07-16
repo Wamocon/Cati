@@ -1,6 +1,10 @@
 import { expect, test } from "@playwright/test"
-import { openDashboardAs } from "../support/flows"
+import { openDashboardAs, resetQaState } from "../support/flows"
 import { accessRoles, dashboardModules } from "../support/test-catalog"
+
+test.beforeEach(async ({ page }) => {
+  await resetQaState(page)
+})
 
 test.describe("Functional tests - role-based access", () => {
   for (const roleConfig of accessRoles) {
@@ -34,4 +38,31 @@ test.describe("Functional tests - role-based access", () => {
     await expect(page).toHaveURL(/\/tr\/dashboard\/finance/)
     await expect(page.locator("main")).toContainText(/Finans|Ledger|Aidat/i)
   })
+
+  test("accountant sees the finance-scoped ticket queue", async ({ page }) => {
+    await openDashboardAs(page, "accountant", "/tr/dashboard/tickets")
+    await expect(page).toHaveURL(/\/tr\/dashboard\/tickets/)
+    await expect(page.locator("main")).toContainText(/Ticket|Servis|Finans|Finance/i)
+  })
+
+  test("organization admin sees governance controls without platform scope", async ({ page }) => {
+    await openDashboardAs(page, "admin", "/tr/dashboard/users")
+    await expect(page.locator("main")).toContainText(/Organizasyon yönetişimi|Organization governance/i)
+    await expect(page.locator("main")).toContainText(/Kiracı erişim|Tenant access/i)
+    await expect(page.locator("main")).toContainText(/Organizasyonlar arası erişim kapalıdır|Cross-organization access is disabled/i)
+  })
+
+  test("manager receives site governance but no organization authority editor", async ({ page }) => {
+    await openDashboardAs(page, "manager", "/tr/dashboard/users")
+    await expect(page.locator("main")).toContainText(/Site operasyon yönetişimi|Site operations governance/i)
+    await expect(page.locator("main")).not.toContainText(/Organizasyon yetki yönetimi|Organization authority management/i)
+  })
+
+  for (const residentRole of ["owner", "tenant"] as const) {
+    test(`${residentRole} reaches tenant access from the resident dashboard`, async ({ page }) => {
+      await openDashboardAs(page, residentRole)
+      await expect(page.locator("main")).toContainText(/Kiracı erişim yönetimi|Tenant access management/i)
+      await expect(page.locator("main")).toContainText(/Yerel rol demosu|Local role demos/i)
+    })
+  }
 })

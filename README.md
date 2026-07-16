@@ -3,7 +3,7 @@
 Cati is a premium real-estate ERP and site-management platform for Ataberk Estate operations. It combines a public product experience, a protected CRM dashboard, operational workflows, local AI integration, Supabase data foundations, Jira/Xray project automation, and business documentation for stakeholder delivery.
 
 > [!IMPORTANT]
-> This repository must never contain real credentials. Keep `.env.local`, browser caches, QA screenshots, generated reports, and export archives local. Use GitHub repository secrets for CI/Jira automation.
+> This repository must never contain real credentials. Keep `.env.local`, `.env.tooling.local`, browser caches, QA screenshots, generated reports, and export archives local. Use GitHub repository secrets for CI/Jira automation.
 
 ## What Is Included
 
@@ -37,7 +37,7 @@ ERP phase status:
 - Phase 14: AI premium layer and advanced analytics
 - Phase 15: QA, security, performance, UAT, training and launch
 
-Current implementation status: phases 1-4 are connected as a local/Supabase-backed ERP foundation, phase 5 is ready for acceptance review, phases 6-7 are in active build, and phases 8-15 remain planned production work.
+Current implementation status: phases 1-14 are connected to the cloud Supabase project as the ERP foundation; phase 15 remains launch hardening, security review, final QA, UAT, training and go-live readiness.
 
 ## Tech Stack
 
@@ -69,13 +69,16 @@ pnpm install
 copy apps\web\.env.example apps\web\.env.local
 ```
 
-For root-level automation scripts such as Jira/Xray sync, use a root `.env.local` with the same rule: local only, never committed.
+For root-level automation scripts such as Jira/Xray sync, use a root `.env.tooling.local` with the same rule: local only, never committed. Keep Vercel app variables in `apps/web/.env.local`.
 
 Common variables:
 
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DOCUMENT_STORAGE_MODE=supabase
+SUPABASE_DOCUMENT_BUCKET=cati-documents
 TWENTY_API_URL=
 TWENTY_API_KEY=
 AI_API_URL=
@@ -147,39 +150,13 @@ set TMP=.tmp
 
 ## What Must Stay Out Of Git
 
-- `.env`, `.env.local`, `.env.*.local`
-- `.env.local.example` (use `.env.example` as the only committed template name)
+- `.env`, `.env.local`, `.env.tooling.local`, `.env.*.local`
 - `.tmp/`
 - generated QA output folders
 - `playwright-report/`
 - `test-results/`
-- `node_modules/`
 - generated `.zip` archives
 - local browser caches, logs and temporary Word files
-
-Use the committed templates for local setup:
-
-- root `.env.example` is for repository automation such as Jira/Xray, Supabase import and QA harnesses.
-- `apps/web/.env.example` is for the Next.js application runtime and Vercel.
-
-To clean local generated files without removing dependencies:
-
-```bash
-pnpm clean:workspace
-```
-
-To preview the cleanup first:
-
-```bash
-pnpm clean:workspace -- --dry-run
-```
-
-Dependency folders are intentionally kept by default. Remove them only when you
-want a fresh install:
-
-```bash
-pnpm clean:workspace -- --include-deps
-```
 
 ## Key Commands
 

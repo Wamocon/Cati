@@ -36,7 +36,7 @@ const copy = {
       "Sistem tek bir dogruluk kaynagi kurar; satis, site yonetimi, finans, servis, rezervasyon ve raporlama kendi akisinda calisir.",
     center: "Ortak ERP kaydi",
     centerKicker: "Proje merkezi",
-    centerProject: "New Level Premium",
+    centerProject: "Yeni Seviye Premium",
     centerStats: [
       ["769", "daire"],
       ["7", "blok"],
@@ -134,19 +134,56 @@ const copy = {
     ],
   },
   de: {
-    eyebrow: "Verbundene Ablaufe",
-    title: "Ein ERP-Datensatz, mehrere Betriebsablaufe",
+    eyebrow: "Verbundene Abläufe",
+    title: "Ein ERP-Datensatz, mehrere Betriebsabläufe",
     subtitle:
-      "Die Plattform schafft eine Wahrheit, waehrend Vertrieb, Standortbetrieb, Finanzen, Service, Buchung und Reporting eigene Ablaufe behalten.",
+      "Die Plattform schafft eine gemeinsame Wahrheit, während Vertrieb, Standortbetrieb, Finanzen, Service, Buchung und Reporting ihre eigenen Abläufe behalten.",
     center: "Gemeinsamer ERP-Datensatz",
     centerKicker: "Projektkern",
-    centerProject: "New Level Premium",
+    centerProject: "Neues Niveau Premium",
     centerStats: [
       ["769", "Einheiten"],
-      ["7", "Bloecke"],
+      ["7", "Blöcke"],
       ["52k", "m2 Areal"],
     ],
-    flows: [],
+    flows: [
+      {
+        title: "Standort- und Einheitenmodell",
+        text: "Blöcke, Etagen, Einheiten, Status, Preise, Dokumente und Gemeinschaftsflächen hängen an einem Inventar.",
+        icon: Building2,
+        accent: "bg-teal-500",
+      },
+      {
+        title: "Personen- und Rollenbezug",
+        text: "Eigentümer, Mieter, Personal, Buchhaltung und Management sehen nur den Arbeitsbereich, den sie brauchen.",
+        icon: Users,
+        accent: "bg-sky-500",
+      },
+      {
+        title: "Finanz-Entscheidungstor",
+        text: "Hausgeld, Kautionen, Schulden, Abgleich und Zugangsentscheidungen laufen auf derselben Kontrollebene.",
+        icon: CircleDollarSign,
+        accent: "bg-amber-500",
+      },
+      {
+        title: "Service und Außendienst",
+        text: "Anfrage, Schuldenprüfung, Zuweisung, Fotobeweis und Abschlussbericht bewegen sich gemeinsam.",
+        icon: TicketCheck,
+        accent: "bg-rose-500",
+      },
+      {
+        title: "Buchung und Übergabe",
+        text: "Verfügbarkeit, Kaution, Reinigung, Prüfung, Einzug und Check-out teilen eine gemeinsame Zeitachse.",
+        icon: CalendarCheck,
+        accent: "bg-violet-500",
+      },
+      {
+        title: "Dokumente, Nachrichten und Berichte",
+        text: "TAPU, DASK, Verträge, Nachrichten und KI-Zusammenfassungen bleiben mit dem Quelldatensatz verbunden.",
+        icon: FileText,
+        accent: "bg-emerald-500",
+      },
+    ],
   },
   ru: {
     eyebrow: "Connected workflows",
@@ -155,7 +192,7 @@ const copy = {
       "Sales, site management, finance, service, booking and reporting remain connected without becoming one forced linear process.",
     center: "Shared ERP record",
     centerKicker: "Project core",
-    centerProject: "New Level Premium",
+    centerProject: "Новый уровень Премиум",
     centerStats: [
       ["769", "units"],
       ["7", "blocks"],

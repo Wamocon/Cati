@@ -1,26 +1,24 @@
 import { cookies } from "next/headers"
 import { createClient } from "./supabase/server"
-import { getServerSupabaseConfig } from "./supabase/server-env"
 import { Role, roles, isValidRole } from "./rbac"
+import { accessProfilesEnabledForEnvironment } from "./access-profile-policy"
 
 export interface UserProfile {
   id: string
   email?: string
   full_name?: string | null
   role: Role
+  company_id?: string | null
   phone?: string | null
   language?: string | null
   office_id?: string | null
   avatar_url?: string | null
 }
 
-// Access-profile fallback is only for controlled local/QA review. It must never
+// Access-profile fallback is only for controlled QA review. It must never
 // become a production fallback when Supabase is missing or misconfigured.
 async function getAccessProfile(): Promise<UserProfile> {
-  let accessRole =
-    process.env.ACCESS_PROFILE_ROLE ??
-    process.env.NEXT_PUBLIC_ACCESS_PROFILE_ROLE ??
-    "manager"
+  let accessRole = process.env.ACCESS_PROFILE_ROLE ?? "manager"
 
   try {
     const cookieStore = await cookies()
@@ -33,12 +31,21 @@ async function getAccessProfile(): Promise<UserProfile> {
   }
 
   const role: Role = isValidRole(accessRole) ? accessRole : "manager"
+  const displayNames: Record<Role, string> = {
+    admin: "Organizasyon Yöneticisi",
+    manager: "Site Yöneticisi",
+    accountant: "Muhasebe Sorumlusu",
+    staff: "Teknik - Ahmet",
+    owner: "Demo Malik",
+    tenant: "Demo Kiracı",
+  }
 
   return {
     id: "00000000-0000-0000-0000-000000000000",
     email: "access@cati.local",
-    full_name: "Operasyon Kullanıcısı",
+    full_name: displayNames[role],
     role,
+    company_id: null,
     phone: null,
     language: "ru",
     office_id: null,
@@ -47,26 +54,19 @@ async function getAccessProfile(): Promise<UserProfile> {
 }
 
 export function isSupabaseConfigured(): boolean {
-  return getServerSupabaseConfig().isConfigured
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  )
 }
 
 export function isAccessProfileEnabled(): boolean {
-  const productionDeployment =
-    process.env.VERCEL_ENV === "production" ||
-    process.env.CATI_ENV === "production"
-  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const legacyDevFlag =
-    process.env.NODE_ENV !== "production" &&
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
-  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
-  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
-
-  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
+  return accessProfilesEnabledForEnvironment()
 }
 
 /**
  * Returns the current authenticated user profile with a normalized role.
- * Falls back to a local access profile only when external auth is not configured,
+ * Falls back to a QA access profile only when external auth is not configured,
  * unless access profiles are explicitly enabled for a controlled environment.
  */
 export async function getUserProfile(): Promise<UserProfile | null> {
@@ -99,6 +99,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
         id: user.id,
         email: user.email,
         role: "tenant",
+        company_id: null,
       }
     }
 
@@ -109,6 +110,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       email: user.email,
       full_name: profile?.full_name,
       role,
+      company_id: profile?.company_id,
       phone: profile?.phone,
       language: profile?.language,
       office_id: profile?.office_id,

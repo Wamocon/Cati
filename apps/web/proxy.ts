@@ -2,7 +2,7 @@ import createIntlMiddleware from "next-intl/middleware"
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { locales, defaultLocale } from "./i18n"
-import { getServerSupabaseConfig } from "./lib/supabase/server-env"
+import { accessProfilesEnabledForEnvironment } from "./lib/access-profile-policy"
 
 const intlMiddleware = createIntlMiddleware({
   locales,
@@ -34,20 +34,6 @@ function signInUrl(locale: string, request: NextRequest): URL {
   return url
 }
 
-function accessProfilesEnabledForRequest() {
-  const productionDeployment =
-    process.env.VERCEL_ENV === "production" ||
-    process.env.CATI_ENV === "production"
-  const serverQaFlag = process.env.ENABLE_ACCESS_PROFILES === "true"
-  const legacyDevFlag =
-    process.env.NODE_ENV !== "production" &&
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"
-  const remoteDeployment = Boolean(process.env.VERCEL_ENV || process.env.VERCEL_URL)
-  const remoteQaAllowed = process.env.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true"
-
-  return !productionDeployment && (!remoteDeployment || remoteQaAllowed) && (serverQaFlag || legacyDevFlag)
-}
-
 export default async function proxy(request: NextRequest) {
   // 1. Apply next-intl routing (locale prefix, redirects, rewrites).
   const intlResponse = intlMiddleware(request)
@@ -57,8 +43,9 @@ export default async function proxy(request: NextRequest) {
     request: { headers: request.headers },
   })
 
-  const { supabaseUrl, publishableKey } = getServerSupabaseConfig()
-  const accessProfilesEnabled = accessProfilesEnabledForRequest()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const accessProfilesEnabled = accessProfilesEnabledForEnvironment()
   const { locale, pathWithoutLocale } = getLocaleAndPath(
     request.nextUrl.pathname
   )
@@ -67,14 +54,14 @@ export default async function proxy(request: NextRequest) {
     pathWithoutLocale.startsWith(prefix)
   )
 
-  if (!supabaseUrl || !publishableKey) {
+  if (!supabaseUrl || !supabaseKey) {
     if (isProtected && !accessProfilesEnabled) {
       return NextResponse.redirect(signInUrl(locale, request))
     }
     return intlResponse
   }
 
-  const supabase = createServerClient(supabaseUrl, publishableKey, {
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll()

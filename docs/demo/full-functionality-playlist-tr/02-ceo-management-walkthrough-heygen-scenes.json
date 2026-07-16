@@ -1,0 +1,25 @@
+[
+  {
+    "scene": 1,
+    "type": "avatar_intro",
+    "visual": "Waleri HeyGen avatar",
+    "duration_target": "20-30s",
+    "narration": "1Çatı yönetim sunumuna hoş geldiniz. Bu videoda teknik detaylara girmeyeceğiz. Ana soru şu: modern bir yaşam alanı günlük operasyon içinde nasıl daha kontrollü, daha şeffaf ve daha profesyonel yönetilebilir?"
+  },
+  {
+    "scene": 2,
+    "type": "full_product_recording",
+    "visual": "qa_output/full-playlist-recordings/clips/02-ceo-management-walkthrough-de-1080p.webm",
+    "duration_target": "match source recording",
+    "layout": "full-screen product media, source audio muted, no avatar face",
+    "narration_source": "docs/demo/full-functionality-playlist-tr/02-ceo-management-walkthrough.md",
+    "narration_scope": "Main walkthrough explanation from the management problem through dashboard, unit matrix, finance, service, reports, AI limits and operating model. The voiceover must follow the order of the recorded product walkthrough."
+  },
+  {
+    "scene": 3,
+    "type": "avatar_or_clean_product_outro",
+    "visual": "Waleri HeyGen avatar or final clean frame from the product recording",
+    "duration_target": "15-30s",
+    "narration": "Yönetim için fayda nettir: 1Çatı operasyonu görünür hale getirir, kararları hızlandırır, sorumlulukları netleştirir ve iletişimi profesyonelleştirir. Bu sadece bir yazılım arayüzü değildir. Modern yaşam alanları için bir işletme modelidir."
+  }
+]

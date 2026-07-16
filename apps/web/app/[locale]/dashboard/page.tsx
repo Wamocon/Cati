@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { useLocale, useTranslations } from "next-intl"
@@ -24,11 +24,12 @@ import {
   Sparkles,
   TicketCheck,
   TrendingUp,
+  Users,
   type LucideIcon,
 } from "lucide-react"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource, type Role } from "@/lib/rbac"
-import { resourceForDashboardPath } from "@/lib/dashboard-routing"
+import { dashboardRoutes, resourceForDashboardPath } from "@/lib/dashboard-routing"
 import { Card3D } from "@/components/3d-card"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { StatusBadge } from "@/components/status-badge"
@@ -37,7 +38,9 @@ import { PieChart } from "@/components/charts/pie-chart"
 import { GlassCard } from "@/components/glass-card"
 import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
-import { LiveErpSimulation } from "@/components/live-erp-simulation"
+import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
+import { RoleFocusedLiveDashboard } from "@/components/role-focused-live-dashboard"
+import { LiveErpSimulation, type SimulationQuickAction } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
@@ -48,6 +51,7 @@ import {
   type DashboardHomeCopy,
   type WorkloadKind,
 } from "@/lib/dashboard-home-copy"
+import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import type {
   DashboardSnapshot,
   Phase4SiteData,
@@ -120,6 +124,7 @@ function CommandLink({
   role: Role
 }) {
   const copy = dashboardHomeCopy[resolveDashboardHomeLocale(useLocale())]
+  const [lockedNoticeVisible, setLockedNoticeVisible] = useState(false)
   const resource = resourceForDashboardPath(href)
   const allowed = hasPermission(role, resource, "view")
   const content = typeof children === "function" ? children({ allowed }) : children
@@ -136,10 +141,29 @@ function CommandLink({
         aria-label={`${ariaLabel} - ${copy.command.lockedAriaSuffix}`}
         className={baseClassName}
         data-access="locked"
-        role="group"
+        role="button"
+        tabIndex={0}
+        onClick={() => {
+          setLockedNoticeVisible(true)
+          window.setTimeout(() => setLockedNoticeVisible(false), 5200)
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return
+          event.preventDefault()
+          setLockedNoticeVisible(true)
+          window.setTimeout(() => setLockedNoticeVisible(false), 5200)
+        }}
         title={copy.command.lockedTitle}
       >
         {content}
+        {lockedNoticeVisible ? (
+          <span
+            role="status"
+            className="absolute right-3 top-3 z-10 rounded-full border border-amber-500/30 bg-amber-500/95 px-3 py-1 text-xs font-black text-white shadow-lg shadow-amber-500/20"
+          >
+            {copy.command.locked}
+          </span>
+        ) : null}
       </div>
     )
   }
@@ -241,6 +265,12 @@ const roleWorkspaceConfig: Partial<
   accountant: {
     cards: [
       {
+        href: "/dashboard/tickets",
+        resource: "tickets",
+        icon: TicketCheck,
+        copyKey: "tickets",
+      },
+      {
         href: "/dashboard/finance",
         resource: "finance",
         icon: CreditCard,
@@ -307,6 +337,12 @@ const roleWorkspaceConfig: Partial<
         resource: "calendar",
         icon: CalendarCheck,
         copyKey: "calendar",
+      },
+      {
+        href: "/dashboard/finance",
+        resource: "finance",
+        icon: CreditCard,
+        copyKey: "finance",
       },
       {
         href: "/dashboard/documents",
@@ -376,10 +412,10 @@ const roleSceneConfig: Partial<
     bars: [72, 84, 58],
   },
   owner: {
-    metric: "4",
+    metric: "5",
     accent: "from-cyan-500 via-emerald-500 to-orange-300",
     icon: Building2,
-    bars: [68, 54, 81],
+    bars: [68, 72, 81],
   },
   tenant: {
     metric: "4",
@@ -387,6 +423,58 @@ const roleSceneConfig: Partial<
     icon: CalendarCheck,
     bars: [64, 71, 57],
   },
+}
+
+const simulationActionIcons = {
+  dashboard: BarChart3,
+  listings: Building2,
+  leads: Users,
+  deals: Users,
+  tickets: TicketCheck,
+  calendar: CalendarCheck,
+  documents: FileText,
+  eids_compliance: ShieldCheck,
+  finance: CreditCard,
+  reports: Brain,
+  users: Users,
+  settings: Network,
+  communications: MessageSquareText,
+  offline_sync: Network,
+} satisfies Record<Resource, LucideIcon>
+
+const simulationActionResourceOrder: Resource[] = [
+  "listings",
+  "tickets",
+  "calendar",
+  "finance",
+  "documents",
+  "reports",
+  "communications",
+  "offline_sync",
+  "users",
+  "settings",
+  "leads",
+  "eids_compliance",
+]
+
+function buildSimulationQuickActions(
+  role: Role,
+  labelForResource: (resource: Resource) => string
+): SimulationQuickAction[] {
+  const routesByResource = new Map(
+    dashboardRoutes.map((route) => [route.resource, route])
+  )
+
+  return simulationActionResourceOrder
+    .map((resource) => routesByResource.get(resource))
+    .filter((route): route is (typeof dashboardRoutes)[number] => Boolean(route))
+    .filter((route) => hasPermission(role, route.resource, "view"))
+    .slice(0, 4)
+    .map((route) => ({
+      href: route.href,
+      icon: simulationActionIcons[route.resource],
+      label: labelForResource(route.resource),
+    }))
 }
 
 function isFocusedRole(role: Role): role is FocusedRole {
@@ -757,8 +845,6 @@ function RoleFocusedDashboard({
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
-  const summary = getSummary()
-  const blocks = getBlockOverview()
 
   return (
     <div className="space-y-6">
@@ -772,20 +858,7 @@ function RoleFocusedDashboard({
         </p>
       </div>
 
-      <LiveErpSimulation
-        blocks={blocks}
-        criticalTickets={[]}
-        realtimeState="disabled"
-        requestState="success"
-        roleLabel={roleLabel}
-        source="local-seed"
-        summary={{
-          ...summary,
-          openTickets: role === "staff" ? summary.openTickets : cards.length,
-        }}
-      />
-
-      <RoleWorkspaceScene copy={copy} role={role} />
+      <RoleFocusedLiveDashboard role={role} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
@@ -822,6 +895,8 @@ function RoleFocusedDashboard({
         })}
       </div>
 
+      {role === "owner" || role === "tenant" ? <TenantAccessLivePanel /> : null}
+
       <Card3D glow={false}>
         <div className="flex items-start gap-3">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
@@ -852,11 +927,20 @@ function RoleFocusedDashboard({
 }
 
 function routeForActivity(type: string) {
-  if (type.includes("Tahsilat")) return "/dashboard/finance"
-  if (type.includes("Rezervasyon")) return "/dashboard/calendar"
-  if (type.includes("Eri")) return "/dashboard/compliance"
-  if (type.includes("Servis")) return "/dashboard/tickets"
-  if (type.includes("AI")) return "/dashboard/reports"
+  const normalized = type.toLocaleLowerCase("tr-TR")
+  if (/(tahsilat|finans|payment|finance|buchhaltung|inkasso)/i.test(normalized)) {
+    return "/dashboard/finance"
+  }
+  if (/(rezervasyon|booking|reservation|calendar|takvim|check-?in|check-?out)/i.test(normalized)) {
+    return "/dashboard/calendar"
+  }
+  if (/(erişim|erisim|access|compliance|security|zugang|güvenlik|guvenlik)/i.test(normalized)) {
+    return "/dashboard/compliance"
+  }
+  if (/(servis|service|ticket|order|task|auftrag|görev|gorev)/i.test(normalized)) {
+    return "/dashboard/tickets"
+  }
+  if (/(ai|ki|report|bericht|rapor)/i.test(normalized)) return "/dashboard/reports"
   return "/dashboard"
 }
 
@@ -1026,7 +1110,7 @@ function mapLiveCriticalTickets(snapshot: DashboardSnapshot | null) {
     return {
       id: ticketNo,
       assignee: asString(record.assignee, asString(record.status, "CRM")),
-      label: unitLabel || serviceTicketUnitByTicketNo.get(ticketNo) || ticketNo || "Ticket",
+      label: unitLabel || serviceTicketUnitByTicketNo.get(ticketNo) || "Servis kaydı",
       slaHoursRemaining: hoursRemaining,
       title: asString(record.title, "Operational ticket"),
     }
@@ -1037,7 +1121,13 @@ function routeForEntityTable(entityTable: string) {
   if (entityTable.includes("unit") || entityTable.includes("import")) {
     return "/dashboard/listings"
   }
-  if (entityTable.includes("service_ticket")) return "/dashboard/tickets"
+  if (
+    entityTable.includes("service_ticket") ||
+    entityTable.includes("service_order") ||
+    entityTable.includes("workforce_task")
+  ) {
+    return "/dashboard/tickets"
+  }
   if (entityTable.includes("reservation") || entityTable.includes("booking")) {
     return "/dashboard/calendar"
   }
@@ -1076,28 +1166,88 @@ function mapLiveActivities(snapshot: DashboardSnapshot | null) {
 
 export default function DashboardHomePage() {
   const user = useUser()
-  const locale = resolveDashboardHomeLocale(useLocale())
+  const rawLocale = useLocale()
+  const locale = resolveDashboardHomeLocale(rawLocale)
   const copy = dashboardHomeCopy[locale]
+  const dashboardT = useTranslations("dashboard")
   const roleT = useTranslations("roles")
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabel = roleDef ? roleT(roleDef.labelKey.replace("roles.", "")) : user.role
+  const quickActions = buildSimulationQuickActions(user.role, (resource) =>
+    dashboardT(`menu.${resource}`)
+  )
+  const permittedDashboardHrefs = useMemo(
+    () =>
+      dashboardRoutes
+        .filter((route) => hasPermission(user.role, route.resource, "view"))
+        .map((route) => route.href),
+    [user.role]
+  )
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
-    return <RoleFocusedDashboard copy={copy} role={user.role} roleLabel={roleLabel} />
+    return (
+      <RoleFocusedDashboard
+        copy={copy}
+        role={user.role}
+        roleLabel={roleLabel}
+      />
+    )
   }
 
-  return <OperationsDashboard copy={copy} user={user} roleLabel={roleLabel} />
+  return (
+    <OperationsDashboard
+      copy={copy}
+      permittedDashboardHrefs={permittedDashboardHrefs}
+      quickActions={quickActions}
+      user={user}
+      roleLabel={roleLabel}
+    />
+  )
 }
 
 function OperationsDashboard({
   copy,
+  permittedDashboardHrefs,
+  quickActions,
   user,
   roleLabel,
 }: {
   copy: DashboardHomeCopy
+  permittedDashboardHrefs: string[]
+  quickActions: SimulationQuickAction[]
   user: ReturnType<typeof useUser>
   roleLabel: string
 }) {
+  const dashboardLocale = resolveDashboardLocale(useLocale())
+  const tRecord = useCallback(
+    (value: string) => localizeDashboardTextPart(value, dashboardLocale),
+    [dashboardLocale]
+  )
+  const tActivityMessage = useCallback((value: string) => {
+    const localized = tRecord(value)
+    if (localized !== value) return localized
+    if (dashboardLocale !== "tr") return value
+
+    return value
+      .replace(/^AI interest - what-is/i, "AI talep sinyali")
+      .replace(/^AI interest/i, "AI talep sinyali")
+      .replace(/\bwhats\b/i, "WhatsApp")
+      .replace(/\baccess update\b/i, "erişim güncelleme")
+      .replace(/\bCamera incident lookup request\b/i, "kamera olay arama talebi")
+      .replace(/\bDeposit hold\b/i, "depozito bekletme")
+      .replace(/\bcheckout\b/i, "çıkış")
+      .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
+      .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
+      .replace(/\bservice_ticket\b/gi, "servis talebi")
+      .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+  }, [dashboardLocale, tRecord])
+  const tActivityType = useCallback(
+    (value: string) =>
+      tActivityMessage(value.replaceAll("_", " ")).toLocaleLowerCase(
+        dashboardLocale === "tr" ? "tr-TR" : dashboardLocale
+      ),
+    [dashboardLocale, tActivityMessage]
+  )
   const {
     snapshot,
     phase4,
@@ -1146,9 +1296,11 @@ function OperationsDashboard({
   const occupancyTrend = useMemo(() => {
     const trend = getOccupancyTrend()
     return trend.map((point, index) =>
-      index === trend.length - 1 ? { ...point, value: summary.occupancyRate } : point
+      index === trend.length - 1
+        ? { ...point, label: tRecord(point.label), value: summary.occupancyRate }
+        : { ...point, label: tRecord(point.label) }
     )
-  }, [summary.occupancyRate])
+  }, [summary.occupancyRate, tRecord])
   const kpis: Kpi[] = [
     {
       icon: Building2,
@@ -1250,6 +1402,8 @@ function OperationsDashboard({
         blocks={blocks}
         criticalTickets={criticalTickets}
         generatedAt={snapshot?.generatedAt}
+        permittedHrefs={permittedDashboardHrefs}
+        quickActions={quickActions}
         realtimeState={realtimeState}
         requestState={requestState}
         roleLabel={roleLabel}
@@ -1301,8 +1455,9 @@ function OperationsDashboard({
             </p>
           </div>
           <span className="flex shrink-0 items-center gap-2">
-          <StatusBadge variant="success">
+          <StatusBadge variant={phaseSummary.blocked > 0 ? "warning" : "success"}>
             {copyText(copy.modules.badge, {
+              blocked: phaseSummary.blocked,
               complete: phaseSummary.complete,
               progress: phaseSummary.inProgress,
               ready: phaseSummary.readyForUat,
@@ -1322,7 +1477,10 @@ function OperationsDashboard({
                 href={phaseRoutes[phase.phase] ?? "/dashboard"}
                 ariaLabel={copyText(copy.modules.openAria, {
                   phase: phase.phase,
-                  title: phase.title,
+                  title:
+                    dashboardLocale === "tr"
+                      ? phase.title
+                      : `${copy.modules.module} ${phase.phase}`,
                 })}
                 role={user.role}
               >
@@ -1332,24 +1490,37 @@ function OperationsDashboard({
                     <p className="text-xs font-semibold uppercase text-muted-foreground">
                       {copy.modules.module} {phase.phase}
                     </p>
-                    <h3 className="mt-1 text-sm font-black text-foreground">{phase.title}</h3>
+                    <h3 className="mt-1 text-sm font-black text-foreground">
+                      {dashboardLocale === "tr"
+                        ? phase.title
+                        : `${copy.modules.module} ${phase.phase}`}
+                    </h3>
                   </div>
                   <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-black", status.className)}>
                     <StatusIcon className="h-3 w-3" />
                     {copy.phaseStatus[phase.status]}
                   </span>
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">{phase.businessOutcome}</p>
-                <p className="mt-3 text-xs font-semibold text-foreground">
-                  {copy.modules.howTo}: {phase.userGuide}
-                </p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {phase.evidence.slice(0, 2).map((item) => (
-                    <span key={item} className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
-                      {item}
-                    </span>
-                  ))}
-                </div>
+                {dashboardLocale === "tr" ? (
+                  <div data-testid={`phase-delivery-detail-${phase.phase}`}>
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      {phase.businessOutcome}
+                    </p>
+                    <p className="mt-3 text-xs font-semibold text-foreground">
+                      {copy.modules.howTo}: {phase.userGuide}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {phase.evidence.slice(0, 2).map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
               </CommandLink>
             )
@@ -1503,7 +1674,7 @@ function OperationsDashboard({
             <CommandLink
               key={insight.title}
               href={routeForInsight(insight.title)}
-              ariaLabel={insight.title}
+              ariaLabel={tRecord(insight.title)}
               role={user.role}
             >
               {({ allowed }) => (
@@ -1511,8 +1682,8 @@ function OperationsDashboard({
                   <div className="flex items-start gap-3">
                     <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-card-foreground">{insight.title}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{insight.detail}</p>
+                      <h3 className="text-sm font-bold text-card-foreground">{tRecord(insight.title)}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{tRecord(insight.detail)}</p>
                     </div>
                     <DrilldownCue allowed={allowed} />
                   </div>
@@ -1538,7 +1709,7 @@ function OperationsDashboard({
               >
                 <CommandLink
                   href={activity.href}
-                  ariaLabel={activity.message}
+                  ariaLabel={tActivityMessage(activity.message)}
                   role={user.role}
                 >
                   {({ allowed }) => (
@@ -1550,9 +1721,9 @@ function OperationsDashboard({
                     >
                       <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-foreground">{activity.message}</p>
+                        <p className="text-sm text-foreground">{tActivityMessage(activity.message)}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {activity.actor} - {activity.type}
+                          {tActivityMessage(activity.actor)} - {tActivityType(activity.type)}
                         </p>
                       </div>
                       <DrilldownCue allowed={allowed} />
@@ -1569,7 +1740,7 @@ function OperationsDashboard({
           <div className="space-y-3">
             {criticalTickets.map((ticket) => (
               <CommandLink
-                key={`ticket-${ticket.label}`}
+                key={`ticket-${ticket.id}`}
                 href="/dashboard/tickets"
                 ariaLabel={ticket.label}
                 role={user.role}
@@ -1579,8 +1750,8 @@ function OperationsDashboard({
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
                   <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
                 </div>
-                <p className="mt-2 text-sm text-foreground">{ticket.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{ticket.assignee}</p>
+                <p className="mt-2 text-sm text-foreground">{tRecord(ticket.title)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{tRecord(ticket.assignee)}</p>
               </div>
               </CommandLink>
             ))}

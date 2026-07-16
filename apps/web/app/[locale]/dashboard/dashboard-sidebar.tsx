@@ -1,12 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 import {
   Building2,
   Users,
   TicketCheck,
   CalendarDays,
-  LogOut,
   FileCheck,
   CircleDollarSign,
   FileText,
@@ -20,16 +25,17 @@ import {
   MessageSquareText,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
-import { Link, usePathname, useRouter } from "@/app/navigation"
+import { Link, usePathname } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
 import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
-import { createClient } from "@/lib/supabase/client"
-import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
-import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
+import {
+  localizeOperationalValue,
+  resolveDashboardLocale,
+} from "@/lib/unit-matrix-copy"
 
 interface MenuItem {
   resource: Resource
@@ -59,139 +65,229 @@ const menu: MenuItem[] = dashboardRoutes.map((item) => ({
   icon: iconsByResource[item.resource],
 }))
 
+const dialogFocusableSelector =
+  'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled])'
+
+function keepFocusInsideDialog(event: KeyboardEvent<HTMLDialogElement>) {
+  if (event.key !== "Tab") return
+
+  const controls = Array.from(
+    event.currentTarget.querySelectorAll<HTMLElement>(dialogFocusableSelector)
+  ).filter(
+    (control) =>
+      control.getAttribute("aria-hidden") !== "true" &&
+      control.getClientRects().length > 0
+  )
+  const first = controls[0]
+  const last = controls.at(-1)
+  if (!first || !last) return
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
 export function DashboardSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const mobileDialogRef = useRef<HTMLDialogElement>(null)
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null)
+  const mobileCloseButtonRef = useRef<HTMLButtonElement>(null)
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
   const t = useTranslations("dashboard")
   const roleT = useTranslations("roles")
-  const router = useRouter()
   const pathname = usePathname()
 
   const roleDef = roleDefinitions.find((r) => r.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
-  const userDisplayName = localizeOperationalValue(user.full_name ?? user.email, locale)
+  const portfolioDisplayName = localizeOperationalValue(
+    clientProfile.activePortfolio,
+    locale
+  )
+  const userDisplayName = localizeOperationalValue(
+    user.full_name ?? user.email,
+    locale
+  )
 
-  async function logout() {
-    try {
-      if (isPublicSupabaseConfigured()) {
-        await createClient().auth.signOut()
-      }
-      await fetch("/api/access-profile", { method: "DELETE" })
-    } catch {
-      // ignore
-    }
-    router.replace("/login")
-  }
-
-  const filteredMenu = menu.filter((item) => hasPermission(user.role, item.resource, "view"))
+  const filteredMenu = menu.filter((item) =>
+    hasPermission(user.role, item.resource, "view")
+  )
   const mobileMenuId = "dashboard-mobile-sidebar"
+  const mobileMenuTitleId = "dashboard-mobile-sidebar-title"
+  const closeMobileMenu = useCallback(() => setMobileOpen(false), [])
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 767px)")
+    const syncViewport = () => {
+      setIsMobileViewport(mobileQuery.matches)
+      if (!mobileQuery.matches) closeMobileMenu()
+    }
+
+    syncViewport()
+    mobileQuery.addEventListener("change", syncViewport)
+    return () => mobileQuery.removeEventListener("change", syncViewport)
+  }, [closeMobileMenu])
+
+  useEffect(() => {
+    const dialog = mobileDialogRef.current
+    if (!isMobileViewport || !dialog) return
+
+    if (mobileOpen) {
+      if (!dialog.open) dialog.showModal()
+      mobileCloseButtonRef.current?.focus()
+      return
+    }
+
+    if (dialog.open) dialog.close()
+  }, [isMobileViewport, mobileOpen])
+
+  const renderSidebarPanel = (mobile: boolean) => (
+    <div className="flex h-full min-h-0 flex-col p-4">
+      <div className="flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <CatiLogoMark className="shadow-lg shadow-primary/20" />
+          <span className="min-w-0">
+            <span
+              id={mobile ? mobileMenuTitleId : undefined}
+              className="block text-lg leading-tight font-black text-sidebar-foreground"
+            >
+              1Çatı
+            </span>
+            <span className="block truncate text-[11px] font-semibold text-muted-foreground">
+              {clientProfile.clientName}
+            </span>
+          </span>
+        </Link>
+        {mobile ? (
+          <button
+            ref={mobileCloseButtonRef}
+            type="button"
+            className="rounded-lg p-2 text-muted-foreground transition hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
+            onClick={closeMobileMenu}
+            aria-label={t("closeMenu")}
+          >
+            <X className="h-5 w-5" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
+        <div className="mb-3">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            {t("activePortfolio")}
+          </p>
+          <p className="mt-1 truncate text-sm font-black text-card-foreground">
+            {portfolioDisplayName}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {clientProfile.activeLocation}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <ShieldCheck className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-card-foreground">
+              {userDisplayName}
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              {roleLabel}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <nav
+        aria-label={t("openMenu")}
+        className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1"
+      >
+        {filteredMenu.map((item) => {
+          const Icon = item.icon
+          const active =
+            item.href === "/dashboard"
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`)
+          return (
+            <Link
+              key={item.resource}
+              href={item.href}
+              onClick={mobile ? closeMobileMenu : undefined}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
+                active
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {t(`menu.${item.resource}`)}
+            </Link>
+          )
+        })}
+      </nav>
+    </div>
+  )
 
   return (
     <>
-      {mobileOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 md:hidden" onClick={() => setMobileOpen(false)} />
-      )}
-
       <button
+        ref={mobileTriggerRef}
         type="button"
         data-testid="dashboard-menu-toggle"
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
+        className="fixed top-4 left-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm md:hidden"
         aria-label={t("openMenu")}
         aria-expanded={mobileOpen}
         aria-controls={mobileMenuId}
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <aside
-        id={mobileMenuId}
-        className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 transform overflow-hidden border-r border-sidebar-border bg-sidebar/[0.92] shadow-2xl shadow-black/5 backdrop-blur-xl transition-[transform,visibility] duration-200 max-md:pointer-events-none max-md:invisible md:sticky md:top-0 md:h-svh md:self-start md:visible md:pointer-events-auto md:translate-x-0 md:shadow-none",
-          mobileOpen ? "translate-x-0 max-md:pointer-events-auto max-md:visible" : "-translate-x-full"
-        )}
-      >
-        <div className="flex h-full min-h-0 flex-col p-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <CatiLogoMark className="shadow-lg shadow-primary/20" />
-              <span className="min-w-0">
-                <span className="block text-lg font-black leading-tight text-sidebar-foreground">1Çatı</span>
-                <span className="block truncate text-[11px] font-semibold text-muted-foreground">
-                  {clientProfile.clientName}
-                </span>
-              </span>
-            </Link>
-            <button
-              type="button"
-              className="text-muted-foreground md:hidden"
-              onClick={() => setMobileOpen(false)}
-              aria-label={t("closeMenu")}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="mt-5 rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-3">
-            <div className="mb-3">
-              <p className="text-[10px] font-semibold uppercase text-muted-foreground">{t("activePortfolio")}</p>
-              <p className="mt-1 truncate text-sm font-black text-card-foreground">
-                {clientProfile.activePortfolio}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">{clientProfile.activeLocation}</p>
-            </div>
-            <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-card-foreground">
-                {userDisplayName}
-              </p>
-              <p className="truncate text-xs text-muted-foreground">{roleLabel}</p>
-            </div>
-            </div>
-          </div>
-
-          <nav className="mt-5 min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain pr-1">
-            {filteredMenu.map((item) => {
-              const Icon = item.icon
-              const active =
-                item.href === "/dashboard"
-                  ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`)
-              return (
-                <Link
-                  key={item.resource}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
-                    active
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]"
-                      : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {t(`menu.${item.resource}`)}
-                </Link>
-              )
-            })}
-          </nav>
-
-          <div className="mt-4 shrink-0 space-y-2 border-t border-sidebar-border pt-3">
-            <button
-              onClick={logout}
-              className="inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              {t("logout")}
-            </button>
-          </div>
-        </div>
-      </aside>
+      {isMobileViewport ? (
+        <dialog
+          ref={mobileDialogRef}
+          id={mobileMenuId}
+          aria-labelledby={mobileMenuTitleId}
+          onKeyDown={keepFocusInsideDialog}
+          onCancel={(event) => {
+            event.preventDefault()
+            closeMobileMenu()
+          }}
+          onClose={() => {
+            setMobileOpen(false)
+            mobileTriggerRef.current?.focus()
+          }}
+          onPointerDown={(event) => {
+            if (event.target !== event.currentTarget) return
+            const bounds = event.currentTarget.getBoundingClientRect()
+            const inside =
+              event.clientX >= bounds.left &&
+              event.clientX <= bounds.right &&
+              event.clientY >= bounds.top &&
+              event.clientY <= bounds.bottom
+            if (!inside) closeMobileMenu()
+          }}
+          className="fixed inset-y-0 left-0 z-[200] m-0 h-dvh max-h-none w-72 max-w-[calc(100vw-2rem)] overflow-hidden border-0 border-r border-sidebar-border bg-sidebar/[0.96] p-0 text-sidebar-foreground shadow-2xl shadow-black/20 backdrop:bg-black/40 backdrop:backdrop-blur-[1px]"
+        >
+          <aside className="h-full w-full" aria-label={t("openMenu")}>
+            {renderSidebarPanel(true)}
+          </aside>
+        </dialog>
+      ) : (
+        <aside
+          id={mobileMenuId}
+          className="sticky top-0 hidden h-svh w-72 self-start overflow-hidden border-r border-sidebar-border bg-sidebar/[0.92] shadow-none backdrop-blur-xl md:block"
+        >
+          {renderSidebarPanel(false)}
+        </aside>
+      )}
     </>
   )
 }

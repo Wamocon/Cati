@@ -2,9 +2,8 @@
 //
 // Mirrors the local-ai gateway pattern (lib/local-ai.ts): a single
 // env-configured provider performs OCR + document-authenticity + selfie-to-ID
-// face match + liveness in one call. When no provider is configured (the demo),
-// a deterministic SIMULATED result is returned so the automated flow is fully
-// visible and testable without any real vendor or credentials.
+// face match + liveness in one call. Without a configured provider, the result
+// is always manual review; this gateway never simulates a successful check.
 //
 // Maintenance-free by design: the SaaS IDV provider owns document templates,
 // new ID types, liveness models and compliance updates — 1Çatı owns none of
@@ -46,30 +45,20 @@ function reference(prefix: string): string {
   return `${prefix}-${Date.now().toString(36).toUpperCase().slice(-6)}`
 }
 
-// Deterministic stand-in for the demo: a plausibly-formed ID number verifies,
-// an empty/too-short one routes to manual review. No randomness, so the UX and
-// the tests are stable.
-function simulateVerification(
-  input: IdentityVerificationInput
-): IdentityVerificationResult {
-  const looksValid = input.idNumber.replace(/\s/g, "").length >= 5
-  if (!looksValid) {
-    return {
-      status: "review",
-      score: 0.4,
-      provider: "simulated",
-      checks: { documentAuthentic: false, faceMatch: false, liveness: false, notExpired: true },
-      reference: reference("IDV-REVIEW"),
-      simulated: true,
-    }
-  }
+// Truthful provider boundary: evidence remains pending for a human reviewer.
+function providerNotConfigured(): IdentityVerificationResult {
   return {
-    status: "verified",
-    score: 0.96,
-    provider: "simulated",
-    checks: { documentAuthentic: true, faceMatch: true, liveness: true, notExpired: true },
-    reference: reference("IDV-OK"),
-    simulated: true,
+    status: "review",
+    score: 0,
+    provider: "not_configured",
+    checks: {
+      documentAuthentic: false,
+      faceMatch: false,
+      liveness: false,
+      notExpired: false,
+    },
+    reference: reference("IDV-MANUAL"),
+    simulated: false,
   }
 }
 
@@ -103,7 +92,7 @@ export async function verifyIdentity(
   input: IdentityVerificationInput
 ): Promise<IdentityVerificationResult> {
   if (!isIdvConfigured()) {
-    return simulateVerification(input)
+    return providerNotConfigured()
   }
 
   try {

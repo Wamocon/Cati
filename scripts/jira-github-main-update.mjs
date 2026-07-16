@@ -10,7 +10,10 @@ function parseEnv(text) {
 }
 
 async function loadEnv() {
-  const local = await fs.readFile(".env.local", "utf8").then(parseEnv).catch(() => ({}))
+  const local = await fs
+    .readFile(".env.tooling.local", "utf8")
+    .then(parseEnv)
+    .catch(() => fs.readFile(".env.local", "utf8").then(parseEnv).catch(() => ({})))
   return { ...local, ...process.env }
 }
 

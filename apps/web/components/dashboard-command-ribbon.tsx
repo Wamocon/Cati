@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useLocale } from "next-intl"
 import {
   ArrowRight,
@@ -21,7 +22,7 @@ import {
   Wrench,
   X,
 } from "lucide-react"
-import { Link } from "@/app/navigation"
+import { Link, usePathname, useRouter } from "@/app/navigation"
 import { AppDialog } from "@/components/app-dialog"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
@@ -316,8 +317,41 @@ function formatRibbonText(template: string, values: Record<string, string | numb
 }
 
 const commandValueCopy: Record<keyof typeof ribbonCopy, Record<string, string>> = {
-  tr: {},
+  tr: {
+    "booking_confirmation": "Rezervasyon onayı",
+    "pre_arrival": "Varış öncesi",
+    "move_in": "Giriş",
+    "move_in_today": "Bugün giriş",
+    "in_stay": "Konaklama içi",
+    "post_stay": "Konaklama sonrası",
+    "post_stay_feedback": "Konaklama sonrası geri bildirim",
+    "checkout_today": "Bugün çıkış",
+    "precheck_pending": "Ön kontrol bekliyor",
+    "deposit_review": "Depozito incelemesi",
+    "manual_review": "Manuel inceleme",
+    "manager_review": "Yönetici incelemesi",
+    "needs_review": "İnceleme gerekli",
+    "not_started": "Başlamadı",
+    "evidence_needed": "Kanıt gerekli",
+    "finance_ready": "Finansa hazır",
+  },
   en: {
+    "booking_confirmation": "Booking confirmation",
+    "pre_arrival": "Pre-arrival",
+    "move_in": "Move-in",
+    "move_in_today": "Move-in today",
+    "in_stay": "In-stay",
+    "post_stay": "Post-stay",
+    "post_stay_feedback": "Post-stay feedback",
+    "checkout_today": "Check-out today",
+    "precheck_pending": "Pre-check pending",
+    "deposit_review": "Deposit review",
+    "manual_review": "Manual review",
+    "manager_review": "Manager review",
+    "needs_review": "Needs review",
+    "not_started": "Not started",
+    "evidence_needed": "Evidence needed",
+    "finance_ready": "Finance ready",
     "Malik kaydı bekliyor": "Owner record pending",
     "Sakin kaydı bekliyor": "Resident record pending",
     "Kaynak bekliyor": "Source pending",
@@ -333,6 +367,22 @@ const commandValueCopy: Record<keyof typeof ribbonCopy, Record<string, string>> 
     "Malik": "Owner",
   },
   de: {
+    "booking_confirmation": "Buchungsbestätigung",
+    "pre_arrival": "Vor Anreise",
+    "move_in": "Einzug",
+    "move_in_today": "Einzug heute",
+    "in_stay": "Während des Aufenthalts",
+    "post_stay": "Nach dem Aufenthalt",
+    "post_stay_feedback": "Feedback nach Aufenthalt",
+    "checkout_today": "Auszug heute",
+    "precheck_pending": "Vorprüfung offen",
+    "deposit_review": "Kautionsprüfung",
+    "manual_review": "Manuelle Prüfung",
+    "manager_review": "Managerprüfung",
+    "needs_review": "Prüfung nötig",
+    "not_started": "Nicht gestartet",
+    "evidence_needed": "Nachweis nötig",
+    "finance_ready": "Finanzbereit",
     "Malik kaydı bekliyor": "Eigentümerdatensatz ausstehend",
     "Sakin kaydı bekliyor": "Bewohnerdatensatz ausstehend",
     "Kaynak bekliyor": "Quelle ausstehend",
@@ -348,6 +398,22 @@ const commandValueCopy: Record<keyof typeof ribbonCopy, Record<string, string>> 
     "Malik": "Eigentümer",
   },
   ru: {
+    "booking_confirmation": "Подтверждение бронирования",
+    "pre_arrival": "До прибытия",
+    "move_in": "Заезд",
+    "move_in_today": "Заезд сегодня",
+    "in_stay": "Во время проживания",
+    "post_stay": "После проживания",
+    "post_stay_feedback": "Отзыв после проживания",
+    "checkout_today": "Выезд сегодня",
+    "precheck_pending": "Ожидает предпросмотра",
+    "deposit_review": "Проверка депозита",
+    "manual_review": "Ручная проверка",
+    "manager_review": "Проверка менеджера",
+    "needs_review": "Требует проверки",
+    "not_started": "Не начато",
+    "evidence_needed": "Нужны доказательства",
+    "finance_ready": "Готово для финансов",
     "Malik kaydı bekliyor": "Запись владельца ожидает данных",
     "Sakin kaydı bekliyor": "Запись жителя ожидает данных",
     "Kaynak bekliyor": "Источник ожидает данных",
@@ -365,7 +431,7 @@ const commandValueCopy: Record<keyof typeof ribbonCopy, Record<string, string>> 
 }
 
 function localizeCommandValue(value: string, locale: keyof typeof ribbonCopy) {
-  return Object.entries(commandValueCopy[locale]).reduce(
+  return Object.entries(commandValueCopy[locale]).sort(([left], [right]) => right.length - left.length).reduce(
     (current, [source, target]) => current.split(source).join(target),
     value
   )
@@ -385,6 +451,16 @@ const scopeOrder: CommandScope[] = [
   "reports",
   "team",
 ]
+
+const FILTER_QUERY_PARAM = "filter_q"
+const FILTER_SCOPE_PARAM = "filter_scope"
+const FILTER_ATTENTION_PARAM = "filter_attention"
+
+function parseScopeParam(value: string | null): CommandScope | "all" {
+  if (value === "all") return "all"
+  if (value && scopeOrder.includes(value as CommandScope)) return value as CommandScope
+  return "all"
+}
 
 const scopeIcon = {
   portfolio: Building2,
@@ -892,14 +968,49 @@ function buildCommandIndex(role: Role): CommandItem[] {
 export function DashboardCommandRibbon() {
   const user = useUser()
   const locale = resolveRibbonLocale(useLocale())
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const copy = ribbonCopy[locale]
-  const [query, setQuery] = useState("")
-  const [scope, setScope] = useState<CommandScope | "all">("all")
-  const [attentionOnly, setAttentionOnly] = useState(false)
+  const urlQuery = searchParams.get(FILTER_QUERY_PARAM)?.trim() ?? ""
+  const urlScope = parseScopeParam(searchParams.get(FILTER_SCOPE_PARAM))
+  const urlAttentionOnly = searchParams.get(FILTER_ATTENTION_PARAM) === "1"
+  const query = urlQuery
+  const scope = urlScope
+  const attentionOnly = urlAttentionOnly
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [draftQuery, setDraftQuery] = useState("")
-  const [draftScope, setDraftScope] = useState<CommandScope | "all">("all")
-  const [draftAttentionOnly, setDraftAttentionOnly] = useState(false)
+  const [draftQuery, setDraftQuery] = useState(urlQuery)
+  const [draftScope, setDraftScope] = useState<CommandScope | "all">(urlScope)
+  const [draftAttentionOnly, setDraftAttentionOnly] = useState(urlAttentionOnly)
+
+  const replaceFilterParams = useCallback(
+    (next: { query: string; scope: CommandScope | "all"; attentionOnly: boolean }) => {
+      const params = new URLSearchParams(searchParams.toString())
+      const nextQuery = next.query.trim()
+
+      if (nextQuery) {
+        params.set(FILTER_QUERY_PARAM, nextQuery)
+      } else {
+        params.delete(FILTER_QUERY_PARAM)
+      }
+
+      if (next.scope !== "all") {
+        params.set(FILTER_SCOPE_PARAM, next.scope)
+      } else {
+        params.delete(FILTER_SCOPE_PARAM)
+      }
+
+      if (next.attentionOnly) {
+        params.set(FILTER_ATTENTION_PARAM, "1")
+      } else {
+        params.delete(FILTER_ATTENTION_PARAM)
+      }
+
+      const queryString = params.toString()
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
 
   const index = useMemo(() => buildCommandIndex(user.role), [user.role])
   const scopeCounts = useMemo(() => {
@@ -961,9 +1072,12 @@ export function DashboardCommandRibbon() {
   }
 
   function applyFilters() {
-    setQuery(draftQuery.trim())
-    setScope(draftScope)
-    setAttentionOnly(draftAttentionOnly)
+    const nextQuery = draftQuery.trim()
+    replaceFilterParams({
+      attentionOnly: draftAttentionOnly,
+      query: nextQuery,
+      scope: draftScope,
+    })
     setFiltersOpen(false)
   }
 
@@ -974,9 +1088,7 @@ export function DashboardCommandRibbon() {
   }
 
   function clearAppliedFilters() {
-    setQuery("")
-    setScope("all")
-    setAttentionOnly(false)
+    replaceFilterParams({ attentionOnly: false, query: "", scope: "all" })
   }
 
   return (
@@ -1006,14 +1118,6 @@ export function DashboardCommandRibbon() {
           </button>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={openFilters}
-              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/80 bg-background px-3 py-1.5 text-xs font-bold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              {copy.filters}
-            </button>
             <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300">
               <Sparkles className="h-4 w-4" />
               {copy.attention} {activeCount}

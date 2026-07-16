@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111f" />
+    <title>1Çatı · Çevrimdışı</title>
+    <style>
+      :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #07111f; color: #f8fafc; }
+      main { width: min(34rem, calc(100% - 2rem)); padding: 2rem; border: 1px solid #334155; border-radius: 1.5rem; background: #0f1b2d; box-sizing: border-box; }
+      p { color: #cbd5e1; line-height: 1.6; }
+      button { min-height: 2.75rem; padding: 0.7rem 1rem; border: 0; border-radius: 0.75rem; background: #2dd4bf; color: #042f2e; font: inherit; font-weight: 700; cursor: pointer; }
+      button:focus-visible { outline: 3px solid #f8fafc; outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p aria-hidden="true">1Çatı</p>
+      <h1>Şu anda çevrimdışısınız</h1>
+      <p>Güvenliğiniz için portal sayfaları bu cihaza önbelleğe alınmaz. Bağlantı geri geldiğinde tekrar deneyin.</p>
+      <p lang="en">Portal pages are not cached on this device. Reconnect to continue securely.</p>
+      <button type="button" onclick="location.reload()">Tekrar dene / Retry</button>
+    </main>
+  </body>
+</html>

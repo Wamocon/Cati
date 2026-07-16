@@ -13,7 +13,7 @@ export type FlatStatus = "occupied" | "vacant" | "reserved" | "maintenance" | "b
 export type AccessStatus = "active" | "restricted" | "pending" | "disabled"
 export type PaymentStatus = "clear" | "minor_debt" | "overdue" | "legal"
 export type ServicePriority = "low" | "medium" | "high" | "urgent"
-export type ServiceStatus = "open" | "assigned" | "waiting_payment" | "in_progress" | "resolved" | "closed"
+export type ServiceStatus = "open" | "assigned" | "waiting_approval" | "waiting_payment" | "in_progress" | "resolved" | "closed"
 export type BookingStatus = "confirmed" | "precheck_pending" | "move_in_today" | "checkout_today" | "deposit_review" | "cancelled"
 export type DepositStatus = "not_required" | "reserved" | "held" | "deduction_pending" | "refund_ready"
 export type PhaseDeliveryStatus = "complete" | "ready_for_uat" | "in_progress" | "planned" | "blocked"
@@ -54,16 +54,33 @@ export interface FlatRecord {
   lastPaymentAt: string
 }
 
+export interface ServiceTicketHistoryEvent {
+  id: string
+  type: string
+  message: string
+  occurredAt: string
+  /** Used only for defense-in-depth response filtering; the UI never displays it. */
+  audience?: "resident" | "internal" | "finance"
+  version?: string
+  fromState?: string | null
+  toState?: string | null
+}
+
 export interface ServiceTicket {
   id: string
   flatId: string
   flatNumber: string
   title: string
+  description?: string | null
   category: string
   priority: ServicePriority
   status: ServiceStatus
   assignee: string
   requester: string
+  requesterRole?: string
+  /** Internal actor key used by the API to calculate requester-only actions. */
+  requesterProfileId?: string | null
+  assigneeProfileId?: string | null
   openedAt: string
   dueAt: string
   slaHoursRemaining: number
@@ -71,6 +88,16 @@ export interface ServiceTicket {
   paymentVerified: boolean
   mediaCount: number
   estimatedCostTry: number
+  /** Opaque optimistic-concurrency token returned by the ticket API. */
+  version?: string
+  workflowState?: string
+  approvalStatus?: "not_required" | "pending_owner" | "approved" | "rejected"
+  dispatchStatus?: "not_required" | "pending" | "assigned" | "acknowledged" | "en_route" | "on_site" | "completed" | "failed"
+  paymentWorkflowStatus?: "not_required" | "pending" | "paid" | "waived" | "post_emergency_review" | "failed" | "refunded"
+  severity?: "P0" | "P1" | "P2" | "P3"
+  emergency?: boolean
+  /** Append-only, role-filtered progress history safe for the current viewer. */
+  history?: ServiceTicketHistoryEvent[]
 }
 
 export type ServiceCatalogCategory =
@@ -100,6 +127,7 @@ export type ServicePaymentDecision =
   | "debit_to_account"
   | "paid_or_debit_approved"
   | "hold"
+  | "post_emergency_review"
 
 export interface ServiceCatalogItem {
   id: string
@@ -166,6 +194,9 @@ export interface BookingRecord {
   flatId: string
   flatNumber: string
   guestName: string
+  resourceName?: string
+  notes?: string | null
+  approvalStatus?: "pending_owner" | "approved" | "rejected"
   channel: "Airbnb" | "Booking.com" | "Owner" | "Direct" | "Corporate"
   checkIn: string
   checkOut: string
@@ -356,6 +387,9 @@ export interface DocumentVaultRecord {
   size: string
   updatedAt: string
   retentionRule: string
+  storageBucket?: string | null
+  storagePath?: string | null
+  sourcePath?: string | null
 }
 
 export interface CommunicationThreadRecord {
@@ -873,6 +907,60 @@ export const serviceCatalogItems: ServiceCatalogItem[] = [
     popularityScore: 84,
   },
   {
+    id: "CAT-EMERG-LIFE-SAFETY",
+    code: "EMERG-LIFE-SAFETY",
+    name: "Can guvenligi ve gaz/duman alarmi",
+    category: "security",
+    description: "Gaz kokusu, duman, yangin alarmi veya can guvenligi uyarisi icin aninda guvenlik ve yonetici eskalasyonu.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 1,
+    debtPolicy: "allow",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Guvenlik",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 99,
+  },
+  {
+    id: "CAT-MAINT-ELEC",
+    code: "MAINT-ELEC",
+    name: "Acil elektrik kesintisi ve kivilcim riski",
+    category: "maintenance",
+    description: "Daire veya ortak alanda elektrik kesintisi, kivilcim, pano kokusu ve aydinlatma riski icin teknik mudaahele.",
+    basePriceTry: 7200,
+    currency: "TRY",
+    slaHours: 2,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 94,
+  },
+  {
+    id: "CAT-MAINT-ELEVATOR",
+    code: "MAINT-ELEVATOR",
+    name: "Asansor arizasi ve kabinde kalma",
+    category: "maintenance",
+    description: "Asansor durmasi, kabinde kalma, kata hizalanmama veya alarm durumunda sozlesmeli servis ve guvenlik yonlendirmesi.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 1,
+    debtPolicy: "allow",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "vendor",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 93,
+  },
+  {
     id: "CAT-MAINT-PLUMB",
     code: "MAINT-PLUMB",
     name: "Acil tesisat mudahalesi",
@@ -889,6 +977,42 @@ export const serviceCatalogItems: ServiceCatalogItem[] = [
     active: true,
     serviceLevel: "emergency",
     popularityScore: 91,
+  },
+  {
+    id: "CAT-MAINT-SEWER",
+    code: "MAINT-SEWER",
+    name: "Gider tasmasi ve kanalizasyon riski",
+    category: "maintenance",
+    description: "Gider tikanikligi, tuvalet tasmasi, kotu koku ve hijyen riski icin acil tesisat/vendor yonlendirmesi.",
+    basePriceTry: 8600,
+    currency: "TRY",
+    slaHours: 3,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "vendor",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 90,
+  },
+  {
+    id: "CAT-MAINT-HVAC-URGENT",
+    code: "MAINT-HVAC-URGENT",
+    name: "Acil klima ve konfor riski",
+    category: "maintenance",
+    description: "Yuksek sicaklik, yasli/misafir konfor riski veya premium konaklama sikayeti icin hizli klima kontrolu.",
+    basePriceTry: 6500,
+    currency: "TRY",
+    slaHours: 8,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Teknik",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 86,
   },
   {
     id: "CAT-TRANSFER-AYT",
@@ -927,6 +1051,96 @@ export const serviceCatalogItems: ServiceCatalogItem[] = [
     popularityScore: 73,
   },
   {
+    id: "CAT-AMENITY-SPA-INCIDENT",
+    code: "AMENITY-SPA-INCIDENT",
+    name: "Spa, havuz ve ortak alan olay yonetimi",
+    category: "amenity",
+    description: "Spa, havuz, fitness veya ortak alanda hijyen, kapasite, ekipman ya da misafir guvenligi olayini is akisiyla yonetir.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 2,
+    debtPolicy: "allow",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Sakin destek",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 83,
+  },
+  {
+    id: "CAT-AMENITY-FOOD-EVENT-INCIDENT",
+    code: "AMENITY-FOOD-EVENT-INCIDENT",
+    name: "Restoran ve etkinlik operasyon olayi",
+    category: "amenity",
+    description: "Restoran, tiyatro, etkinlik veya kalabalik sosyal alanlarda kapasite, servis aksakligi ve misafir sikayetlerini yonlendirir.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 2,
+    debtPolicy: "allow",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Restoran",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 81,
+  },
+  {
+    id: "CAT-AMENITY-THEATRE",
+    code: "AMENITY-THEATRE",
+    name: "Saha etkinlik ve tiyatro performansi",
+    category: "amenity",
+    description: "Site icindeki tiyatro, sahne ve etkinlik talepleri icin kapasite, takvim ve sakin uygunluk kontrolu.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 72,
+    debtPolicy: "manager_review",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Sosyal tesis",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "premium",
+    popularityScore: 69,
+  },
+  {
+    id: "CAT-AMENITY-RESTAURANT",
+    code: "AMENITY-RESTAURANT",
+    name: "Restoran rezervasyonu ve malik avantajlari",
+    category: "amenity",
+    description: "Restoran kullanimi, masa rezervasyonu, malik avantajlari ve misafir yonlendirme talepleri.",
+    basePriceTry: 0,
+    currency: "TRY",
+    slaHours: 24,
+    debtPolicy: "manager_review",
+    requiresPayment: false,
+    requiresDeposit: false,
+    team: "Sakin destek",
+    providerType: "mixed",
+    active: true,
+    serviceLevel: "standard",
+    popularityScore: 76,
+  },
+  {
+    id: "CAT-CONCIERGE-EXCURSION",
+    code: "CONCIERGE-EXCURSION",
+    name: "Tur, quad, bisiklet, jeep ve dag gezisi yonlendirmesi",
+    category: "concierge",
+    description: "Quad, bisiklet turu, jeep safari, dag gezisi ve yerel aktivite talepleri icin dis saglayici yonlendirmesi.",
+    basePriceTry: 3500,
+    currency: "TRY",
+    slaHours: 48,
+    debtPolicy: "manager_review",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Concierge",
+    providerType: "vendor",
+    active: true,
+    serviceLevel: "premium",
+    popularityScore: 72,
+  },
+  {
     id: "CAT-SEC-ACCESS",
     code: "SEC-ACCESS",
     name: "Kart, QR ve plaka erisim islemi",
@@ -943,6 +1157,24 @@ export const serviceCatalogItems: ServiceCatalogItem[] = [
     active: true,
     serviceLevel: "standard",
     popularityScore: 82,
+  },
+  {
+    id: "CAT-SEC-LOCKOUT",
+    code: "SEC-LOCKOUT",
+    name: "Acil erisim, kapi ve bariyer kilidi",
+    category: "security",
+    description: "Daireye girememe, kart/QR calismamasi, kapida kalma, bariyer veya plaka gecis arizasi icin guvenlik yonlendirmesi.",
+    basePriceTry: 1200,
+    currency: "TRY",
+    slaHours: 2,
+    debtPolicy: "allow",
+    requiresPayment: true,
+    requiresDeposit: false,
+    team: "Guvenlik",
+    providerType: "internal",
+    active: true,
+    serviceLevel: "emergency",
+    popularityScore: 88,
   },
   {
     id: "CAT-INSP-DAMAGE",
@@ -965,16 +1197,36 @@ export const serviceCatalogItems: ServiceCatalogItem[] = [
 ]
 
 const catalogByCategory: Partial<Record<string, string>> = {
-  Asansor: "CAT-MAINT-AC",
+  "Can guvenligi": "CAT-EMERG-LIFE-SAFETY",
+  Gaz: "CAT-EMERG-LIFE-SAFETY",
+  Duman: "CAT-EMERG-LIFE-SAFETY",
+  Yangin: "CAT-EMERG-LIFE-SAFETY",
+  Asansor: "CAT-MAINT-ELEVATOR",
   Tesisat: "CAT-MAINT-PLUMB",
+  Su: "CAT-MAINT-PLUMB",
+  Gider: "CAT-MAINT-SEWER",
+  Kanalizasyon: "CAT-MAINT-SEWER",
+  Tuvalet: "CAT-MAINT-SEWER",
   Iklimlendirme: "CAT-MAINT-AC",
+  "Acil klima": "CAT-MAINT-HVAC-URGENT",
   "Finans onayi": "CAT-AMENITY-SPA",
   Guvenlik: "CAT-SEC-ACCESS",
   Depozito: "CAT-INSP-DAMAGE",
-  Elektrik: "CAT-MAINT-AC",
+  Elektrik: "CAT-MAINT-ELEC",
   Temizlik: "CAT-CLEAN-STD",
   "Ortak alan": "CAT-AMENITY-SPA",
+  Spa: "CAT-AMENITY-SPA",
+  Havuz: "CAT-AMENITY-SPA-INCIDENT",
+  Fitness: "CAT-AMENITY-SPA",
+  Restoran: "CAT-AMENITY-RESTAURANT",
+  "Restoran olayi": "CAT-AMENITY-FOOD-EVENT-INCIDENT",
+  Tiyatro: "CAT-AMENITY-THEATRE",
+  Etkinlik: "CAT-AMENITY-THEATRE",
+  "Etkinlik olayi": "CAT-AMENITY-FOOD-EVENT-INCIDENT",
+  Gezi: "CAT-CONCIERGE-EXCURSION",
+  Tur: "CAT-CONCIERGE-EXCURSION",
   Erisim: "CAT-SEC-ACCESS",
+  "Acil erisim": "CAT-SEC-LOCKOUT",
   Hasar: "CAT-INSP-DAMAGE",
   Tahsilat: "CAT-AMENITY-SPA",
 }
@@ -991,6 +1243,11 @@ function paymentDecisionForTicket(
   ticket: ServiceTicket,
   catalogItem: ServiceCatalogItem
 ): ServicePaymentDecision {
+  if (ticket.emergency) {
+    return ticket.estimatedCostTry > 0 || catalogItem.basePriceTry > 0
+      ? "post_emergency_review"
+      : "no_charge"
+  }
   if (ticket.debtBlocked) return "hold"
   if (!catalogItem.requiresPayment || catalogItem.basePriceTry === 0) return "no_charge"
   if (ticket.paymentVerified) return "paid_or_debit_approved"
@@ -999,6 +1256,11 @@ function paymentDecisionForTicket(
 }
 
 function serviceOrderStatusForTicket(ticket: ServiceTicket): ServiceOrderStatus {
+  if (ticket.emergency) {
+    if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
+    if (ticket.status === "assigned" || ticket.status === "in_progress") return "assigned"
+    return "debt_check"
+  }
   if (ticket.debtBlocked) return "blocked"
   if (ticket.status === "waiting_payment") return "payment_pending"
   if (ticket.status === "resolved" || ticket.status === "closed") return "completed"
@@ -1010,6 +1272,7 @@ function serviceOrderNextAction(
   ticket: ServiceTicket,
   paymentDecision: ServicePaymentDecision
 ) {
+  if (ticket.emergency) return "Acil mudahaleye devam et; sonrasinda insan finans incelemesini tamamla"
   if (ticket.debtBlocked) return "Muhasebe onayi ve borc kontrolu tamamlanmadan saha isine cikarma"
   if (paymentDecision === "collect_before_dispatch") return "Odeme linki veya cari hesaba borclandirma secimini onayla"
   if (ticket.status === "open") return "SLA ve ekip uygunluguna gore gorevi ata"
@@ -1033,8 +1296,10 @@ export const serviceOrders: ServiceOrderRecord[] = serviceTickets.slice(0, 12).m
     flatNumber: ticket.flatNumber,
     requester: ticket.requester,
     status: serviceOrderStatusForTicket(ticket),
-    debtCheckStatus: ticket.debtBlocked
-      ? "blocked"
+    debtCheckStatus: ticket.emergency
+      ? "clear"
+      : ticket.debtBlocked
+        ? "blocked"
       : ticket.paymentVerified
         ? "clear"
         : "minor_debt_review",
@@ -1043,7 +1308,7 @@ export const serviceOrders: ServiceOrderRecord[] = serviceTickets.slice(0, 12).m
     currency: "TRY",
     slaHours: catalogItem.slaHours,
     assignedTeam: catalogItem.team,
-    taskCreated: ticket.status !== "open" && !ticket.debtBlocked,
+    taskCreated: ticket.status !== "open" && (ticket.emergency || !ticket.debtBlocked),
     requestedForAt: isoDaysFromAnchor(index % 4, 10 + (index % 6)),
     createdAt: ticket.openedAt,
     nextAction: serviceOrderNextAction(ticket, paymentDecision),
@@ -1718,6 +1983,8 @@ export const documentVault: DocumentVaultRecord[] = newLevelPremiumDataset.docum
     document.status === "active"
       ? `Kaynak: ${document.path}`
       : `OCR / insan onayı gerekli: ${document.path}`,
+  storagePath: document.path.replaceAll("\\", "/"),
+  sourcePath: document.path,
 }))
 
 export const communicationThreads: CommunicationThreadRecord[] = [
@@ -2791,52 +3058,77 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
   {
     phase: 5,
     title: "Kullanıcı, malik, kiracı ve personel yönetimi",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Operations + Admin",
     businessOutcome: "Her kişi doğru daire, hesap, belge, iletişim dili ve yetki kapsamıyla tek kayıtta yönetilir.",
     userGuide: "Kullanıcılar ekranında sakin, malik, kiracı, personel ve rol ilişkilerini kontrol edin.",
-    evidence: ["Resident profile model", "Kişi dizini servisi", "Kullanıcı yönetim paneli", "Rol matrisi"],
+    evidence: [
+      "Yerel/sentetik rol akışı doğrulandı",
+      "Kişi dizini ve rol matrisi kaynak sözleşmesi",
+      "Canlı Auth/RLS doğrulaması bekliyor",
+      "Müşteri verisi UAT kapsamı bekliyor",
+    ],
   },
   {
     phase: 6,
     title: "Finans ledger motoru",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Finance + Engineering",
     businessOutcome: "Bakiyeler ekran hesabından değil, hesap, borç/alacak, tahakkuk, düzeltme ve ekstre kayıtlarından hesaplanır.",
     userGuide: "Finans ekranında aidat, borç, tahsilat, gecikme ve ekstre hareketlerini ledger mantığıyla inceleyin.",
-    evidence: ["Finans defteri modeli", "Finans defteri servisi", "Finans operasyon paneli", "Denetimli finans aksiyonları"],
+    evidence: [
+      "Malik ekstresi yerel/sentetik sözleşmede doğrulandı",
+      "Ana finans defteri kaynak sözleşmesi",
+      "Canlı RLS ve sorgu planı bekliyor",
+      "Kiracı borç tahsisi ürün sözleşmesi bekliyor",
+    ],
   },
   {
     phase: 7,
     title: "Ödeme, depozito, mutabakat ve borç kısıtı",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Finance + Legal",
     businessOutcome: "Ödeme, depozito, iade, borç eşiği ve servis/erişim kısıtları muhasebe ve hukuk onayıyla yürür.",
     userGuide: "Finans ve Uyum ekranlarında gecikme, depozito, kısıt ve onay kuyruğunu takip edin.",
-    evidence: ["Debt restriction model", "Deposit states", "Finance approval queue", "Human-approved access policy"],
+    evidence: [
+      "Kontrollü yerel ödeme ve kısıt akışı",
+      "İnsan onaylı finans/erişim kararı",
+      "Canlı mutabakat ve webhook doğrulaması bekliyor",
+      "Ödeme sağlayıcısı seçimi bekliyor",
+    ],
   },
   {
     phase: 8,
     title: "Servis kataloğu ve servis siparişi akışı",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Operations + Finance",
     businessOutcome: "Temizlik, transfer, bakım ve özel hizmetler fiyat, SLA, borç kontrolü ve görev üretimiyle siparişe dönüşür.",
     userGuide: "Servis Talepleri ekranında katalog, borç kontrolü, görev üretimi ve durum takibini yönetin.",
-    evidence: ["Service catalogue", "Debt-check gate", "Service order API", "Resident order flow"],
+    evidence: [
+      "Yerel/sentetik servis siparişi akışı doğrulandı",
+      "Acil işlerde para beklememe sözleşmesi",
+      "Canlı veritabanı/RLS kanıtı bekliyor",
+      "Saha müşteri UAT kapsamı bekliyor",
+    ],
   },
   {
     phase: 9,
     title: "Görev, saha ekibi, SLA ve medya raporu",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Technical + Staff",
     businessOutcome: "Saha işleri atama, öncelik, SLA, foto/video kanıt, iptal ve yönetici onayıyla görünür olur.",
     userGuide: "Servis Talepleri ekranında görev panosu, SLA riski ve saha raporlarını yönetin.",
-    evidence: ["Task board", "Mobile staff flow", "SLA timer", "Media proof"],
+    evidence: [
+      "Yerel/sentetik görev ve SLA akışı",
+      "Rol kapsamlı saha kanıtı sözleşmesi",
+      "Özel obje depolama ve tarama bekliyor",
+      "Canlı Realtime/RLS kanıtı bekliyor",
+    ],
   },
   {
     phase: 10,
     title: "Rezervasyon, kiralama, move-in ve checkout",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Reservations + Operations",
     businessOutcome: "Müsaitlik, rezervasyon, depozito, giriş hazırlığı, checkout, kesinti ve erişim kapatma tek süreç olur.",
     userGuide: "Rezervasyon ekranında takvim, giriş/çıkış işleri, depozito ve final kontrol adımlarını takip edin.",
@@ -2845,13 +3137,14 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
       "Move-in readiness board",
       "Checkout settlement queue",
       "Access handoff queue",
-      "Phase 10/11 QA harness",
+      "Yerel/sentetik tarayıcı sözleşmesi doğrulandı",
+      "Canlı RLS ve erişim sağlayıcısı bekliyor",
     ],
   },
   {
     phase: 11,
     title: "İletişim, bildirim ve doküman merkezi",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Support + Backoffice",
     businessOutcome: "Sakin, malik, yönetici ve personel iletişimi daire, borç, görev, rezervasyon ve belgeyle ilişkilendirilir.",
     userGuide: "İletişim ve Belgeler ekranlarında konuşma, duyuru, bildirim ve dosya izinlerini yönetin.",
@@ -2861,34 +3154,50 @@ export const phaseDeliveryRecords: PhaseDeliveryRecord[] = [
       "Notification retry queue",
       "Document packet board",
       "Provider-ready simulation mode",
+      "Canlı teslimat makbuzu ve özel depolama bekliyor",
     ],
   },
   {
     phase: 12,
     title: "Mobil uyumlu web/PWA ve offline-guvenli deneyim",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "Frontend + QA",
     businessOutcome: "Native mobile app yerine tek web uygulamasi telefonda hizli, kurulabilir, erisilebilir ve offline-safe calisir.",
     userGuide: "Offline Senkron ekraninda mobil web hazirligini, offline kuyrugu, stale veri uyarilarini ve rol kapsamlarini test edin.",
-    evidence: ["Responsive web surface", "Manifest/service worker shell", "Offline retry queue", "Touch-safe QA"],
+    evidence: [
+      "Yerel responsive web/PWA akışı",
+      "Offline tekrar kuyruğu kaynak sözleşmesi",
+      "Masaüstü/mobil tarayıcı kapısı bekliyor",
+      "Gerçek cihaz performans ve erişilebilirlik UAT bekliyor",
+    ],
   },
   {
     phase: 13,
     title: "Dis sistem entegrasyonlari",
-    status: "ready_for_uat",
+    status: "blocked",
     owner: "Integrations + Security",
-    businessOutcome: "Supabase canli backend olarak kullanilir; odeme, banka, SMS, e-posta, erisim, kamera ve OAuth baglantilari demo/provider-ready placeholder olarak durur.",
+    businessOutcome: "Ayarlar ekranı Supabase durumunu çalışma anında kontrol eder; ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth için canlı teslimat kanıtı olmadan bağlantı varmış gibi göstermez.",
     userGuide: "Ayarlar ekraninda entegrasyon durumunu, musteri tarafindan gereken karar/API key listesini ve manuel fallback planini takip edin.",
-    evidence: ["Supabase connected", "Provider-ready placeholders", "Integration health matrix", "Manual fallback"],
+    evidence: [
+      "Çalışma zamanı Supabase sağlık kontrolü",
+      "Temiz migration/RLS/yedekleme kanıtı bekliyor",
+      "Dış sağlayıcılar bloke veya provider-ready",
+      "İnsan kontrollü manuel fallback",
+    ],
   },
   {
     phase: 14,
     title: "AI premium katmani ve gelismis analitik",
-    status: "ready_for_uat",
+    status: "in_progress",
     owner: "AI Governance + Analytics",
-    businessOutcome: "AI gunluk brifing, servis triage, borc riski, rezervasyon kontrolu, rapor taslagi, entegrasyon tavsiyesi ve gorsel kanit yardimi uretir; hassas islem yapmaz.",
+    businessOutcome: "Kontrollü yerel demo AI öneri ve taslak üretir; finans, erişim, rol veya acil müdahale kararı vermez. Canlı model, kaynaklandırma ve değerlendirme kapıları ayrıca tamamlanır.",
     userGuide: "AI Rapor Merkezi ve sohbet asistaninda onerileri kaynak, guven, dil ve insan onayi notuyla inceleyin.",
-    evidence: ["AI command center", "Same-language assistant", "Guardrailed recommendations", "Image-proof workflow"],
+    evidence: [
+      "Local demo contract",
+      "İnsan onayı ve hassas işlem guardrail'i",
+      "Çok dilli golden-set kaynak testleri",
+      "Canlı model/eval/güvenlik UAT bekliyor",
+    ],
   },
   {
     phase: 15,
@@ -3135,6 +3444,26 @@ export const roleCoverage: RoleCoverage[] = [
   { role: "Kiracı", users: 184, canApproveFinance: false, canRestrictAccess: false, canManageUsers: false, canExportData: false },
 ]
 
+export interface TenantAccessGrant {
+  id: string
+  tenantName: string
+  unit: string
+  ownerName: string
+  startOffsetDays: number
+  endOffsetDays: number
+  scope: string[]
+  inviteCode: string
+}
+
+// Owner-sponsored, time-boxed tenant access grants (New Level Premium model).
+// Demo seed for the tenant time-access panel in the Users dashboard.
+export const tenantAccessGrants: TenantAccessGrant[] = [
+  { id: "grant-1", tenantName: "Ivan Petrov", unit: "B3 / 12", ownerName: "Ahmet Yılmaz", startOffsetDays: -20, endOffsetDays: 70, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-8F3A2C" },
+  { id: "grant-2", tenantName: "Sofia Novak", unit: "A1 / 5", ownerName: "Elena Kaya", startOffsetDays: -85, endOffsetDays: 6, scope: ["tickets", "calendar", "communications"], inviteCode: "NLP-INV-11B7D9" },
+  { id: "grant-3", tenantName: "Mehmet Demir", unit: "C2 / 8", ownerName: "Ahmet Yılmaz", startOffsetDays: -120, endOffsetDays: -3, scope: ["tickets", "documents"], inviteCode: "NLP-INV-77E1A0" },
+  { id: "grant-4", tenantName: "Anna Ivanova", unit: "B1 / 3", ownerName: "Deniz Aksoy", startOffsetDays: -10, endOffsetDays: 20, scope: ["tickets", "documents", "communications"], inviteCode: "NLP-INV-3C9F45" },
+]
+
 export const statusLabels: Record<FlatStatus, string> = {
   occupied: "Dolu",
   vacant: "Boş",
@@ -3158,6 +3487,7 @@ export const paymentLabels: Record<PaymentStatus, string> = {
 }
 
 export const serviceStatusLabels: Record<ServiceStatus, string> = {
+  waiting_approval: "Owner approval pending",
   open: "Açık",
   assigned: "Atandı",
   waiting_payment: "Ödeme bekliyor",

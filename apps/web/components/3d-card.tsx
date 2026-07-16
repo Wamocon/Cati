@@ -1,15 +1,20 @@
 import { cn } from "@/lib/utils"
 
-interface Card3DProps {
+interface Card3DProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
-  className?: string
   innerClassName?: string
   glow?: boolean
 }
 
-export function Card3D({ children, className, innerClassName, glow = true }: Card3DProps) {
+export function Card3D({
+  children,
+  className,
+  innerClassName,
+  glow = true,
+  ...containerProps
+}: Card3DProps) {
   return (
-    <div className={cn("group min-w-0", className)}>
+    <div {...containerProps} className={cn("group min-w-0", className)}>
       <div
         className={cn(
           "premium-surface relative isolate min-w-0 overflow-visible rounded-xl p-5 transition-all duration-200 ease-out group-hover/command:border-primary/35 group-hover/command:shadow-[0_22px_70px_color-mix(in_srgb,var(--primary)_14%,transparent)] group-focus-visible/command:border-primary/45",

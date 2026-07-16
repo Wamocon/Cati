@@ -3,13 +3,11 @@
 import { BriefcaseBusiness, LogOut, ShieldCheck } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { LocaleSwitcher } from "@/components/locale-switcher"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { useUser } from "@/components/user-provider"
 import { useRouter } from "@/app/navigation"
 import { clientProfile } from "@/lib/client-context"
 import { roleDefinitions } from "@/lib/rbac"
 import { createClient } from "@/lib/supabase/client"
-import { isPublicSupabaseConfigured } from "@/lib/supabase/public-env"
 import { localizeOperationalValue, resolveDashboardLocale } from "@/lib/unit-matrix-copy"
 
 export function DashboardTopbar() {
@@ -21,11 +19,15 @@ export function DashboardTopbar() {
   const roleDef = roleDefinitions.find((role) => role.key === user.role)
   const roleLabelKey = roleDef?.labelKey.replace("roles.", "") ?? user.role
   const roleLabel = roleT(roleLabelKey)
+  const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
   const userDisplayName = localizeOperationalValue(user.full_name ?? user.email, locale)
 
   async function logout() {
     try {
-      if (isPublicSupabaseConfigured()) {
+      if (
+        process.env.NEXT_PUBLIC_SUPABASE_URL &&
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      ) {
         await createClient().auth.signOut()
       }
       await fetch("/api/access-profile", { method: "DELETE" })
@@ -44,7 +46,7 @@ export function DashboardTopbar() {
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-foreground">
-              {clientProfile.activePortfolio}
+              {portfolioDisplayName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
               {clientProfile.activeLocation} · {roleLabel}
@@ -53,7 +55,6 @@ export function DashboardTopbar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <ThemeToggle />
           <LocaleSwitcher compact className="hidden min-[360px]:flex" />
           <details className="group relative">
             <summary
@@ -82,15 +83,6 @@ export function DashboardTopbar() {
               </button>
             </div>
           </details>
-          <button
-            type="button"
-            aria-label={t("logout")}
-            onClick={logout}
-            className="hidden h-10 w-10 items-center justify-center gap-2 rounded-full border border-border bg-card text-xs font-bold text-foreground shadow-sm transition hover:bg-muted sm:inline-flex md:w-auto md:px-3"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden md:inline">{t("logout")}</span>
-          </button>
         </div>
       </div>
     </header>

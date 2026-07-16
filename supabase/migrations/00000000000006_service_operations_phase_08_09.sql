@@ -197,6 +197,56 @@ EXCEPTION
 END;
 $$;
 
+WITH tenant_context AS (
+  SELECT
+    c.id AS company_id,
+    s.id AS site_id
+  FROM public.companies c
+  LEFT JOIN LATERAL (
+    SELECT id
+    FROM public.sites
+    WHERE company_id = c.id
+    ORDER BY created_at ASC
+    LIMIT 1
+  ) s ON TRUE
+  WHERE c.id = public.default_company_id()
+),
+catalog_seed (
+  id,
+  code,
+  name,
+  category,
+  description,
+  base_price_cents,
+  currency,
+  sla_hours,
+  debt_policy,
+  requires_payment,
+  requires_deposit,
+  team,
+  provider_type,
+  service_level,
+  popularity_score,
+  active
+) AS (
+  VALUES
+    ('77777777-7777-4777-8777-777777777701'::UUID, 'CLEAN-STD', 'Standart daire temizligi', 'cleaning', 'Daire teslimi ve kisa konaklama sonrasi temizlik.', 250000, 'TRY', 24, 'manager_review', TRUE, FALSE, 'Kat hizmetleri', 'mixed', 'standard', 96, TRUE),
+    ('77777777-7777-4777-8777-777777777702'::UUID, 'CLEAN-DEEP', 'Derin temizlik ve checkout hazirligi', 'cleaning', 'Checkout sonrasi detayli temizlik ve depozito kaniti.', 620000, 'TRY', 18, 'manager_review', TRUE, TRUE, 'Kat hizmetleri', 'mixed', 'premium', 88, TRUE),
+    ('77777777-7777-4777-8777-777777777703'::UUID, 'MAINT-AC', 'Klima bakimi ve drenaj kontrolu', 'maintenance', 'Filtre, drenaj ve sogutma performansi kontrolu.', 210000, 'TRY', 36, 'allow', TRUE, FALSE, 'Teknik', 'internal', 'standard', 84, TRUE),
+    ('77777777-7777-4777-8777-777777777713'::UUID, 'EMERG-LIFE-SAFETY', 'Can guvenligi ve gaz/duman alarmi', 'security', 'Gaz kokusu, duman, yangin alarmi veya can guvenligi uyarisi icin aninda guvenlik ve yonetici eskalasyonu.', 0, 'TRY', 1, 'allow', FALSE, FALSE, 'Guvenlik', 'mixed', 'emergency', 99, TRUE),
+    ('77777777-7777-4777-8777-777777777714'::UUID, 'MAINT-ELEC', 'Acil elektrik kesintisi ve kivilcim riski', 'maintenance', 'Daire veya ortak alanda elektrik kesintisi, kivilcim, pano kokusu ve aydinlatma riski icin teknik mudaahele.', 720000, 'TRY', 2, 'allow', TRUE, FALSE, 'Teknik', 'mixed', 'emergency', 94, TRUE),
+    ('77777777-7777-4777-8777-777777777715'::UUID, 'MAINT-ELEVATOR', 'Asansor arizasi ve kabinde kalma', 'maintenance', 'Asansor durmasi, kabinde kalma, kata hizalanmama veya alarm durumunda sozlesmeli servis ve guvenlik yonlendirmesi.', 0, 'TRY', 1, 'allow', FALSE, FALSE, 'Teknik', 'vendor', 'emergency', 93, TRUE),
+    ('77777777-7777-4777-8777-777777777704'::UUID, 'MAINT-PLUMB', 'Acil tesisat mudahalesi', 'maintenance', 'Su kacagi, gider tikanikligi ve acil tesisat onarimi.', 980000, 'TRY', 4, 'allow', TRUE, FALSE, 'Teknik', 'vendor', 'emergency', 91, TRUE),
+    ('77777777-7777-4777-8777-777777777716'::UUID, 'MAINT-SEWER', 'Gider tasmasi ve kanalizasyon riski', 'maintenance', 'Gider tikanikligi, tuvalet tasmasi, kotu koku ve hijyen riski icin acil tesisat/vendor yonlendirmesi.', 860000, 'TRY', 3, 'allow', TRUE, FALSE, 'Teknik', 'vendor', 'emergency', 90, TRUE),
+    ('77777777-7777-4777-8777-777777777717'::UUID, 'MAINT-HVAC-URGENT', 'Acil klima ve konfor riski', 'maintenance', 'Yuksek sicaklik, yasli/misafir konfor riski veya premium konaklama sikayeti icin hizli klima kontrolu.', 650000, 'TRY', 8, 'allow', TRUE, FALSE, 'Teknik', 'mixed', 'emergency', 86, TRUE),
+    ('77777777-7777-4777-8777-777777777705'::UUID, 'TRANSFER-AYT', 'Antalya havalimani transferi', 'transfer', 'Malik, kiraci ve misafirler icin planli transfer.', 450000, 'TRY', 48, 'block_until_clear', TRUE, FALSE, 'Rezervasyon', 'vendor', 'premium', 79, TRUE),
+    ('77777777-7777-4777-8777-777777777706'::UUID, 'AMENITY-SPA', 'Spa, fitness ve ortak alan rezervasyonu', 'amenity', 'Ortak alan kapasitesi, aidat durumu ve yetki kontrolu.', 0, 'TRY', 12, 'block_until_clear', FALSE, FALSE, 'Sakin destek', 'internal', 'standard', 73, TRUE),
+    ('77777777-7777-4777-8777-777777777718'::UUID, 'AMENITY-SPA-INCIDENT', 'Spa, havuz ve ortak alan olay yonetimi', 'amenity', 'Spa, havuz, fitness veya ortak alanda hijyen, kapasite, ekipman ya da misafir guvenligi olayini is akisiyla yonetir.', 0, 'TRY', 2, 'allow', FALSE, FALSE, 'Sakin destek', 'mixed', 'emergency', 83, TRUE),
+    ('77777777-7777-4777-8777-777777777719'::UUID, 'AMENITY-FOOD-EVENT-INCIDENT', 'Restoran ve etkinlik operasyon olayi', 'amenity', 'Restoran, tiyatro, etkinlik veya kalabalik sosyal alanlarda kapasite, servis aksakligi ve misafir sikayetlerini yonlendirir.', 0, 'TRY', 2, 'allow', FALSE, FALSE, 'Restoran', 'mixed', 'emergency', 81, TRUE),
+    ('77777777-7777-4777-8777-777777777707'::UUID, 'SEC-ACCESS', 'Kart, QR ve plaka erisim islemi', 'security', 'Yeni kart/QR, plaka tanimi ve kayip kart iptali.', 90000, 'TRY', 8, 'block_until_clear', TRUE, FALSE, 'Guvenlik', 'internal', 'standard', 82, TRUE),
+    ('77777777-7777-4777-8777-777777777720'::UUID, 'SEC-LOCKOUT', 'Acil erisim, kapi ve bariyer kilidi', 'security', 'Daireye girememe, kart/QR calismamasi, kapida kalma, bariyer veya plaka gecis arizasi icin guvenlik yonlendirmesi.', 120000, 'TRY', 2, 'allow', TRUE, FALSE, 'Guvenlik', 'internal', 'emergency', 88, TRUE),
+    ('77777777-7777-4777-8777-777777777708'::UUID, 'INSP-DAMAGE', 'Hasar tespiti ve depozito raporu', 'inspection', 'Fotograf/video kanitli hasar ve depozito raporu.', 720000, 'TRY', 12, 'manager_review', FALSE, TRUE, 'Operasyon', 'internal', 'premium', 77, TRUE)
+)
 INSERT INTO public.service_catalog (
   id,
   company_id,
@@ -217,15 +267,29 @@ INSERT INTO public.service_catalog (
   popularity_score,
   active
 )
-VALUES
-  ('77777777-7777-4777-8777-777777777701', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'CLEAN-STD', 'Standart daire temizligi', 'cleaning', 'Daire teslimi ve kisa konaklama sonrasi temizlik.', 250000, 'TRY', 24, 'manager_review', TRUE, FALSE, 'Kat hizmetleri', 'mixed', 'standard', 96, TRUE),
-  ('77777777-7777-4777-8777-777777777702', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'CLEAN-DEEP', 'Derin temizlik ve checkout hazirligi', 'cleaning', 'Checkout sonrasi detayli temizlik ve depozito kaniti.', 620000, 'TRY', 18, 'manager_review', TRUE, TRUE, 'Kat hizmetleri', 'mixed', 'premium', 88, TRUE),
-  ('77777777-7777-4777-8777-777777777703', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'MAINT-AC', 'Klima bakimi ve drenaj kontrolu', 'maintenance', 'Filtre, drenaj ve sogutma performansi kontrolu.', 210000, 'TRY', 36, 'allow', TRUE, FALSE, 'Teknik', 'internal', 'standard', 84, TRUE),
-  ('77777777-7777-4777-8777-777777777704', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'MAINT-PLUMB', 'Acil tesisat mudahalesi', 'maintenance', 'Su kacagi, gider tikanikligi ve acil tesisat onarimi.', 980000, 'TRY', 4, 'allow', TRUE, FALSE, 'Teknik', 'vendor', 'emergency', 91, TRUE),
-  ('77777777-7777-4777-8777-777777777705', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'TRANSFER-AYT', 'Antalya havalimani transferi', 'transfer', 'Malik, kiraci ve misafirler icin planli transfer.', 450000, 'TRY', 48, 'block_until_clear', TRUE, FALSE, 'Rezervasyon', 'vendor', 'premium', 79, TRUE),
-  ('77777777-7777-4777-8777-777777777706', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'AMENITY-SPA', 'Spa, fitness ve ortak alan rezervasyonu', 'amenity', 'Ortak alan kapasitesi, aidat durumu ve yetki kontrolu.', 0, 'TRY', 12, 'block_until_clear', FALSE, FALSE, 'Sakin destek', 'internal', 'standard', 73, TRUE),
-  ('77777777-7777-4777-8777-777777777707', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'SEC-ACCESS', 'Kart, QR ve plaka erisim islemi', 'security', 'Yeni kart/QR, plaka tanimi ve kayip kart iptali.', 90000, 'TRY', 8, 'block_until_clear', TRUE, FALSE, 'Guvenlik', 'internal', 'standard', 82, TRUE),
-  ('77777777-7777-4777-8777-777777777708', '11111111-1111-4111-8111-111111111111', '33333333-3333-4333-8333-333333333333', 'INSP-DAMAGE', 'Hasar tespiti ve depozito raporu', 'inspection', 'Fotograf/video kanitli hasar ve depozito raporu.', 720000, 'TRY', 12, 'manager_review', FALSE, TRUE, 'Operasyon', 'internal', 'premium', 77, TRUE)
+SELECT
+  catalog_seed.id,
+  tenant_context.company_id,
+  tenant_context.site_id,
+  catalog_seed.code,
+  catalog_seed.name,
+  catalog_seed.category,
+  catalog_seed.description,
+  catalog_seed.base_price_cents,
+  catalog_seed.currency,
+  catalog_seed.sla_hours,
+  catalog_seed.debt_policy,
+  catalog_seed.requires_payment,
+  catalog_seed.requires_deposit,
+  catalog_seed.team,
+  catalog_seed.provider_type,
+  catalog_seed.service_level,
+  catalog_seed.popularity_score,
+  catalog_seed.active
+FROM catalog_seed
+CROSS JOIN tenant_context
+WHERE tenant_context.company_id IS NOT NULL
+  AND tenant_context.site_id IS NOT NULL
 ON CONFLICT (company_id, code) DO UPDATE
 SET
   name = EXCLUDED.name,
@@ -268,7 +332,7 @@ WITH ticket_catalog AS (
       WHEN t.category ILIKE '%Erisim%' OR t.category ILIKE '%Guven%' OR t.category ILIKE '%Kamera%' THEN 'SEC-ACCESS'
       ELSE 'AMENITY-SPA'
     END
-  WHERE t.company_id = '11111111-1111-4111-8111-111111111111'
+  WHERE t.company_id = public.default_company_id()
 )
 INSERT INTO public.service_orders (
   company_id,
@@ -347,7 +411,7 @@ WITH order_source AS (
     ORDER BY sm.active_tasks ASC, sm.name ASC
     LIMIT 1
   ) s ON TRUE
-  WHERE o.company_id = '11111111-1111-4111-8111-111111111111'
+  WHERE o.company_id = public.default_company_id()
 )
 INSERT INTO public.workforce_tasks (
   company_id,

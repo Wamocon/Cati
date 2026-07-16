@@ -87,6 +87,10 @@ export const dashboardHomeCopy = {
           "Saha işi kapatma operasyon kanıtı olmadan yapılamaz",
         ],
         cards: {
+          tickets: {
+            title: "Finans İncelemesi Gereken Talepler",
+            description: "Ödeme, borç veya mali onay gerektiren servis taleplerini salt okunur olarak inceleyin.",
+          },
           finance: {
             title: "Finans & Aidat",
             description: "Aidat, tahsilat, açık bakiye ve finans defteri kontrolleri.",
@@ -135,10 +139,10 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Malik Çalışma Alanı",
         description:
-          "Bu rol kendi dairesiyle ilgili servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer maliklerin kayıtları ve şirket içi ekranlar kapalıdır.",
+          "Bu rol, doğrulanmış kendi dairelerine ait salt okunur bakiye, hesap özeti ve ödeme geçmişinin yanı sıra servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer malik kayıtları ve şirket içi finans kontrolleri kapalıdır.",
         accessNotes: [
-          "Sadece kendi dairesi ve yetkili kayıtlar",
-          "Diğer malik, personel, rapor ve finans ekranları kapalı",
+          "Sadece doğrulanmış kendi daireleri ve yetkili kayıtlar",
+          "Diğer malik, personel, şirket raporları ve iç finans kontrolleri kapalı",
         ],
         cards: {
           tickets: {
@@ -148,6 +152,10 @@ export const dashboardHomeCopy = {
           calendar: {
             title: "Rezervasyon",
             description: "Kiralama, giriş-çıkış ve uygunluk takvimi.",
+          },
+          finance: {
+            title: "Bakiye & Hesap Özeti",
+            description: "Doğrulanmış kendi daireleriniz için salt okunur bakiye, hesap özeti ve ödeme geçmişi.",
           },
           documents: {
             title: "Belgeler",
@@ -219,13 +227,13 @@ export const dashboardHomeCopy = {
       },
       owner: {
         eyebrow: "Malik portal akışı",
-        title: "Kendi daireniz için net durum görünümü",
+        title: "Kendi daireleriniz için bakiye ve işlem görünümü",
         metricLabel: "yetkili işlem alanı",
-        status: "Sadece kendi dairesi, belge ve iletişim kapsamı",
-        bars: ["Servis", "Rezervasyon", "Belge"],
+        status: "Kendi daireleri için salt okunur hesap özeti, belge ve iletişim",
+        bars: ["Servis", "Bakiye", "Belge"],
         timeline: [
           { label: "Daire", detail: "Yetkili kayıt" },
-          { label: "Servis", detail: "Talep ve durum" },
+          { label: "Finans", detail: "Bakiye ve ödeme geçmişi" },
           { label: "Mesaj", detail: "Yönetim iletişimi" },
         ],
       },
@@ -267,7 +275,7 @@ export const dashboardHomeCopy = {
       title: "ERP modül durumu",
       description:
         "CRM, daire matrisi, kullanıcı rolleri, finans, servis, saha, rezervasyon, iletişim, mobil PWA, entegrasyon, AI ve güvenlik kontrolleri aynı işletim planında izlenir.",
-      badge: "{complete} aktif · {ready} kontrol hazır · {progress} yapımda",
+      badge: "{complete} aktif · {ready} kontrol hazır · {progress} yapımda · {blocked} bloke",
       module: "Modül",
       howTo: "Nasıl kullanılır",
       openAria: "Modül {phase} {title} ekranını aç",
@@ -391,6 +399,10 @@ export const dashboardHomeCopy = {
           "Field work cannot be closed without operational evidence",
         ],
         cards: {
+          tickets: {
+            title: "Tickets Requiring Finance Review",
+            description: "Review service tickets that need payment, debt, or financial approval without changing operations.",
+          },
           finance: {
             title: "Finance & Dues",
             description: "Dues, collections, open balances and finance ledger controls.",
@@ -439,10 +451,10 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Owner Workspace",
         description:
-          "This role sees service, reservation, document and management communication related to its own units. Other owner records and internal company screens are closed.",
+          "This role sees read-only balances, statements and payment history for its verified owned units, alongside service, reservations, documents and management communication. Other owners' records and internal finance controls are closed.",
         accessNotes: [
-          "Only own units and authorized records",
-          "Other owners, staff, reports and finance screens are closed",
+          "Only verified owned units and authorized records",
+          "Other owners, staff, company reports and internal finance controls are closed",
         ],
         cards: {
           tickets: {
@@ -452,6 +464,10 @@ export const dashboardHomeCopy = {
           calendar: {
             title: "Reservations",
             description: "Rental, check-in/out and availability calendar.",
+          },
+          finance: {
+            title: "Balance & Statement",
+            description: "Read-only balances, statements and payment history for your verified owned units.",
           },
           documents: {
             title: "Documents",
@@ -523,13 +539,13 @@ export const dashboardHomeCopy = {
       },
       owner: {
         eyebrow: "Owner portal flow",
-        title: "Clear status view for your own units",
+        title: "Clear balances and activity for your own units",
         metricLabel: "authorized action areas",
-        status: "Only own unit, document and communication scope",
-        bars: ["Service", "Reservation", "Document"],
+        status: "Read-only statement, documents and communication for owned units",
+        bars: ["Service", "Balance", "Document"],
         timeline: [
           { label: "Unit", detail: "Authorized record" },
-          { label: "Service", detail: "Request and status" },
+          { label: "Finance", detail: "Balance and payment history" },
           { label: "Message", detail: "Management communication" },
         ],
       },
@@ -571,7 +587,7 @@ export const dashboardHomeCopy = {
       title: "ERP module status",
       description:
         "CRM, unit matrix, user roles, finance, service, field work, reservations, communication, mobile PWA, integrations, AI and security controls are tracked in the same operating plan.",
-      badge: "{complete} active · {ready} ready for review · {progress} in progress",
+      badge: "{complete} active · {ready} ready for review · {progress} in progress · {blocked} blocked",
       module: "Module",
       howTo: "How to use",
       openAria: "Open module {phase} {title}",
@@ -610,7 +626,7 @@ export const dashboardHomeCopy = {
   de: {
     command: {
       inspect: "Prüfen",
-      locked: "Rolle gesperrt",
+      locked: "Bereich gesperrt",
       lockedAriaSuffix: "Rollenberechtigung fehlt",
       lockedTitle: "Dieses Modul ist für die aktuelle Rolle geschlossen",
     },
@@ -695,6 +711,10 @@ export const dashboardHomeCopy = {
           "Außendienstaufgaben können ohne Operationsnachweis nicht abgeschlossen werden",
         ],
         cards: {
+          tickets: {
+            title: "Tickets mit Finanzprüfung",
+            description: "Serviceanfragen mit Zahlungs-, Rückstands- oder Finanzfreigabe prüfen, ohne den operativen Ablauf zu ändern.",
+          },
           finance: {
             title: "Finanzen & Beiträge",
             description: "Beiträge, Zahlungseingänge, offene Salden und Finanzbuch-Kontrollen.",
@@ -743,10 +763,10 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Eigentümer-Arbeitsbereich",
         description:
-          "Diese Rolle sieht Service, Reservierungen, Dokumente und Managementkommunikation zu den eigenen Einheiten. Andere Eigentümerdaten und interne Unternehmensseiten sind geschlossen.",
+          "Diese Rolle sieht schreibgeschützte Salden, Abrechnungen und Zahlungshistorien für verifizierte eigene Einheiten sowie Service, Reservierungen, Dokumente und Managementkommunikation. Daten anderer Eigentümer und interne Finanzkontrollen sind geschlossen.",
         accessNotes: [
-          "Nur eigene Einheiten und autorisierte Datensätze",
-          "Andere Eigentümer, Personal, Berichte und Finanzseiten sind geschlossen",
+          "Nur verifizierte eigene Einheiten und autorisierte Datensätze",
+          "Andere Eigentümer, Personal, Unternehmensberichte und interne Finanzkontrollen sind geschlossen",
         ],
         cards: {
           tickets: {
@@ -756,6 +776,10 @@ export const dashboardHomeCopy = {
           calendar: {
             title: "Reservierungen",
             description: "Vermietung, Check-in/out und Verfügbarkeitskalender.",
+          },
+          finance: {
+            title: "Saldo & Abrechnung",
+            description: "Schreibgeschützte Salden, Abrechnungen und Zahlungshistorien für Ihre verifizierten eigenen Einheiten.",
           },
           documents: {
             title: "Dokumente",
@@ -827,13 +851,13 @@ export const dashboardHomeCopy = {
       },
       owner: {
         eyebrow: "Eigentümerportalfluss",
-        title: "Klare Statussicht für eigene Einheiten",
+        title: "Klare Salden und Vorgänge für eigene Einheiten",
         metricLabel: "autorisierte Aktionsbereiche",
-        status: "Nur eigene Einheit, Dokumente und Kommunikation",
-        bars: ["Service", "Reservierung", "Dokument"],
+        status: "Schreibgeschützte Abrechnung, Dokumente und Kommunikation für eigene Einheiten",
+        bars: ["Service", "Saldo", "Dokument"],
         timeline: [
           { label: "Einheit", detail: "Autorisierter Datensatz" },
-          { label: "Service", detail: "Anfrage und Status" },
+          { label: "Finanzen", detail: "Saldo und Zahlungshistorie" },
           { label: "Nachricht", detail: "Managementkommunikation" },
         ],
       },
@@ -875,7 +899,7 @@ export const dashboardHomeCopy = {
       title: "ERP-Modulstatus",
       description:
         "CRM, Wohnungsmatrix, Benutzerrollen, Finanzen, Service, Außendienst, Reservierungen, Kommunikation, mobile PWA, Integrationen, KI und Sicherheitskontrollen werden im selben Betriebsplan verfolgt.",
-      badge: "{complete} aktiv · {ready} prüfbereit · {progress} in Arbeit",
+      badge: "{complete} aktiv · {ready} prüfbereit · {progress} in Arbeit · {blocked} blockiert",
       module: "Modul",
       howTo: "Nutzung",
       openAria: "Modul {phase} {title} öffnen",
@@ -999,6 +1023,10 @@ export const dashboardHomeCopy = {
           "Полевую работу нельзя закрыть без операционного доказательства",
         ],
         cards: {
+          tickets: {
+            title: "Заявки на финансовую проверку",
+            description: "Просматривайте сервисные заявки, требующие проверки оплаты, задолженности или финансового согласования, без изменения операций.",
+          },
           finance: {
             title: "Финансы и взносы",
             description: "Взносы, оплаты, открытые балансы и контроль финансового журнала.",
@@ -1047,10 +1075,10 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Рабочее пространство владельца",
         description:
-          "Эта роль видит сервис, бронирования, документы и коммуникацию управления по своим юнитам. Записи других владельцев и внутренние экраны компании закрыты.",
+          "Эта роль видит балансы, выписки и историю платежей только для подтверждённых собственных юнитов в режиме чтения, а также сервис, бронирования, документы и коммуникацию с управлением. Записи других владельцев и внутренние финансовые операции закрыты.",
         accessNotes: [
-          "Только собственные юниты и авторизованные записи",
-          "Другие владельцы, персонал, отчеты и финансы закрыты",
+          "Только подтверждённые собственные юниты и авторизованные записи",
+          "Другие владельцы, персонал, отчёты компании и внутренние финансовые операции закрыты",
         ],
         cards: {
           tickets: {
@@ -1060,6 +1088,10 @@ export const dashboardHomeCopy = {
           calendar: {
             title: "Бронирования",
             description: "Аренда, check-in/out и календарь доступности.",
+          },
+          finance: {
+            title: "Баланс и выписка",
+            description: "Балансы, выписки и история платежей только для ваших подтверждённых собственных юнитов в режиме чтения.",
           },
           documents: {
             title: "Документы",
@@ -1131,13 +1163,13 @@ export const dashboardHomeCopy = {
       },
       owner: {
         eyebrow: "Портал владельца",
-        title: "Понятный статус по собственным юнитам",
+        title: "Понятные балансы и операции по собственным юнитам",
         metricLabel: "авторизованных зон действий",
-        status: "Только свой юнит, документы и коммуникации",
-        bars: ["Сервис", "Бронирование", "Документ"],
+        status: "Выписка только для чтения, документы и коммуникации по собственным юнитам",
+        bars: ["Сервис", "Баланс", "Документ"],
         timeline: [
           { label: "Юнит", detail: "Авторизованная запись" },
-          { label: "Сервис", detail: "Заявка и статус" },
+          { label: "Финансы", detail: "Баланс и история платежей" },
           { label: "Сообщение", detail: "Коммуникация с управлением" },
         ],
       },
@@ -1179,7 +1211,7 @@ export const dashboardHomeCopy = {
       title: "Статус ERP-модулей",
       description:
         "CRM, матрица юнитов, роли пользователей, финансы, сервис, полевые работы, бронирования, коммуникации, мобильная PWA, интеграции, AI и безопасность отслеживаются в одном операционном плане.",
-      badge: "{complete} активно · {ready} готово к проверке · {progress} в работе",
+      badge: "{complete} активно · {ready} готово к проверке · {progress} в работе · {blocked} заблокировано",
       module: "Модуль",
       howTo: "Как использовать",
       openAria: "Открыть модуль {phase} {title}",

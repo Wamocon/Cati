@@ -22,7 +22,12 @@ export const dashboardRoutes: DashboardRoute[] = [
 ]
 
 export function resourceForDashboardPath(pathname: string): Resource {
-  const normalized = pathname.replace(/\/$/, "") || "/dashboard"
+  const withoutQueryOrHash = pathname.split(/[?#]/, 1)[0] ?? pathname
+  const withoutLocale = withoutQueryOrHash.replace(
+    /^\/(?:tr|en|de|ru)(?=\/|$)/,
+    ""
+  )
+  const normalized = withoutLocale.replace(/\/$/, "") || "/dashboard"
   const route = dashboardRoutes
     .filter((item) => item.href !== "/dashboard")
     .find((item) => normalized === item.href || normalized.startsWith(`${item.href}/`))

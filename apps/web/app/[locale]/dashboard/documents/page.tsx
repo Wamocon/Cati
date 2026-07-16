@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import { useLocale } from "next-intl"
 import {
   Download,
@@ -109,13 +109,31 @@ function summarizeDocuments(documents: DocumentVaultRecord[]) {
   }
 }
 
+function formatUploadSize(sizeBytes: unknown) {
+  if (typeof sizeBytes !== "number" || !Number.isFinite(sizeBytes) || sizeBytes <= 0) return "-"
+  if (sizeBytes >= 1024 * 1024) return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+  if (sizeBytes >= 1024) return `${Math.ceil(sizeBytes / 1024)} KB`
+  return `${sizeBytes} B`
+}
+
+function uploadString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : ""
+}
+
+function uploadCategory(value: unknown): DocumentVaultRecord["category"] {
+  const category = uploadString(value)
+  return uploadCategories.includes(category as DocumentVaultRecord["category"])
+    ? (category as DocumentVaultRecord["category"])
+    : "Uyum"
+}
+
 function DocumentUploadPanel({
   role,
   onUploaded,
   t,
 }: {
   role: Role
-  onUploaded: () => void
+  onUploaded: (document: DocumentVaultRecord) => void
   t: (value: string) => string
 }) {
   const [state, setState] = useState<UploadState>("idle")
@@ -140,14 +158,31 @@ function DocumentUploadPanel({
         throw new Error(payload.error || "Upload failed.")
       }
 
+      const upload = payload.upload && typeof payload.upload === "object"
+        ? (payload.upload as Record<string, unknown>)
+        : {}
+      const title = uploadString(upload.title) || uploadString(formData.get("title"))
+      const originalFilename = uploadString(upload.originalFilename) || fileName || t("Document")
+      const flatNumber = uploadString(formData.get("flatNumber")) || "-"
+
       setState("success")
       setMessage(
-        `${payload.upload?.originalFilename ?? t("Document")} ${t("saved for review")} (${payload.storageMode}).`
+        `${originalFilename} ${t("saved for review")} (${payload.storageMode}).`
       )
       form.reset()
       setFileName("")
       window.dispatchEvent(new CustomEvent("site-management:changed"))
-      onUploaded()
+      onUploaded({
+        id: uploadString(upload.id) || `UPLOAD-${Date.now()}`,
+        flatNumber,
+        ownerName: "İnceleme ekibi",
+        name: title || originalFilename,
+        category: uploadCategory(upload.category || formData.get("category")),
+        status: "pending",
+        size: formatUploadSize(upload.sizeBytes),
+        updatedAt: new Date().toISOString().slice(0, 10),
+        retentionRule: `OCR / insan onayı gerekli: ${originalFilename}`,
+      })
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : t("Yükleme başarısız."))
@@ -261,6 +296,133 @@ function DocumentUploadPanel({
   )
 }
 
+type DocumentAvailabilityState = "checking" | "available" | "missing"
+type DocumentFileActionRecord = Pick<
+  DocumentVaultRecord,
+  "id" | "flatNumber" | "name" | "status" | "storagePath" | "sourcePath"
+> & {
+  category: string
+}
+
+function DocumentFileActions({
+  document,
+  role,
+  t,
+}: {
+  document: DocumentFileActionRecord
+  role: Role
+  t: (value: string) => string
+}) {
+  const hasCandidateFile =
+    document.status === "verified" &&
+    Boolean(document.storagePath || document.sourcePath)
+  const [availability, setAvailability] = useState<DocumentAvailabilityState>(
+    hasCandidateFile ? "checking" : "missing"
+  )
+  const fileUrl = `/api/site-management/documents/${encodeURIComponent(document.id)}/file`
+  const unavailableLabel =
+    availability === "checking"
+      ? t("Dosya kontrol ediliyor")
+      : t("Dosya henüz bağlı değil")
+
+  useEffect(() => {
+    if (!hasCandidateFile) {
+      return undefined
+    }
+
+    const controller = new AbortController()
+
+    async function checkAvailability() {
+      try {
+        const response = await fetch(`${fileUrl}?mode=availability`, {
+          signal: controller.signal,
+        })
+        const payload = (await response.json().catch(() => ({}))) as {
+          available?: unknown
+        }
+
+        if (!controller.signal.aborted) {
+          setAvailability(response.ok && payload.available === true ? "available" : "missing")
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setAvailability("missing")
+        }
+      }
+    }
+
+    void checkAvailability()
+
+    return () => controller.abort()
+  }, [fileUrl, hasCandidateFile])
+
+  if (availability !== "available") {
+    return (
+      <span title={unavailableLabel}>
+        <DashboardActionMenu
+          compact
+          label={t("Belge aksiyonlari")}
+          ariaLabel={`${document.id} ${unavailableLabel}`}
+          items={[
+            {
+              key: "missing-file",
+              label: unavailableLabel,
+              actionType: "document.file.unavailable",
+              disabled: true,
+            },
+          ]}
+        />
+      </span>
+    )
+  }
+
+  return (
+    <DashboardActionMenu
+      compact
+      label={t("Belge aksiyonlari")}
+      ariaLabel={`${document.id} ${t("Belge aksiyonlari")}`}
+      items={[
+        {
+          key: "view",
+          label: t("Belgeyi goruntule"),
+          icon: <Eye />,
+          href: fileUrl,
+          target: "_blank",
+          actionType: "document.view.requested",
+          ariaLabel: t("Belgeyi goruntule"),
+          entityTable: "documents",
+          entityExternalId: document.id,
+          title: document.name,
+          metadata: {
+            flatNumber: document.flatNumber,
+            category: document.category,
+            role,
+            fileAvailable: true,
+          },
+        },
+        {
+          key: "download",
+          label: t("Belgeyi indir"),
+          icon: <Download />,
+          href: `${fileUrl}?disposition=attachment`,
+          download: true,
+          actionType: "document.download.requested",
+          ariaLabel: t("Belgeyi indir"),
+          entityTable: "documents",
+          entityExternalId: document.id,
+          title: document.name,
+          metadata: {
+            flatNumber: document.flatNumber,
+            category: document.category,
+            role,
+            fileAvailable: true,
+          },
+        },
+      ]}
+    />
+  )
+}
+
 export default function DocumentsPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
@@ -269,9 +431,20 @@ export default function DocumentsPage() {
   const fieldView = isFieldRole(user.role)
   const restrictedView = clientView || fieldView
   const canUpload = hasPermission(user.role, "documents", "create")
-  const visibleDocuments = visibleDocumentsForRole(user.role, documentVault)
+  const [pendingUploads, setPendingUploads] = useState<DocumentVaultRecord[]>([])
+  const baseVisibleDocuments = visibleDocumentsForRole(user.role, documentVault)
+  const visibleDocuments = pendingUploads.length > 0
+    ? [...pendingUploads, ...baseVisibleDocuments]
+    : baseVisibleDocuments
   const visiblePackets = visibleDocumentPacketsForRole(user.role, documentPackets)
-  const summary = restrictedView ? summarizeDocuments(visibleDocuments) : getDocumentSummary()
+  const baseSummary = restrictedView ? summarizeDocuments(baseVisibleDocuments) : getDocumentSummary()
+  const summary = pendingUploads.length > 0
+    ? {
+        ...baseSummary,
+        total: baseSummary.total + pendingUploads.length,
+        pending: baseSummary.pending + pendingUploads.length,
+      }
+    : baseSummary
   const packetSummary = getDocumentPacketSummary()
   const purchaseSummary = getPurchaseChecklistSummary()
   const localizeRetentionRule = (rule: string) => {
@@ -282,8 +455,18 @@ export default function DocumentsPage() {
     if (rule.startsWith(ocrPrefix)) return `${t("OCR / insan onayı gerekli")}: ${rule.slice(ocrPrefix.length)}`
     return t(rule)
   }
+  const localizeDocumentOwner = (ownerName: string) => {
+    if (ownerName !== "İnceleme ekibi") return ownerName
+    return {
+      tr: "İnceleme ekibi",
+      en: "Review team",
+      de: "Prüfungsteam",
+      ru: "Команда проверки",
+    }[locale]
+  }
   const localizedVisibleDocuments = visibleDocuments.map((document) => ({
     ...document,
+    ownerName: localizeDocumentOwner(document.ownerName),
     category: t(document.category),
     retentionRule: localizeRetentionRule(document.retentionRule),
   }))
@@ -340,7 +523,16 @@ export default function DocumentsPage() {
       </div>
 
       {canUpload ? (
-        <DocumentUploadPanel role={user.role} t={t} onUploaded={() => undefined} />
+        <DocumentUploadPanel
+          role={user.role}
+          t={t}
+          onUploaded={(document) =>
+            setPendingUploads((current) => [
+              document,
+              ...current.filter((item) => item.id !== document.id),
+            ])
+          }
+        />
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -590,43 +782,7 @@ export default function DocumentsPage() {
             headerClassName: "text-center",
             cellClassName: "text-center",
             render: (document) => (
-              <DashboardActionMenu
-                compact
-                label={t("Belge aksiyonlari")}
-                ariaLabel={`${document.id} ${t("Belge aksiyonlari")}`}
-                items={[
-                  {
-                    key: "view",
-                    label: t("Belgeyi goruntule"),
-                    icon: <Eye />,
-                    actionType: "document.view.requested",
-                    ariaLabel: t("Belgeyi goruntule"),
-                    entityTable: "documents",
-                    entityExternalId: document.id,
-                    title: document.name,
-                    metadata: {
-                      flatNumber: document.flatNumber,
-                      category: document.category,
-                      role: user.role,
-                    },
-                  },
-                  {
-                    key: "download",
-                    label: t("Belgeyi indir"),
-                    icon: <Download />,
-                    actionType: "document.download.requested",
-                    ariaLabel: t("Belgeyi indir"),
-                    entityTable: "documents",
-                    entityExternalId: document.id,
-                    title: document.name,
-                    metadata: {
-                      flatNumber: document.flatNumber,
-                      category: document.category,
-                      role: user.role,
-                    },
-                  },
-                ]}
-              />
+              <DocumentFileActions document={document} role={user.role} t={t} />
             ),
           },
         ]}

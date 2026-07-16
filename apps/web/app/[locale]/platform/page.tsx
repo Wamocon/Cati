@@ -288,7 +288,7 @@ export default async function PlatformPage({
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/#platform"
+                    href="/#modules"
                     className="inline-flex h-11 items-center justify-center rounded-md border border-border bg-card px-5 text-sm font-bold text-foreground transition hover:bg-muted"
                   >
                     {copy.secondaryCta}

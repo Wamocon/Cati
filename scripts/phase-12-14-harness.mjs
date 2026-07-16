@@ -54,7 +54,7 @@ async function waitForServer(baseUrl, timeoutMs = 90_000) {
   let lastError = ""
   while (Date.now() - started < timeoutMs) {
     try {
-      const response = await fetch(apiUrl(baseUrl, "/api/site-management/phase-status"), { cache: "no-store" })
+      const response = await fetch(apiUrl(baseUrl, "/tr"), { cache: "no-store" })
       if (response.ok) return { status: response.status }
       lastError = `HTTP ${response.status}`
     } catch (error) {
@@ -118,9 +118,10 @@ async function runApiChecks(baseUrl) {
   }
 
   await run("phase-status-12-14", "/api/site-management/phase-status", { role: "admin" }, (payload) => {
+    const expectedStatuses = new Map([[12, "in_progress"], [13, "blocked"], [14, "in_progress"]])
     for (const phaseNo of [12, 13, 14]) {
       const phase = payload.phases?.find((item) => item.phase === phaseNo)
-      assert(phase?.status === "ready_for_uat", `phase ${phaseNo} must be ready_for_uat`)
+      assert(phase?.status === expectedStatuses.get(phaseNo), `phase ${phaseNo} status must remain evidence-scoped`)
       assert((phase.evidence ?? []).length >= 3, `phase ${phaseNo} must expose evidence`)
     }
   })
@@ -319,7 +320,7 @@ async function main() {
   process.env.TEMP = localTempDir
   process.env.TMP = localTempDir
   process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(localTempDir, "ms-playwright")
-  process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES = process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
+  process.env.ENABLE_ACCESS_PROFILES = process.env.ENABLE_ACCESS_PROFILES ?? "true"
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const outDir = path.join(args.outDir, `phase-12-14-${timestamp}`)

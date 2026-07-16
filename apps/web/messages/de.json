@@ -11,7 +11,7 @@
   "nav": {
     "skipToContent": "Zum Inhalt springen",
     "home": "Startseite",
-    "newLevel": "New Level",
+    "newLevel": "Neues Niveau",
     "catalog": "Module",
     "about": "Über uns",
     "services": "Abläufe",
@@ -22,7 +22,9 @@
     "portal": "Kundenportal",
     "platformSubtitle": "1Çatı Plattform",
     "toggleMenu": "Menü umschalten",
-    "platform": "Plattform"
+    "platform": "Plattform",
+    "demo": "Demo",
+    "videos": "Cati Training"
   },
   "hero": {
     "badge": "Plattform für Immobilienbetrieb",
@@ -50,6 +52,8 @@
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212.000+",
     "previewCity": "Alanya",
+    "projectName": "Neues Niveau Premium",
+    "projectSubtitle": "Avsallar-Masterplan zum Betriebsdatensatz",
     "statValues": {
       "activeListings": "212k+",
       "leads": "150",
@@ -198,20 +202,9 @@
     "rights": "© 2026 Ataberk Estate. Alle Rechte vorbehalten.",
     "description": "Immobilienverkauf und -management in der Türkei; ein vertrauenswürdiger Partner für lokale und ausländische Eigentümer.",
     "companyTitle": "Unternehmen",
-    "company": [
-      "Über uns",
-      "Plattform",
-      "Unser Team",
-      "Karriere",
-      "Kontakt"
-    ],
+    "company": ["Über uns", "Plattform", "Unser Team", "Karriere", "Kontakt"],
     "catalogTitle": "Katalog",
-    "catalog": [
-      "Alle Anzeigen",
-      "Neue Projekte",
-      "Zu mieten",
-      "VIP-Anzeigen"
-    ],
+    "catalog": ["Alle Anzeigen", "Neue Projekte", "Zu mieten", "VIP-Anzeigen"],
     "servicesTitle": "Dienstleistungen",
     "services": [
       "Kauf",
@@ -220,10 +213,7 @@
       "Staatsbürgerschaft"
     ],
     "legalTitle": "Rechtliches",
-    "legal": [
-      "Datenschutz",
-      "Nutzungsbedingungen"
-    ],
+    "legal": ["Datenschutz", "Nutzungsbedingungen"],
     "securityNote": "Sichere Betriebsplattform — WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
@@ -273,7 +263,7 @@
     "owner": "Eigentümer",
     "tenant": "Mieter",
     "descriptions": {
-      "admin": "Vollständige Verwaltungsrolle. Verwaltet Nutzer, Einstellungen, Finanzen, Zutritt und Prüfspur.",
+      "admin": "Organisationsadministrator ausschließlich für das zugewiesene Unternehmen. Verwaltet dessen Nutzer, Einstellungen, Finanzen, Zugriffe und Audit; keine organisationsübergreifende oder Plattformkontrolle. Der Plattform-Superadmin ist eine separate, geschützte Break-Glass-Identität.",
       "manager": "Verantwortliche Betriebsrolle. Überwacht Services, Aufgaben, Personal, Reservierungen, Kommunikation und Tagesrisiken.",
       "accountant": "Buchhaltungsrolle. Verwaltet Gebühren, Zahlungen, Inkasso, Kautionen, Rückerstattungen und Finanzberichte.",
       "staff": "Mitarbeiterrolle. Nimmt zugewiesene Aufträge an, erledigt Aufgaben und ergänzt Foto-/Videoberichte.",
@@ -663,110 +653,38 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": [
-        "Lead",
-        "Status",
-        "Quelle",
-        "Makler"
-      ],
+      "columns": ["Lead", "Status", "Quelle", "Makler"],
       "rows": [
-        [
-          "Anna K. - Alanya Wohnung",
-          "Heiß",
-          "WhatsApp",
-          "Mehmet"
-        ],
-        [
-          "Sergey P. - Villa",
-          "Neu",
-          "Webformular",
-          "Ayşe"
-        ],
-        [
-          "Li W. - Investition",
-          "Meeting",
-          "Empfehlung",
-          "Can"
-        ]
+        ["Anna K. - Alanya Wohnung", "Heiß", "WhatsApp", "Mehmet"],
+        ["Sergey P. - Villa", "Neu", "Webformular", "Ayşe"],
+        ["Li W. - Investition", "Meeting", "Empfehlung", "Can"]
       ]
     },
     "listings": {
       "name": "Anzeigen",
-      "columns": [
-        "Anzeige",
-        "Preis",
-        "EİDS",
-        "Status"
-      ],
+      "columns": ["Anzeige", "Preis", "EİDS", "Status"],
       "rows": [
-        [
-          "Villa #4021 - Kargıcak",
-          "€ 420.000",
-          "Genehmigt",
-          "Aktiv"
-        ],
-        [
-          "Wohnung #1847 - Mahmutlar",
-          "€ 95.000",
-          "Ausstehend",
-          "Aktiv"
-        ],
-        [
-          "Penthouse #990 - Alanya",
-          "€ 310.000",
-          "Genehmigt",
-          "Reserviert"
-        ]
+        ["Villa #4021 - Kargıcak", "€ 420.000", "Genehmigt", "Aktiv"],
+        ["Wohnung #1847 - Mahmutlar", "€ 95.000", "Ausstehend", "Aktiv"],
+        ["Penthouse #990 - Alanya", "€ 310.000", "Genehmigt", "Reserviert"]
       ]
     },
     "tickets": {
       "name": "Tickets",
-      "columns": [
-        "Anfrage",
-        "Priorität",
-        "Letzte Aktualisierung"
-      ],
+      "columns": ["Anfrage", "Priorität", "Letzte Aktualisierung"],
       "rows": [
-        [
-          "Wasserleck - Villa #4021",
-          "Hoch",
-          "vor 2 Stunden"
-        ],
-        [
-          "Klima-Wartung - Whg #1847",
-          "Mittel",
-          "Gestern"
-        ],
-        [
-          "Malerei - Penthouse #990",
-          "Niedrig",
-          "vor 3 Tagen"
-        ]
+        ["Wasserleck - Villa #4021", "Hoch", "vor 2 Stunden"],
+        ["Klima-Wartung - Whg #1847", "Mittel", "Gestern"],
+        ["Malerei - Penthouse #990", "Niedrig", "vor 3 Tagen"]
       ]
     },
     "calendar": {
       "name": "Kalender",
-      "columns": [
-        "Zeit",
-        "Termin",
-        "Ort"
-      ],
+      "columns": ["Zeit", "Termin", "Ort"],
       "rows": [
-        [
-          "10:00",
-          "Villen-Tour - Anna K.",
-          "Kargıcak"
-        ],
-        [
-          "14:00",
-          "Grundbuchtermin",
-          "Alanya Tapu"
-        ],
-        [
-          "16:30",
-          "Wartungskontrolle",
-          "Mahmutlar"
-        ]
+        ["10:00", "Villen-Tour - Anna K.", "Kargıcak"],
+        ["14:00", "Grundbuchtermin", "Alanya Tapu"],
+        ["16:30", "Wartungskontrolle", "Mahmutlar"]
       ]
     }
   },
@@ -776,5 +694,127 @@
     "ready": "{source} bereit",
     "retry": "Erneut versuchen",
     "sourceFallback": "Daten"
+  },
+  "manualPayments": {
+    "loading": "Manuelle Zahlungskontrollen werden vorbereitet...",
+    "loadErrorTitle": "Manuelle Zahlungen sind vorübergehend nicht verfügbar",
+    "loadErrorBody": "Es wurde kein Datensatz geändert. Aktualisieren Sie den Bereich oder versuchen Sie es gleich erneut.",
+    "retry": "Erneut versuchen",
+    "title": "Eingegangene Zahlung buchen",
+    "unreconciledBadge": "Manuell / nicht abgestimmt",
+    "readOnlyBadge": "Nur Manager-Ansicht",
+    "subtitle": "Erfassen Sie eine als eingegangen gemeldete Zahlung für die genaue Einheit und das Eigentümerkonto. Die Buchung landet in einem ausgeglichenen Verrechnungskonto und bleibt bis zur separaten Bankprüfung unabgestimmt.",
+    "liveTruth": "Live-Datenbankeintrag; keine Bestätigung durch Bank oder Kartenanbieter.",
+    "demoTruth": "Persistenter lokaler QA-Eintrag; keine externe Bank oder Zahlungsanbindung.",
+    "refreshing": "Wird aktualisiert",
+    "refresh": "Aktualisieren",
+    "postedCount": "Aktive manuelle Eingänge",
+    "unreconciledTotal": "Abstimmung ausstehend",
+    "accountCount": "Berechtigte Eigentümerkonten",
+    "formTitle": "Zahlungsdaten",
+    "managerTitle": "Zahlungsprüfung",
+    "account": "Einheit und Eigentümerkonto",
+    "selectAccount": "Konto auswählen",
+    "amount": "Eingegangener Betrag",
+    "currency": "Währung",
+    "receivedAt": "Eingangsdatum und -zeit",
+    "method": "Gemeldete Zahlungsart",
+    "methods": {
+      "bank_transfer": "Banküberweisung",
+      "cash": "Barzahlung",
+      "card_terminal": "Kartenterminal",
+      "other": "Sonstige"
+    },
+    "reference": "Beleg- oder Überweisungsreferenz",
+    "businessNote": "Geschäftliche Notiz",
+    "noteHelp": "Beschreiben Sie Prüfung und Buchungsgrund. Keine Kartendaten oder Passwörter eingeben.",
+    "saving": "Wird sicher gebucht...",
+    "submit": "Manuelle Zahlung buchen",
+    "managerBody": "Manager dürfen manuelle Eingänge ihrer zugewiesenen Standorte prüfen, aber keine Buchung erstellen oder stornieren. Dies erledigt ein Organisationsadministrator oder Buchhalter.",
+    "historyTitle": "Verlauf manueller Zahlungen",
+    "saveError": "Die Zahlung konnte nicht gebucht werden. Prüfen Sie die Angaben und wiederholen Sie dieselbe Anfrage.",
+    "saveSuccess": "Die Zahlung wurde manuell und unabgestimmt gebucht. Eigentümerauszug und Hauptbuch werden aktualisiert.",
+    "replaySuccess": "Die frühere erfolgreiche Buchung wurde zurückgegeben; kein Duplikat entstand.",
+    "reverseError": "Die Gegenbuchung konnte nicht erstellt werden. Aktualisieren Sie den Datensatz vor dem nächsten Versuch.",
+    "reverseSuccess": "Eine Gegenbuchung wurde erstellt. Der ursprüngliche Eingang bleibt im Prüfpfad erhalten.",
+    "status": {
+      "posted": "Gebucht",
+      "reversed": "Storniert"
+    },
+    "reversalReason": "Grund der Gegenbuchung",
+    "confirmReverse": "Gegenbuchung erstellen",
+    "cancel": "Abbrechen",
+    "reverse": "Mit Grund stornieren",
+    "empty": "In diesem Bereich wurden noch keine manuellen Zahlungen erfasst."
+  },
+  "ownerFinance": {
+    "title": "Meine Abrechnung",
+    "subtitle": "Sehen Sie den aktuellen Beitragsstand und die erfasste Zahlungshistorie aller eigenen Einheiten in einer klaren Übersicht.",
+    "readOnly": "Nur Lesen",
+    "verifiedScope": "Nur Ihre verifizierten Einheiten",
+    "liveSource": "Datenbank-Snapshot",
+    "demoSource": "Lokale Demodaten",
+    "lastUpdated": "Zuletzt aktualisiert",
+    "notAvailable": "—",
+    "refresh": "Aktualisieren",
+    "refreshing": "Wird aktualisiert",
+    "pollRecovery": "Solange diese Ansicht geöffnet ist, fragt sie die autorisierte Abrechnungs-API spätestens alle 30 Sekunden ab; Aktualisieren prüft sofort.",
+    "sourceNoteLive": "Dieser schreibgeschützte Snapshot wird serverseitig aus Finanzbuchungen berechnet, die Ihrer verifizierten Eigentümer-Einheiten-Beziehung zugeordnet sind.",
+    "sourceNoteDemo": "Die Beträge in dieser Rollendemo sind feste Demodaten und stammen nicht von einem Live-Zahlungsanbieter.",
+    "backgroundRefreshError": "Die neueste Aktualisierung war nicht möglich. Ihre vorhandenen Buchungen bleiben sichtbar; Sie können es erneut versuchen.",
+    "loading": "Ihre Abrechnung wird vorbereitet…",
+    "errorTitle": "Ihre Abrechnung ist vorübergehend nicht verfügbar",
+    "errorBody": "Ihre Buchungen wurden nicht verändert. Versuchen Sie es in einigen Sekunden erneut oder wenden Sie sich an die Hausverwaltung.",
+    "retry": "Erneut versuchen",
+    "noUnitTitle": "Keine verifizierte Einheit ist mit Ihrem Profil verknüpft",
+    "noUnitBody": "Ihr Eigentümerprofil muss mit Ihrer Einheit verifiziert sein, bevor Finanzbuchungen angezeigt werden. Die Hausverwaltung kann die Zuordnung prüfen.",
+    "filters": "Abrechnungsfilter",
+    "unitFilter": "Einheit",
+    "allUnits": "Alle meine Einheiten",
+    "unitLabel": "Einheit {unit}",
+    "historyFilter": "Buchungsart",
+    "allHistory": "Alle Buchungen",
+    "dueHistory": "Offen und überfällig",
+    "paidHistory": "Bezahlt und Zahlungen",
+    "openBalance": "Offener Saldo",
+    "overdueBalance": "Überfälliger Saldo",
+    "recordedPayments": "Erfasste Zahlungen",
+    "ownedUnits": "Gewählte Einheiten",
+    "mixedCurrencies": "mehrere Währungen",
+    "statement": "Kontobewegungen",
+    "entryCount": "{count, plural, one {# Buchung} other {# Buchungen}}",
+    "historyPageStatus": "{loaded} von {total} Buchungen geladen",
+    "loadMore": "Weitere Bewegungen laden",
+    "loadingMore": "Weitere Bewegungen werden geladen…",
+    "loadMoreError": "Weitere Kontobewegungen konnten nicht geladen werden. Versuchen Sie es erneut.",
+    "noEntriesTitle": "Keine Buchung entspricht diesen Filtern",
+    "noEntriesBody": "Wählen Sie eine andere Einheit oder Buchungsart, um den übrigen Kontoverlauf zu prüfen.",
+    "tableCaption": "Beitrags- und Zahlungshistorie Ihrer verifizierten Einheiten",
+    "unit": "Einheit",
+    "description": "Vorgang",
+    "period": "Zeitraum",
+    "dueDate": "Datum",
+    "statusColumn": "Status",
+    "amount": "Betrag",
+    "entryType": {
+      "dues": "Beitrag",
+      "service_charge": "Servicegebühr",
+      "deposit": "Kaution",
+      "refund": "Erstattung",
+      "penalty": "Säumnisgebühr",
+      "adjustment": "Korrektur",
+      "payment": "Zahlung",
+      "manual_payment": "Manuelle Zahlung (Abstimmung ausstehend)",
+      "manual_payment_reversal": "Gegenbuchung zur manuellen Zahlung"
+    },
+    "status": {
+      "paid": "Bezahlt",
+      "open": "Offen",
+      "partially_paid": "Teilbezahlt",
+      "overdue": "Überfällig",
+      "draft": "Entwurf",
+      "cancelled": "Storniert",
+      "reversed": "Gegengebucht"
+    }
   }
 }

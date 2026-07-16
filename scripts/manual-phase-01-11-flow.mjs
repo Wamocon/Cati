@@ -83,7 +83,7 @@ async function waitForServer(baseUrl, timeoutMs = 90_000) {
   let lastError = ""
   while (Date.now() - started < timeoutMs) {
     try {
-      const response = await fetch(apiUrl(baseUrl, "/api/site-management/phase-status"), {
+      const response = await fetch(apiUrl(baseUrl, "/tr"), {
         cache: "no-store",
       })
       if (response.ok) return { status: response.status }
@@ -171,9 +171,10 @@ async function runApiChecks(baseUrl) {
     for (let phaseNumber = 1; phaseNumber <= 11; phaseNumber++) {
       const phase = phases.find((item) => item.phase === phaseNumber)
       assert(phase, `phase ${phaseNumber} is missing`)
+      const expectedStatus = phaseNumber <= 4 ? "complete" : "in_progress"
       assert(
-        ["complete", "ready_for_uat"].includes(phase.status),
-        `phase ${phaseNumber} is not complete/ready: ${phase.status}`
+        phase.status === expectedStatus,
+        `phase ${phaseNumber} expected ${expectedStatus}, received ${phase.status}`
       )
     }
   })
@@ -515,8 +516,8 @@ async function main() {
   process.env.TEMP = localTempDir
   process.env.TMP = localTempDir
   process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(localTempDir, "ms-playwright")
-  process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES =
-    process.env.NEXT_PUBLIC_ENABLE_ACCESS_PROFILES ?? "true"
+  process.env.ENABLE_ACCESS_PROFILES =
+    process.env.ENABLE_ACCESS_PROFILES ?? "true"
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
   const outDir = path.join(args.outDir, `manual-phase-01-11-flow-${timestamp}`)

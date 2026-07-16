@@ -24,20 +24,17 @@ Open `http://localhost:3100/tr/dashboard`.
 Copy `.env.example` to `.env.local` and fill local values. Never commit `.env.local`.
 
 ```bash
-SUPABASE_URL=
-SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DOCUMENT_STORAGE_MODE=supabase
+SUPABASE_DOCUMENT_BUCKET=cati-documents
 AI_API_URL=
 AI_API_KEY=
 AI_CHAT_COMPLETIONS_PATH=/chat/completions
 ```
 
-Only values used directly by browser code should use the `NEXT_PUBLIC_` prefix.
-For Supabase, the URL and publishable key are safe to expose and are required
-for browser auth/realtime. Keep `SUPABASE_SERVICE_ROLE_KEY`, AI keys and
-provider credentials server-only.
+`SUPABASE_SERVICE_ROLE_KEY` is required only on the server for live document uploads and must be marked sensitive in Vercel. The default private Supabase Storage bucket is `cati-documents`.
 
 ## Quality
 

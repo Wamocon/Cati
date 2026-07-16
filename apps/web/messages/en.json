@@ -22,7 +22,9 @@
     "portal": "Client Portal",
     "platformSubtitle": "1Çatı Platform",
     "toggleMenu": "Toggle menu",
-    "platform": "Platform"
+    "platform": "Platform",
+    "demo": "Demo",
+    "videos": "Cati Training"
   },
   "hero": {
     "badge": "real estate operations platform",
@@ -50,6 +52,8 @@
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212,298+",
     "previewCity": "Alanya",
+    "projectName": "New Level Premium",
+    "projectSubtitle": "Avsallar masterplan to operating record",
     "statValues": {
       "activeListings": "212k+",
       "leads": "150",
@@ -198,32 +202,13 @@
     "rights": "© 2026 Ataberk Estate. All rights reserved.",
     "description": "Real estate sales and management in Turkey; a trusted partner for local and foreign owners.",
     "companyTitle": "Company",
-    "company": [
-      "About Us",
-      "Platform",
-      "Our Team",
-      "Careers",
-      "Contact"
-    ],
+    "company": ["About Us", "Platform", "Our Team", "Careers", "Contact"],
     "catalogTitle": "Catalogue",
-    "catalog": [
-      "All Listings",
-      "New Projects",
-      "For Rent",
-      "VIP Listings"
-    ],
+    "catalog": ["All Listings", "New Projects", "For Rent", "VIP Listings"],
     "servicesTitle": "Services",
-    "services": [
-      "Purchase",
-      "Sale",
-      "Rental Management",
-      "Citizenship"
-    ],
+    "services": ["Purchase", "Sale", "Rental Management", "Citizenship"],
     "legalTitle": "Legal",
-    "legal": [
-      "Privacy Policy",
-      "Terms of Use"
-    ],
+    "legal": ["Privacy Policy", "Terms of Use"],
     "securityNote": "Secure operations platform — WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
@@ -273,7 +258,7 @@
     "owner": "Owner",
     "tenant": "Tenant",
     "descriptions": {
-      "admin": "Full administration role. Manages users, settings, finance, access controls and audit oversight.",
+      "admin": "Organization administrator for the assigned company only. Manages that company's users, settings, finance, access and audit; has no cross-organization or platform control. Platform super-admin is a separate protected break-glass identity.",
       "manager": "Responsible site manager. Supervises services, tasks, staff, reservations, communication and daily risks.",
       "accountant": "Accounting role. Manages fees, payments, collections, deposits, refunds and finance reports.",
       "staff": "Operational staff role. Accepts assigned jobs, completes tasks and uploads photo/video reports.",
@@ -670,111 +655,161 @@
     },
     "crm": {
       "name": "CRM",
-      "columns": [
-        "Lead",
-        "Status",
-        "Source",
-        "Agent"
-      ],
+      "columns": ["Lead", "Status", "Source", "Agent"],
       "rows": [
-        [
-          "Anna K. - Alanya apartment",
-          "Hot",
-          "WhatsApp",
-          "Mehmet"
-        ],
-        [
-          "Sergey P. - Villa",
-          "New",
-          "Web form",
-          "Ayşe"
-        ],
-        [
-          "Li W. - Investment",
-          "Meeting",
-          "Referral",
-          "Can"
-        ]
+        ["Anna K. - Alanya apartment", "Hot", "WhatsApp", "Mehmet"],
+        ["Sergey P. - Villa", "New", "Web form", "Ayşe"],
+        ["Li W. - Investment", "Meeting", "Referral", "Can"]
       ]
     },
     "listings": {
       "name": "Listings",
-      "columns": [
-        "Listing",
-        "Price",
-        "EİDS",
-        "Status"
-      ],
+      "columns": ["Listing", "Price", "EİDS", "Status"],
       "rows": [
-        [
-          "Villa #4021 - Kargıcak",
-          "€ 420,000",
-          "Approved",
-          "Active"
-        ],
-        [
-          "Apartment #1847 - Mahmutlar",
-          "€ 95,000",
-          "Pending",
-          "Active"
-        ],
-        [
-          "Penthouse #990 - Alanya",
-          "€ 310,000",
-          "Approved",
-          "Reserved"
-        ]
+        ["Villa #4021 - Kargıcak", "€ 420,000", "Approved", "Active"],
+        ["Apartment #1847 - Mahmutlar", "€ 95,000", "Pending", "Active"],
+        ["Penthouse #990 - Alanya", "€ 310,000", "Approved", "Reserved"]
       ]
     },
     "tickets": {
       "name": "Tickets",
-      "columns": [
-        "Request",
-        "Priority",
-        "Last Update"
-      ],
+      "columns": ["Request", "Priority", "Last Update"],
       "rows": [
-        [
-          "Water leak - Villa #4021",
-          "High",
-          "2 hours ago"
-        ],
-        [
-          "AC maintenance - Apt #1847",
-          "Medium",
-          "Yesterday"
-        ],
-        [
-          "Painting - Penthouse #990",
-          "Low",
-          "3 days ago"
-        ]
+        ["Water leak - Villa #4021", "High", "2 hours ago"],
+        ["AC maintenance - Apt #1847", "Medium", "Yesterday"],
+        ["Painting - Penthouse #990", "Low", "3 days ago"]
       ]
     },
     "calendar": {
       "name": "Calendar",
-      "columns": [
-        "Time",
-        "Event",
-        "Location"
-      ],
+      "columns": ["Time", "Event", "Location"],
       "rows": [
-        [
-          "10:00",
-          "Villa tour - Anna K.",
-          "Kargıcak"
-        ],
-        [
-          "14:00",
-          "Title deed appointment",
-          "Alanya Tapu"
-        ],
-        [
-          "16:30",
-          "Maintenance check",
-          "Mahmutlar"
-        ]
+        ["10:00", "Villa tour - Anna K.", "Kargıcak"],
+        ["14:00", "Title deed appointment", "Alanya Tapu"],
+        ["16:30", "Maintenance check", "Mahmutlar"]
       ]
+    }
+  },
+  "manualPayments": {
+    "loading": "Preparing manual payment controls...",
+    "loadErrorTitle": "Manual payments are temporarily unavailable",
+    "loadErrorBody": "No record was changed. Refresh the workspace or try again shortly.",
+    "retry": "Try again",
+    "title": "Post a received payment",
+    "unreconciledBadge": "Manual / unreconciled",
+    "readOnlyBadge": "Manager view only",
+    "subtitle": "Record a payment reported as received against the exact unit and owner account. The entry is posted to a balanced clearing journal and stays unreconciled until a separate bank review confirms it.",
+    "liveTruth": "Live database record; this is not bank or card-provider confirmation.",
+    "demoTruth": "Persistent local QA record; no external bank or payment provider is connected.",
+    "refreshing": "Refreshing",
+    "refresh": "Refresh",
+    "postedCount": "Active manual receipts",
+    "unreconciledTotal": "Awaiting reconciliation",
+    "accountCount": "Eligible owner accounts",
+    "formTitle": "Payment details",
+    "managerTitle": "Payment review",
+    "account": "Unit and owner account",
+    "selectAccount": "Select an account",
+    "amount": "Amount received",
+    "currency": "Currency",
+    "receivedAt": "Received date and time",
+    "method": "Reported method",
+    "methods": {
+      "bank_transfer": "Bank transfer",
+      "cash": "Cash",
+      "card_terminal": "Card terminal",
+      "other": "Other"
+    },
+    "reference": "Receipt or transfer reference",
+    "businessNote": "Business note",
+    "noteHelp": "Explain what was checked and why this payment is being posted. Do not enter card data or passwords.",
+    "saving": "Posting safely...",
+    "submit": "Post manual payment",
+    "managerBody": "Managers can review manual receipts for their assigned sites, but cannot post or reverse accounting entries. An organization admin or accountant must complete those actions.",
+    "historyTitle": "Manual payment history",
+    "saveError": "The payment could not be posted. Review the details and retry with the same request.",
+    "saveSuccess": "Payment posted as manual and unreconciled. The owner statement and finance ledger will refresh.",
+    "replaySuccess": "The earlier successful payment was returned; no duplicate was created.",
+    "reverseError": "The reversal could not be completed. Refresh the record before retrying.",
+    "reverseSuccess": "A counter-entry was posted. The original receipt remains in the audit history.",
+    "status": {
+      "posted": "Posted",
+      "reversed": "Reversed"
+    },
+    "reversalReason": "Reversal reason",
+    "confirmReverse": "Post counter-entry",
+    "cancel": "Cancel",
+    "reverse": "Reverse with reason",
+    "empty": "No manual payments have been recorded in this workspace yet."
+  },
+  "ownerFinance": {
+    "title": "My financial statement",
+    "subtitle": "See the current dues balance and recorded payment history for every unit you own, in one clear view.",
+    "readOnly": "Read only",
+    "verifiedScope": "Only your verified units",
+    "liveSource": "Database snapshot",
+    "demoSource": "Local demo data",
+    "lastUpdated": "Last updated",
+    "notAvailable": "—",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing",
+    "pollRecovery": "While this view is open, it checks the authorized statement API at least every 30 seconds; Refresh checks now.",
+    "sourceNoteLive": "This read-only snapshot is calculated server-side from finance records linked to your verified owner-to-unit relationship.",
+    "sourceNoteDemo": "Amounts in this role demo are fixed demo records, not data from a live payment provider.",
+    "backgroundRefreshError": "The latest refresh could not be completed. Your existing records remain visible; you can try again.",
+    "loading": "Preparing your financial statement…",
+    "errorTitle": "Your statement is temporarily unavailable",
+    "errorBody": "Your records have not changed. Try again in a few seconds, or contact site management if the issue continues.",
+    "retry": "Try again",
+    "noUnitTitle": "No verified unit is linked to your profile",
+    "noUnitBody": "Your owner profile must be verified against your unit before financial records can be shown. Site management can review this link.",
+    "filters": "Statement filters",
+    "unitFilter": "Unit",
+    "allUnits": "All my units",
+    "unitLabel": "Unit {unit}",
+    "historyFilter": "Record type",
+    "allHistory": "All records",
+    "dueHistory": "Open and overdue",
+    "paidHistory": "Paid and payments",
+    "openBalance": "Open balance",
+    "overdueBalance": "Overdue balance",
+    "recordedPayments": "Recorded payments",
+    "ownedUnits": "Selected units",
+    "mixedCurrencies": "multiple currencies",
+    "statement": "Account activity",
+    "entryCount": "{count, plural, one {# record} other {# records}}",
+    "historyPageStatus": "{loaded} of {total} records loaded",
+    "loadMore": "Load more activity",
+    "loadingMore": "Loading more activity…",
+    "loadMoreError": "More account activity could not be loaded. Try again.",
+    "noEntriesTitle": "No activity matches these filters",
+    "noEntriesBody": "Choose another unit or record type to review the rest of your account history.",
+    "tableCaption": "Dues and payment history for your verified units",
+    "unit": "Unit",
+    "description": "Activity",
+    "period": "Period",
+    "dueDate": "Date",
+    "statusColumn": "Status",
+    "amount": "Amount",
+    "entryType": {
+      "dues": "Dues",
+      "service_charge": "Service charge",
+      "deposit": "Deposit",
+      "refund": "Refund",
+      "penalty": "Late fee",
+      "adjustment": "Adjustment",
+      "payment": "Payment",
+      "manual_payment": "Manual payment (awaiting reconciliation)",
+      "manual_payment_reversal": "Manual payment counter-entry"
+    },
+    "status": {
+      "paid": "Paid",
+      "open": "Open",
+      "partially_paid": "Partly paid",
+      "overdue": "Overdue",
+      "draft": "Draft",
+      "cancelled": "Cancelled",
+      "reversed": "Reversed"
     }
   }
 }
