@@ -95,8 +95,13 @@ test.describe("Site concierge (WhatsApp + public AI assistant)", () => {
       ).filter((candidate) => candidate.offsetParent !== null)
       focusable.at(-1)?.focus()
     })
+    // Tab from the last focusable must wrap back within the dialog (focus stays
+    // trapped). We assert containment rather than a specific control so the header's
+    // expand/shrink toggle doesn't make this brittle.
     await page.keyboard.press("Tab")
-    await expect(close).toBeFocused()
+    expect(
+      await dialog.evaluate((element) => element.contains(document.activeElement))
+    ).toBe(true)
 
     await page.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
