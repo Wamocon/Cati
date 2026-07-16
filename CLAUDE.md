@@ -37,7 +37,7 @@ Wenn Architektur, Struktur oder Konventionen sich ändern: `AGENTS.md`, `docs/RE
 | CRM-Kern (geplant/vorbereitet) | Twenty CRM (Open Source, AGPL-3.0), self-hosted |
 | Auth/DB/Realtime/Storage | Supabase (PostgreSQL) |
 | Repository | https://github.com/Wamocon/Cati |
-| Arbeitsbranch | `waleri-dev` (ab sofort ausschließlich hier arbeiten, nicht auf `main`) |
+| Arbeitsbranch | Feature-/Fix-Branches nach Konvention; `waleri-dev`-Exklusivvorgabe aufgehoben |
 
 Das Repository enthält **ein zentrales Produkt-Deliverable**: `apps/web` — eine Next.js-Anwendung, die öffentliche Produktseiten, Login/Auth und ein rollenbasiertes CRM-/ERP-Portal in einer App vereint (kein separates Backend-Repo).
 
@@ -386,8 +386,7 @@ Es existiert **keine automatisierte PR-CI** für diese Gates — sie müssen von
 
 ## 9. Git-/Jira-Workflow
 
-- Niemals direkt auf `main` committen. Branch-Konvention: `feature/CATI-123-kurzbeschreibung`, `fix/CATI-123-...`, `chore/...`.
-- **Für diese Session gilt zusätzlich die explizite Nutzeranweisung:** ausschließlich auf `waleri-dev` arbeiten.
+- Branch-Konvention: `feature/CATI-123-kurzbeschreibung`, `fix/CATI-123-...`, `chore/...`. (Die frühere Vorgabe, ausschließlich auf `waleri-dev` zu arbeiten, ist aufgehoben.)
 - Commit-Format: Jira-Key voranstellen, wenn ein Ticket existiert (`CATI-123 add buyer eligibility precheck`), sonst konventioneller `type: description`-Stil (siehe Historie: `feat:`, `fix:`, `docs:`, `chore:`).
 - PRs benötigen: Business-Summary, Technical-Summary, Jira-Key oder Begründung, Validierungsbefehle+Ergebnisse, Screenshots bei UI-Änderungen, Risiken/Follow-ups.
 - `.github/workflows/jira-main-sync.yml` aktualisiert bei Push auf `main` automatisch referenzierte Jira-Issues.
