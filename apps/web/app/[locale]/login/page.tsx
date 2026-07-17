@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { AlertCircle, ArrowRight, ChevronDown, Loader2, LockKeyhole, ShieldCheck } from "lucide-react"
@@ -36,6 +36,8 @@ const pageCopy = {
     accessError: "Rol profili açılamadı. Tekrar deneyin.",
     demoButton: "Demo başlat",
     demoHint: "Demo ortamı: Demo başlat'a tıklayın, rol seçin ve ilgili modülleri şifresiz açın.",
+    demoLoginTitle: "Demo rolleri",
+    demoLoginHint: "Bir role tıklayın; o rolün demo hesabıyla gerçek giriş yapılır.",
     or: "veya",
     providerTitle: "Modern giriş seçenekleri",
     providerSummary: "Diğer giriş yöntemleri",
@@ -82,6 +84,8 @@ const pageCopy = {
     accessError: "Role profile could not be opened. Try again.",
     demoButton: "Start demo",
     demoHint: "Demo environment: click Start demo, choose a role, and open the matching modules without a password.",
+    demoLoginTitle: "Demo roles",
+    demoLoginHint: "Click a role to sign in with its demo account. This is a real sign-in.",
     or: "or",
     providerTitle: "Modern sign-in options",
     providerSummary: "Other sign-in methods",
@@ -128,6 +132,8 @@ const pageCopy = {
     accessError: "Rollenprofil konnte nicht geöffnet werden. Erneut versuchen.",
     demoButton: "Demo starten",
     demoHint: "Demo-Umgebung: Demo starten anklicken, Rolle wählen und passende Module ohne Passwort öffnen.",
+    demoLoginTitle: "Demo-Rollen",
+    demoLoginHint: "Auf eine Rolle klicken; die Anmeldung erfolgt echt mit dem Demo-Konto.",
     or: "oder",
     providerTitle: "Moderne Anmeldeoptionen",
     providerSummary: "Weitere Anmeldemethoden",
@@ -174,6 +180,8 @@ const pageCopy = {
     accessError: "Ролевой профиль не открылся. Попробуйте еще раз.",
     demoButton: "Запустить демо",
     demoHint: "Демо-среда: нажмите запуск демо, выберите роль и откройте нужные модули без пароля.",
+    demoLoginTitle: "Демо-роли",
+    demoLoginHint: "Нажмите на роль — выполняется реальный вход через демо-аккаунт.",
     or: "или",
     providerTitle: "Современные варианты входа",
     providerSummary: "Другие способы входа",
@@ -224,6 +232,30 @@ const providerLogos = {
   magic: MagicLinkLogo,
 }
 
+type DemoLogin = { role: string; email: string; password: string }
+
+/**
+ * Demo sign-in accounts, supplied at build time as
+ *   NEXT_PUBLIC_DEMO_LOGINS="admin|admin@x.com|pw;manager|manager@x.com|pw"
+ *
+ * Kept in an environment variable (never in the repository) so no credential is
+ * committed, and so the banner only ever appears where an operator has
+ * deliberately set it. Malformed entries are dropped rather than thrown.
+ */
+function parseDemoLogins(raw: string | undefined): DemoLogin[] {
+  if (!raw) return []
+  return raw
+    .split(";")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [role, email, password] = entry.split("|").map((part) => part?.trim() ?? "")
+      if (!role || !email || !password) return null
+      return { role, email, password }
+    })
+    .filter((entry): entry is DemoLogin => entry !== null)
+}
+
 function roleCopy(role: Role, roleT: ReturnType<typeof useTranslations>) {
   const def = roleDefinitions.find((item) => item.key === role)
   const labelKey = def?.labelKey.replace("roles.", "") ?? role
@@ -241,6 +273,10 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const requestedNext = searchParams.get("next")
+  const demoLogins = useMemo(
+    () => parseDemoLogins(process.env.NEXT_PUBLIC_DEMO_LOGINS),
+    []
+  )
   const nextPath = requestedNext?.startsWith("/dashboard") ? requestedNext : "/dashboard"
   const signupHref = nextPath === "/dashboard" ? "/signup" : `/signup?next=${encodeURIComponent(nextPath)}`
   const supabaseConfigured = Boolean(
@@ -287,13 +323,16 @@ export default function LoginPage() {
   async function handlePasswordSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!supabaseConfigured) return
+    await signInWith(email, password)
+  }
 
+  async function signInWith(withEmail: string, withPassword: string) {
     setAuthPending(true)
     setError(null)
     const supabase = createClient()
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+      email: withEmail,
+      password: withPassword,
     })
     setAuthPending(false)
 
@@ -303,6 +342,21 @@ export default function LoginPage() {
     }
 
     router.push(nextPath)
+  }
+
+  /**
+   * One-click demo sign-in. Unlike the local access profiles, this performs a
+   * real Supabase password sign-in -- it bypasses no authorization guard and the
+   * session is a normal authenticated session with the role held in `profiles`.
+   * Accounts are supplied at build time via NEXT_PUBLIC_DEMO_LOGINS so that no
+   * credential is ever committed to the repository; when that variable is unset
+   * (the default, including production) the banner does not render at all.
+   */
+  async function signInAsDemoRole(login: DemoLogin) {
+    if (!supabaseConfigured || authPending) return
+    setEmail(login.email)
+    setPassword(login.password)
+    await signInWith(login.email, login.password)
   }
 
   async function handleForgotPassword() {
@@ -495,6 +549,45 @@ export default function LoginPage() {
                     </div>
                   )}
                 </section>
+                ) : null}
+
+                {demoLogins.length > 0 ? (
+                  <div
+                    data-testid="demo-login-banner"
+                    className="mb-5 rounded-2xl border border-primary/25 bg-primary/6 p-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 shrink-0 text-primary" />
+                      <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+                        {t.demoLoginTitle}
+                      </p>
+                    </div>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      {t.demoLoginHint}
+                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {demoLogins.map((login) => (
+                        <button
+                          key={login.role}
+                          type="button"
+                          data-testid={`demo-login-${login.role}`}
+                          onClick={() => void signInAsDemoRole(login)}
+                          disabled={!supabaseConfigured || authPending}
+                          className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-left transition-colors hover:border-primary hover:bg-primary/8 disabled:opacity-50"
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-black capitalize text-card-foreground">
+                              {login.role}
+                            </span>
+                            <span className="block truncate text-[11px] text-muted-foreground">
+                              {login.email}
+                            </span>
+                          </span>
+                          <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ) : null}
 
                 <form className="grid gap-4" onSubmit={handlePasswordSignIn}>

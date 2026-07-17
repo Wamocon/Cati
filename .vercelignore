@@ -1,0 +1,22 @@
+# Keep deployment uploads to actual source.
+# Without this, a CLI deploy from the repo root tries to upload ~8.4GB of local
+# artifacts (installed dependencies, build output, scratch dirs, QA captures).
+.git
+.tmp
+.tmp_doc_merge
+node_modules
+**/node_modules
+.next
+**/.next
+.next-root-focused-*
+out
+build
+coverage
+test-results
+playwright-report
+**/playwright-report
+qa
+qa_output
+quality
+Videos
+*.log
