@@ -749,6 +749,11 @@
     }
     order.sort(function (a, b) { return a.depth - b.depth; });
 
+    var faint = getComputedStyle(document.documentElement).getPropertyValue("--fg-faint").trim() || "#888";
+    var fg = getComputedStyle(document.documentElement).getPropertyValue("--fg").trim() || "#000";
+    var panel = getComputedStyle(document.documentElement).getPropertyValue("--panel").trim() || "#fff";
+    var valueLabels = [];
+
     for (var k = 0; k < order.length; k++) {
       var o = order[k], v = vals[o.i];
       var hc = (v.cloud / max) * HMAX;
@@ -759,16 +764,47 @@
       box(cx, cy, o.x, 0, bw, bd, hc + hm, hp, "#B8762C");
 
       var lp = proj(o.x + bw / 2, 0, bd + 16, cx, cy);
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--fg-faint").trim() || "#888";
-      ctx.font = "500 10px " + "ui-monospace, monospace";
+      ctx.fillStyle = faint;
+      ctx.font = "500 10px ui-monospace, monospace";
       ctx.textAlign = "center";
       ctx.fillText(SCALES[o.i] >= 1000 ? (SCALES[o.i] / 1000) + "k" : SCALES[o.i], lp.x, lp.y + 12);
 
       var tp = proj(o.x + bw / 2, hc + hm + hp + 10, bd / 2, cx, cy);
-      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--fg").trim() || "#000";
-      ctx.font = "600 11px ui-monospace, monospace";
-      ctx.fillText(fmtUsd(v.total), tp.x, tp.y);
+      valueLabels.push({ x: tp.x, y: tp.y, text: fmtUsd(v.total) });
     }
+
+    // Draw value labels last, with a backing pill and vertical de-collision so
+    // every number stays legible at any rotation angle.
+    valueLabels.sort(function (a, b) { return a.y - b.y; });
+    ctx.font = "600 11px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var minGap = 15;
+    for (var li = 1; li < valueLabels.length; li++) {
+      if (valueLabels[li].y - valueLabels[li - 1].y < minGap) {
+        valueLabels[li].y = valueLabels[li - 1].y + minGap;
+      }
+    }
+    for (var lj = 0; lj < valueLabels.length; lj++) {
+      var L = valueLabels[lj];
+      var w = ctx.measureText(L.text).width + 10;
+      var hh = 15;
+      ctx.globalAlpha = 0.82;
+      ctx.fillStyle = panel;
+      var rx = L.x - w / 2, ry = L.y - hh / 2, rr = 3;
+      ctx.beginPath();
+      ctx.moveTo(rx + rr, ry);
+      ctx.arcTo(rx + w, ry, rx + w, ry + hh, rr);
+      ctx.arcTo(rx + w, ry + hh, rx, ry + hh, rr);
+      ctx.arcTo(rx, ry + hh, rx, ry, rr);
+      ctx.arcTo(rx, ry, rx + w, ry, rr);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = fg;
+      ctx.fillText(L.text, L.x, L.y);
+    }
+    ctx.textBaseline = "alphabetic";
   }
 
   cv.addEventListener("pointerdown", function (e) { dragging = true; lastX = e.clientX; cv.setPointerCapture(e.pointerId); });
