@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="1Çatı Preis-Simulator — interaktive Live-Kalkulation des Lizenzmodells mit Ataberk">
+<title>1Çatı — Preis-Simulator (Live-Kalkulation)</title>
+<style>
+:root{--ink:#0b202b;--ink2:#183942;--paper:#f2ede3;--white:#fffdf8;--line:#d9d0c1;--teal:#087d75;--teal2:#d9eeea;--amber:#c57a20;--amber2:#f6e4c9;--red:#a84d44;--red2:#f5dedb;--green:#2f7d5b;--muted:#64757b;--shadow:0 16px 45px #0b202b17;--r:16px;--sans:"Segoe UI",Arial,sans-serif;--display:"Trebuchet MS","Segoe UI",sans-serif;--mono:Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:radial-gradient(circle at 4% 3%,#087d7518,transparent 26rem),var(--paper);font:15px/1.5 var(--sans)}
+button,input,select{font:inherit}button{cursor:pointer}
+.shell{width:min(1440px,calc(100% - 28px));margin:auto}
+.hero{overflow:hidden;color:var(--white);background:var(--ink);border-radius:0 0 26px 26px;box-shadow:var(--shadow)}
+.hero-in{padding:32px 0 26px}
+.eyebrow{color:#9dd9d1;font-size:11px;font-weight:850;letter-spacing:.16em;text-transform:uppercase}
+.eyebrow:before{content:"";display:inline-block;width:26px;height:2px;margin:0 9px 3px 0;background:var(--amber);vertical-align:middle}
+h1{margin:10px 0 8px;font:650 clamp(30px,4.4vw,54px)/1 var(--display);letter-spacing:-.04em}
+.lead{max-width:820px;margin:0;color:#c5d2d4;font-size:16px}
+.tag{display:inline-block;margin-top:12px;padding:5px 10px;border:1px solid #ffffff2a;border-radius:999px;background:#ffffff10;color:#d7e0e1;font-size:11px;font-weight:700}
+main{padding:26px 0 60px}
+.cockpit{display:grid;grid-template-columns:390px minmax(0,1fr);gap:18px;align-items:start}
+.cockpit>*{min-width:0}
+.panel{border:1px solid var(--line);border-radius:var(--r);background:#fffdf8ee;box-shadow:0 10px 26px #0b202b0d}
+.controls{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding:18px;scrollbar-width:thin}
+.controls h3{margin:0 0 4px;font-size:13px;letter-spacing:.02em}
+.kick{margin:2px 0 10px;color:#06625d;font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}
+.block{padding:14px 0;border-top:1px solid var(--line)}
+.block:first-of-type{border-top:0;padding-top:2px}
+.field{display:grid;gap:4px;margin-bottom:10px}
+.field:last-child{margin-bottom:0}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.field label{display:flex;justify-content:space-between;gap:8px;color:#44565c;font-size:11px;font-weight:750}
+.field small{color:var(--muted);font-size:10px;font-weight:600}
+input[type=number]{width:100%;min-height:38px;padding:7px 9px;border:1px solid #cfc4b4;border-radius:8px;color:var(--ink);background:var(--white)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid #c57a2055;outline-offset:1px}
+.seg{display:flex;border:1px solid #cfc4b4;border-radius:8px;overflow:hidden}
+.seg button{flex:1;padding:8px 6px;border:0;background:var(--white);color:var(--ink2);font-size:12px;font-weight:800}
+.seg button.on{background:var(--teal);color:#fff}
+.check{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:12px;font-weight:700;color:#3a4c52}
+.check input{width:17px;height:17px;accent-color:var(--teal)}
+.reset{min-height:34px;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--white);font-weight:750;font-size:12px}
+.print{min-height:34px;padding:6px 12px;border:1px solid #ffffff32;border-radius:8px;background:#ffffff12;color:#fff;font-weight:750;font-size:12px}
+.results{display:grid;gap:14px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{min-width:0;padding:15px;border:1px solid var(--line);border-radius:13px;background:var(--white)}
+.kpi.dark{color:#fff;border-color:var(--ink);background:var(--ink)}
+.kpi.teal{background:var(--teal2)}.kpi.amber{background:var(--amber2)}
+.klabel{min-height:30px;color:var(--muted);font-size:10px;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
+.dark .klabel{color:#a9bdc1}
+.kval{margin:5px 0 3px;font:750 clamp(18px,1.5vw,25px)/1 var(--display);letter-spacing:-.03em;white-space:nowrap}
+.knote{color:var(--muted);font-size:10px}.dark .knote{color:#a9bdc1}
+.card{padding:16px;border:1px solid var(--line);border-radius:13px;background:var(--white)}
+.card h3{margin:0 0 2px;font-size:14px}
+.card p.sub{margin:0 0 10px;color:var(--muted);font-size:10px}
+.grid2{display:grid;grid-template-columns:1.3fr .9fr;gap:12px}
+.grid2b{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+canvas{display:block;width:100%;height:210px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;color:var(--muted);font-size:10px}
+.legend span:before{content:"";display:inline-block;width:9px;height:9px;margin-right:5px;border-radius:2px;background:var(--c);vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 9px;color:#5b6b70;background:#f1ece4;text-align:left;font-size:9px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+td{padding:8px 9px;border-top:1px solid #e5ded3;vertical-align:top}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tot td{font-weight:850;background:#eef6f4}
+.bad{color:var(--red);font-weight:800}.good{color:var(--green);font-weight:800}
+.callout{padding:13px 15px;border:1px solid #dfbd87;border-radius:12px;background:var(--amber2);color:#694d20;font-size:12px}
+.callout.teal{border-color:#acd4cf;background:var(--teal2);color:#0b4a45}
+.callout b{display:block;margin-bottom:2px}
+.honest{display:grid;grid-template-columns:36px 1fr;gap:11px;align-items:start;padding:13px 15px;border-radius:12px;background:linear-gradient(110deg,#06625d,#104b4e);color:#eaf5f3;font-size:12px}
+.honest i{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;color:var(--ink);background:#efc477;font-style:normal;font-weight:900}
+footer{padding:22px 0 40px;color:#607177;font-size:10px}
+.foot{display:flex;justify-content:space-between;gap:20px;padding-top:13px;border-top:1px solid #cec5b6;flex-wrap:wrap}
+.conf{color:var(--red);font-weight:850}
+h2.sec{margin:22px 0 10px;font:650 20px/1.1 var(--display);letter-spacing:-.02em}
+@media(max-width:1080px){.cockpit{grid-template-columns:340px 1fr}.kpis{grid-template-columns:repeat(2,1fr)}.grid2,.grid2b{grid-template-columns:1fr}}
+@media(max-width:760px){.cockpit{grid-template-columns:1fr}.controls{position:static;max-height:none}.fields{grid-template-columns:1fr}}
+@media print{body{background:#fff}.controls,.print,.reset{display:none!important}.cockpit{display:block}.hero{border-radius:0;box-shadow:none;print-color-adjust:exact}.kpi,.kpi.dark,.kpi.teal,.kpi.amber{print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="shell hero-in">
+  <div class="eyebrow">Interne Live-Kalkulation · WAMOCON ↔ Ataberk</div>
+  <h1>1Çatı Preis-Simulator</h1>
+  <p class="lead">Alle Preis-Varianten live durchspielen — gemeinsam mit dem Kunden. Metrik umschalten (pro Nutzer / pro Einheit), Degression, Preisgarantie und Marktentwicklung ändern und sofort Umsatz, <b>Vollkosten-Marge</b> und die <b>ehrliche</b> Ersparnis sehen.</p>
+  <span class="tag">Red-Team-korrigiert · Vollkosten-Marge · ehrliche EUR-Ersparnis · FX-Sicht · keine Mindestanzahl</span>
+</div></header>
+
+<main class="shell"><div class="cockpit">
+
+  <!-- ============ CONTROLS ============ -->
+  <aside class="panel controls">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div><div class="kick">Steuerung</div><h3>Annahmen</h3></div>
+      <button class="reset" id="reset">Zurücksetzen</button>
+    </div>
+
+    <div class="block">
+      <h3>1 · Portfolio &amp; Nutzer</h3>
+      <div class="fields">
+        <div class="field"><label>Einheiten</label><input id="units" type="number" min="0" value="769"></div>
+        <div class="field"><label>Nutzer / Einheit</label><input id="upu" type="number" min="0" step="0.1" value="2"></div>
+      </div>
+      <div class="fields">
+        <div class="field"><label>Mitarbeiter</label><input id="staff" type="number" min="0" value="50"></div>
+        <div class="field"><label>Hotel-Nutzer <small>optional</small></label><input id="hotel" type="number" min="0" value="0"></div>
+      </div>
+      <div class="callout" style="padding:8px 11px" id="totalUsersBox"></div>
+    </div>
+
+    <div class="block">
+      <h3>2 · Metrik &amp; Rate</h3>
+      <div class="field"><label>Abrechnungs-Metrik</label>
+        <div class="seg" id="metricSeg">
+          <button data-m="user" class="on">pro Nutzer</button>
+          <button data-m="unit">pro Einheit</button>
+        </div>
+      </div>
+      <div class="fields">
+        <div class="field"><label>€ / Nutzer / Monat</label><input id="ratePerUser" type="number" min="0" step="0.5" value="5"></div>
+        <div class="field"><label>€ / Einheit / Monat</label><input id="ratePerUnit" type="number" min="0" step="0.5" value="10"></div>
+      </div>
+      <small style="color:var(--muted)">All-in — keine separaten Entwicklungs-/Wartungskosten.</small>
+    </div>
+
+    <div class="block">
+      <h3>3 · Degression &amp; Floor</h3>
+      <label class="check"><input id="degOn" type="checkbox"><span>Mengen-Degression (Wachstums-Rabatt)</span></label>
+      <div class="fields">
+        <div class="field"><label>Rabatt je Stufe</label><input id="degPct" type="number" min="0" max="90" step="1" value="5"></div>
+        <div class="field"><label>Stufengröße</label><input id="degStep" type="number" min="1" value="500"></div>
+      </div>
+      <label class="check"><input id="floorOn" type="checkbox"><span>Mindest-Monatsumsatz (Floor)</span></label>
+      <div class="field"><label>Floor <small>€/Monat</small></label><input id="floorVal" type="number" min="0" value="0"></div>
+      <small style="color:var(--muted)">Standard: kein Floor — nur reale Nutzer/Einheiten.</small>
+    </div>
+
+    <div class="block">
+      <h3>4 · Preisgarantie &amp; Markt</h3>
+      <div class="field"><label>Preisgarantie <small>Jahre</small></label><input id="guarYears" type="number" min="1" max="10" value="3"></div>
+      <div class="fields">
+        <div class="field"><label>Markt-Index tief <small>%/J</small></label><input id="mktLow" type="number" min="0" value="20"></div>
+        <div class="field"><label>Markt-Index hoch <small>%/J</small></label><input id="mktHigh" type="number" min="0" value="30"></div>
+      </div>
+      <div class="field"><label>Ehrlicher EUR-Benchmark <small>%/J</small></label><input id="eurBench" type="number" min="0" step="0.5" value="11"></div>
+      <small style="color:var(--muted)">Ersparnis wird ehrlich gg. den EUR-Benchmark gerechnet; Markt-Index nur als Kontext.</small>
+    </div>
+
+    <div class="block">
+      <h3>5 · Kosten &amp; Steuer (WAMOCON)</h3>
+      <div class="fields">
+        <div class="field"><label>Externe Fremdkosten <small>€/Mon</small></label><input id="cogsExt" type="number" min="0" value="450"></div>
+        <div class="field"><label>WAMOCON-Aufwand <small>€/Mon</small></label><input id="effort" type="number" min="0" value="500"></div>
+      </div>
+      <div class="fields">
+        <div class="field"><label>Quellensteuer <small>%</small></label><input id="wht" type="number" min="0" max="30" step="1" value="10"></div>
+        <div class="field"><label>EUR/TRY</label><input id="fx" type="number" min="1" step="0.1" value="53"></div>
+      </div>
+      <div class="field"><label>Quellensteuer trägt</label>
+        <div class="seg" id="whtSeg">
+          <button data-w="gross" class="on">Ataberk (Gross-up)</button>
+          <button data-w="wamocon">WAMOCON</button>
+        </div>
+      </div>
+      <div class="field"><label>Lira-Abwertung <small>%/J (FX-Sicht)</small></label><input id="fxDep" type="number" min="0" value="15"></div>
+    </div>
+  </aside>
+
+  <!-- ============ RESULTS ============ -->
+  <div class="results">
+    <div class="kpis">
+      <article class="kpi dark"><div class="klabel">Monatsumsatz (netto WAMOCON)</div><div class="kval" id="kMonth"></div><div class="knote" id="kMonthTry"></div></article>
+      <article class="kpi teal"><div class="klabel">Jahresumsatz</div><div class="kval" id="kYear"></div><div class="knote" id="kEffRate"></div></article>
+      <article class="kpi"><div class="klabel">Brutto-Marge <small>(Fremdkosten)</small></div><div class="kval" id="kGross"></div><div class="knote" id="kGrossAbs"></div></article>
+      <article class="kpi amber"><div class="klabel">Vollkosten-Deckungsbeitrag</div><div class="kval" id="kNet"></div><div class="knote" id="kNetAbs"></div></article>
+    </div>
+
+    <div class="honest"><i>✓</i><div id="honestBox"></div></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>Preispfad über die Garantiezeit</h3>
+        <p class="sub">Garantiert flat vs. ehrlicher EUR-Benchmark vs. Markt-Index (Kontext). Monatsumsatz in EUR.</p>
+        <canvas id="chartPath"></canvas>
+        <div class="legend">
+          <span style="--c:var(--teal)">Garantiert (flat)</span>
+          <span style="--c:var(--green)">EUR-Benchmark (ehrlich)</span>
+          <span style="--c:var(--amber)">Markt +tief</span>
+          <span style="--c:var(--red)">Markt +hoch</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Vollkosten-Aufschlüsselung</h3>
+        <p class="sub">Wohin geht der Monatsumsatz? (Red-Team-Fix: nicht nur Fremdkosten.)</p>
+        <canvas id="chartMargin"></canvas>
+        <div class="legend">
+          <span style="--c:var(--teal)">Deckungsbeitrag</span>
+          <span style="--c:var(--muted)">Fremdkosten</span>
+          <span style="--c:var(--ink2)">WAMOCON-Aufwand</span>
+          <span style="--c:var(--red)">Quellensteuer</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2b">
+      <div class="card">
+        <h3>Degressions-Treppe</h3>
+        <p class="sub">Effektiver Preis pro <span id="degUnitLbl">Nutzer</span> — je größer, desto günstiger.</p>
+        <canvas id="chartDeg"></canvas>
+      </div>
+      <div class="card">
+        <h3>Ataberks Last in TRY (FX-Sicht)</h3>
+        <p class="sub">Flat EUR ≠ flat TRY. Was der Kunde bei anhaltender Lira-Abwertung wirklich zahlt.</p>
+        <canvas id="chartFx"></canvas>
+        <div class="legend"><span style="--c:var(--ink2)">TRY-Monatslast</span><span style="--c:var(--teal)">EUR (unverändert)</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:13px 16px;border-bottom:1px solid var(--line)"><h3 style="margin:0">3-Jahres-Tabelle (Garantie vs. Vergleich)</h3></div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Jahr</th><th class="num">Garantiert €/Mon</th><th class="num">EUR-Benchmark €/Mon</th><th class="num">Markt +tief €/Mon</th><th class="num">Markt +hoch €/Mon</th><th class="num">Ataberk TRY/Mon</th></tr></thead>
+        <tbody id="yearRows"></tbody>
+      </table></div>
+    </div>
+
+    <div class="callout teal" id="ataberkView"></div>
+
+    <div class="callout"><b>⚖️ Vor dem Angebot (Rechts-Gates, nicht im Rechner abbildbar):</b> Quellensteuer-Einstufung 0/10/20 % (GIB-Ruling) · e-Fatura via lizenzierten Integrator · KVKK-Auslandstransfer (standart sözleşme) · Betriebsstätten-Vermeidung · Payments nur über lizenzierten PSP. „Compliance inklusive" ehrlich = Software + Updates.</div>
+  </div>
+</div></main>
+
+<footer><div class="shell foot">
+  <div><b class="conf">STRENG VERTRAULICH</b> · Interne Kalkulationshilfe WAMOCON GmbH / Ataberk Estate. Planungswerte, kein verbindliches Angebot.</div>
+  <div style="text-align:right"><button class="reset" onclick="window.print()">Drucken / PDF</button><br>1Çatı Preis-Simulator · v1.0 · 19.07.2026</div>
+</div></footer>
+
+<script>
+(function(){"use strict";
+var metric="user", whtWho="gross";
+var DEFAULTS={units:769,upu:2,staff:50,hotel:0,ratePerUser:5,ratePerUnit:10,degPct:5,degStep:500,floorVal:0,guarYears:3,mktLow:20,mktHigh:30,eurBench:11,cogsExt:450,effort:500,wht:10,fx:53,fxDep:15};
+function $(id){return document.getElementById(id)}
+function num(id){var v=parseFloat($(id).value);return isNaN(v)?0:v}
+function eur(v){return "€"+Math.round(v).toLocaleString("de-DE")}
+function eur2(v){return "€"+v.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function tryf(v){return "₺"+Math.round(v).toLocaleString("de-DE")}
+function pct(v){return v.toLocaleString("de-DE",{maximumFractionDigits:1})+" %"}
+
+// marginal-tier degression -> returns total monthly revenue for `count` items at baseRate
+function degRevenue(count,baseRate){
+  if(!$("degOn").checked) return count*baseRate;
+  var step=Math.max(1,num("degStep")), red=num("degPct")/100, total=0, rem=count, i=0;
+  while(rem>0){var take=Math.min(rem,step);var r=baseRate*Math.max(0,1-red*i);total+=take*r;rem-=take;i++}
+  return total;
+}
+
+function calc(){
+  var units=num("units"), upu=num("upu"), staff=num("staff"), hotel=num("hotel");
+  var totalUsers=units*upu+staff+hotel;
+  var baseCount = metric==="user"? totalUsers : units;
+  var baseRate  = metric==="user"? num("ratePerUser") : num("ratePerUnit");
+  var revGross = degRevenue(baseCount, baseRate);            // before floor
+  if($("floorOn").checked) revGross=Math.max(revGross,num("floorVal"));
+  // withholding
+  var wht=num("wht")/100;
+  var whtCost = whtWho==="wamocon"? revGross*wht : 0;                    // only a WAMOCON cost if WAMOCON bears it
+  var revNetWamocon = revGross - whtCost;                                // what WAMOCON actually receives
+  var ataberkPaysEur = whtWho==="gross"? revGross/(1-wht) : revGross;    // gross-up => Ataberk pays more
+  var effRateUser = totalUsers>0? revGross/totalUsers : 0;
+  var effRateUnit = units>0? revGross/units : 0;
+  var cogs=num("cogsExt"), effort=num("effort"), fx=num("fx");
+  var gross = revGross>0? (revGross-cogs)/revGross : 0;                  // brutto: nur externe Fremdkosten
+  var contribAbs = revNetWamocon - cogs - effort;                       // Vollkosten-Deckungsbeitrag (kein WHT-Doppelzählen)
+  var net = revGross>0? contribAbs/revGross : 0;
+  return {units:units,totalUsers:totalUsers,baseCount:baseCount,baseRate:baseRate,revGross:revGross,revNetWamocon:revNetWamocon,
+    ataberkPaysEur:ataberkPaysEur,effRateUser:effRateUser,effRateUnit:effRateUnit,cogs:cogs,effort:effort,whtCost:whtCost,
+    gross:gross,net:net,contribAbs:contribAbs,fx:fx};
+}
+
+function render(){
+  var d=calc();
+  $("totalUsersBox").innerHTML="<b>"+d.totalUsers.toLocaleString("de-DE")+"</b> aktive Nutzer &nbsp;·&nbsp; <b>"+d.units.toLocaleString("de-DE")+"</b> Einheiten";
+  $("kMonth").textContent=eur(d.revNetWamocon);
+  $("kMonthTry").textContent=tryf(d.revGross*d.fx)+" zum Kurs";
+  $("kYear").textContent=eur(d.revNetWamocon*12);
+  $("kEffRate").textContent=eur2(d.effRateUser)+"/Nutzer · "+eur2(d.effRateUnit)+"/Einheit";
+  $("kGross").textContent=pct(d.gross*100);
+  $("kGrossAbs").textContent="nur Fremdkosten "+eur(d.cogs)+"/Mon";
+  $("kNet").textContent=pct(d.net*100);
+  $("kNetAbs").textContent="nach Aufwand+Steuer · "+eur(d.contribAbs)+"/Mon";
+
+  // ---- 3-year paths (monthly revenue) ----
+  var yrs=Math.max(1,Math.round(num("guarYears")));
+  var mL=num("mktLow")/100, mH=num("mktHigh")/100, bch=num("eurBench")/100, fxDep=num("fxDep")/100;
+  var base=d.revGross, guar=[],bench=[],low=[],high=[],tryLast=[];
+  for(var y=0;y<yrs;y++){
+    guar.push(base);
+    bench.push(base*Math.pow(1+bch,y));
+    low.push(base*Math.pow(1+mL,y));
+    high.push(base*Math.pow(1+mH,y));
+    tryLast.push(base*d.fx*Math.pow(1+fxDep,y));
+  }
+  // honest savings vs EUR benchmark; market context savings
+  var saveBench=0,saveLow=0,saveHigh=0;
+  for(var y2=0;y2<yrs;y2++){saveBench+=(bench[y2]-guar[y2])*12;saveLow+=(low[y2]-guar[y2])*12;saveHigh+=(high[y2]-guar[y2])*12;}
+
+  $("honestBox").innerHTML="<b>Ehrliche Ersparnis (gg. fairen EUR-Benchmark "+pct(bch*100)+"/J): "+eur(saveBench)+" über "+yrs+" Jahre.</b>"+
+    "Das ist die verteidigbare Zahl. <u>Markt-Kontext</u> (nur zur Einordnung, NICHT als von uns getragene Last): "+eur(saveLow)+"–"+eur(saveHigh)+" gg. lokal marktindexierten Preisen (+"+pct(mL*100)+" bis +"+pct(mH*100)+"/J). WAMOCONs reale EUR-Kosten steigen nur ~"+pct(bch*100)+"/J → Garantie ist finanzierbar.";
+
+  // year table
+  var rows="";
+  for(var y3=0;y3<yrs;y3++){
+    rows+="<tr><td>Jahr "+(y3+1)+"</td><td class='num'>"+eur(guar[y3])+"</td><td class='num'>"+eur(bench[y3])+"</td><td class='num'>"+eur(low[y3])+"</td><td class='num'>"+eur(high[y3])+"</td><td class='num'>"+tryf(tryLast[y3])+"</td></tr>";
+  }
+  var tryGrowth=tryLast[yrs-1]/tryLast[0];
+  rows+="<tr class='tot'><td>Bilanz</td><td class='num'>"+eur(guar[0])+" flat</td><td class='num good'>+"+eur(saveBench)+" gespart</td><td class='num' colspan='2'>Markt-Kontext +"+eur(saveLow)+"–"+eur(saveHigh)+"</td><td class='num bad'>×"+tryGrowth.toFixed(2)+" in TRY</td></tr>";
+  $("yearRows").innerHTML=rows;
+
+  $("ataberkView").innerHTML="<b>Kundensicht (Ehrlichkeit &amp; FX):</b> Ataberk zahlt "+(whtWho==="gross"?"inkl. Quellensteuer-Gross-up <b>"+eur(d.ataberkPaysEur)+"</b>/Mon (WAMOCON erhält "+eur(d.revNetWamocon)+" netto)":"<b>"+eur(d.revGross)+"</b>/Mon (WAMOCON trägt die Quellensteuer)")+
+    ". In EUR ist der Preis "+yrs+" Jahre garantiert flat — <b>in TRY steigt die Last dennoch um ~×"+tryGrowth.toFixed(2)+"</b> (Lira-Abwertung "+pct(fxDep*100)+"/J). Deshalb: ‚EUR-Stabilität‘ kommunizieren, NICHT ‚Schutz vor türkischer Kostensteigerung‘.";
+
+  // charts
+  lineChart("chartPath",[
+    {data:guar,color:getVar("--teal"),w:3},
+    {data:bench,color:getVar("--green"),w:2},
+    {data:low,color:getVar("--amber"),w:2,dash:true},
+    {data:high,color:getVar("--red"),w:2,dash:true}
+  ],eur);
+  stackChart("chartMargin",[
+    {v:Math.max(0,d.contribAbs),color:getVar("--teal")},
+    {v:d.cogs,color:getVar("--muted")},
+    {v:d.effort,color:getVar("--ink2")},
+    {v:d.whtCost,color:getVar("--red")}
+  ],d.revGross);
+  degChart(d);
+  lineChart("chartFx",[
+    {data:tryLast,color:getVar("--ink2"),w:3},
+    {data:guar.map(g=>g*d.fx),color:getVar("--teal"),w:2,dash:true}
+  ],tryf);
+  $("degUnitLbl").textContent=metric==="user"?"Nutzer":"Einheit";
+}
+
+function getVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||"#888"}
+function setupCanvas(id){var c=$(id);var r=c.getBoundingClientRect();var dpr=window.devicePixelRatio||1;c.width=r.width*dpr;c.height=r.height*dpr;var x=c.getContext("2d");x.scale(dpr,dpr);return {x:x,w:r.width,h:r.height}}
+function lineChart(id,series,fmt){
+  var s=setupCanvas(id),x=s.x,W=s.w,H=s.h,pad=34;
+  var all=[].concat.apply([],series.map(se=>se.data));var max=Math.max.apply(null,all)*1.1||1,min=0;
+  var n=series[0].data.length;
+  x.strokeStyle="#e5ded3";x.lineWidth=1;
+  for(var g=0;g<=3;g++){var yy=pad+(H-2*pad)*g/3;x.beginPath();x.moveTo(pad,yy);x.lineTo(W-6,yy);x.stroke();
+    x.fillStyle="#9aa8ac";x.font="9px Consolas";x.fillText(fmt(max*(1-g/3)),2,yy-2);}
+  function px(i){return pad+(W-pad-6)*(n<=1?0:i/(n-1))}
+  function py(v){return pad+(H-2*pad)*(1-(v-min)/(max-min))}
+  series.forEach(function(se){
+    x.strokeStyle=se.color;x.lineWidth=se.w||2;x.setLineDash(se.dash?[5,4]:[]);
+    x.beginPath();se.data.forEach(function(v,i){i?x.lineTo(px(i),py(v)):x.moveTo(px(i),py(v))});x.stroke();
+    x.setLineDash([]);x.fillStyle=se.color;se.data.forEach(function(v,i){x.beginPath();x.arc(px(i),py(v),se.w>2?3.5:2.5,0,7);x.fill()});
+  });
+  x.fillStyle="#7c8a8e";x.font="9px Consolas";for(var i=0;i<n;i++){x.fillText("J"+(i+1),px(i)-6,H-6)}
+}
+function stackChart(id,parts,total){
+  var s=setupCanvas(id),x=s.x,W=s.w,H=s.h,pad=20,bw=Math.min(120,W*0.32),bx=(W-bw)/2;
+  total=total||parts.reduce((a,p)=>a+p.v,0)||1;var y=H-pad;
+  parts.forEach(function(p){var h=(H-2*pad)*(p.v/total);y-=h;x.fillStyle=p.color;x.fillRect(bx,y,bw,h);
+    if(h>14){x.fillStyle="#fff";x.font="700 11px Segoe UI";x.fillText(Math.round(p.v/total*100)+"%",bx+8,y+h/2+4)}});
+  x.fillStyle="#0b202b";x.font="800 13px Segoe UI";x.textAlign="center";x.fillText("Umsatz "+eur(total),W/2,14);x.textAlign="left";
+}
+function degChart(d){
+  var s=setupCanvas("chartDeg"),x=s.x,W=s.w,H=s.h,pad=30;
+  var base=metric==="user"?num("ratePerUser"):num("ratePerUnit");
+  var on=$("degOn").checked, step=Math.max(1,num("degStep")), red=num("degPct")/100;
+  var count=Math.max(step*5,d.baseCount), bars=Math.min(6,Math.ceil(count/step));
+  var maxR=base*1.15||1;
+  x.strokeStyle="#e5ded3";x.beginPath();x.moveTo(pad,H-pad);x.lineTo(W-6,H-pad);x.stroke();
+  var bw=(W-pad-6)/bars*0.7;
+  for(var i=0;i<bars;i++){
+    var r=on?base*Math.max(0,1-red*i):base;
+    var h=(H-2*pad)*(r/maxR);var bx=pad+(W-pad-6)*i/bars+((W-pad-6)/bars-bw)/2;var by=H-pad-h;
+    var cur=(d.baseCount>i*step && d.baseCount<=(i+1)*step);
+    x.fillStyle=cur?getVar("--teal"):getVar("--amber");x.globalAlpha=cur?1:.55;x.fillRect(bx,by,bw,h);x.globalAlpha=1;
+    x.fillStyle="#0b202b";x.font="700 10px Consolas";x.fillText(eur2(r),bx-2,by-4);
+    x.fillStyle="#7c8a8e";x.font="9px Consolas";x.fillText((i*step)+(i===bars-1?"+":"–"+((i+1)*step)),bx-2,H-pad+12);
+  }
+  x.fillStyle="#7c8a8e";x.font="9px Consolas";x.fillText(metric==="user"?"Nutzer-Stufen":"Einheiten-Stufen",pad,16);
+}
+
+// ---- wiring ----
+document.querySelectorAll("input").forEach(function(el){el.addEventListener("input",render)});
+$("degOn").addEventListener("change",render);$("floorOn").addEventListener("change",render);
+document.querySelectorAll("#metricSeg button").forEach(function(b){b.addEventListener("click",function(){
+  metric=b.dataset.m;document.querySelectorAll("#metricSeg button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();})});
+document.querySelectorAll("#whtSeg button").forEach(function(b){b.addEventListener("click",function(){
+  whtWho=b.dataset.w;document.querySelectorAll("#whtSeg button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();})});
+$("reset").addEventListener("click",function(){for(var k in DEFAULTS){if($(k))$(k).value=DEFAULTS[k]}$("degOn").checked=false;$("floorOn").checked=false;
+  metric="user";whtWho="gross";
+  document.querySelectorAll("#metricSeg button").forEach(x=>x.classList.toggle("on",x.dataset.m==="user"));
+  document.querySelectorAll("#whtSeg button").forEach(x=>x.classList.toggle("on",x.dataset.w==="gross"));render();});
+window.addEventListener("resize",function(){clearTimeout(window._rt);window._rt=setTimeout(render,120)});
+render();
+})();
+</script>
+</body>
+</html>
