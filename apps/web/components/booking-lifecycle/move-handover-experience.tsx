@@ -459,7 +459,7 @@ const optionCopy = {
 function localeOf(value: string): Locale {
   return value === "tr" || value === "de" || value === "ru" ? value : "en"
 }
-function text(row: Row, key: string, fallback = "—") {
+function text(row: Row, key: string, fallback = "-") {
   const value = row[key]
   return typeof value === "string" && value ? value : fallback
 }
@@ -669,7 +669,7 @@ function formatDate(value: string, locale: Locale) {
         timeStyle: "short",
         timeZone: "Europe/Istanbul",
       }).format(date)
-    : "—"
+    : "-"
 }
 
 export function MoveHandoverExperience() {

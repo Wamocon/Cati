@@ -659,7 +659,7 @@ export function LiveErpSimulation({
         >
           <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.045)_1px,transparent_1px)] bg-[size:42px_42px]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_20%,rgba(20,184,166,.15),transparent_28%),radial-gradient(circle_at_72%_70%,rgba(255,107,87,.13),transparent_30%)]" />
-          {/* Ground line with a single subtle shimmer pass — suggests live data, not decoration. */}
+          {/* Ground line with a single subtle shimmer pass, suggests live data, not decoration. */}
           <div className="absolute inset-x-6 top-[54%] h-px bg-gradient-to-r from-transparent via-slate-300/70 to-transparent" />
           {!prefersReducedMotion && (
             <motion.span

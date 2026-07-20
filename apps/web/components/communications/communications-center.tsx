@@ -39,10 +39,10 @@ function statusLabel(value: string) {
 }
 
 function dateLabel(value: string | null, locale: string) {
-  if (!value) return "—"
+  if (!value) return "-"
   const date = new Date(value)
   return Number.isNaN(date.getTime())
-    ? "—"
+    ? "-"
     : new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(date)
 }
 
@@ -668,7 +668,7 @@ export function CommunicationsCenter() {
                       className={`w-full min-w-0 rounded-2xl border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selectedThreadId === thread.id ? "border-primary bg-primary/5" : "border-transparent bg-muted/40 hover:border-border"}`}
                     >
                       <span className="block truncate text-sm font-black text-foreground">{thread.subject}</span>
-                      <span className="mt-1 block truncate text-xs text-muted-foreground">{thread.lastMessagePreview ?? thread.unitLabel ?? "—"}</span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">{thread.lastMessagePreview ?? thread.unitLabel ?? "-"}</span>
                       <span className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                         <span>{statusLabel(thread.status)}</span>
                         {thread.unreadCount > 0 && <span className="text-primary">{thread.unreadCount} {copy.unread}</span>}

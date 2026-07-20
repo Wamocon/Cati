@@ -260,7 +260,7 @@ function formatMetric(
 
 function formatTimestamp(value: string, locale: DashboardLocale) {
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "—"
+  if (Number.isNaN(date.getTime())) return "-"
   return new Intl.DateTimeFormat(localeNames[locale], {
     dateStyle: "medium",
     timeStyle: "short",

@@ -2,7 +2,7 @@
   "name": "cati",
   "private": true,
   "version": "2.0.0",
-  "description": "1Çatı Property Management ERP — Next.js CRM and operations application",
+  "description": "1Çatı Property Management ERP, Next.js CRM and operations application",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

@@ -2,7 +2,7 @@
 // leak untranslated on the default (tr) locale. Keys are the raw English seed
 // values from site-management-data.ts (buyerGoal, districtCheck, documentType,
 // status, risk, checklist nextAction). Turkish source strings are NOT listed
-// here — they pass through unchanged via localizeBusinessCopy's `?? text`.
+// here, they pass through unchanged via localizeBusinessCopy's `?? text`.
 export const trCopy: Record<string, string> = {
   // buyerGoal
   investment: "Yatırım",

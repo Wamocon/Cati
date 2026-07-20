@@ -6,13 +6,13 @@
 // is always manual review; this gateway never simulates a successful check.
 //
 // Maintenance-free by design: the SaaS IDV provider owns document templates,
-// new ID types, liveness models and compliance updates — 1Çatı owns none of
+// new ID types, liveness models and compliance updates, 1Çatı owns none of
 // that. Swapping providers is an env change, not a code change.
 //
 // Env:
-//   IDV_API_URL, IDV_API_KEY  — enable the real provider
-//   IDV_VERIFY_PATH           — optional, default "/verify"
-//   IDV_PROVIDER              — optional provider id passed through
+//   IDV_API_URL, IDV_API_KEY , enable the real provider
+//   IDV_VERIFY_PATH          , optional, default "/verify"
+//   IDV_PROVIDER             , optional provider id passed through
 
 export type IdentityVerificationInput = {
   idType: string

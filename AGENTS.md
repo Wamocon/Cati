@@ -8,11 +8,11 @@
 
 Dieses Repository enthält **ein zentrales Produkt-Deliverable** für die digitale Transformationsinitiative **„1Çatı“** (1Cat) bei Ataberk Estate:
 
-1. **`apps/web/`** — Die eigentliche Next.js-Anwendung: öffentliche ERP-Produktseiten, integrierter Login/Auth sowie das rollenbasierte CRM-/ERP-Portal dahinter.
+1. **`apps/web/`**, Die eigentliche Next.js-Anwendung: öffentliche ERP-Produktseiten, integrierter Login/Auth sowie das rollenbasierte CRM-/ERP-Portal dahinter.
 
 - **Auftraggeber:** Ataberk Estate, Türkei (Zielgruppe: russischsprachige Käufer, Verkäufer, Eigentümer; lokale Betriebssprache Türkisch)
 - **Durchführung / Beratung:** WAMOCON GmbH
-- **Projektname:** 1Çatı — Property-Management-Plattform
+- **Projektname:** 1Çatı, Property-Management-Plattform
 - **Mandanten-Website:** https://www.ataberkestate.com/
 - **Immobilienbestand:** 212.298+ Objekte in der Datenbank
 - **Live-Web-App:** https://cati-blond.vercel.app
@@ -155,7 +155,7 @@ pnpm --filter cati-web typecheck
 
 ## Hinweis für Agenten
 
-- Nicht löschen oder veröffentlichen — Inhalte sind vertraulich.
+- Nicht löschen oder veröffentlichen, Inhalte sind vertraulich.
 - Änderungen an `AGENTS.md`, `docs/README.md` und `docs/PROJECT-HANDBOOK.md` müssen bei Architektur-, Struktur- oder Dokumentationsänderungen nachgeführt werden.
 - Vor größeren Architekturentscheidungen einen Plan erstellen und absegnen lassen.
 - Vor jeder Produktänderung die betroffene Anforderung in `docs/requirements/option-3-ai-site-crm/` sowie den passenden Abschnitt in `docs/ways-of-work/` prüfen. Implementierung, Supabase-Migrationen/API-Verträge, RBAC/RLS und die zugehörigen QA-Szenarien müssen vor dem Release gegengeprüft werden. Provider- oder Sicherheitsfunktionen dürfen erst nach den in der Dokumentation genannten Freigaben und mit passenden End-to-End-Nachweisen als produktiv bezeichnet werden.

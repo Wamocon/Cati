@@ -122,9 +122,9 @@ function commandKey(purpose: string) {
 }
 
 function dateLabel(value: string | null, locale: string) {
-  if (!value) return "—"
+  if (!value) return "-"
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return "—"
+  if (Number.isNaN(parsed.getTime())) return "-"
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -1204,7 +1204,7 @@ export function BuyerPipelineWorkspace() {
                         {prospect.fullName}
                       </h3>
                       <p className="mt-1 truncate text-xs text-muted-foreground">
-                        {prospect.email ?? prospect.phone ?? "—"}
+                        {prospect.email ?? prospect.phone ?? "-"}
                       </p>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <span className="inline-flex items-center gap-1.5 text-muted-foreground">
@@ -1823,7 +1823,7 @@ export function BuyerPipelineWorkspace() {
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold text-foreground">
                                   {event.reason ??
-                                    `${event.fromStage ? copy.stageLabels[event.fromStage] : "—"} → ${copy.stageLabels[event.toStage]}`}
+                                    `${event.fromStage ? copy.stageLabels[event.fromStage] : "-"} → ${copy.stageLabels[event.toStage]}`}
                                 </p>
                                 <p className="mt-1 text-[10px] text-muted-foreground">
                                   v{event.version} ·{" "}

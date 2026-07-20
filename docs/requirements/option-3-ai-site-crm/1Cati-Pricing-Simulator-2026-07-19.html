@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="1Çatı Preis-Simulator — interaktive Live-Kalkulation des Lizenzmodells mit Ataberk">
-<title>1Çatı — Preis-Simulator (Live-Kalkulation)</title>
+<meta name="description" content="1Çatı Preis-Simulator, interaktive Live-Kalkulation des Lizenzmodells mit Ataberk">
+<title>1Çatı, Preis-Simulator (Live-Kalkulation)</title>
 <style>
 :root{--ink:#0b202b;--ink2:#183942;--paper:#f2ede3;--white:#fffdf8;--line:#d9d0c1;--teal:#087d75;--teal2:#d9eeea;--amber:#c57a20;--amber2:#f6e4c9;--red:#a84d44;--red2:#f5dedb;--green:#2f7d5b;--muted:#64757b;--shadow:0 16px 45px #0b202b17;--r:16px;--sans:"Segoe UI",Arial,sans-serif;--display:"Trebuchet MS","Segoe UI",sans-serif;--mono:Consolas,monospace}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
@@ -82,7 +82,7 @@ h2.sec{margin:22px 0 10px;font:650 20px/1.1 var(--display);letter-spacing:-.02em
 <header class="hero"><div class="shell hero-in">
   <div class="eyebrow">Interne Live-Kalkulation · WAMOCON ↔ Ataberk</div>
   <h1>1Çatı Preis-Simulator</h1>
-  <p class="lead">Alle Preis-Varianten live durchspielen — gemeinsam mit dem Kunden. Metrik umschalten (pro Nutzer / pro Einheit), Degression, Preisgarantie und Marktentwicklung ändern und sofort Umsatz, <b>Vollkosten-Marge</b> und die <b>ehrliche</b> Ersparnis sehen.</p>
+  <p class="lead">Alle Preis-Varianten live durchspielen, gemeinsam mit dem Kunden. Metrik umschalten (pro Nutzer / pro Einheit), Degression, Preisgarantie und Marktentwicklung ändern und sofort Umsatz, <b>Vollkosten-Marge</b> und die <b>ehrliche</b> Ersparnis sehen.</p>
   <span class="tag">Red-Team-korrigiert · Vollkosten-Marge · ehrliche EUR-Ersparnis · FX-Sicht · keine Mindestanzahl</span>
 </div></header>
 
@@ -120,7 +120,7 @@ h2.sec{margin:22px 0 10px;font:650 20px/1.1 var(--display);letter-spacing:-.02em
         <div class="field"><label>€ / Nutzer / Monat</label><input id="ratePerUser" type="number" min="0" step="0.5" value="5"></div>
         <div class="field"><label>€ / Einheit / Monat</label><input id="ratePerUnit" type="number" min="0" step="0.5" value="10"></div>
       </div>
-      <small style="color:var(--muted)">All-in — keine separaten Entwicklungs-/Wartungskosten.</small>
+      <small style="color:var(--muted)">All-in, keine separaten Entwicklungs-/Wartungskosten.</small>
     </div>
 
     <div class="block">
@@ -132,7 +132,7 @@ h2.sec{margin:22px 0 10px;font:650 20px/1.1 var(--display);letter-spacing:-.02em
       </div>
       <label class="check"><input id="floorOn" type="checkbox"><span>Mindest-Monatsumsatz (Floor)</span></label>
       <div class="field"><label>Floor <small>€/Monat</small></label><input id="floorVal" type="number" min="0" value="0"></div>
-      <small style="color:var(--muted)">Standard: kein Floor — nur reale Nutzer/Einheiten.</small>
+      <small style="color:var(--muted)">Standard: kein Floor, nur reale Nutzer/Einheiten.</small>
     </div>
 
     <div class="block">
@@ -205,7 +205,7 @@ h2.sec{margin:22px 0 10px;font:650 20px/1.1 var(--display);letter-spacing:-.02em
     <div class="grid2b">
       <div class="card">
         <h3>Degressions-Treppe</h3>
-        <p class="sub">Effektiver Preis pro <span id="degUnitLbl">Nutzer</span> — je größer, desto günstiger.</p>
+        <p class="sub">Effektiver Preis pro <span id="degUnitLbl">Nutzer</span>, je größer, desto günstiger.</p>
         <canvas id="chartDeg"></canvas>
       </div>
       <div class="card">
@@ -317,7 +317,7 @@ function render(){
   $("yearRows").innerHTML=rows;
 
   $("ataberkView").innerHTML="<b>Kundensicht (Ehrlichkeit &amp; FX):</b> Ataberk zahlt "+(whtWho==="gross"?"inkl. Quellensteuer-Gross-up <b>"+eur(d.ataberkPaysEur)+"</b>/Mon (WAMOCON erhält "+eur(d.revNetWamocon)+" netto)":"<b>"+eur(d.revGross)+"</b>/Mon (WAMOCON trägt die Quellensteuer)")+
-    ". In EUR ist der Preis "+yrs+" Jahre garantiert flat — <b>in TRY steigt die Last dennoch um ~×"+tryGrowth.toFixed(2)+"</b> (Lira-Abwertung "+pct(fxDep*100)+"/J). Deshalb: ‚EUR-Stabilität‘ kommunizieren, NICHT ‚Schutz vor türkischer Kostensteigerung‘.";
+    ". In EUR ist der Preis "+yrs+" Jahre garantiert flat, <b>in TRY steigt die Last dennoch um ~×"+tryGrowth.toFixed(2)+"</b> (Lira-Abwertung "+pct(fxDep*100)+"/J). Deshalb: ‚EUR-Stabilität‘ kommunizieren, NICHT ‚Schutz vor türkischer Kostensteigerung‘.";
 
   // charts
   lineChart("chartPath",[

@@ -70,7 +70,7 @@
   },
   "problems": {
     "title": "Türkiye'de emlak yönetimi neden zor",
-    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler — özellikle 2026'daki yeni düzenlemelerle.",
+    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler, özellikle 2026'daki yeni düzenlemelerle.",
     "leads": {
       "title": "Müşteri adayları mesajlaşmalarda kayboluyor",
       "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. 30 dakikadan sonra dönüşüm yüzde altmış düşüyor. Tek bir CRM olmadan geçmiş personel değiştiğinde yok oluyor."
@@ -89,7 +89,7 @@
     },
     "compliance": {
       "title": "Günlük kiralamada 1.000.000 ₺'ye varan cezalar",
-      "desc": "7464 sayılı Kanun, TÜRSAB lisansı, 24 saat içinde KBS/e-GUEST — uyumsuzluk yüz binlerce liraya mal oluyor."
+      "desc": "7464 sayılı Kanun, TÜRSAB lisansı, 24 saat içinde KBS/e-GUEST, uyumsuzluk yüz binlerce liraya mal oluyor."
     },
     "owners": {
       "title": "Yabancı malikler şeffaflık istiyor",
@@ -101,7 +101,7 @@
     },
     "fraud": {
       "title": "Sahte TAPU ve sahte ilanlar",
-      "desc": "Sahte TAPU, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef — her işlemde due-diligence şart."
+      "desc": "Sahte TAPU, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef, her işlemde due-diligence şart."
     },
     "permits": {
       "title": "Oturum izni kuralları sıkılaştı",
@@ -110,7 +110,7 @@
     "sectionBadge": "2026 Gerçekliği"
   },
   "solution": {
-    "title": "1Çatı — emlağın tek işletim sistemi",
+    "title": "1Çatı, emlağın tek işletim sistemi",
     "subtitle": "CRM, ilanlar, işlemler, kiralama, bakım talepleri, belgeler ve uyumluluk tek platformda.",
     "items": {
       "crm": "Adaylar, müşteriler ve malikler için tek CRM",
@@ -209,7 +209,7 @@
     "services": ["Satın Alma", "Satış", "Kiralama Yönetimi", "Vatandaşlık"],
     "legalTitle": "Yasal",
     "legal": ["Gizlilik Politikası", "Kullanım Koşulları"],
-    "securityNote": "Güvenli operasyon platformu — WAMOCON GmbH & Ataberk Estate."
+    "securityNote": "Güvenli operasyon platformu, WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
     "title": "Kontrol Paneli",
@@ -750,7 +750,7 @@
     "liveSource": "Veritabanı anlık görünümü",
     "demoSource": "Yerel demo verisi",
     "lastUpdated": "Son güncelleme",
-    "notAvailable": "—",
+    "notAvailable": "-",
     "refresh": "Güncelle",
     "refreshing": "Güncelleniyor",
     "pollRecovery": "Bu görünüm açıkken yetkili hesap özeti API'si en geç 30 saniyede bir yeniden kontrol edilir; Yenile düğmesi hemen kontrol eder.",

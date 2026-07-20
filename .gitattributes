@@ -20,7 +20,7 @@
 *.sh   text eol=lf
 *.py   text eol=lf
 
-# Binary assets — never touch line endings.
+# Binary assets, never touch line endings.
 *.png  binary
 *.jpg  binary
 *.jpeg binary

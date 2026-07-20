@@ -4,8 +4,8 @@ import { resolveChatLanguageFromMessage } from "./language-detection"
 //
 // Guardrail by construction: this module (and the /api/ai/public-chat route
 // that uses it) has NO access to live 1Cati data. The visitor-facing assistant
-// knows the product story — what 1Cati is, why it exists, which advantages it
-// brings — but it can never surface a balance, a resident, a document or any
+// knows the product story, what 1Cati is, why it exists, which advantages it
+// brings, but it can never surface a balance, a resident, a document or any
 // other internal record, because none of that is ever loaded into its context.
 // Questions that ask for private data get a polite refusal that points to
 // registration or the management contact instead.
@@ -264,7 +264,7 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
     "service-features":
       "Servis talebi açarsınız; durumu, SLA süresini ve işin foto/video kanıtını sistemden izlersiniz. Temizlik, bakım, transfer, spa, restoran, tiyatro/etkinlik ve gezi-tur gibi talepler sohbet mesajlarında kaybolmaz; doğru iç ekibe veya dış sağlayıcıya yönlendirilir ve kapatma onayıyla biter.",
     languages:
-      "1Çatı dört dilde çalışır: Türkçe, İngilizce, Almanca ve Rusça — hepsi aynı derinlikte. Uluslararası malik tabanı için tasarlandı; siz hangi dilde rahatsanız sistemi o dilde kullanırsınız.",
+      "1Çatı dört dilde çalışır: Türkçe, İngilizce, Almanca ve Rusça, hepsi aynı derinlikte. Uluslararası malik tabanı için tasarlandı; siz hangi dilde rahatsanız sistemi o dilde kullanırsınız.",
     "project-info":
       "Yeni Seviye Premium, Avsallar'da 52.000 m² proje alanı üzerinde 7 blok ve 769 daireden oluşur; plaja 900 metre mesafede, 5 yıldızlı otel altyapısı ve 22 sosyal olanak sunar. 1Çatı bu sitenin tamamını tek işletim modelinde yönetir.",
     pricing:
@@ -338,13 +338,13 @@ const answers: Record<PublicAiLocale, TopicCopy> = {
   },
   ru: {
     "what-is":
-      "1Çatı — операционная система, с помощью которой Ataberk Estate управляет крупными комплексами вроде «Новый уровень Премиум». Финансы, сервис, документы, бронирования и решения о доступе встречаются в одной записи; собственники, арендаторы, персонал и управление работают в одной системе, и каждая роль видит только свою зону.",
+      "1Çatı, операционная система, с помощью которой Ataberk Estate управляет крупными комплексами вроде «Новый уровень Премиум». Финансы, сервис, документы, бронирования и решения о доступе встречаются в одной записи; собственники, арендаторы, персонал и управление работают в одной системе, и каждая роль видит только свою зону.",
     advantages:
       "Отличие в том, что обещание продаж связано с ежедневной работой. Вы видите свой баланс без звонков, заявки закрываются с подтверждением, документы лежат проверенными в одном месте, а у каждого решения о доступе есть причина. Четыре языка с одинаковой глубиной, каждое действие фиксируется и отслеживается.",
     registration:
       "Регистрация прямо на этой странице: выберите роль (Собственник, Арендатор или Персонал), заполните данные и отправьте заявку. После проверки легитимности доступ открывает администратор; ни один аккаунт не активируется сам. Личность собственников и арендаторов проверяется с минимизацией данных и защищённым доступом; точные сроки хранения и удаления зависят от утверждённой политики KVKK и уточняются у управления.",
     "tenant-access":
-      "Для арендаторов лучший путь — код приглашения от собственника: он создаёт в кабинете одноразовый код со сроком. Доступ действует только в выбранный период и закрывается сам. Ответственность несёт собственник весь срок аренды, что сохраняет цепочку доверия для всех.",
+      "Для арендаторов лучший путь, код приглашения от собственника: он создаёт в кабинете одноразовый код со сроком. Доступ действует только в выбранный период и закрывается сам. Ответственность несёт собственник весь срок аренды, что сохраняет цепочку доверия для всех.",
     reporting:
       "Чтобы сообщить о проблеме, аккаунт не нужен. Используйте форму на этой странице или отсканируйте QR-плакат на территории; достаточно места и короткого описания. Каждое сообщение попадает в очередь триажа, получает номер и отслеживается до решения.",
     "security-kvkk":
@@ -546,7 +546,7 @@ const localeNames: Record<PublicAiLocale, string> = {
 }
 
 // System prompt for the optional local AI gateway. The model receives ONLY this
-// curated product knowledge — no live data is ever loaded into its context —
+// curated product knowledge, no live data is ever loaded into its context -
 // and is instructed to refuse anything private. Do not weaken these rules.
 export function getPublicAiSystemPrompt(locale: PublicAiLocale): string {
   return [

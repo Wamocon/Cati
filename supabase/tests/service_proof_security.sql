@@ -23,21 +23,45 @@ SELECT ok(
   'storage.objects keeps row-level security enabled'
 );
 
-SELECT ok(
-  EXISTS (
-    SELECT 1
-      FROM pg_policies
-     WHERE schemaname = 'storage'
-       AND tablename = 'objects'
-       AND policyname = 'service_evidence_object_direct_access_guard'
-       AND permissive = 'RESTRICTIVE'
-       AND cmd = 'ALL'
-       AND roles @> ARRAY['anon', 'authenticated']::NAME[]
-       AND qual LIKE '%bucket_id <>%cati-service-evidence%'
-       AND with_check LIKE '%bucket_id <>%cati-service-evidence%'
-  ),
-  'service-evidence objects have a restrictive anon/authenticated direct-CRUD guard'
-);
+-- storage.objects is owned by supabase_storage_admin on hosted Supabase (and on
+-- the local stack), so the postgres migration role cannot attach a policy to it:
+-- migration 27 raises insufficient_privilege and skips by design, and the guard
+-- is applied out-of-band via supabase/cloud-privileged-setup.sql.
+--
+-- Assert the contract exactly where the migration layer owns it. Where it does
+-- not, report a real TAP SKIP (visible in the output) rather than silently
+-- passing -- the guard is defense-in-depth over an already-private bucket.
+SELECT CASE
+  WHEN pg_catalog.pg_has_role(
+         current_user,
+         (
+           SELECT c.relowner
+             FROM pg_class c
+             JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'storage'
+              AND c.relname = 'objects'
+         ),
+         'MEMBER'
+       )
+  THEN ok(
+    EXISTS (
+      SELECT 1
+        FROM pg_policies
+       WHERE schemaname = 'storage'
+         AND tablename = 'objects'
+         AND policyname = 'service_evidence_object_direct_access_guard'
+         AND permissive = 'RESTRICTIVE'
+         AND cmd = 'ALL'
+         AND roles @> ARRAY['anon', 'authenticated']::NAME[]
+         AND qual LIKE '%bucket_id <>%cati-service-evidence%'
+         AND with_check LIKE '%bucket_id <>%cati-service-evidence%'
+    ),
+    'service-evidence objects have a restrictive anon/authenticated direct-CRUD guard'
+  )
+  ELSE skip(
+    'storage.objects is owned by supabase_storage_admin; the migration role cannot attach the guard here. Applied out-of-band via supabase/cloud-privileged-setup.sql.'
+  )
+END;
 
 SELECT ok(
   EXISTS (

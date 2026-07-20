@@ -8,7 +8,7 @@
 --       (so a manager can see staff assigned to tasks on sites they manage)
 --
 -- PostgreSQL expands policies recursively, so this structural cycle raises
--- 42P17 for ANY authenticated read of workforce_tasks — it broke the staff
+-- 42P17 for ANY authenticated read of workforce_tasks, it broke the staff
 -- role dashboard entirely against a real (RLS-enforcing) database. It was never
 -- caught because the E2E suite runs against the local-seed fallback and never
 -- exercises Postgres RLS.

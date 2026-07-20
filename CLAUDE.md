@@ -1,8 +1,8 @@
-# CLAUDE.md — Experten-Projektdokumentation für KI-Coding-Agenten
+# CLAUDE.md, Experten-Projektdokumentation für KI-Coding-Agenten
 
 > Erstellt: 1. Juli 2026 (Branch `waleri-dev`)
-> Sprache: Deutsch (Agenten-Dokumentation) — Business-/Produktdokumente in `docs/` sind Englisch
-> Vertraulichkeit: STRICTLY CONFIDENTIAL — nicht veröffentlichen, nicht löschen
+> Sprache: Deutsch (Agenten-Dokumentation), Business-/Produktdokumente in `docs/` sind Englisch
+> Vertraulichkeit: STRICTLY CONFIDENTIAL, nicht veröffentlichen, nicht löschen
 > Status: Diese Datei ist eine tiefgehende technische Ergänzung zu `AGENTS.md`, `docs/README.md` und `docs/PROJECT-HANDBOOK.md`. Bei Widersprüchen gilt die Reihenfolge in Abschnitt 0.
 
 Diese Datei MUSS bei jeder zukünftigen Bearbeitung dieses Repositories zuerst gelesen werden, bevor Code geändert wird. Sie beschreibt Architektur, Datenmodell, Konventionen und Automatisierung so detailliert, dass ein Agent ohne weitere Exploration produktiv arbeiten kann.
@@ -11,12 +11,12 @@ Diese Datei MUSS bei jeder zukünftigen Bearbeitung dieses Repositories zuerst g
 
 ## 0. Dokumenten-Hierarchie (was gilt bei Widersprüchen)
 
-1. `docs/PROJECT-HANDBOOK.md` — aktueller Implementierungsstatus, Phasenwahrheit, offene Entscheidungen (Single Source of Truth für Business/Produkt-Scope).
-2. `docs/README.md` — Navigation und Pflegeregeln für den gesamten `docs/`-Baum.
-3. `docs/requirements/option-3-ai-site-crm/README.md` — Index für BRD/PRD/TRD/Security/QA/Migration.
-4. `AGENTS.md` — kompakte Agenten-Instruktionen (Repo-Struktur, Stack, Konventionen, Sicherheit).
-5. **Diese Datei (`CLAUDE.md`)** — tiefe technische Referenz: exakte Dateien, Schema, Skripte, Datenflüsse.
-6. Aktueller Code unter `apps/web`, `supabase`, `scripts` — im Zweifel ist der Code die Wahrheit, nicht ein Dokument.
+1. `docs/PROJECT-HANDBOOK.md`, aktueller Implementierungsstatus, Phasenwahrheit, offene Entscheidungen (Single Source of Truth für Business/Produkt-Scope).
+2. `docs/README.md`, Navigation und Pflegeregeln für den gesamten `docs/`-Baum.
+3. `docs/requirements/option-3-ai-site-crm/README.md`, Index für BRD/PRD/TRD/Security/QA/Migration.
+4. `AGENTS.md`, kompakte Agenten-Instruktionen (Repo-Struktur, Stack, Konventionen, Sicherheit).
+5. **Diese Datei (`CLAUDE.md`)**, tiefe technische Referenz: exakte Dateien, Schema, Skripte, Datenflüsse.
+6. Aktueller Code unter `apps/web`, `supabase`, `scripts`, im Zweifel ist der Code die Wahrheit, nicht ein Dokument.
 
 Wenn Architektur, Struktur oder Konventionen sich ändern: `AGENTS.md`, `docs/README.md`, `docs/PROJECT-HANDBOOK.md` **und** diese Datei nachführen.
 
@@ -39,7 +39,7 @@ Wenn Architektur, Struktur oder Konventionen sich ändern: `AGENTS.md`, `docs/RE
 | Repository | https://github.com/Wamocon/Cati |
 | Arbeitsbranch | Feature-/Fix-Branches nach Konvention; `waleri-dev`-Exklusivvorgabe aufgehoben |
 
-Das Repository enthält **ein zentrales Produkt-Deliverable**: `apps/web` — eine Next.js-Anwendung, die öffentliche Produktseiten, Login/Auth und ein rollenbasiertes CRM-/ERP-Portal in einer App vereint (kein separates Backend-Repo).
+Das Repository enthält **ein zentrales Produkt-Deliverable**: `apps/web`, eine Next.js-Anwendung, die öffentliche Produktseiten, Login/Auth und ein rollenbasiertes CRM-/ERP-Portal in einer App vereint (kein separates Backend-Repo).
 
 ### 15-Phasen-ERP-Modell (Delivery-Rahmen)
 
@@ -61,7 +61,7 @@ Das Repository enthält **ein zentrales Produkt-Deliverable**: `apps/web` — ei
 | 14 | AI-Premium-Layer, Advanced Analytics | Beschleunigtes Lieferfenster |
 | 15 | QA, Security, Performance, UAT, Training, Launch | Beschleunigtes Lieferfenster |
 
-Wichtige Grenze laut Handbook: Phase 5-9 sind als **Implementierungs-Fundament** fertig (API + UI + Harness-Nachweis), aber **nicht produktionsscharf** — es fehlen Kundendaten-Validierung, Accounting-/Legal-Review, Provider-Entscheidungen und UAT-Sign-off. Zahlungs-, Bank-, Zugangs-, Storage-, Messaging- und AI-Automatisierung dürfen niemals als "live" dargestellt werden, solange diese Punkte offen sind (siehe Abschnitt 11 "Offene Entscheidungen").
+Wichtige Grenze laut Handbook: Phase 5-9 sind als **Implementierungs-Fundament** fertig (API + UI + Harness-Nachweis), aber **nicht produktionsscharf**, es fehlen Kundendaten-Validierung, Accounting-/Legal-Review, Provider-Entscheidungen und UAT-Sign-off. Zahlungs-, Bank-, Zugangs-, Storage-, Messaging- und AI-Automatisierung dürfen niemals als "live" dargestellt werden, solange diese Punkte offen sind (siehe Abschnitt 11 "Offene Entscheidungen").
 
 ---
 
@@ -79,18 +79,18 @@ Cati/
 ├── qa.py, qa-web.py, qa-web-direct.py   # Standalone Playwright-Python-QA-Skripte (Root-Ebene, ad-hoc Screenshots)
 ├── .github/workflows/jira-main-sync.yml # CI: Jira-Update bei Push auf main
 ├── apps/
-│   └── web/                      # Next.js 16 App — Produktseite + CRM/ERP-Portal (Details: Abschnitt 3)
+│   └── web/                      # Next.js 16 App, Produktseite + CRM/ERP-Portal (Details: Abschnitt 3)
 ├── supabase/                     # Migrationen, Seed, lokale Config (Details: Abschnitt 4)
 ├── scripts/                      # Automatisierung: QA-Harness, Jira/Xray-Sync, Datenimport (Details: Abschnitt 5)
 ├── docs/                         # Projekt-, Produkt-, Technik-, QA-Dokumentation (Details: Abschnitt 6)
 └── twenty/                       # Docker-Compose-Referenz für Twenty CRM (nur Config, kein Vendor-Fork; Details: Abschnitt 7)
 ```
 
-`packages/ui` wird in `AGENTS.md` und `pnpm-workspace.yaml` als vorgesehener Ort für geteilte shadcn/ui-Komponenten erwähnt, existiert aber **noch nicht** im Dateibaum — bei Bedarf neu anlegen, nicht als vorhanden voraussetzen.
+`packages/ui` wird in `AGENTS.md` und `pnpm-workspace.yaml` als vorgesehener Ort für geteilte shadcn/ui-Komponenten erwähnt, existiert aber **noch nicht** im Dateibaum, bei Bedarf neu anlegen, nicht als vorhanden voraussetzen.
 
 ---
 
-## 3. `apps/web` — Next.js-Anwendung (Kernprodukt)
+## 3. `apps/web`, Next.js-Anwendung (Kernprodukt)
 
 ### 3.1 Tech-Stack (exakt aus `apps/web/package.json`)
 
@@ -98,7 +98,7 @@ Cati/
 - **Tailwind CSS v4** (`@tailwindcss/postcss`), `tw-animate-css`, `tailwind-merge`, `class-variance-authority`
 - **@base-ui/react** (Base UI Primitives) + `shadcn` CLI, eigene UI-Bausteine unter `components/ui/`
 - **Framer Motion 12**, **GSAP 3 + @gsap/react** für Animationen
-- **Lucide React** (Icons, Paketname `lucide-react` — aktuell Version `^1.21.0` gepinnt)
+- **Lucide React** (Icons, Paketname `lucide-react`, aktuell Version `^1.21.0` gepinnt)
 - **next-intl 4** für i18n
 - **next-themes** für Dark/Light-Theme
 - **@supabase/ssr** + **@supabase/supabase-js** für Auth/DB
@@ -111,16 +111,16 @@ Cati/
 Alles Produkt-Routing läuft über `app/[locale]/...` (next-intl Locale-Segment). Es gibt zusätzlich einen locale-losen Wurzelbereich (`app/layout.tsx`, `app/global-error.tsx`, `app/not-found.tsx`) als Next.js-Root-Shell.
 
 **Öffentliche Seiten** (`app/[locale]/`):
-- `page.tsx` — Landingpage (setzt sich aus `app/sections/*` zusammen: `top-bar`, `navbar`, `hero`, `problem-bento`, `solution-grid`, `stats`, `how-it-works`, `services`, `platform-workflow`, `new-level-immersion`, `compliance-features`, `cta`, `footer`)
+- `page.tsx`, Landingpage (setzt sich aus `app/sections/*` zusammen: `top-bar`, `navbar`, `hero`, `problem-bento`, `solution-grid`, `stats`, `how-it-works`, `services`, `platform-workflow`, `new-level-immersion`, `compliance-features`, `cta`, `footer`)
 - `about/page.tsx`, `platform/page.tsx`, `reviews/page.tsx`, `privacy/page.tsx`, `terms/page.tsx`
-- `login/page.tsx` — Login inkl. lokaler Access-Profile-Rollenwahl (siehe 3.4)
+- `login/page.tsx`, Login inkl. lokaler Access-Profile-Rollenwahl (siehe 3.4)
 - `signup/page.tsx`
-- `error.tsx`, `not-found.tsx` — locale-spezifische Error-Boundaries
+- `error.tsx`, `not-found.tsx`, locale-spezifische Error-Boundaries
 
 **Geschütztes Dashboard** (`app/[locale]/dashboard/`):
-- `layout.tsx` — Dashboard-Shell (bindet `dashboard-sidebar.tsx`, `dashboard-topbar.tsx`, `dashboard-route-guard.tsx` ein)
-- `dashboard-route-guard.tsx` — Client-seitiger Zusatzschutz zur Proxy-Middleware (Abschnitt 3.3)
-- `page.tsx` — Übersicht/KPI-Dashboard
+- `layout.tsx`, Dashboard-Shell (bindet `dashboard-sidebar.tsx`, `dashboard-topbar.tsx`, `dashboard-route-guard.tsx` ein)
+- `dashboard-route-guard.tsx`, Client-seitiger Zusatzschutz zur Proxy-Middleware (Abschnitt 3.3)
+- `page.tsx`, Übersicht/KPI-Dashboard
 - Modul-Seiten: `listings/`, `leads/`, `calendar/`, `finance/`, `documents/`, `compliance/`, `users/`, `reports/`, `tickets/`, `communications/`, `settings/`
 
 **API-Routen** (`app/api/`):
@@ -140,23 +140,23 @@ Alles Produkt-Routing läuft über `app/[locale]/...` (next-intl Locale-Segment)
 | `api/site-management/import/preview/route.ts` | Vorschau eines Dateneingang-Imports (Validation) |
 | `api/site-management/import/commit/route.ts` | Commit eines validierten Imports |
 
-**Wiederkehrendes Architekturmuster:** Jede `site-management`-API-Route und die zugehörigen Dashboard-Komponenten laufen über `apps/web/lib/site-management-repository.ts`, welches je Funktion prüft, ob Supabase konfiguriert ist (`isSupabaseConfigured()`), und sonst transparent auf deterministische Seed-Daten aus `apps/web/lib/site-management-data.ts` zurückfällt. Jede zurückgegebene Struktur hat ein `source: "supabase" | "local-seed"`-Feld — **beim Debuggen von Datenproblemen immer zuerst dieses Feld prüfen**, bevor man einen DB-Fehler vermutet.
+**Wiederkehrendes Architekturmuster:** Jede `site-management`-API-Route und die zugehörigen Dashboard-Komponenten laufen über `apps/web/lib/site-management-repository.ts`, welches je Funktion prüft, ob Supabase konfiguriert ist (`isSupabaseConfigured()`), und sonst transparent auf deterministische Seed-Daten aus `apps/web/lib/site-management-data.ts` zurückfällt. Jede zurückgegebene Struktur hat ein `source: "supabase" | "local-seed"`-Feld, **beim Debuggen von Datenproblemen immer zuerst dieses Feld prüfen**, bevor man einen DB-Fehler vermutet.
 
 ### 3.3 Auth, RBAC und Middleware
 
-- **`apps/web/proxy.ts`** — Next.js 16 Proxy (Nachfolger der klassischen `middleware.ts`). Kombiniert in einem Request-Zyklus:
+- **`apps/web/proxy.ts`**, Next.js 16 Proxy (Nachfolger der klassischen `middleware.ts`). Kombiniert in einem Request-Zyklus:
   1. `next-intl`-Locale-Routing (`createIntlMiddleware`, `localePrefix: "always"`, Locales `tr|en|de|ru`, Default `tr`).
   2. Supabase-Session-Refresh via `createServerClient` aus `@supabase/ssr` (liest/schreibt Cookies auf Request **und** Response).
-  3. Route-Guard: `/dashboard`-Pfade sind geschützt. Ohne Supabase-Konfiguration oder ohne gültige Session wird auf `/{locale}/login` umgeleitet — **außer** `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true` ist gesetzt (dann bleibt der Zugriff für lokale QA offen).
+  3. Route-Guard: `/dashboard`-Pfade sind geschützt. Ohne Supabase-Konfiguration oder ohne gültige Session wird auf `/{locale}/login` umgeleitet, **außer** `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true` ist gesetzt (dann bleibt der Zugriff für lokale QA offen).
   4. Ist ein Nutzer eingeloggt und ruft `/login` auf, erfolgt Redirect zu `/dashboard`.
   5. Matcher: `["/", "/(tr|en|de|ru)/:path*"]`.
 
-- **`apps/web/lib/auth.ts`** — `getUserProfile()` ist die zentrale Funktion für Server Components/Routen:
+- **`apps/web/lib/auth.ts`**, `getUserProfile()` ist die zentrale Funktion für Server Components/Routen:
   - Ist Supabase **nicht** konfiguriert (keine `NEXT_PUBLIC_SUPABASE_URL`/`ANON_KEY`), wird **immer** ein lokales Access-Profile zurückgegeben (Priorität: `access_profile_role`-Cookie → `NEXT_PUBLIC_ACCESS_PROFILE_ROLE`-Env → Default `"manager"`).
   - Ist Supabase konfiguriert, wird `supabase.auth.getUser()` + ein Read auf `profiles` ausgeführt; fehlt das Profil, wird ein minimales `tenant`-Profil zurückgegeben.
   - `isAccessProfileEnabled()` = `!isSupabaseConfigured() || NEXT_PUBLIC_ENABLE_ACCESS_PROFILES === "true"`. **Diese lokalen Access-Profile sind ausschließlich für kontrollierte lokale/QA-Umgebungen gedacht und dürfen in Produktion nicht aktiv sein.**
 
-- **`apps/web/lib/rbac.ts`** — Canonical-Permission-Matrix, clientseitig und serverseitig gleich genutzt (**muss synchron zu den Supabase-RLS-Policies gehalten werden**, siehe Kommentar im Code: "Keep in sync with Supabase RLS and tests"):
+- **`apps/web/lib/rbac.ts`**, Canonical-Permission-Matrix, clientseitig und serverseitig gleich genutzt (**muss synchron zu den Supabase-RLS-Policies gehalten werden**, siehe Kommentar im Code: "Keep in sync with Supabase RLS and tests"):
   - 6 Rollen: `admin` (Level 90, Scope company), `manager` (70, site), `accountant` (60, finance), `staff` (40, field), `owner` (20, owned_unit), `tenant` (10, rented_unit).
   - 14 Resources: `dashboard, listings, leads, deals, tickets, calendar, documents, eids_compliance, finance, reports, users, settings, communications, offline_sync`.
   - 8 Actions: `view, create, update, delete, manage, export, approve, assign`.
@@ -167,7 +167,7 @@ Alles Produkt-Routing läuft über `app/[locale]/...` (next-intl Locale-Segment)
 
 ### 3.4 Lokale Access-Profile (wichtig für lokale Entwicklung/QA)
 
-Die Login-Seite zeigt in kontrollierten Umgebungen eine Rollenauswahl (6 Rollen mit Beschreibung). Klick auf eine Rolle ruft `api/access-profile/route.ts` auf, setzt das Cookie `access_profile_role` und leitet zum Dashboard weiter — so lässt sich RBAC ohne echte Supabase-Auth durchklicken. Playwright-Tests aktivieren dies über `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true` (siehe `playwright.config.ts`). **Niemals in Produktion aktivieren**, außer nach expliziter, dokumentierter Freigabe für eine kontrollierte Umgebung.
+Die Login-Seite zeigt in kontrollierten Umgebungen eine Rollenauswahl (6 Rollen mit Beschreibung). Klick auf eine Rolle ruft `api/access-profile/route.ts` auf, setzt das Cookie `access_profile_role` und leitet zum Dashboard weiter, so lässt sich RBAC ohne echte Supabase-Auth durchklicken. Playwright-Tests aktivieren dies über `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES=true` (siehe `playwright.config.ts`). **Niemals in Produktion aktivieren**, außer nach expliziter, dokumentierter Freigabe für eine kontrollierte Umgebung.
 
 ### 3.5 i18n
 
@@ -179,20 +179,20 @@ Die Login-Seite zeigt in kontrollierten Umgebungen eine Rollenauswahl (6 Rollen 
 ### 3.6 KI-Integration (AI-Assistent)
 
 - **`app/api/ai/chat/route.ts`**: nimmt `{ message: string }` entgegen (max. 2000 Zeichen), lädt das aktuelle Nutzerprofil (`getUserProfile`), bestimmt über `apps/web/lib/ai-responses.ts` eine **RBAC-Zugriffsentscheidung** (`getAiAccessDecision`) und einen **deterministischen Kontext** (`generateAiResponse`) rein aus den Seed-/Live-Daten.
-- Ist der Zugriff laut RBAC verweigert, wird ausschließlich der deterministische Kontext mit `source: "rbac-guard"` zurückgegeben — **kein LLM-Call**.
+- Ist der Zugriff laut RBAC verweigert, wird ausschließlich der deterministische Kontext mit `source: "rbac-guard"` zurückgegeben, **kein LLM-Call**.
 - Ist kein lokaler KI-Gateway konfiguriert (`AI_API_URL`/`AI_API_KEY` fehlen, geprüft via `apps/web/lib/local-ai.ts` → `isLocalAiConfigured()`), Antwort mit `source: "deterministic-fallback"`.
 - Ist ein Gateway konfiguriert, wird `completeWithLocalAi()` aufgerufen: POST an `${AI_API_URL}${AI_CHAT_COMPLETIONS_PATH}` (Default-Pfad `/chat/completions`) im OpenAI-kompatiblen Chat-Completions-Format, mit Bearer-Token `AI_API_KEY`. Modellwahl je "Purpose" (`fast`/`reasoning`/`german-copy`/`pro`) über eigene Env-Vars (`AI_MODEL_FAST`, `AI_MODEL_REASONING`, `AI_MODEL_GERMAN_COPY`, `AI_MODEL_PRO`); `choosePurpose()` wählt anhand türkischer Schlüsselwörter (`rapor`, `analiz`, `risk`, `plan`, `finans`) zwischen `fast` und `pro`.
-- System-Prompt (Türkisch) verbietet dem Modell explizit, Finanz-/Zugangs-/Berechtigungsaktionen direkt auszuführen — es darf nur empfehlen und muss auf menschliche Freigabe verweisen. Das ist ein bewusstes Sicherheits-Gate, **beim Ändern des Prompts nicht abschwächen**.
-- Schlägt der Gateway-Call fehl, greift ein Catch-Block auf `deterministic-fallback` zurück — der Endpunkt liefert also nie einen 5xx wegen eines KI-Ausfalls.
-- Dies ist bewusst **kein** Anthropic-/Claude-Aufruf, sondern ein generischer, austauschbarer "Local/On-Prem AI Gateway" (im Code als `sokrates-fast`/`sokrates-pro`/`qwen3.6-35b`/`gemma4-31b` referenziert — Platzhalter-Modellnamen des Kunden-Setups, keine Anthropic-Modelle).
+- System-Prompt (Türkisch) verbietet dem Modell explizit, Finanz-/Zugangs-/Berechtigungsaktionen direkt auszuführen, es darf nur empfehlen und muss auf menschliche Freigabe verweisen. Das ist ein bewusstes Sicherheits-Gate, **beim Ändern des Prompts nicht abschwächen**.
+- Schlägt der Gateway-Call fehl, greift ein Catch-Block auf `deterministic-fallback` zurück, der Endpunkt liefert also nie einen 5xx wegen eines KI-Ausfalls.
+- Dies ist bewusst **kein** Anthropic-/Claude-Aufruf, sondern ein generischer, austauschbarer "Local/On-Prem AI Gateway" (im Code als `sokrates-fast`/`sokrates-pro`/`qwen3.6-35b`/`gemma4-31b` referenziert, Platzhalter-Modellnamen des Kunden-Setups, keine Anthropic-Modelle).
 
 ### 3.7 Design-System
 
 - **Glassmorphism**: `.glass`-Utility + `components/glass-card.tsx`.
 - **Aurora-Hintergründe**: `components/aurora-background.tsx`, CSS-only, respektiert `prefers-reduced-motion`.
-- **BuildingIllustration**: `components/building-illustration.tsx` — SVG-Gebäudeillustration im Hero, hat `hyper-frame.tsx` (3D-Variante) als veraltete Vorgänger-Komponente abgelöst (letztere ist noch im Baum, aber nicht mehr primär genutzt — vor Löschung erst auf Referenzen prüfen).
-- **DashboardPreview**: `components/dashboard-preview.tsx` — SVG-Produktvorschau.
-- **KineticHeadline**: `components/kinetic-headline.tsx` — Wort-für-Wort-Animation.
+- **BuildingIllustration**: `components/building-illustration.tsx`, SVG-Gebäudeillustration im Hero, hat `hyper-frame.tsx` (3D-Variante) als veraltete Vorgänger-Komponente abgelöst (letztere ist noch im Baum, aber nicht mehr primär genutzt, vor Löschung erst auf Referenzen prüfen).
+- **DashboardPreview**: `components/dashboard-preview.tsx`, SVG-Produktvorschau.
+- **KineticHeadline**: `components/kinetic-headline.tsx`, Wort-für-Wort-Animation.
 - **ScrollReveal**: `components/scroll-reveal.tsx`.
 - Weitere Live-/Simulations-Komponenten: `erp-product-cloud.tsx`, `isometric-erp-world.tsx`, `site-command-simulation.tsx`, `phase4-live-operations.tsx`, `finance-live-ledger.tsx`, `people-directory-live.tsx`, `payment-restriction-control.tsx`, `sync-badge.tsx` (zeigt Live/Poll-Sync-Status), `dashboard-command-ribbon.tsx`, `dashboard-action-button.tsx`, `dashboard-refresh-button.tsx`, `status-badge.tsx`, Charts unter `components/charts/{bar,line,pie}-chart.tsx`.
 - UI-Primitives (shadcn-Stil) unter `components/ui/{button,input,label}.tsx`.
@@ -214,7 +214,7 @@ Die Login-Seite zeigt in kontrollierten Umgebungen eine Rollenauswahl (6 Rollen 
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 TWENTY_API_URL=
-TWENTO_API_KEY=            # Hinweis: Tippfehler im Beispiel-File ("TWENTO" statt "TWENTY") — im echten .env.local korrekt als TWENTY_API_KEY verwenden, Code erwartet TWENTY_API_KEY
+TWENTO_API_KEY=            # Hinweis: Tippfehler im Beispiel-File ("TWENTO" statt "TWENTY"), im echten .env.local korrekt als TWENTY_API_KEY verwenden, Code erwartet TWENTY_API_KEY
 AI_API_URL=
 AI_API_KEY=
 AI_CHAT_COMPLETIONS_PATH=/chat/completions
@@ -225,15 +225,15 @@ AI_MODEL_PRO=sokrates-pro
 ```
 Zusätzlich global relevant (Root-Ebene / Server-Kontext, nicht in `apps/web/.env.example`, aber in `README.md`/Code referenziert): `NEXT_PUBLIC_ACCESS_PROFILE_ROLE`, `NEXT_PUBLIC_ENABLE_ACCESS_PROFILES`, `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY`, `JIRA_PROJECT_NAME`, `XRAY_CLIENT_ID`, `XRAY_CLIENT_SECRET`.
 
-`apps/web/lib/database.types.ts` (Supabase-generierte TS-Typen) ist **nicht** eingecheckt — wird lokal via `pnpm supabase:types` erzeugt. Vor Arbeiten, die auf diese Typen angewiesen sind, prüfen ob die Datei existiert; falls nicht, Hinweis geben statt Import zu erzwingen.
+`apps/web/lib/database.types.ts` (Supabase-generierte TS-Typen) ist **nicht** eingecheckt, wird lokal via `pnpm supabase:types` erzeugt. Vor Arbeiten, die auf diese Typen angewiesen sind, prüfen ob die Datei existiert; falls nicht, Hinweis geben statt Import zu erzwingen.
 
 ---
 
-## 4. `supabase/` — Datenbankschicht
+## 4. `supabase/`, Datenbankschicht
 
 Struktur: `supabase/config.toml` (lokale Studio/API/DB/Auth-Ports), `supabase/seed.sql`, `supabase/migrations/*.sql` (7 Dateien, chronologisch über Zeitstempel-Präfix `00000000000000`–`00000000000006`).
 
-Lokale Ports (`config.toml`): API `55321`, DB `55322`, Studio `55323`, Inbucket (Mail) `55324`, Analytics `55327`. `major_version = 15` (Postgres 15 Engine-Kompatibilität im lokalen CLI trotz `db: postgres:16` im Twenty-Compose — zwei getrennte Postgres-Instanzen, nicht verwechseln).
+Lokale Ports (`config.toml`): API `55321`, DB `55322`, Studio `55323`, Inbucket (Mail) `55324`, Analytics `55327`. `major_version = 15` (Postgres 15 Engine-Kompatibilität im lokalen CLI trotz `db: postgres:16` im Twenty-Compose, zwei getrennte Postgres-Instanzen, nicht verwechseln).
 
 ### 4.1 Migrationen im Detail
 
@@ -242,7 +242,7 @@ Lokale Ports (`config.toml`): API `55321`, DB `55322`, Studio `55323`, Inbucket 
 | `00000000000000_initial_schema.sql` | `public.profiles` (erweitert `auth.users`), RLS "read/update own profile", Trigger `on_auth_user_created` (Profil-Auto-Erstellung bei Signup). |
 | `00000000000001_rbac.sql` | Erweitert `profiles.role` auf die 6 kanonischen Rollen (synchron zu `lib/rbac.ts`), SQL-Helper-Funktionen: Rollen-Hierarchie-Level, Rollen-Scope, `is_admin()`, "hat Rolle Level >= X" (für "manager or above"-Policies), `current_user_role()` (liest Rolle aus `profiles`, **bewusst nicht aus dem JWT**, da `user_metadata` clientseitig manipulierbar ist). Aktualisierte Policies: eigenes Profil lesen, Admin/Manager lesen alle Profile, eigenes Profil updaten. Indizes für Policy-Performance. |
 | `00000000000002_site_crm_core.sql` | Produktions-Domänenmodell: `companies`, `offices`, `sites`, `site_blocks`, `site_floors`, `units`, `residents`, `unit_residents`, `vendors`, `service_tickets`, `service_ticket_events`, `finance_ledger_entries`, `payment_transactions`, `reservations`, `documents`, `access_events`, `ai_action_logs`, `audit_events`. RLS auf `companies` (Mitglieder lesen eigene Company, Super-Admins erstellen, Company-Admins updaten eigene Company) und erweiterte Policies auf `profiles`/`service_tickets`. |
-| `00000000000003_operational_api_foundation.sql` | Fügt Backend-for-Frontend-Unterstützung hinzu: Erweiterungen an `sites`, `units`, `residents`, `service_tickets`, `documents`, `finance_ledger_entries` (inkl. Trigger `prevent_posted_ledger_mutation` — **gebuchte Ledger-Einträge sind unveränderlich**, wichtige Buchhaltungs-Invariante). Neue Tabellen: `import_batches`, `import_findings` (Datenimport-Validierung/QA), `staff_members`, `role_coverage`, `client_action_requests`, `integration_outbox` (Outbox-Pattern für externe Integrationen), `operational_search_documents` (Volltextsuche). Erneuert Signup-Trigger. |
+| `00000000000003_operational_api_foundation.sql` | Fügt Backend-for-Frontend-Unterstützung hinzu: Erweiterungen an `sites`, `units`, `residents`, `service_tickets`, `documents`, `finance_ledger_entries` (inkl. Trigger `prevent_posted_ledger_mutation`, **gebuchte Ledger-Einträge sind unveränderlich**, wichtige Buchhaltungs-Invariante). Neue Tabellen: `import_batches`, `import_findings` (Datenimport-Validierung/QA), `staff_members`, `role_coverage`, `client_action_requests`, `integration_outbox` (Outbox-Pattern für externe Integrationen), `operational_search_documents` (Volltextsuche). Erneuert Signup-Trigger. |
 | `00000000000004_realtime_operational_dashboard.sql` | Registriert dashboard-relevante Tabellen (Units, Finance, Tickets, Reservations, AI-Actions, Imports, Client-Action-Requests) bei der Supabase-Realtime-Publikation für Live-Updates im Dashboard. |
 | `00000000000005_new_level_premium_unit_sales.sql` | Additive Erweiterung von `units` um typisierte Sales-/Nummerierungs-/Quell-Evidenz-Felder für den "New Level Premium"-Datensatz (Import-QA), ohne bestehende Feldsemantik zu brechen. |
 | `00000000000006_service_operations_phase_08_09.sql` | Phase 8-9: `service_catalog`, `service_orders`, `workforce_tasks`, `media_reports` (Foto/Video-Nachweise für Feldarbeit). Policies: Staff darf zugewiesene Workforce-Tasks updaten und Media-Reports einfügen. |
@@ -263,7 +263,7 @@ profiles ─ staff_members / role_coverage
 
 ### 4.3 RBAC in der Datenbank vs. Frontend
 
-Die Rollenliste in `supabase/migrations/00000000000001_rbac.sql` **muss** exakt mit `apps/web/lib/rbac.ts` (`roles`-Array) übereinstimmen. Wird eine Rolle im Frontend ergänzt/entfernt, ist zwingend eine neue Migration erforderlich — niemals nur clientseitig ändern.
+Die Rollenliste in `supabase/migrations/00000000000001_rbac.sql` **muss** exakt mit `apps/web/lib/rbac.ts` (`roles`-Array) übereinstimmen. Wird eine Rolle im Frontend ergänzt/entfernt, ist zwingend eine neue Migration erforderlich, niemals nur clientseitig ändern.
 
 ### 4.4 Supabase-Skripte (Root `package.json`)
 
@@ -276,7 +276,7 @@ Die Rollenliste in `supabase/migrations/00000000000001_rbac.sql` **muss** exakt 
 
 ---
 
-## 5. `scripts/` — Automatisierung
+## 5. `scripts/`, Automatisierung
 
 | Datei | Zweck |
 |---|---|
@@ -288,22 +288,22 @@ Die Rollenliste in `supabase/migrations/00000000000001_rbac.sql` **muss** exakt 
 | `manual-phase-qa.mjs` | Manuelle/gezielte Phasen-QA-Unterstützung. |
 | `dashboard-context-check.mjs` | Konsistenzprüfung des Dashboard-Kontexts/-Daten. |
 | `inspect-ataberk-pages.mjs`, `inspect-new-level-listings.mjs` | Inspektions-/Scraping-Hilfsskripte für Quelldaten (Ataberk-Seiten, "New Level"-Listings). |
-| `jira-xray-sync.mjs` | Synchronisiert 15 Phasen-Epics, 53 Phasen-Stories, ein Doku-Issue und 20 UAT/Xray-Testfälle nach Jira Cloud/Xray Cloud sowie das gemanagte DOCX-Doku-Paket. Lädt `.env.local`, erfordert `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_NAME`, `JIRA_PROJECT_KEY` (außer im `--dry-run`), Flags `--dry-run`, `--skip-attachments`. **Schreibt bei echtem Lauf remote in Jira und kann vertrauliche Dokumente anhängen — nur nach expliziter Freigabe ausführen, sonst immer `--dry-run`.** |
+| `jira-xray-sync.mjs` | Synchronisiert 15 Phasen-Epics, 53 Phasen-Stories, ein Doku-Issue und 20 UAT/Xray-Testfälle nach Jira Cloud/Xray Cloud sowie das gemanagte DOCX-Doku-Paket. Lädt `.env.local`, erfordert `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_NAME`, `JIRA_PROJECT_KEY` (außer im `--dry-run`), Flags `--dry-run`, `--skip-attachments`. **Schreibt bei echtem Lauf remote in Jira und kann vertrauliche Dokumente anhängen, nur nach expliziter Freigabe ausführen, sonst immer `--dry-run`.** |
 | `jira-github-main-update.mjs` | Aktualisiert Jira-Issues, die in Commit-Messages auf `main` referenziert werden (`CATI-123 ...`); wird von `.github/workflows/jira-main-sync.yml` bei Push auf `main` aufgerufen. |
 | `supabase-cloud-import.mjs` | Importiert/verifiziert Daten gegen eine Supabase-Cloud-Instanz (`--verify-only` für reinen Check). |
 | `build-docx-from-md.py`, `markdown-to-basic-docx.ps1` | Erzeugen die DOCX-Lesekopien aus den kanonischen Markdown-Requirements-Dokumenten. |
 | `extract-new-level-premium-data.py`, `build-new-level-premium-dataset.py` | Extraktion/Aufbau des "New Level Premium"-Beispiel-/Import-Datensatzes (unterstützt Migration `...0005`). |
 | `add-demo-translations.js`, `patch-dashboard-messages.js`, `patch-legal-messages.js` | Einmalige/wiederholbare Patch-Skripte für `messages/*.json` (i18n-Nachpflege). |
 
-Root-Python-QA-Skripte (`qa.py`, `qa-web.py`, `qa-web-direct.py`) sind **eigenständig von den Node/Playwright-Harnessen** — schlanke `playwright.sync_api`-Skripte, die gezielt Screenshots/Konsolenlogs einzelner Seiten (z. B. `/tr/platform`) unter `qa_output/` erzeugen. Sinnvoll für schnelle visuelle Ad-hoc-Checks, nicht für CI-Gates.
+Root-Python-QA-Skripte (`qa.py`, `qa-web.py`, `qa-web-direct.py`) sind **eigenständig von den Node/Playwright-Harnessen**, schlanke `playwright.sync_api`-Skripte, die gezielt Screenshots/Konsolenlogs einzelner Seiten (z. B. `/tr/platform`) unter `qa_output/` erzeugen. Sinnvoll für schnelle visuelle Ad-hoc-Checks, nicht für CI-Gates.
 
 ### 5.1 GitHub Actions
 
-`.github/workflows/jira-main-sync.yml` — Trigger: `push` auf `main`. Checkt aus, installiert Node 20, führt `node scripts/jira-github-main-update.mjs` mit Secrets `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` aus (Projekt-Key fest `CATI`). Das ist der **einzige** GitHub-Workflow im Repository — es existiert aktuell **keine** automatisierte CI für Lint/Typecheck/Build/Test bei Pull Requests; diese Quality Gates sind laut `CONTRIBUTING.md`/`README.md` manuell vor jedem PR auszuführen.
+`.github/workflows/jira-main-sync.yml`, Trigger: `push` auf `main`. Checkt aus, installiert Node 20, führt `node scripts/jira-github-main-update.mjs` mit Secrets `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` aus (Projekt-Key fest `CATI`). Das ist der **einzige** GitHub-Workflow im Repository, es existiert aktuell **keine** automatisierte CI für Lint/Typecheck/Build/Test bei Pull Requests; diese Quality Gates sind laut `CONTRIBUTING.md`/`README.md` manuell vor jedem PR auszuführen.
 
 ---
 
-## 6. `docs/` — Dokumentationssystem
+## 6. `docs/`, Dokumentationssystem
 
 Kanonische Struktur (siehe `docs/README.md`, "Documentation Hub"):
 
@@ -340,11 +340,11 @@ docs/
 
 ---
 
-## 7. `twenty/` — Twenty CRM
+## 7. `twenty/`, Twenty CRM
 
-**Wichtig, oft missverstanden:** `twenty/` enthält **ausschließlich** `docker-compose.yml` und `.env.example` — **kein** Vendor-Checkout/Fork des Twenty-CRM-Quellcodes. Der Compose-Stack zieht das offizielle Image `twentycrm/twenty:${TAG:-latest}` und startet 4 Services: `server` (Port 3000, App-Container), `worker` (Background-Jobs, `yarn worker:prod`), `db` (Postgres 16, getrennt von der Supabase-Postgres-Instanz), `redis`. Konfigurierbar u. a. über `SERVER_URL`, `STORAGE_TYPE`/`STORAGE_S3_*`, `ENCRYPTION_KEY`, `APP_SECRET`; Google-/Microsoft-OAuth- und E-Mail-SMTP-Variablen sind vorbereitet, aber standardmäßig auskommentiert.
+**Wichtig, oft missverstanden:** `twenty/` enthält **ausschließlich** `docker-compose.yml` und `.env.example`, **kein** Vendor-Checkout/Fork des Twenty-CRM-Quellcodes. Der Compose-Stack zieht das offizielle Image `twentycrm/twenty:${TAG:-latest}` und startet 4 Services: `server` (Port 3000, App-Container), `worker` (Background-Jobs, `yarn worker:prod`), `db` (Postgres 16, getrennt von der Supabase-Postgres-Instanz), `redis`. Konfigurierbar u. a. über `SERVER_URL`, `STORAGE_TYPE`/`STORAGE_S3_*`, `ENCRYPTION_KEY`, `APP_SECRET`; Google-/Microsoft-OAuth- und E-Mail-SMTP-Variablen sind vorbereitet, aber standardmäßig auskommentiert.
 
-Laut `apps/web/.env.example` ist eine Anbindung über `TWENTY_API_URL`/`TWENTY_API_KEY` vorgesehen, **im aktuell analysierten Code von `apps/web` gibt es jedoch keinen aktiven Verbrauch dieser Variablen** (kein gefundener Fetch-Call gegen Twenty) — die CRM-Property-Objekte (`Property`, `Unit`, `Lead`, `Opportunity`, `Lease`, `Booking`, `MaintenanceTicket`, `Contractor`, `Document`, `Appointment`, `Message`, siehe `AGENTS.md`) sind stattdessen bereits direkt als Supabase-Tabellen umgesetzt (Abschnitt 4). Twenty ist also aktuell **Referenz-/Zielarchitektur für ein mögliches späteres CRM-Backend**, nicht produktiv verdrahtet. Vor Aussagen wie "Twenty ist integriert" den aktuellen Code prüfen, nicht nur `AGENTS.md`.
+Laut `apps/web/.env.example` ist eine Anbindung über `TWENTY_API_URL`/`TWENTY_API_KEY` vorgesehen, **im aktuell analysierten Code von `apps/web` gibt es jedoch keinen aktiven Verbrauch dieser Variablen** (kein gefundener Fetch-Call gegen Twenty), die CRM-Property-Objekte (`Property`, `Unit`, `Lead`, `Opportunity`, `Lease`, `Booking`, `MaintenanceTicket`, `Contractor`, `Document`, `Appointment`, `Message`, siehe `AGENTS.md`) sind stattdessen bereits direkt als Supabase-Tabellen umgesetzt (Abschnitt 4). Twenty ist also aktuell **Referenz-/Zielarchitektur für ein mögliches späteres CRM-Backend**, nicht produktiv verdrahtet. Vor Aussagen wie "Twenty ist integriert" den aktuellen Code prüfen, nicht nur `AGENTS.md`.
 
 ---
 
@@ -380,7 +380,7 @@ pnpm phase:harness -- --profile smoke --max-attempts 2
 pnpm jira:sync -- --dry-run
 ```
 
-Es existiert **keine automatisierte PR-CI** für diese Gates — sie müssen von jedem Agenten/Entwickler manuell vor dem Erstellen eines PRs ausgeführt und deren Ergebnis im PR dokumentiert werden (siehe `CONTRIBUTING.md`).
+Es existiert **keine automatisierte PR-CI** für diese Gates, sie müssen von jedem Agenten/Entwickler manuell vor dem Erstellen eines PRs ausgeführt und deren Ergebnis im PR dokumentiert werden (siehe `CONTRIBUTING.md`).
 
 ---
 
@@ -401,7 +401,7 @@ Es existiert **keine automatisierte PR-CI** für diese Gates — sie müssen von
 4. Der KI-System-Prompt in `app/api/ai/chat/route.ts` darf nie so geändert werden, dass das Modell Finanz-/Zugangs-/Berechtigungsaktionen direkt ausführt statt sie nur zu empfehlen.
 5. Lokale Access-Profile (`NEXT_PUBLIC_ENABLE_ACCESS_PROFILES`) dürfen nicht in produktionsnahen Deployments aktiv sein.
 6. Secrets (OAuth-Keys, Supabase Service-Role-Key, Twilio, Cal.com etc.) ausschließlich über Vercel-Environment-Variablen bzw. GitHub-Secrets injizieren, nie hardcoden.
-7. Twenty CRM ist AGPL-3.0 — Modifikationen bleiben im internen Betrieb des Mandanten, keine Weiterverteilung.
+7. Twenty CRM ist AGPL-3.0, Modifikationen bleiben im internen Betrieb des Mandanten, keine Weiterverteilung.
 8. Vor `pnpm jira:sync` ohne `--dry-run` explizite Nutzerfreigabe einholen (schreibt remote, kann vertrauliche Dokumente anhängen).
 
 ---
@@ -411,21 +411,21 @@ Es existiert **keine automatisierte PR-CI** für diese Gates — sie müssen von
 - TypeScript strict, keine `any` ohne Begründung im Code-Kommentar.
 - Server Components sind Default; `"use client"` nur wenn nötig (State/Effects/Browser-APIs).
 - Tailwind-Utility-Klassen; Inline-Styles nur für tatsächlich dynamische Werte (z. B. berechnete Positionen).
-- Forms: React Hook Form + Zod (Standard, sofern im jeweiligen Formular schon etabliert — vor Abweichung prüfen, was die Nachbar-Komponenten nutzen).
+- Forms: React Hook Form + Zod (Standard, sofern im jeweiligen Formular schon etabliert, vor Abweichung prüfen, was die Nachbar-Komponenten nutzen).
 - Server State bevorzugt über Server Actions/TanStack Query; Client State mit Zustand nur bei echtem Bedarf.
 - Icons ausschließlich Lucide React.
 - i18n-Keys Englisch benennen, Übersetzungen in `messages/*.json` pflegen; Türkisch ist die inhaltliche Leitsprache.
-- Datumsrechnungen/Seed-Skripte müssen plattformportabel sein (siehe Commit `fix: make supabase seed date math portable` — keine shell-spezifische Datumsarithmetik in Seeds).
+- Datumsrechnungen/Seed-Skripte müssen plattformportabel sein (siehe Commit `fix: make supabase seed date math portable`, keine shell-spezifische Datumsarithmetik in Seeds).
 
 ---
 
-## 12. Stand Juli 2026 — Best-Practice-Leitplanken für neue Arbeit
+## 12. Stand Juli 2026, Best-Practice-Leitplanken für neue Arbeit
 
 Bei jeder neuen Implementierung in diesem Projekt zusätzlich beachten (aktueller Stand der hier verwendeten Frameworks):
 
-- **Next.js 16 / React 19**: React Server Components + Server Actions als Standardpfad für Datenmutationen; `proxy.ts` ist der offizielle Nachfolger von `middleware.ts` in Next 16 — keine neue `middleware.ts` parallel anlegen.
+- **Next.js 16 / React 19**: React Server Components + Server Actions als Standardpfad für Datenmutationen; `proxy.ts` ist der offizielle Nachfolger von `middleware.ts` in Next 16, keine neue `middleware.ts` parallel anlegen.
 - **TypeScript 5**, strikte Typprüfung; öffentliche Funktionsschnittstellen explizit typisieren statt `any`/`unknown` ohne Guard.
-- **Tailwind v4**: CSS-first-Konfiguration (keine `tailwind.config.js`-Altlasten einführen, falls das Projekt bereits auf die v4-CSS-Konfiguration migriert ist — vor Änderungen prüfen, welche Konfigurationsdatei tatsächlich vorhanden ist).
+- **Tailwind v4**: CSS-first-Konfiguration (keine `tailwind.config.js`-Altlasten einführen, falls das Projekt bereits auf die v4-CSS-Konfiguration migriert ist, vor Änderungen prüfen, welche Konfigurationsdatei tatsächlich vorhanden ist).
 - **Supabase**: RLS-first-Design, Service-Role-Key nie im Browser-Bundle; neue Tabellen immer mit Migration + RLS in derselben PR.
 - **Barrierefreiheit/Performance**: `prefers-reduced-motion` respektieren (bereits Konvention in diesem Projekt), Lighthouse als sinnvolles zusätzliches Gate einplanen, auch wenn es aktuell kein festes Package-Script ist.
 - **Sicherheit**: OWASP-Top-10-Bewusstsein bei jeder neuen API-Route (Input-Validierung wie in `api/ai/chat/route.ts` als Vorbild: Typprüfung, Längenlimit, Fehlerstatus statt Exception-Leak).

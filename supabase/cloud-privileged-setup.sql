@@ -1,12 +1,12 @@
 -- ============================================================================
--- 1Çatı — Cloud privileged setup (run in the Supabase Dashboard SQL Editor)
+-- 1Çatı, Cloud privileged setup (run in the Supabase Dashboard SQL Editor)
 -- ============================================================================
 -- Migrations 0–36 apply cleanly through `supabase db push` / the DB-owner role.
 -- However, three RLS/bucket objects are owned by Supabase-internal roles
 -- (supabase_storage_admin, supabase_realtime_admin) that the `postgres`
 -- migration role cannot ALTER. Migration 27 therefore SKIPS them gracefully on
 -- hosted Supabase (private buckets, data-table RLS and service-role writes are
--- still fully enforced — this file is defense-in-depth hardening).
+-- still fully enforced, this file is defense-in-depth hardening).
 --
 -- Run this ONCE in Dashboard → SQL Editor (which has the required privileges).
 -- It is idempotent. If a statement still reports "must be owner", apply the

@@ -1036,7 +1036,7 @@ test("tenant ticket is authoritative while policy-based owner approval remains e
 
   // Scopes are isolated: the QA owner persona owns {A-001, A-054, D-023} and is
   // NOT the landlord of the tenant's A-018. The owner cannot see or decide this
-  // ticket — the visibility guard returns 403 before any transition runs, so the
+  // ticket, the visibility guard returns 403 before any transition runs, so the
   // ticket version is left untouched for the authorized actor below.
   await setAccessRole(page, "owner")
   const ownerDeniedKey = `ticket:e2e:owner-denied:${Date.now()}`
@@ -1182,7 +1182,7 @@ test("owner can inspect but cannot rewrite or self-assign an ordinary tenant tic
   expect(visible).toBeUndefined()
 
   // Send an otherwise well-formed edit (valid expectedVersion + idempotency key) so the
-  // request reaches the authorization layer — proving the owner is FORBIDDEN (403) from
+  // request reaches the authorization layer, proving the owner is FORBIDDEN (403) from
   // touching a tenant ticket outside its units, rather than merely tripping request
   // validation (400).
   const forbiddenRewriteKey = `ticket:e2e:owner-rewrite:${Date.now()}`
@@ -1568,7 +1568,7 @@ test("policy-requested owner approval is translated without duplicating the tick
   expect(rejected.ticket.workflowState).toBe("triage")
 
   // The policy-requested owner approval was translated in place: exactly one ticket
-  // carries this title — the request never forked a duplicate.
+  // carries this title, the request never forked a duplicate.
   const adminQueue = await page.request.get(
     "/api/site-management/tickets?limit=100"
   )

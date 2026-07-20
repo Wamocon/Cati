@@ -642,7 +642,7 @@ function withLocalQaState<T>(write: boolean, operation: () => T): T {
 /**
  * Test-only: drop every accumulated local-QA mutation and shrink the shared state
  * file back to empty. Reads still return the static seed (localMerged* functions
- * merge the seed with these dynamic arrays), so the seed is preserved — only
+ * merge the seed with these dynamic arrays), so the seed is preserved, only
  * cross-test accumulation and the resulting per-request latency are removed. This
  * clears inside withLocalQaState so the emptied state is persisted under the lock.
  */
@@ -3595,7 +3595,7 @@ export function serviceTicketApiViewForRole(
     delete result.paymentVerified
     delete result.paymentWorkflowStatus
     // An owner must see who raised the request and the estimated cost of a ticket on
-    // their own unit that is awaiting their approval decision — that sign-off is the
+    // their own unit that is awaiting their approval decision, that sign-off is the
     // whole point of the owner-approval gate. The ticket set is already scoped to the
     // owner's units upstream, so every other client-role ticket keeps finance masked.
     const ownerDecisionPending =

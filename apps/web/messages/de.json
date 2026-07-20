@@ -70,14 +70,14 @@
   },
   "problems": {
     "title": "Warum Immobilienmanagement in der Türkei schwierig ist",
-    "subtitle": "Die echten Zahlen und Prozesse, denen ein Property Manager täglich begegnet — besonders mit den Vorschriften 2026.",
+    "subtitle": "Die echten Zahlen und Prozesse, denen ein Property Manager täglich begegnet, besonders mit den Vorschriften 2026.",
     "leads": {
       "title": "Interessenten gehen in Messaging-Apps verloren",
       "desc": "Ein Käufer schreibt gleichzeitig über WhatsApp, Instagram und die Website. Nach 30 Minuten sinkt die Conversion um 60%. Ohne ein einziges CRM verschwindet die Historie bei Personalwechsel."
     },
     "admin": {
       "title": "30-40% der Zeit geht an manuelle Verwaltung",
-      "desc": "Manager verbringen fast den halben Tag mit Dateneingabe, Zahlungsabstimmung und Berichterstellung — statt mit Kunden zu arbeiten."
+      "desc": "Manager verbringen fast den halben Tag mit Dateneingabe, Zahlungsabstimmung und Berichterstellung, statt mit Kunden zu arbeiten."
     },
     "tools": {
       "title": "5-7 getrennte Tools",
@@ -89,7 +89,7 @@
     },
     "compliance": {
       "title": "Geldstrafen für Kurzzeitvermietung bis zu 1.000.000 ₺",
-      "desc": "Gesetz 7464, TÜRSAB-Lizenz, KBS/e-GUEST innerhalb von 24 Stunden — Nichteinhaltung kostet Hunderttausende Lira."
+      "desc": "Gesetz 7464, TÜRSAB-Lizenz, KBS/e-GUEST innerhalb von 24 Stunden, Nichteinhaltung kostet Hunderttausende Lira."
     },
     "owners": {
       "title": "Ausländische Eigentümer verlangen Transparenz",
@@ -101,7 +101,7 @@
     },
     "fraud": {
       "title": "Gefälschte Grundbücher und gefälschte Anzeigen",
-      "desc": "Gefälschte Grundbücher, gefälschte Verträge und unbefugte Makler. Ausländische Käufer sind besonders gefährdet — Due Diligence ist in jeder Transaktion Pflicht."
+      "desc": "Gefälschte Grundbücher, gefälschte Verträge und unbefugte Makler. Ausländische Käufer sind besonders gefährdet, Due Diligence ist in jeder Transaktion Pflicht."
     },
     "permits": {
       "title": "Aufenthaltsgenehmigungsregeln wurden verschärft",
@@ -110,7 +110,7 @@
     "sectionBadge": "Realität 2026"
   },
   "solution": {
-    "title": "1Çatı — das Betriebssystem für Immobilien",
+    "title": "1Çatı, das Betriebssystem für Immobilien",
     "subtitle": "CRM, Anzeigen, Transaktionen, Vermietung, Wartungsanfragen, Dokumente und Compliance auf einer Plattform.",
     "items": {
       "crm": "Ein CRM für Interessenten, Kunden und Eigentümer",
@@ -214,7 +214,7 @@
     ],
     "legalTitle": "Rechtliches",
     "legal": ["Datenschutz", "Nutzungsbedingungen"],
-    "securityNote": "Sichere Betriebsplattform — WAMOCON GmbH & Ataberk Estate."
+    "securityNote": "Sichere Betriebsplattform, WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -755,7 +755,7 @@
     "liveSource": "Datenbank-Snapshot",
     "demoSource": "Lokale Demodaten",
     "lastUpdated": "Zuletzt aktualisiert",
-    "notAvailable": "—",
+    "notAvailable": "-",
     "refresh": "Aktualisieren",
     "refreshing": "Wird aktualisiert",
     "pollRecovery": "Solange diese Ansicht geöffnet ist, fragt sie die autorisierte Abrechnungs-API spätestens alle 30 Sekunden ab; Aktualisieren prüft sofort.",

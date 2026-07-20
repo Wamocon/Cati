@@ -222,7 +222,7 @@ test.describe("New Level Premium landing page", () => {
   }, testInfo) => {
     await page.goto("/tr/new-level-premium/report-poster")
     // Security: without a valid ?qr= placement token the poster must NOT generate a
-    // scannable code — it shows the manager setup guidance instead. A code is only
+    // scannable code, it shows the manager setup guidance instead. A code is only
     // produced when a manager opens it with the exact placement token.
     await expect(
       page.getByRole("heading", { name: "QR posteri henüz yapılandırılmadı" })

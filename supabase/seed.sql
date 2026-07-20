@@ -1,6 +1,20 @@
 -- Fixture seed data for the 1Cati Supabase schema.
 -- Cloud runtime uses migrations/import scripts; do not run local reset workflows for production.
 
+-- Declare the seed's provisioning identity.
+--
+-- public.prevent_profile_privilege_escalation() (BEFORE UPDATE ON profiles)
+-- rejects any role/company change that does not come from an authorized admin
+-- command or a verified invitation redemption. Seeding IS platform/service
+-- provisioning, and the guard recognises the service role for exactly this case
+-- (it audit-logs the change as 'profile.platform_authority_provisioned' with
+-- reason 'platform/service provisioning').
+--
+-- Without this, the profile upsert below resolves to an UPDATE -- the
+-- on_auth_user_created trigger has already inserted the row -- the guard raises
+-- P0001, and `supabase db reset` / `supabase start` fails outright.
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', false);
+
 DO $$
 DECLARE
   v_company_id UUID := '11111111-1111-4111-8111-111111111111';
@@ -14,6 +28,20 @@ BEGIN
   DELETE FROM public.role_coverage WHERE company_id = v_company_id;
 END;
 $$;
+
+-- Migration 14 provisions the default 'ataberk-estate' company with a GENERATED
+-- id. Every fixture below references the canonical fixture UUID, and
+-- "ON CONFLICT (slug) DO UPDATE" cannot change a primary key -- so without this
+-- the seed would attach its fixtures to a company id that does not exist and
+-- fail with profiles_company_id_fkey (23503).
+--
+-- Dropping the generated row first lets the fixture company be created with its
+-- canonical id. This is safe in the only flow that runs this file: `supabase db
+-- reset` starts from an empty database, so migration 14's row has no dependents
+-- yet (its own profile backfill matches nothing -- there are no profiles).
+DELETE FROM public.companies
+WHERE slug = 'ataberk-estate'
+  AND id <> '11111111-1111-4111-8111-111111111111';
 
 INSERT INTO public.companies (id, name, slug, status, primary_locale, timezone, currency)
 VALUES (
@@ -632,3 +660,6 @@ FROM public.documents
 WHERE company_id = '11111111-1111-4111-8111-111111111111'
 ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
 SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();
+
+-- Drop the provisioning identity again so nothing else inherits it.
+SELECT set_config('request.jwt.claims', '', false);
