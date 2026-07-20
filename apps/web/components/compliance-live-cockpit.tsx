@@ -646,7 +646,7 @@ function decisionsFor(status: ComplianceCaseStatus): ComplianceDecision[] {
 
 function formatDate(value: string, locale: LocaleKey) {
   const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return "—"
+  if (Number.isNaN(parsed.getTime())) return "-"
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -655,7 +655,7 @@ function formatDate(value: string, locale: LocaleKey) {
 }
 
 function formatMoney(caseItem: ComplianceCase, locale: LocaleKey) {
-  if (caseItem.financialExposureCents === null || !caseItem.currency) return "—"
+  if (caseItem.financialExposureCents === null || !caseItem.currency) return "-"
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: caseItem.currency,

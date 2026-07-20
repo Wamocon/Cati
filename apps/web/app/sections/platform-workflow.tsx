@@ -55,7 +55,7 @@ export function PlatformWorkflow() {
                 <div className="h-3 w-3 rounded-full bg-amber-400/80" />
                 <div className="h-3 w-3 rounded-full bg-emerald-400/80" />
                 <span className="ml-4 text-xs font-medium text-muted-foreground">
-                  1Çatı — {t("tabs.crm")}
+                  1Çatı, {t("tabs.crm")}
                 </span>
               </div>
 

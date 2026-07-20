@@ -170,7 +170,7 @@ export function IntegrationHealthPanel() {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(new Date(data.generatedAt))
-    : "—"
+    : "-"
 
   return (
     <Card3D glow={false}>

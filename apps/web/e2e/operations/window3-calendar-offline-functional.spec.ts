@@ -82,7 +82,7 @@ test.describe("Window 3 pure calendar and offline contracts", () => {
         updatedAt: "2026-07-13T12:00:00.000Z",
         status: "cancelled",
         resourceLabel:
-          "Havuz, Spa; çok uzun ortak alan adı — güvenli UTF-8 katlama doğrulaması için uzatılmış etiket",
+          "Havuz, Spa; çok uzun ortak alan adı, güvenli UTF-8 katlama doğrulaması için uzatılmış etiket",
         ...sensitiveRuntimeFields,
       } as PrivacyReducedCalendarEvent,
       {

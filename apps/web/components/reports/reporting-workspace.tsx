@@ -43,9 +43,9 @@ function commandKey(purpose: string) {
 }
 
 function dateLabel(value: string | null, locale: string) {
-  if (!value) return "—"
+  if (!value) return "-"
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "—"
+  if (Number.isNaN(date.getTime())) return "-"
   return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
@@ -67,9 +67,9 @@ function humanize(value: string) {
 
 function valueLabel(value: unknown, locale: string) {
   if (typeof value === "number") return new Intl.NumberFormat(locale).format(value)
-  if (typeof value === "boolean") return value ? "✓" : "—"
+  if (typeof value === "boolean") return value ? "✓" : "-"
   if (typeof value === "string") return value
-  if (value == null) return "—"
+  if (value == null) return "-"
   return JSON.stringify(value)
 }
 
@@ -87,7 +87,7 @@ function statusClass(status: string | null) {
 }
 
 function StatusPill({ status, copy }: { status: string | null; copy: ReportingCopy }) {
-  const label = status ? copy.statusLabels[status] ?? humanize(status) : "—"
+  const label = status ? copy.statusLabels[status] ?? humanize(status) : "-"
   return (
     <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] ${statusClass(status)}`}>
       {label}

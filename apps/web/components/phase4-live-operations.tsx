@@ -392,7 +392,7 @@ export function Phase4LiveOperations() {
                 dateStyle: "medium",
                 timeStyle: "short",
               }).format(new Date(data.generatedAt))
-            : "—"}
+            : "-"}
         </span>
         {visibleWarning ? (
           <span className="rounded-full bg-amber-500/10 px-2 py-1 text-amber-700 dark:text-amber-300">

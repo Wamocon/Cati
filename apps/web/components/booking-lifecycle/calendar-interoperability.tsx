@@ -110,7 +110,7 @@ const copy = {
     title: "Calendar sharing",
     body: "Create a revocable calendar link without exposing resident/unit details, or preview an ICS file without importing it.",
     provider:
-      "Google, Outlook, and Cal.com remain provider-ready—not connected—until credentials and consent are approved.",
+      "Google, Outlook, and Cal.com remain provider-ready-not connected-until credentials and consent are approved.",
     refresh: "Refresh",
     create: "Create secure link",
     label: "Calendar name",
@@ -742,9 +742,9 @@ export function CalendarInteroperability() {
                                 t.invalid}
                             </StatusBadge>
                           </td>
-                          <td className="p-3">{event.startsAt ?? "—"}</td>
+                          <td className="p-3">{event.startsAt ?? "-"}</td>
                           <td className="max-w-64 truncate p-3">
-                            {event.summary || "—"}
+                            {event.summary || "-"}
                           </td>
                         </tr>
                       ))}

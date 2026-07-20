@@ -10,7 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     // Focused/ad-hoc build outputs (e.g. .next-root-focused-3104-webpack) are
-    // generated webpack bundles, never source — keep them out of lint.
+    // generated webpack bundles, never source, keep them out of lint.
     ".next-*/**",
     "out/**",
     "build/**",

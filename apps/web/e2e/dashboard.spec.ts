@@ -156,7 +156,7 @@ test.describe("Dashboard portal", () => {
     await clickDashboardMenu(page, "Daire Matrisi")
     await expect(page.getByTestId("unit-live-matrix")).toBeVisible()
     await expect(page.getByTestId("unit-matrix-source")).toBeVisible()
-    await expect(page.getByTestId("unit-matrix-freshness")).not.toContainText("—")
+    await expect(page.getByTestId("unit-matrix-freshness")).not.toContainText("-")
     await page.getByPlaceholder("Daire, malik, sakin veya blok ara").fill("A-001")
     await expect(page.getByRole("button", { name: /A-001 Daire detay/ }).first()).toBeVisible()
     await expect(page.getByRole("button", { name: "Veri kontrolü" })).toHaveCount(0)

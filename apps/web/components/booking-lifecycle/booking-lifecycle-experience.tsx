@@ -530,7 +530,7 @@ const stateLabels: Record<Locale, Record<string, string>> = {
 function localeOf(value: string): Locale {
   return value === "tr" || value === "de" || value === "ru" ? value : "en"
 }
-function text(row: Row | undefined, key: string, fallback = "—") {
+function text(row: Row | undefined, key: string, fallback = "-") {
   const value = row?.[key]
   return typeof value === "string" && value ? value : fallback
 }
@@ -611,7 +611,7 @@ function formatDate(value: string, locale: Locale) {
         timeStyle: "short",
         timeZone: "Europe/Istanbul",
       }).format(date)
-    : "—"
+    : "-"
 }
 
 function errorCode(payload: unknown): string | null {

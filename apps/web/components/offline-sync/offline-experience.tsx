@@ -504,7 +504,7 @@ export function OfflineExperience() {
     snapshot.items.length < OFFLINE_QUEUE_LIMIT &&
     allowedCommands.includes(effectiveCommandType)
   const sourceLabel = useMemo(() => {
-    if (!serverState) return "—"
+    if (!serverState) return "-"
     if (serverState.source === "supabase") return t.sourceSupabase
     if (serverState.source === "local-qa") return t.sourceLocal
     return t.sourceUnavailable

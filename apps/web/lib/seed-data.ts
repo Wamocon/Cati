@@ -216,7 +216,7 @@ export const properties: Property[] = Array.from({ length: 48 }).map((_, i) => {
   ])
   return {
     id: `P-${1001 + i}`,
-    title: `${type === "apartment" ? "Daire" : type === "villa" ? "Villa" : type === "penthouse" ? "Penthouse" : type === "land" ? "Arsa" : "Ticari"} #${1001 + i} — ${district}`,
+    title: `${type === "apartment" ? "Daire" : type === "villa" ? "Villa" : type === "penthouse" ? "Penthouse" : type === "land" ? "Arsa" : "Ticari"} #${1001 + i}, ${district}`,
     type,
     city,
     district,

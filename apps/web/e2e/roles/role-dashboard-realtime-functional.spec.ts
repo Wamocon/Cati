@@ -16,7 +16,7 @@ test.describe("role-focused live dashboard", () => {
       )
       await expect(
         page.getByTestId("role-dashboard-freshness")
-      ).not.toContainText("—")
+      ).not.toContainText("-")
       await expect(page.getByTestId("role-dashboard-realtime")).toBeVisible()
       await expect(dashboard.locator("a")).not.toHaveCount(0)
 
@@ -60,7 +60,7 @@ test.describe("role-focused live dashboard", () => {
 
     await expect(matrix).toBeVisible()
     await expect(source).toContainText("QA")
-    await expect(freshness).toHaveText(/^Son güncelleme:\s*(?!—\s*$).+/)
+    await expect(freshness).toHaveText(/^Son güncelleme:\s*(?!-\s*$).+/)
     await expect(page.getByTestId("unit-matrix-realtime")).toBeVisible()
     await expect(matrix.getByText(/^769 kayıt$/)).toBeVisible()
 

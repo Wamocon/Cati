@@ -92,7 +92,7 @@ export const apiContracts = [
   { path: "/api/site-management/search?q=A-42&limit=5", method: "GET", role: "manager", expectedStatus: 200 },
   { path: "/api/site-management/phase-status", method: "GET", role: "manager", expectedStatus: 200 },
   // Note: a session-less request in the QA build resolves to the "manager" demo
-  // profile (no-cookie default), so it returns 200 — not 401. The genuine
+  // profile (no-cookie default), so it returns 200, not 401. The genuine
   // unauthenticated 401 contract is exercised by the production access-profile
   // suite (access-profile-production-functional.spec.ts), where profiles are off.
   { path: "/api/site-management/phase4?limit=5", method: "GET", role: "manager", expectedStatus: 200 },

@@ -15,9 +15,9 @@ import { NlpLove } from "@/components/new-level-premium/nlp-love"
 import { SiteConcierge } from "@/components/site-concierge"
 
 export const metadata: Metadata = {
-  title: "New Level Premium — 1Çatı ERP",
+  title: "New Level Premium, 1Çatı ERP",
   description:
-    "New Level Premium Avsallar on 1Çatı: see why the ERP fits, register for owner/tenant/staff access, and report an issue on the grounds — no account needed.",
+    "New Level Premium Avsallar on 1Çatı: see why the ERP fits, register for owner/tenant/staff access, and report an issue on the grounds, no account needed.",
 }
 
 // Section order follows the AISDALSLove funnel: Attention (hero) · Interest

@@ -70,14 +70,14 @@
   },
   "problems": {
     "title": "Why real estate management is hard in Turkey",
-    "subtitle": "The real numbers and processes a property manager faces every day — especially with the 2026 regulations.",
+    "subtitle": "The real numbers and processes a property manager faces every day, especially with the 2026 regulations.",
     "leads": {
       "title": "Leads get lost across messaging apps",
       "desc": "A buyer writes on WhatsApp, Instagram and the website at the same time. After 30 minutes, conversion drops by 60%. Without a single CRM, history disappears when staff changes."
     },
     "admin": {
       "title": "30-40% of time goes to manual admin work",
-      "desc": "Managers spend almost half the day on data entry, payment reconciliation and report preparation — instead of working with clients."
+      "desc": "Managers spend almost half the day on data entry, payment reconciliation and report preparation, instead of working with clients."
     },
     "tools": {
       "title": "5-7 disconnected tools",
@@ -89,7 +89,7 @@
     },
     "compliance": {
       "title": "Daily rental fines up to ₺1,000,000",
-      "desc": "Law 7464, TÜRSAB license, KBS/e-GUEST within 24 hours — non-compliance costs hundreds of thousands of lira."
+      "desc": "Law 7464, TÜRSAB license, KBS/e-GUEST within 24 hours, non-compliance costs hundreds of thousands of lira."
     },
     "owners": {
       "title": "Foreign owners demand transparency",
@@ -101,7 +101,7 @@
     },
     "fraud": {
       "title": "Fake title deeds and fake listings",
-      "desc": "Forged title deeds, fake contracts and unauthorized agents. Foreign buyers are especially targeted — due diligence is a must in every transaction."
+      "desc": "Forged title deeds, fake contracts and unauthorized agents. Foreign buyers are especially targeted, due diligence is a must in every transaction."
     },
     "permits": {
       "title": "Residence permit rules have tightened",
@@ -110,7 +110,7 @@
     "sectionBadge": "2026 Reality"
   },
   "solution": {
-    "title": "1Çatı — the operating system for real estate",
+    "title": "1Çatı, the operating system for real estate",
     "subtitle": "CRM, listings, transactions, rentals, maintenance requests, documents and compliance in one platform.",
     "items": {
       "crm": "Single CRM for leads, clients and owners",
@@ -209,7 +209,7 @@
     "services": ["Purchase", "Sale", "Rental Management", "Citizenship"],
     "legalTitle": "Legal",
     "legal": ["Privacy Policy", "Terms of Use"],
-    "securityNote": "Secure operations platform — WAMOCON GmbH & Ataberk Estate."
+    "securityNote": "Secure operations platform, WAMOCON GmbH & Ataberk Estate."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -750,7 +750,7 @@
     "liveSource": "Database snapshot",
     "demoSource": "Local demo data",
     "lastUpdated": "Last updated",
-    "notAvailable": "—",
+    "notAvailable": "-",
     "refresh": "Refresh",
     "refreshing": "Refreshing",
     "pollRecovery": "While this view is open, it checks the authorized statement API at least every 30 seconds; Refresh checks now.",

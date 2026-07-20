@@ -1,4 +1,4 @@
-// 1Çatı Demo Center — visual master recorder
+// 1Çatı Demo Center, visual master recorder
 // ---------------------------------------------------------------------------
 // PURPOSE
 //   Records the "visual master" for the 1Çatı Demo Center described in
@@ -117,7 +117,7 @@ const scenes = [
     explain:
       "The landing on the control center. One platform that manages units, people, money, services and staff for a 769-flat site.",
     narration:
-      "Welcome to 1Çatı, an AI-powered operating system for residential complexes. In one platform you manage units, people, money, services and staff — for a site as large as 769 flats. Everything live today is shown as live; anything still in build is clearly marked.",
+      "Welcome to 1Çatı, an AI-powered operating system for residential complexes. In one platform you manage units, people, money, services and staff, for a site as large as 769 flats. Everything live today is shown as live; anything still in build is clearly marked.",
     comingSoon: [],
     steps: [
       ["settle"],
@@ -135,7 +135,7 @@ const scenes = [
     status: "live",
     chapter: "01-overview",
     explain:
-      "Six roles — admin, manager, accountant, staff, owner, tenant. Each person only sees what their role allows.",
+      "Six roles, admin, manager, accountant, staff, owner, tenant. Each person only sees what their role allows.",
     narration:
       "Access is role-based. There are six roles: admin, manager, accountant, staff, owner and tenant. A manager sees operations and finance summaries, an accountant sees the full ledger, staff see only their tasks, and owners and tenants see only their own unit. This keeps data private and each screen simple.",
     comingSoon: [
@@ -154,7 +154,7 @@ const scenes = [
     explain:
       "Income, expenses, debt, open tasks, occupancy and AI risk highlights at a glance, plus the live phase-delivery map.",
     narration:
-      "The dashboard is the control center. At a glance you see income, expenses, outstanding debt, open tasks, occupancy and AI risk highlights, and the cards update live. Below, the phase map shows exactly how far the platform has been built — from the foundation through the AI layer.",
+      "The dashboard is the control center. At a glance you see income, expenses, outstanding debt, open tasks, occupancy and AI risk highlights, and the cards update live. Below, the phase map shows exactly how far the platform has been built, from the foundation through the AI layer.",
     comingSoon: [],
     steps: [
       ["settle"],
@@ -176,7 +176,7 @@ const scenes = [
     explain:
       "The whole site modelled as blocks, floors and flats. Filter by status and open a single unit to see owner, tenant, balance and history.",
     narration:
-      "The whole site is modelled as blocks, floors and flats — all 769 units. You can filter by status: vacant, occupied, in maintenance or restricted. Open a single unit to see its owner, tenant, balance and history in one place.",
+      "The whole site is modelled as blocks, floors and flats, all 769 units. You can filter by status: vacant, occupied, in maintenance or restricted. Open a single unit to see its owner, tenant, balance and history in one place.",
     comingSoon: [],
     steps: [
       ["settle"],
@@ -245,7 +245,7 @@ const scenes = [
     explain:
       "Hold a deposit, settle it at checkout, and apply debt-based restrictions. Actions are guarded and logged for audit.",
     narration:
-      "Payments and deposits are controlled. The system can hold a deposit, settle it at checkout, and apply debt-based restrictions — for example limiting a service or booking when an account is overdue. These actions are guarded and logged for audit.",
+      "Payments and deposits are controlled. The system can hold a deposit, settle it at checkout, and apply debt-based restrictions, for example limiting a service or booking when an account is overdue. These actions are guarded and logged for audit.",
     comingSoon: [
       "Live card and bank-transfer collection through a payment provider is activated after the provider and accounting/legal review (Phase 7/13).",
     ],
@@ -357,7 +357,7 @@ const scenes = [
     explain:
       "Contracts, statements and reports stored with role-based access and document packets.",
     narration:
-      "Documents are organised in one place — contracts, statements and reports — with role-based access so each person only opens what they are allowed to. Compliance items are tracked alongside the records they belong to.",
+      "Documents are organised in one place, contracts, statements and reports, with role-based access so each person only opens what they are allowed to. Compliance items are tracked alongside the records they belong to.",
     comingSoon: [
       "Production storage bucket, retention rules and virus scanning are confirmed with the customer before launch.",
     ],
@@ -397,9 +397,9 @@ const scenes = [
     status: "ready_for_uat",
     chapter: "06-roadmap-phase-10-15",
     explain:
-      "AI daily briefing, debt-risk summaries, service triage and report drafts — as guarded suggestions, never sensitive actions.",
+      "AI daily briefing, debt-risk summaries, service triage and report drafts, as guarded suggestions, never sensitive actions.",
     narration:
-      "An AI layer helps managers work faster: a daily briefing, debt-risk summaries, service triage and report drafts. The AI suggests and explains in the user's own language, but it never performs sensitive financial or access actions on its own — a person always approves.",
+      "An AI layer helps managers work faster: a daily briefing, debt-risk summaries, service triage and report drafts. The AI suggests and explains in the user's own language, but it never performs sensitive financial or access actions on its own, a person always approves.",
     comingSoon: [
       "Advanced AI automation (anomaly detection at scale, predictive maintenance) is expanded in Phase 14 with governance review.",
     ],
@@ -443,7 +443,7 @@ const scenes = [
     explain:
       "Where the customer connects payment, bank, SMS, email, access hardware and identity, with a manual fallback for each.",
     narration:
-      "Settings is where the platform connects to the outside world — payment, bank, messaging, access hardware and identity. Each connection is ready and shows its status, with a manual fallback so operations never stop while providers are being approved.",
+      "Settings is where the platform connects to the outside world, payment, bank, messaging, access hardware and identity. Each connection is ready and shows its status, with a manual fallback so operations never stop while providers are being approved.",
     comingSoon: [
       "Payment/bank, SMS/email, access-card and camera integrations are live placeholders today and are switched on per provider after the customer's decisions and credentials (Phase 13).",
     ],
@@ -465,9 +465,9 @@ const scenes = [
     explain:
       "The on-screen phase map: what is foundation-complete today and what is coming next, through launch.",
     narration:
-      "On the roadmap: bookings and checkout depth, deeper external integrations, the full AI premium layer, and final launch hardening — Phases 10 through 15. Today you have a complete management foundation; next, it grows into a full premium platform. That is 1Çatı: units, people, finance, services and decisions in one place. Explore the interactive demo to try it yourself.",
+      "On the roadmap: bookings and checkout depth, deeper external integrations, the full AI premium layer, and final launch hardening, Phases 10 through 15. Today you have a complete management foundation; next, it grows into a full premium platform. That is 1Çatı: units, people, finance, services and decisions in one place. Explore the interactive demo to try it yourself.",
     comingSoon: [
-      "Phase 15 — final QA, security, performance, UAT, training and go-live — is the last step before production.",
+      "Phase 15, final QA, security, performance, UAT, training and go-live, is the last step before production.",
     ],
     steps: [
       ["settle"],
@@ -480,7 +480,7 @@ const scenes = [
 ]
 
 // ---------------------------------------------------------------------------
-// Action runner — every step here is language-neutral on purpose.
+// Action runner, every step here is language-neutral on purpose.
 // ---------------------------------------------------------------------------
 
 async function smoothScrollTo(page, fraction, durationMs) {
@@ -674,7 +674,7 @@ const statusBadge = {
 
 function buildScriptMarkdown(activeScenes) {
   const lines = []
-  lines.push("# 1Çatı Demo Center — Recording & Narration Guide (auto-generated)")
+  lines.push("# 1Çatı Demo Center, Recording & Narration Guide (auto-generated)")
   lines.push("")
   lines.push(
     "Master narration is in English. Turkish, German and Russian follow the same meaning, scene by scene, using the shared glossary in the demo-center plan."
@@ -687,7 +687,7 @@ function buildScriptMarkdown(activeScenes) {
   lines.push("")
 
   for (const scene of activeScenes) {
-    lines.push(`## ${scene.id} — ${scene.feature}  \`${statusBadge[scene.status]}\``)
+    lines.push(`## ${scene.id}, ${scene.feature}  \`${statusBadge[scene.status]}\``)
     lines.push("")
     lines.push(`- Role: \`${scene.role}\`  ·  Route: \`/{locale}${scene.route}\`  ·  Chapter: \`${scene.chapter}\``)
     lines.push(`- What the viewer sees: ${scene.explain}`)
