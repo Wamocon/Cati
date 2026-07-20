@@ -1,4 +1,4 @@
-# 1Çatı — Betriebskosten, Lücken und Skalierung
+# 1Çatı, Betriebskosten, Lücken und Skalierung
 
 ## Managementbericht für die Entscheidung über den Produktivbetrieb
 
@@ -198,15 +198,15 @@ Einheitliche Annahme: **2.500 TRY Hausgeld je Wohnung und Monat**, Nachrichten �
 Rechenweg für die Zahlungen (nachvollziehbar, nicht geschätzt):
 
 - **Günstiger Weg:** Nutzer × 2.500 TRY × 1,04 % × 1,05 (BSMV) ÷ 47,04
-- **iyzico Liste:** (Nutzer × 2.500 TRY × 4,29 % + Nutzer × 0,25 TRY) ÷ 47,04 — Satz ist BSMV-inklusive
+- **iyzico Liste:** (Nutzer × 2.500 TRY × 4,29 % + Nutzer × 0,25 TRY) ÷ 47,04, Satz ist BSMV-inklusive
 
 **Lesehilfe:** Die Technik ist der kleinste Posten. Die Zahlungen sind der größte. Der Unterschied zwischen der günstigen und der teuren Spalte ist **allein die Wahl des Zahlungsweges**.
 
 ### 6.1 Hinweise zur Technik
 
 - **Eigenbetrieb ist heute eine Datenschutz-Entscheidung, keine Kostenentscheidung.** Hetzner hat 2026 **zweimal** erhöht: am 1. April um 30–37 % (**auch für Bestandskunden**) und am 15. Juni die dedizierten Kerne um 113–169 % (nur Neubestellungen). Grund: Speicherpreise +58–63 % je Quartal. Die verbleibende Ersparnis wird von einem Viertel einer Betriebsstelle aufgezehrt.
-- **Falls doch Eigenbetrieb: nicht die Cloud-Tarife nehmen.** Die Juni-Erhöhung hat die Rangfolge umgekehrt. Ein **dedizierter Server (AX42, 97,30 €)** ist heute **günstiger** als der vergleichbare Cloud-Tarif (CCX33, 138,49 €) — bei **doppeltem Arbeitsspeicher, ECC-Speicher, vierfacher Platte und unbegrenztem Datenverkehr**. Für eine Datenbank ist ECC-Speicher ohnehin das richtige Kriterium.
-- **Was der Eigenbetrieb kostet, steht nicht auf der Rechnung.** Beim selbst betriebenen Supabase entfallen verwaltete Sicherungen, Zeitpunkt-Wiederherstellung, Lesereplikate und Kennzahlen — alles wird Eigenleistung. Das meistgemeldete Problem der Betreiber: **Datenbank-Migrationen laufen bei Updates nicht automatisch**. Zudem hat die Verwaltungsoberfläche **kein Rechtemodell** — wer die Adresse kennt, ist Administrator.
+- **Falls doch Eigenbetrieb: nicht die Cloud-Tarife nehmen.** Die Juni-Erhöhung hat die Rangfolge umgekehrt. Ein **dedizierter Server (AX42, 97,30 €)** ist heute **günstiger** als der vergleichbare Cloud-Tarif (CCX33, 138,49 €), bei **doppeltem Arbeitsspeicher, ECC-Speicher, vierfacher Platte und unbegrenztem Datenverkehr**. Für eine Datenbank ist ECC-Speicher ohnehin das richtige Kriterium.
+- **Was der Eigenbetrieb kostet, steht nicht auf der Rechnung.** Beim selbst betriebenen Supabase entfallen verwaltete Sicherungen, Zeitpunkt-Wiederherstellung, Lesereplikate und Kennzahlen, alles wird Eigenleistung. Das meistgemeldete Problem der Betreiber: **Datenbank-Migrationen laufen bei Updates nicht automatisch**. Zudem hat die Verwaltungsoberfläche **kein Rechtemodell**, wer die Adresse kennt, ist Administrator.
 - **Der Vercel-Tarif ist zu etwa 90 % Nutzerlizenzen**, nicht Rechenleistung.
 - **Der Supabase-Team-Tarif (599 USD) bringt keine zusätzliche Kapazität**, sondern Zertifizierungen und Zusicherungen. Nur kaufen, wenn diese gefordert sind.
 - **Ab etwa 2 TB Dateiablage** spart eine Umstellung der Dateiablage bei Videobetrieb rund 2.000 USD monatlich, weil dort kein Ausgangsverkehr berechnet wird.
@@ -221,28 +221,28 @@ Die türkische Datenschutzbehörde hat **für kein einziges Land** einen Angemes
 
 Daraus folgt ein Ergebnis, das dem verbreiteten Bauchgefühl widerspricht:
 
-> **Deutschland und die USA liegen in derselben Stufe.** Es gibt unter KVKK **keine „EU-Abkürzung". Jede** Übermittlung — an Vercel, Supabase, Hetzner oder Cloudflare — braucht denselben **türkischen Standardvertrag** (Modul **SS-2**, Verantwortlicher → Auftragsverarbeiter), anzuzeigen binnen **fünf Werktagen** nach der **zweiten** Unterschrift, mit beglaubigter Übersetzung und Apostille.
+> **Deutschland und die USA liegen in derselben Stufe.** Es gibt unter KVKK **keine „EU-Abkürzung". Jede** Übermittlung, an Vercel, Supabase, Hetzner oder Cloudflare, braucht denselben **türkischen Standardvertrag** (Modul **SS-2**, Verantwortlicher → Auftragsverarbeiter), anzuzeigen binnen **fünf Werktagen** nach der **zweiten** Unterschrift, mit beglaubigter Übersetzung und Apostille.
 
-**Wichtige Korrektur zu einer naheliegenden Annahme:** Ein Supabase-Standort in Frankfurt **hilft rechtlich nicht**. Maßgeblich ist nicht der Serverstandort, sondern die **Niederlassung des Empfängers** — und das ist die Supabase Inc. in den USA.
+**Wichtige Korrektur zu einer naheliegenden Annahme:** Ein Supabase-Standort in Frankfurt **hilft rechtlich nicht**. Maßgeblich ist nicht der Serverstandort, sondern die **Niederlassung des Empfängers**, und das ist die Supabase Inc. in den USA.
 
 ### 7.2 Wo der Unterschied dann doch liegt
 
 Der Unterschied liegt nicht in der Stufe, sondern in der **inhaltlichen Prüfung**:
 
 - Abschnitt 3 des Standardvertrags verlangt vom Empfänger die **Zusicherung, dass kein nationales Recht dem Vertrag entgegensteht**. Ein US-Anbieter unter **FISA 702 / CLOUD Act** kann das schwerer redlich unterschreiben als ein deutscher.
-- Artikel 9(4) verlangt zusätzlich **wirksamen Rechtsschutz im Zielland** — für Deutschland leichter nachzuweisen.
+- Artikel 9(4) verlangt zusätzlich **wirksamen Rechtsschutz im Zielland**, für Deutschland leichter nachzuweisen.
 
-**Daraus folgt:** Hetzner Deutschland ist die stärkste der Optionen — aber wegen dieser inhaltlichen Punkte, **nicht** wegen eines Angemessenheitsbeschlusses.
+**Daraus folgt:** Hetzner Deutschland ist die stärkste der Optionen, aber wegen dieser inhaltlichen Punkte, **nicht** wegen eines Angemessenheitsbeschlusses.
 
 ### 7.3 Der praktische Blocker
 
-**Geprüft:** Weder die Vertragsunterlagen von Vercel noch die von Hetzner erwähnen die Türkei oder KVKK. Beide bieten nur **EU-Standardvertragsklauseln an — diese haben unter KVKK keinerlei Rechtswirkung.**
+**Geprüft:** Weder die Vertragsunterlagen von Vercel noch die von Hetzner erwähnen die Türkei oder KVKK. Beide bieten nur **EU-Standardvertragsklauseln an, diese haben unter KVKK keinerlei Rechtswirkung.**
 
 > Verweigern die Anbieter die Unterzeichnung des **türkischen** Textes, bleibt nur der Eigenbetrieb. **Das ist die Frage mit der größten Hebelwirkung im ganzen Bericht** und vor jeder Budgetfreigabe zu klären.
 
 ### 7.4 Zwei verbreitete Irrtümer, die hier ausgeräumt gehören
 
-- **„Türkische Daten müssen in der Türkei liegen."** Falsch für gewöhnliche Software. Der einschlägige KVKK-Leitfaden erwähnt Lokalisierung **an keiner Stelle**. Eine Pflicht besteht nur für **Banken (BDDK)**, **Zahlungsinstitute (TCMB)**, **Telekommunikation (BTK)** und **öffentliche Stellen** — 1Çatı fällt unter keine davon.
+- **„Türkische Daten müssen in der Türkei liegen."** Falsch für gewöhnliche Software. Der einschlägige KVKK-Leitfaden erwähnt Lokalisierung **an keiner Stelle**. Eine Pflicht besteht nur für **Banken (BDDK)**, **Zahlungsinstitute (TCMB)**, **Telekommunikation (BTK)** und **öffentliche Stellen**, 1Çatı fällt unter keine davon.
 - **„Wir holen einfach Einwilligungen ein."** Trägt nicht. Die Ausnahmen gelten nur für **gelegentliche** Übermittlungen; ein dauerhafter Datenbankzugriff ist ausdrücklich **nicht** gelegentlich. Standardverträge sind damit faktisch verpflichtend.
 
 ### 7.5 Die Größenordnung des Risikos
@@ -275,13 +275,13 @@ Die Behörde hat mit **Grundsatzentscheidung 2025/2120** (Amtsblatt vom 9. Dezem
 | Zulässig | Unzulässig |
 |---|---|
 | Name, Nachname und **TC-Kimlik-Nummer** erfassen | **Den Ausweis scannen oder kopieren und das Bild aufbewahren** |
-| Den Ausweis **vorzeigen lassen** und prüfen | Vorhandene Kopien weiter speichern — **sie sind zu vernichten** |
+| Den Ausweis **vorzeigen lassen** und prüfen | Vorhandene Kopien weiter speichern, **sie sind zu vernichten** |
 
 **Warum das 1Çatı betrifft:** Die Dokumentenverwaltung führt die Kategorien **„Passport", „Kimlik", „KYC" und „Identity"**. Das System kann also genau das speichern, was nach dieser Entscheidung unzulässig ist.
 
-**Entwarnung an einer Stelle:** Die Identitätsprüfung selbst ist **richtig gebaut** — sie übergibt dem Anbieter nur **Dokumenttyp und Dokumentnummer**, kein Bild. Das entspricht der Entscheidung.
+**Entwarnung an einer Stelle:** Die Identitätsprüfung selbst ist **richtig gebaut**, sie übergibt dem Anbieter nur **Dokumenttyp und Dokumentnummer**, kein Bild. Das entspricht der Entscheidung.
 
-**Einschränkung, ehrlich benannt:** Die Entscheidung erging **für Hotels**. Die Übertragung auf die Vermietung ist naheliegend, aber **nicht** ausdrücklich entschieden. Rechtliche Prüfung erforderlich — vor dem ersten produktiven Upload.
+**Einschränkung, ehrlich benannt:** Die Entscheidung erging **für Hotels**. Die Übertragung auf die Vermietung ist naheliegend, aber **nicht** ausdrücklich entschieden. Rechtliche Prüfung erforderlich, vor dem ersten produktiven Upload.
 
 **Erfreulich:** Die TC-Kimlik-Nummer ist **keine besondere Kategorie** personenbezogener Daten. Die verschärften Vertragsklauseln greifen dafür also nicht.
 
@@ -293,15 +293,15 @@ Die Behörde hat mit **Grundsatzentscheidung 2025/2120** (Amtsblatt vom 9. Dezem
 |---|---|---|---|
 | 1 | Unterzeichnen Vercel und Supabase einen türkischen Standardvertrag? | Recht / Einkauf | **Vor jeder Budgetfreigabe** |
 | 2 | Rechtsgutachten: Ist die Ausnahme für Hausgeld tragfähig? | Türkische Kanzlei | **Vor Produktivstart** |
-| 3 | Zahlungsweg: Konto-zu-Konto als Hauptweg? | Geschäftsführung | Hoch — 960.000 TRY jährlich |
+| 3 | Zahlungsweg: Konto-zu-Konto als Hauptweg? | Geschäftsführung | Hoch, 960.000 TRY jährlich |
 | 4 | Umbau der Live-Aktualisierung freigeben | Technik | **Vor 5.000 Nutzern** |
 | 5 | Bau des Versand-Dienstes und der vier Anbindungen freigeben | Technik | Vor jedem Versand |
-| 6 | Prüfung des e-Fatura-Status von Ataberk | Steuerberatung | **Sofort** — Frist bereits verstrichen |
-| 7 | Ausweiskopien: Entscheidung 2025/2120 auf 1Çatı anwenden — dürfen „Passport"/„Kimlik"-Dokumente überhaupt gespeichert werden? | Türkische Kanzlei | **Vor dem ersten produktiven Upload** |
+| 6 | Prüfung des e-Fatura-Status von Ataberk | Steuerberatung | **Sofort**, Frist bereits verstrichen |
+| 7 | Ausweiskopien: Entscheidung 2025/2120 auf 1Çatı anwenden, dürfen „Passport"/„Kimlik"-Dokumente überhaupt gespeichert werden? | Türkische Kanzlei | **Vor dem ersten produktiven Upload** |
 
 ### Hinweis zu Punkt 6
 
-Türkische Immobilienunternehmen unterliegen der e-Fatura-Pflicht bereits ab **500.000 TRY Umsatz** — dem Sechsfachen niedriger als die allgemeine Schwelle von 3 Mio. TRY. Die Frist war der **1. Juli 2026** und ist damit verstrichen. Das Bußgeld beträgt je Beleg rund 17.000 TRY. Dieser Punkt ist unabhängig von 1Çatı und sollte unverzüglich geprüft werden.
+Türkische Immobilienunternehmen unterliegen der e-Fatura-Pflicht bereits ab **500.000 TRY Umsatz**, dem Sechsfachen niedriger als die allgemeine Schwelle von 3 Mio. TRY. Die Frist war der **1. Juli 2026** und ist damit verstrichen. Das Bußgeld beträgt je Beleg rund 17.000 TRY. Dieser Punkt ist unabhängig von 1Çatı und sollte unverzüglich geprüft werden.
 
 ---
 
@@ -311,7 +311,7 @@ Türkische Immobilienunternehmen unterliegen der e-Fatura-Pflicht bereits ab **5
 2. **Zahlungsweg auf Konto-zu-Konto festlegen.** Größter Hebel, sofort wirksam, gesetzlich begünstigt.
 3. **Live-Aktualisierung umbauen, bevor Nutzer wachsen.** Technische Sperre, nicht verhandelbar.
 4. **Versand-Dienst und Anbindungen bauen.** Ohne sie versendet das System nichts.
-5. **Betriebskosten sind beherrschbar.** Selbst bei 10.000 Nutzern liegt die Summe im niedrigen vierstelligen USD-Bereich monatlich — vorausgesetzt, der Zahlungsweg stimmt.
+5. **Betriebskosten sind beherrschbar.** Selbst bei 10.000 Nutzern liegt die Summe im niedrigen vierstelligen USD-Bereich monatlich, vorausgesetzt, der Zahlungsweg stimmt.
 
 ---
 

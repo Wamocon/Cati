@@ -1,4 +1,4 @@
-# 1Çatı (Cati) — Demo Readiness, Implementation and Management Audit
+# 1Çatı (Cati), Demo Readiness, Implementation and Management Audit
 
 **Local implementation, QA evidence, costs, external integrations, risks and management decisions**
 
@@ -55,7 +55,7 @@ The correct management conclusion is nevertheless **conditional local demo readi
 
 1. Approve a short deployment-security gate: deploy the local fail-closed access-profile changes, then verify the public endpoint and login page in production mode before any client uses the Vercel URL.
 2. Fund and schedule a clean Supabase verification environment for migrations 20–36, live RLS/privilege tests, real authentication, persistence-after-restart, backup/restore and audit-log checks.
-3. Choose the first-wave providers and budget owners for email, SMS, document storage, monitoring and—only if legally approved—payments and physical access.
+3. Choose the first-wave providers and budget owners for email, SMS, document storage, monitoring and-only if legally approved-payments and physical access.
 4. Nominate an Ataberk business owner for acceptance criteria and a WAMOCON technical owner for each external dependency.
 5. Run the demo from the controlled local/QA playbook until the public deployment gate is green.
 
@@ -452,7 +452,7 @@ The approved wording is: **“Reload behaviour passed against a stateful isolate
 - Performance against 212,298+ property records and the exact 769-unit demo subset.
 - Realtime fan-out, reconnect and fallback at representative user counts.
 
-The source uses consistent lock ordering—unit, resource, reservation, appointment—and version/idempotency contracts, but load and race tests are still required.
+The source uses consistent lock ordering-unit, resource, reservation, appointment-and version/idempotency contracts, but load and race tests are still required.
 
 ## External integrations and provider truth
 
@@ -483,7 +483,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 ### Provider activation sequence recommended
 
-#### Wave 1 — Minimum safe operations
+#### Wave 1, Minimum safe operations
 
 - Supabase paid non-production and production projects.
 - Vercel production hardening.
@@ -492,21 +492,21 @@ The repository provides integration boundaries; it does not provide vendor contr
 - Transactional email.
 - SMS only if operational alerts/invitations require it.
 
-#### Wave 2 — Resident and field operations
+#### Wave 2, Resident and field operations
 
 - Identity verification after KVKK/DPA approval.
 - Physical access provider after site hardware inventory.
 - Calendar OAuth only if bidirectional sync is a contractual requirement.
 - Push notifications after consent and token lifecycle design.
 
-#### Wave 3 — Financial automation
+#### Wave 3, Financial automation
 
 - Accounting export/connector.
 - Bank/API reconciliation.
 - Payment gateway and refunds only after maker/checker, legal, commission, settlement and incident controls are approved.
 - Wallet-like functionality only after an explicit legal finding.
 
-#### Wave 4 — AI optimisation
+#### Wave 4, AI optimisation
 
 - Select a provider/model after a multilingual evaluation set exists.
 - Start with suggestion/reporting, not autonomous finance, refunds, access or roles.
@@ -647,7 +647,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 ## Recommended roadmap and acceptance gates
 
-### Phase A — Demo stabilization (immediate)
+### Phase A, Demo stabilization (immediate)
 
 - Close focus-wrap and platform-anchor issues.
 - Update stale legacy tests to the approved current product contract without widening RBAC.
@@ -658,7 +658,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 **Exit criterion:** one deterministic full local matrix plus the focused green bundles, zero blocking type/lint/build errors, and a documented demo script.
 
-### Phase B — Public deployment safety
+### Phase B, Public deployment safety
 
 - Deploy the fail-closed access-profile/auth route changes.
 - Verify /api/access-profile is disabled/denied in production and role catalogue is absent from login HTML.
@@ -667,7 +667,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 **Exit criterion:** public Vercel changes from NO-GO to controlled-demo eligible.
 
-### Phase C — Clean database and real authentication
+### Phase C, Clean database and real authentication
 
 - Reconcile/apply migrations 20–36.
 - Run all SQL/pgTAP/privilege/RLS/direct-DML/audit tests.
@@ -677,7 +677,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 **Exit criterion:** source/synthetic claims can be upgraded to clean-database evidence.
 
-### Phase D — First-wave integrations and operations
+### Phase D, First-wave integrations and operations
 
 - Monitoring, email, storage and optional SMS.
 - Production logs, alerting, backups, restore and incident playbook.
@@ -686,7 +686,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 **Exit criterion:** operational beta readiness without payment/access automation.
 
-### Phase E — Physical access, finance and advanced providers
+### Phase E, Physical access, finance and advanced providers
 
 - Site hardware survey and access proof-of-concept.
 - Accounting/bank export then connector/API.
@@ -696,7 +696,7 @@ The repository provides integration boundaries; it does not provide vendor contr
 
 **Exit criterion:** provider-live evidence and customer acceptance for each activated domain.
 
-### Phase F — Production acceptance
+### Phase F, Production acceptance
 
 - Full performance, resilience, accessibility and security review.
 - Customer UAT across all approved roles/use cases.
@@ -816,11 +816,11 @@ The July hardening work achieved real value: critical authorization assumptions 
 
 The most important success is not the number of screens or tests. It is the change in truthfulness: the application now more often distinguishes a real command from a simulated one, a role-safe view from a broad dashboard, a local refetch from database persistence, and an integration boundary from a live provider.
 
-The most important remaining risk is also clear: the project can look complete in an isolated demo while core production evidence—clean migrations, live RLS, real Auth, persistent data, providers, operations and public deployment safety—remains open. Management should authorize a controlled demo only under the stated playbook, keep the current public URL blocked until production access profiles are proven disabled, and fund the clean-database/provider/operational programme before approving production.
+The most important remaining risk is also clear: the project can look complete in an isolated demo while core production evidence-clean migrations, live RLS, real Auth, persistent data, providers, operations and public deployment safety-remains open. Management should authorize a controlled demo only under the stated playbook, keep the current public URL blocked until production access profiles are proven disabled, and fund the clean-database/provider/operational programme before approving production.
 
 ---
 
-## Appendix A — Status vocabulary
+## Appendix A, Status vocabulary
 
 - **Focused-demo ready:** Passed a defined isolated source/browser gate; no production claim.
 - **Source/synthetic ready:** Implementation and synthetic contracts exist; real database/provider remains open.
@@ -829,7 +829,7 @@ The most important remaining risk is also clear: the project can look complete i
 - **NO-GO:** Known evidence prevents use on that release surface.
 - **Unproved:** The required test was not executed; not automatically a defect.
 
-## Appendix B — Release evidence checklist
+## Appendix B, Release evidence checklist
 
 - [ ] Clean worktree/approved commit and migration manifest.
 - [ ] TypeScript zero errors.
@@ -850,11 +850,11 @@ The most important remaining risk is also clear: the project can look complete i
 - [ ] Backup/restore, monitoring and incident response pass.
 - [ ] Accessibility, performance, security and UAT sign-offs complete.
 
-## Appendix C — Document control and truth hierarchy
+## Appendix C, Document control and truth hierarchy
 
 For product and release decisions, use the repository's maintained hierarchy: PROJECT-HANDBOOK, current functional hardening plan, requirements index, phase execution runbook, then code/scripts and this management audit. Markdown remains the canonical maintainable source; the DOCX is the management reading copy. Any future change that alters architecture, status, costs or provider truth should update the canonical documentation and regenerate the DOCX.
 
-## Appendix D — Cost model inputs management must supply
+## Appendix D, Cost model inputs management must supply
 
 The repository does not contain a monetary budget, price range or annual run-rate. A comparable request for quotation needs at least:
 
@@ -877,7 +877,7 @@ The repository does not contain a monetary budget, price range or annual run-rat
 
 Every quotation should separate one-time setup/engineering, recurring subscription, metered usage, transaction commission, hardware/licence/installer support, legal/privacy/procurement effort, and internal operations/support.
 
-## Appendix E — Provider-plan drift and procurement clarifications
+## Appendix E, Provider-plan drift and procurement clarifications
 
 - The written plan recommends Postmark or Amazon SES for email; current code labels Resend/SMTP. Select one shortlist before implementing an adapter.
 - The written plan recommends Netgsm or İleti Merkezi for SMS; current code also references Twilio. Turkish sender and commercial requirements must decide the provider.
@@ -891,7 +891,7 @@ Every quotation should separate one-time setup/engineering, recurring subscripti
 - Meter capture is handover evidence, not automated meter billing.
 - The integration settings page is a read-only readiness/health view, not a credential-management console.
 
-## Appendix F — UC18 technical invariant ledger
+## Appendix F, UC18 technical invariant ledger
 
 | Invariant | Implemented contract | Production evidence still needed |
 |---|---|---|
@@ -916,7 +916,7 @@ Every quotation should separate one-time setup/engineering, recurring subscripti
 | Honest provider execution | Physical access remains not_executed until a provider callback/evidence exists. | Hardware sandbox and reconciliation. |
 | Accountant boundary | No calendar/offline route, data, control or API call; finance permission does not imply resident operations. | Real Auth/RLS and any future redacted aggregate design. |
 
-## Appendix G — UC18 source/runtime chronology
+## Appendix G, UC18 source/runtime chronology
 
 1. Initial source review found reservation-column exposure, inert legacy write policies, incomplete candidate/reload contracts and role/state inconsistencies.
 2. Migration 32 was narrowed to column-safe reservation reads and command-only writes.

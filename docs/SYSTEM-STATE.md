@@ -1,4 +1,4 @@
-# 1Çatı — System State, Features & Roles
+# 1Çatı, System State, Features & Roles
 
 > Last updated: 2026-07-16 · Status snapshot for demo readiness.
 > Canonical status authority remains `docs/PROJECT-HANDBOOK.md`; this file is a
@@ -24,7 +24,7 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
 | Supabase Cloud | ✅ **38/38 migrations applied** · 127 tables · 442 functions |
 | Realtime | ✅ 34 tables published to `supabase_realtime` (live dashboard) |
 | Cloud data | ✅ Real "New Level Premium" dataset present (769 units) |
-| Cloud login | ✅ **All 6 roles verified end-to-end against cloud** — real password login, RBAC-correct workspace, `source: "supabase"` live data |
+| Cloud login | ✅ **All 6 roles verified end-to-end against cloud**, real password login, RBAC-correct workspace, `source: "supabase"` live data |
 
 ## 3. Cloud / infrastructure
 
@@ -35,7 +35,7 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
   compliance cases, buyer prospects, portal communications, …) publish live
   updates; the client also has a 30-second polling fallback.
 - **Storage**: the private `cati-service-evidence` bucket is created (public=false)
-  via the Storage API — direct browser access is denied by default bucket privacy.
+  via the Storage API, direct browser access is denied by default bucket privacy.
 - **Deferred to dashboard** (`supabase/cloud-privileged-setup.sql`): two RLS objects
   owned by Supabase-internal roles (`storage.objects` restrictive guard,
   `realtime.messages` private-broadcast authorization) that the `postgres` role
@@ -43,7 +43,7 @@ run on **Supabase** (PostgreSQL). Primary language Turkish (`tr`); also `en`,
   and per-table RLS. Run that file once in Dashboard → SQL Editor to add them.
 - **App wiring**: `apps/web/lib/site-management-repository.ts` is Supabase-first
   with a deterministic local-seed fallback. Every response carries
-  `source: "supabase" | "local-seed"` — check that field first when debugging data.
+  `source: "supabase" | "local-seed"`, check that field first when debugging data.
 
 ### Verified against cloud (real login, not seed)
 
@@ -54,7 +54,7 @@ Each role signs in with a real password and receives live Supabase data:
 | admin / manager | `/api/site-management/dashboard` | 200 · `source=supabase` · global operations centre (18 nav entries) |
 | accountant / staff / owner / tenant | `/api/site-management/role-dashboard` | 200 · `source=supabase` · `role-dashboard.v1` scoped workspace (7–8 nav entries) |
 
-The focused roles receive **403** on the *global* dashboard by design — that is the
+The focused roles receive **403** on the *global* dashboard by design, that is the
 RBAC boundary; they use the scoped `role-dashboard` contract instead. `owner`
 resolves unit **A-097** and `tenant` resolves **G-014** in both API and page.
 
@@ -97,7 +97,7 @@ Six roles, hierarchical level, and data scope. Kept in sync with Supabase RLS.
 
 | Role | Level | Scope | Can access |
 |---|---|---|---|
-| **admin** | 90 | company | Everything — full manage on all 14 resources |
+| **admin** | 90 | company | Everything, full manage on all 14 resources |
 | **manager** | 70 | site | Listings, leads, deals, tickets, calendar, documents (CRUD + assign/approve); finance & reports (view/export); users & settings (view); communications; offline sync |
 | **accountant** | 60 | finance | Finance (full incl. approve), documents (create/update), reports (create/export), tickets (view), communications (view/create) |
 | **staff** | 40 | field | Assigned tickets (view/update), calendar (view/update), documents (view/create), offline sync (view/create/update), communications |
@@ -111,17 +111,17 @@ eids_compliance, finance, reports, users, settings, communications, offline_sync
 RBAC is enforced in three layers: the client (sidebar/KPI filtering via
 `rolePermissions`), the server (route guards / `getUserProfile`), and the database
 (Supabase RLS policies + SECURITY DEFINER functions such as
-`prevent_profile_privilege_escalation`, which blocks direct role escalation —
+`prevent_profile_privilege_escalation`, which blocks direct role escalation -
 roles change only via authorized admin command or verified invitation).
 
-## 6. Demo access — two ways
+## 6. Demo access, two ways
 
-1. **Real Supabase logins** — six confirmed accounts exist on cloud, one per role
+1. **Real Supabase logins**, six confirmed accounts exist on cloud, one per role
    (`<role>@cati-demo.com`). Passwords are shared privately (never committed). The
    `owner` account is linked as owner of unit **A-097** and the `tenant` account as
    tenant of **G-014** (both real New Level Premium Avsallar units), so their
    scoped dashboards resolve live unit relationships.
-2. **Local access profiles** — the login page offers one-click role selection when
+2. **Local access profiles**, the login page offers one-click role selection when
    `ENABLE_ACCESS_PROFILES=true` (no password). Frictionless for demos and used by
    the E2E harness. Must **not** be enabled in a real production deployment.
 
@@ -129,7 +129,7 @@ roles change only via authorized admin command or verified invitation).
 
 - Apply `supabase/cloud-privileged-setup.sql` in Dashboard → SQL Editor to add the
   storage/realtime private-broadcast defense-in-depth policies (owner-privileged
-  objects). Optional — the bucket is already private and data-table RLS is enforced.
+  objects). Optional, the bucket is already private and data-table RLS is enforced.
 - Close the open product decisions in `PROJECT-HANDBOOK.md` §6 (payment provider,
   access-system vendor, data retention, production UAT sign-off) before any
   automation is represented as production-live.

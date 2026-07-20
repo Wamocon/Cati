@@ -1,4 +1,4 @@
-# 1Çatı Demo Center — Detailed Production & Build Plan
+# 1Çatı Demo Center, Detailed Production & Build Plan
 
 Status: proposed plan, ready for approval
 Owner: product + marketing + engineering
@@ -12,7 +12,7 @@ Languages in scope: Turkish (TR), English (EN), German (DE), Russian (RU)
 
 This is the full plan for turning the 1Çatı platform into a professional **Demo Center**:
 a short trailer, an interactive "choose your role" demo, one complete walkthrough,
-and a chaptered playlist — all in 4 languages.
+and a chaptered playlist, all in 4 languages.
 
 It is written in simple language on purpose. Anyone on the team (technical or not)
 should be able to read it and know exactly what to record, what to say, what to build,
@@ -50,7 +50,7 @@ correct cost/quality choice.
 
 **What is already true in our favor (verified in the code):**
 
-- The app **already ships in TR, EN, DE, RU**. We do not need to build language support — it
+- The app **already ships in TR, EN, DE, RU**. We do not need to build language support, it
   exists. This makes localized UI recording realistic, not a fantasy.
 - The app has a **no-login demo mode** ("access profiles") that lets us switch between
   admin, manager, accountant, staff, owner, and tenant safely. This is perfect for the
@@ -199,14 +199,14 @@ so all 4 languages share identical motion.**
    (`ENABLE_ACCESS_PROFILES=true`) so we can switch roles with no login in controlled QA.
 3. **Fix the viewport** to 1920×1080, device scale factor 2 for crisp text.
 4. **Hide local-only noise**: no dev banners, no console overlays, no realtime "connection
-   refused" toast (the QA scripts already filter this — keep it off-screen).
+   refused" toast (the QA scripts already filter this, keep it off-screen).
 5. **Set a clean clock and currency**: stable date, TRY currency, so finance numbers look real.
 6. **Pick a calm theme**: one theme (light or dark) used consistently across all chapters.
 
 ### 5.2 Capture engine: Playwright video
 
 We already use Playwright to drive the app. We add a recording context. The same script runs
-four times — once per locale — producing four pixel-identical videos that differ only in the
+four times, once per locale, producing four pixel-identical videos that differ only in the
 on-screen language.
 
 Conceptual recipe (one reusable script, parameterized by locale and role):
@@ -246,10 +246,10 @@ $env:DEMO_SKIP_VIDEO="1"; node scripts/demo-record.mjs
 
 It outputs to `qa_output/demo-center-master/`:
 
-- `clips/1cati-master-{scene}-{locale}.webm` — one clip per feature per language
-- `demo-script.md` — auto-generated recording + narration guide that explains every big
+- `clips/1cati-master-{scene}-{locale}.webm`, one clip per feature per language
+- `demo-script.md`, auto-generated recording + narration guide that explains every big
   feature and lists every "coming soon" item
-- `demo-manifest.json` — machine-readable scene/clip index for the editor and the website
+- `demo-manifest.json`, machine-readable scene/clip index for the editor and the website
 
 The scene list inside the script is the single source of truth: every big feature has a
 scene with its role, route, plain-language explanation, master narration, live/coming-soon
@@ -286,7 +286,7 @@ Each row = one clip.
 
 ---
 
-## 6. Full trailer script — all 4 languages
+## 6. Full trailer script, all 4 languages
 
 **Visual spine (same for every language), ~60 seconds:**
 
@@ -295,15 +295,15 @@ Each row = one clip.
 | 0–5s | Black → logo reveal → dashboard fades in | "1Çatı" |
 | 5–14s | Dashboard KPI cards, slow push-in | "One platform for your whole site" |
 | 14–24s | Listings: 769 units filtering | "769 units. Total control." |
-| 24–34s | Finance ledger + payment panel | "Finance, deposits, debts — handled" |
+| 24–34s | Finance ledger + payment panel | "Finance, deposits, debts, handled" |
 | 34–44s | Service order → staff task → SLA timer | "Services and teams, on time" |
 | 44–52s | AI assistant panel + roadmap map | "AI-powered. Built to grow." |
-| 52–60s | Logo + tagline + CTA | "1Çatı — Explore the demo" |
+| 52–60s | Logo + tagline + CTA | "1Çatı, Explore the demo" |
 
-### 6.1 Turkish (TR) — master language
+### 6.1 Turkish (TR), master language
 
 > Bir sitenin tüm yönetimi… tek platformda.
-> Gösterge paneli, finans, hizmetler ve ekipler — hepsi bir arada.
+> Gösterge paneli, finans, hizmetler ve ekipler, hepsi bir arada.
 > 769 daire. Tek ekrandan tam kontrol.
 > Borçlar, depozitolar ve tahsilatlar otomatik takip edilir.
 > Hizmet talebinden ekip görevine, SLA süresine kadar her şey bağlı.
@@ -313,20 +313,20 @@ Each row = one clip.
 ### 6.2 English (EN)
 
 > Managing an entire residential complex… on one platform.
-> Dashboard, finance, services, and teams — all in one place.
+> Dashboard, finance, services, and teams, all in one place.
 > 769 units. Full control from a single screen.
 > Debts, deposits, and payments, tracked automatically.
-> From a service request to a staff task to the SLA clock — everything is connected.
+> From a service request to a staff task to the SLA clock, everything is connected.
 > An AI-powered operating system for your site, built to grow.
 > 1Çatı. Explore the demo.
 
 ### 6.3 German (DE)
 
 > Die gesamte Verwaltung einer Wohnanlage … auf einer Plattform.
-> Dashboard, Finanzen, Services und Teams — alles an einem Ort.
+> Dashboard, Finanzen, Services und Teams, alles an einem Ort.
 > 769 Einheiten. Volle Kontrolle über einen einzigen Bildschirm.
 > Schulden, Kautionen und Zahlungen werden automatisch erfasst.
-> Von der Serviceanfrage über die Mitarbeiteraufgabe bis zur SLA-Zeit — alles ist verbunden.
+> Von der Serviceanfrage über die Mitarbeiteraufgabe bis zur SLA-Zeit, alles ist verbunden.
 > Ein KI-gestütztes Betriebssystem für Ihre Anlage, gemacht zum Wachsen.
 > 1Çatı. Entdecken Sie die Demo.
 
@@ -336,10 +336,10 @@ holding the finance and services shots ~3s longer.)*
 ### 6.4 Russian (RU)
 
 > Управление всем жилым комплексом… на одной платформе.
-> Панель управления, финансы, услуги и команды — всё в одном месте.
+> Панель управления, финансы, услуги и команды, всё в одном месте.
 > 769 квартир. Полный контроль с одного экрана.
 > Долги, депозиты и платежи отслеживаются автоматически.
-> От заявки на услугу до задачи сотрудника и таймера SLA — всё связано.
+> От заявки на услугу до задачи сотрудника и таймера SLA, всё связано.
 > Операционная система для вашего комплекса на базе ИИ, готовая к росту.
 > 1Çatı. Откройте демо.
 
@@ -353,85 +353,85 @@ scene by scene, produced through the localization workflow in section 9. A share
 
 Total target: 12–15 minutes. Each scene below maps to a recorded clip from section 5.3.
 
-### Scene 1 — What 1Çatı is (~1:30)
-*Visual: S1/S2 — dashboard landing, then login role selector.*
+### Scene 1, What 1Çatı is (~1:30)
+*Visual: S1/S2, dashboard landing, then login role selector.*
 
 > Welcome to 1Çatı, an AI-powered operating system for residential complexes.
-> In one platform you manage units, people, money, services, and staff — for a site as large
+> In one platform you manage units, people, money, services, and staff, for a site as large
 > as 769 flats. This walkthrough shows what the platform does today, and what is coming on the
 > roadmap. Anything still in development is clearly marked, so you always know what is live.
 
-### Scene 2 — Login and role access (~1:00)
-*Visual: S2 — role selector, pick a role.*
+### Scene 2, Login and role access (~1:00)
+*Visual: S2, role selector, pick a role.*
 
 > Every person sees only what their role allows. There are six roles: admin, manager,
 > accountant, staff, owner, and tenant. A manager sees operations and finance summaries; an
 > accountant sees the full ledger; staff see only their tasks; owners and tenants see their
 > own unit. This keeps data private and the screen simple for each user.
 
-### Scene 3 — Main dashboard and phase status (~1:30)
-*Visual: S3 — KPI cards, phase-status map.*
+### Scene 3, Main dashboard and phase status (~1:30)
+*Visual: S3, KPI cards, phase-status map.*
 
 > The dashboard is the control center. At a glance you see income, expenses, outstanding debt,
 > open tasks, occupancy, and AI risk highlights. The cards update live. Below, the phase map
 > shows exactly how far the platform has been built, from foundation through the AI layer.
 
-### Scene 4 — Site, listing, and unit operations (~1:30)
-*Visual: S4 — listings, filter, open a unit.*
+### Scene 4, Site, listing, and unit operations (~1:30)
+*Visual: S4, listings, filter, open a unit.*
 
-> The whole site is modeled as blocks, floors, and flats — all 769 units. You can filter by
+> The whole site is modeled as blocks, floors, and flats, all 769 units. You can filter by
 > status: vacant, occupied, in maintenance, or restricted. Open a single unit to see its
 > owner, tenant, balance, and history in one place.
 
-### Scene 5 — People: owners, tenants, staff (~1:15)
-*Visual: S5 — users list, open a profile.*
+### Scene 5, People: owners, tenants, staff (~1:15)
+*Visual: S5, users list, open a profile.*
 
 > Here are the people. Owners, tenants, and staff each have a profile linked to their unit or
 > role. From a profile you reach their balance, documents, and activity. Adding or updating a
 > person takes seconds and respects role permissions.
 
-### Scene 6 — Finance ledger (~1:30)
-*Visual: S6 — ledger, account balance.*
+### Scene 6, Finance ledger (~1:30)
+*Visual: S6, ledger, account balance.*
 
 > Finance is a real ledger, not a spreadsheet. Every charge, payment, and refund is recorded
 > against the right account. You can see each unit's balance, the site's income and expenses,
 > and export reports for accounting.
 
-### Scene 7 — Payments, deposits, restrictions (~1:45)
-*Visual: S7 — payment control + restriction panel.*
+### Scene 7, Payments, deposits, restrictions (~1:45)
+*Visual: S7, payment control + restriction panel.*
 
 > Payments and deposits are controlled. The system can hold a deposit, settle it at checkout,
-> and apply debt-based restrictions — for example, limiting a service or booking when an
+> and apply debt-based restrictions, for example, limiting a service or booking when an
 > account is overdue. These actions are guarded and logged for audit, and the live payment
 > provider is confirmed during launch.
 
-### Scene 8 — Service catalogue and tickets (~1:45)
-*Visual: S8 — service catalogue, create a service order.*
+### Scene 8, Service catalogue and tickets (~1:45)
+*Visual: S8, service catalogue, create a service order.*
 
 > Services run on a catalogue with prices and SLAs. A resident or manager picks a service, the
 > system checks the account, takes the charge, and creates a ticket. That ticket becomes a task
 > assigned to the right team.
 
-### Scene 9 — Staff tasks, SLA, media proof (~1:30)
-*Visual: S9 — assigned task, SLA timer, media upload.*
+### Scene 9, Staff tasks, SLA, media proof (~1:30)
+*Visual: S9, assigned task, SLA timer, media upload.*
 
 > Staff see only their assigned tasks, with priority and an SLA clock. When the work is done,
 > they upload photo or video proof from their phone. The manager sees completion and the SLA
 > status, so nothing is forgotten.
 
-### Scene 10 — Communication and notifications (~1:00)
-*Visual: S10 — chat + notifications.*
+### Scene 10, Communication and notifications (~1:00)
+*Visual: S10, chat + notifications.*
 
 > Communication is built in: resident-to-management chat, internal team chat, and notifications
 > by email, SMS, or push. Templates keep messages consistent and multilingual.
 
-### Scene 11 — Roadmap Phase 10–15 and closing (~1:30)
-*Visual: S11 — 15-phase map, highlight Phase 10–15.*
+### Scene 11, Roadmap Phase 10–15 and closing (~1:30)
+*Visual: S11, 15-phase map, highlight Phase 10–15.*
 
 > On the roadmap: bookings and move-in/checkout, deeper external integrations, the full AI
-> premium layer, and final launch hardening — Phases 10 through 15. Today you have a complete
+> premium layer, and final launch hardening, Phases 10 through 15. Today you have a complete
 > management foundation; next, it grows into a full premium platform.
-> That is 1Çatı: units, people, finance, services, and decisions — in one place. Thank you for
+> That is 1Çatı: units, people, finance, services, and decisions, in one place. Thank you for
 > watching. Explore the interactive demo to try it yourself.
 
 **Localization note:** TR is the primary client language, so we may record TR first as the
@@ -448,7 +448,7 @@ scenes plus a 3-second branded intro card and a 3-second CTA outro card.
 
 | Chapter | Scenes included | Intro card text | Outro CTA |
 |---|---|---|---|
-| `01-overview` | S1, S2 | "1Çatı — Overview" | "See the dashboard →" |
+| `01-overview` | S1, S2 | "1Çatı, Overview" | "See the dashboard →" |
 | `02-dashboard-and-units` | S3, S4 | "Dashboard & 769 Units" | "Meet the people →" |
 | `03-people-and-rbac` | S5 | "People & Roles" | "Open finance →" |
 | `04-finance-and-restrictions` | S6, S7 | "Finance & Controls" | "See services →" |
@@ -480,15 +480,15 @@ This is the "record once, ship four" engine.
 
 ### 9.2 Tool roles
 
-- **HeyGen (Creator plan)** — voiceover and dubbing for TR/EN/DE/RU; supports 175+ languages,
-  1080p, up to ~30-minute videos, 600 credits/month (per the cited HeyGen pages — confirm at
+- **HeyGen (Creator plan)**, voiceover and dubbing for TR/EN/DE/RU; supports 175+ languages,
+  1080p, up to ~30-minute videos, 600 credits/month (per the cited HeyGen pages, confirm at
   build time). Use it for **voice and optional short avatar intro/outro only**, not for full
   avatar in every scene. This protects credits and keeps focus on the product.
-- **DGX Whisper (local)** — generate and verify transcripts/subtitles. Use it to QA that the
+- **DGX Whisper (local)**, generate and verify transcripts/subtitles. Use it to QA that the
   spoken voiceover matches the script in each language, and to produce clean `.vtt` subtitle
   files. Running locally keeps confidential content off third-party servers.
-- **Playwright** — the visual capture engine (section 5).
-- **Editor (any NLE)** — overlay titles, cards, music, subtitles; export final files.
+- **Playwright**, the visual capture engine (section 5).
+- **Editor (any NLE)**, overlay titles, cards, music, subtitles; export final files.
 
 ### 9.3 Shared glossary (keep these identical in every video)
 
@@ -527,7 +527,7 @@ so it is free, always in our 4 languages, and always matches the product.
 ```
 /{locale}/pitch  →  "1Çatı Demo Center"
  ├─ Hero: autoplay-muted trailer (loop) + "Watch with sound" + language switch
- ├─ Interactive demo: "Explore 1Çatı" — role path cards
+ ├─ Interactive demo: "Explore 1Çatı", role path cards
  │    [Executive] [Manager/Admin] [Accountant] [Staff/Operations]   (Resident later)
  ├─ Full walkthrough: 12–15 min player with chapter markers
  ├─ Chapter playlist: 6 thumbnails (overview … roadmap)
@@ -555,7 +555,7 @@ so it is free, always in our 4 languages, and always matches the product.
 ### 10.4 Language behavior
 
 - The page reads the current locale from the URL (`/de/pitch` → German trailer, German
-  captions, German role guide). No separate work — it reuses the app's existing i18n.
+  captions, German role guide). No separate work, it reuses the app's existing i18n.
 
 ---
 
@@ -566,7 +566,7 @@ demos. Nothing publishes until it passes.
 
 **Language & audio**
 - [ ] Voiceover matches the approved script (Whisper transcript diff).
-- [ ] Correct language throughout — no mixed-language leftovers.
+- [ ] Correct language throughout, no mixed-language leftovers.
 - [ ] Glossary terms match section 9.3 exactly.
 - [ ] Audio is clear, evenly leveled, music ducked under voice.
 - [ ] No clipping, no long silences, no abrupt cuts.
@@ -578,7 +578,7 @@ demos. Nothing publishes until it passes.
 
 **Visual & app accuracy**
 - [ ] Screens match the live app for that locale (e.g. `/de/...` shows German UI).
-- [ ] Only seeded demo data — no real names, no real personal data.
+- [ ] Only seeded demo data, no real names, no real personal data.
 - [ ] No dev banners, console errors, or broken layouts on screen.
 - [ ] Numbers consistent across chapters (769 units, balances).
 - [ ] Roadmap items clearly marked as "coming", not presented as live.
@@ -628,7 +628,7 @@ pipeline works in 4 languages, the walkthrough and chapters reuse the exact same
 **Cost discipline (HeyGen credits)**
 - Use HeyGen for **voiceover/dubbing + a short avatar intro/outro only**. Full avatar in every
   scene would burn credits fast and add little value over real product footage.
-- Generate each language's voiceover **once** from a locked script — avoid re-running on small
+- Generate each language's voiceover **once** from a locked script, avoid re-running on small
   edits. Lock the script before generating audio.
 - Keep the walkthrough at 12–15 min so it stays inside the Creator plan's ~30-min limit with
   room to spare.
@@ -668,9 +668,9 @@ These come from the proposal's cited sources and our plan. Confirm at kickoff:
 
 ## 15. Final recommendation
 
-Proceed. The proposal is sound and matches 2026 best practice. With the five refinements —
+Proceed. The proposal is sound and matches 2026 best practice. With the five refinements -
 60-second trailer, native interactive demo first, a text-free visual master, seeded demo data,
-and scene-clip recording — it becomes fully realistic for the current app, affordable on the
+and scene-clip recording, it becomes fully realistic for the current app, affordable on the
 HeyGen Creator plan, honest about what is live versus roadmap, and easy to maintain as Phases
 10–15 ship. The result is a single, professional 1Çatı Demo Center: simple for viewers,
 credible for clients, and consistent across Turkish, English, German, and Russian.
