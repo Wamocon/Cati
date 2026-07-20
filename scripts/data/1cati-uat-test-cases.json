@@ -1,0 +1,2774 @@
+[
+  {
+    "testCaseId": "UC01-TC01",
+    "useCaseNumber": 1,
+    "useCaseName": "Rollenbasierter Zugang (1-Klick-Rollenwechsel)",
+    "testCaseTitle": "Manager- und Eigentümer-Rollenwechsel ohne Logout inkl. korrekter Wohnungs-Sichtbarkeit in Tickets",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Zugang/RBAC",
+    "role": "Sorumlu/Manager (manager) dann Malik/Eigentümer (owner)",
+    "environmentUrl": "/tr/login -> /tr/dashboard -> /tr/dashboard/tickets",
+    "precondition": "Vercel-Demo https://cati-blond.vercel.app ist erreichbar; lokale Access-Profile sind aktiv (Standard in dieser Demo-Umgebung, Button 'Demo başlat' ist auf /tr/login sichtbar). Tester ist in keiner bestimmten Rolle vorausgesetzt, der Rollenwechsel erfolgt innerhalb des Testfalls.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Im Browser die Adresse https://cati-blond.vercel.app/tr/login aufrufen.",
+        "testData": "",
+        "expectedResult": "Login-Seite lädt vollständig; ein grüner Button mit Text 'Demo başlat' ist sichtbar.",
+        "automationNote": "Playwright: page.goto('/tr/login'); Selector data-testid=\"demo-full-access\" (siehe apps/web/app/[locale]/login/page.tsx:418)."
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf den Button 'Demo başlat' klicken.",
+        "testData": "",
+        "expectedResult": "Ein Rollenraster mit genau 6 Rollenkarten öffnet sich: Yönetim, Sorumlu, Muhasebe, Personel, Malik, Kiracı.",
+        "automationNote": "Selector data-testid=\"demo-role-menu\" (Container), Karten data-testid=\"demo-role-option-{admin|manager|accountant|staff|owner|tenant}\"."
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf die Rollenkarte 'Sorumlu' klicken.",
+        "testData": "Rolle: Sorumlu (manager)",
+        "expectedResult": "Automatischer Redirect zu /tr/dashboard; Überschrift 'ERP Operasyon Merkezi' ist sichtbar; in der Seitenleiste erscheint das Rollen-Label 'Sorumlu'.",
+        "automationNote": "data-testid=\"demo-role-option-manager\"; page.getByRole('heading', { name: /ERP Operasyon Merkezi/ }) - verifiziert in e2e/dashboard.spec.ts Zeile 90 und 271."
+      },
+      {
+        "stepNo": 4,
+        "action": "Auf schmalen Bildschirmen zunächst den Button 'Menüyü aç' klicken, dann die Seitenleiste (linkes Menü) vollständig durchzählen.",
+        "testData": "",
+        "expectedResult": "Genau 13 Menüpunkte sind sichtbar: Genel Bakış, Daire Matrisi, Müşteri Adayları, Servis Talepleri, Rezervasyon, Erişim & Uyum, Finans & Aidat, Belgeler, Raporlar, İletişim, Offline Senkron, Kullanıcılar & Roller, Ayarlar.",
+        "automationNote": "aside.getByRole('link', {name}) je Label, Quelle: apps/web/lib/dashboard-routing.ts (13 dashboardRoutes) + apps/web/lib/rbac.ts (manager hat view auf alle 13 Resources)."
+      },
+      {
+        "stepNo": 5,
+        "action": "Ohne Logout erneut die Adresse /tr/login aufrufen.",
+        "testData": "",
+        "expectedResult": "Login-Seite lädt erneut normal, der Button 'Demo başlat' ist wieder sichtbar (kein Logout-Schritt notwendig).",
+        "automationNote": "page.goto('/tr/login') erneut; kein separater Logout-Call nötig."
+      },
+      {
+        "stepNo": 6,
+        "action": "'Demo başlat' klicken, danach die Rollenkarte 'Malik' klicken.",
+        "testData": "Rolle: Malik (owner)",
+        "expectedResult": "Redirect zu /tr/dashboard; Überschrift ändert sich zu 'Malik Çalışma Alanı'.",
+        "automationNote": "data-testid=\"demo-role-option-owner\"; heading-Regex /Malik Çalışma Alanı/ (e2e/dashboard.spec.ts Zeile 320-321)."
+      },
+      {
+        "stepNo": 7,
+        "action": "Die Seitenleiste erneut vollständig durchzählen und insbesondere prüfen, dass Finans & Aidat, Kullanıcılar & Roller, Ayarlar, Daire Matrisi, Müşteri Adayları und Erişim & Uyum NICHT vorhanden sind.",
+        "testData": "",
+        "expectedResult": "Genau 5 Menüpunkte sichtbar: Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim. Die 6 genannten Admin/Manager-only-Punkte erscheinen 0 Mal.",
+        "automationNote": "aside.getByRole('link', {name}).toHaveCount(0) für jeden verbotenen Menüpunkt; bestätigt in e2e/dashboard.spec.ts Zeile 319-330."
+      },
+      {
+        "stepNo": 8,
+        "action": "Im Menü auf 'Servis Talepleri' klicken und in der geöffneten Tabelle die Spalte 'Daire' (Wohnung) vollständig durchsehen; bei Bedarf das Suchfeld 'Ara...' nutzen, um systematisch nach 'A-001', 'A-054' und 'D-023' zu filtern.",
+        "testData": "Erwartete Wohnungs-IDs: A-001, A-054, D-023",
+        "expectedResult": "URL ist /tr/dashboard/tickets, Überschrift 'Servis Talepleri' ist sichtbar. In der Spalte 'Daire' erscheinen ausschließlich die Werte A-001, A-054 und D-023 - keine anderen Wohnungsnummern.",
+        "automationNote": "data-testid=\"data-table\" (apps/web/components/data-table.tsx:431), Spalte key=\"flat\" header=\"Daire\" (apps/web/app/[locale]/dashboard/tickets/page.tsx:1151); Datenquelle apps/web/lib/role-scoped-views.ts:19 (ownerUnits Set)."
+      }
+    ],
+    "architectNote": "Alle Werte (Button-Text 'Demo başlat', Test-IDs, exakte Überschriften 'ERP Operasyon Merkezi' / 'Malik Çalışma Alanı', 13 vs. 5 Menüpunkte, hartkodierte Owner-Wohnungen A-001/A-054/D-023) sind gegen den aktuellen Code und gegen apps/web/e2e/dashboard.spec.ts verifiziert. Erwartungsgemäß PASSED - dies ist ein bereits mit Playwright abgedeckter Kernpfad.",
+    "labels": [
+      "uc01",
+      "prio1",
+      "rbac",
+      "golden-path",
+      "access-profile"
+    ]
+  },
+  {
+    "testCaseId": "UC01-TC02",
+    "useCaseNumber": 1,
+    "useCaseName": "Rollenbasierter Zugang (1-Klick-Rollenwechsel)",
+    "testCaseTitle": "Mieter kann Admin-Ressource 'Kullanıcılar & Roller' nicht per Direkt-URL öffnen",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Zugang/RBAC",
+    "role": "Kiracı/Mieter (tenant)",
+    "environmentUrl": "/tr/dashboard/users",
+    "precondition": "Tester ist noch nicht als Kiracı eingeloggt; lokale Access-Profile sind aktiv (siehe TC1, Schritt 1-2 identisch anwendbar).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf /tr/login den Button 'Demo başlat' klicken, danach die Rollenkarte 'Kiracı' klicken.",
+        "testData": "Rolle: Kiracı (tenant)",
+        "expectedResult": "Redirect zu /tr/dashboard; Überschrift 'Kiracı Çalışma Alanı' ist sichtbar.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"; heading-Regex /Kiracı Çalışma Alanı/."
+      },
+      {
+        "stepNo": 2,
+        "action": "Die Seitenleiste öffnen (ggf. 'Menüyü aç') und prüfen, ob ein Menüpunkt 'Kullanıcılar & Roller' vorhanden ist.",
+        "testData": "",
+        "expectedResult": "Der Menüpunkt 'Kullanıcılar & Roller' erscheint 0 Mal in der Seitenleiste.",
+        "automationNote": "aside.getByRole('link', { name: exactAccessibleName('Kullanıcılar & Roller') }).toHaveCount(0)."
+      },
+      {
+        "stepNo": 3,
+        "action": "Manuell in der Adressleiste https://cati-blond.vercel.app/tr/dashboard/users eingeben und Enter drücken.",
+        "testData": "",
+        "expectedResult": "Kurzzeitig kann eine Warnbox mit Überschrift 'Bu sayfa rolünüz için kapalı' und Text 'Yetki modeli güvenlik nedeniyle varsayılan olarak erişimi reddeder. Sizin rolünüz için açık olan panele yönlendiriliyorsunuz.' erscheinen (bernsteinfarbener Kasten).",
+        "automationNote": "Text/Component: apps/web/app/[locale]/dashboard/dashboard-route-guard.tsx Zeile 13-14 (deniedCopy.tr); rein client-seitige Zwischenanzeige, kann in schnellen Netzwerken übersprungen werden."
+      },
+      {
+        "stepNo": 4,
+        "action": "Kurz warten (max. 2 Sekunden) und die finale URL sowie den sichtbaren Seiteninhalt prüfen.",
+        "testData": "",
+        "expectedResult": "Die URL springt automatisch zurück auf /tr/dashboard (endet NICHT mehr auf /users); Überschrift 'Kiracı Çalışma Alanı' ist wieder sichtbar; an keiner Stelle werden Namen, E-Mails oder Rollen anderer Nutzer angezeigt.",
+        "automationNote": "expect(page).toHaveURL(/\\/tr\\/dashboard$/); verifiziert identisches Muster für /dashboard/finance und /dashboard/listings in e2e/dashboard.spec.ts Zeile 393-404 (dashboard-route-guard.tsx Zeile 40: router.replace('/dashboard'))."
+      },
+      {
+        "stepNo": 5,
+        "action": "DevTools öffnen (F12), Tab 'Network', danach /tr/dashboard/users erneut per Direkt-URL aufrufen und den Request an /api/site-management/users suchen.",
+        "testData": "",
+        "expectedResult": "Der API-Request auf /api/site-management/users liefert HTTP-Status 403 Forbidden mit einer Fehlermeldung wie 'Your role is not allowed to view people directory data.' - der Schutz besteht also nicht nur clientseitig, sondern auch serverseitig.",
+        "automationNote": "GET /api/site-management/users; Server-Check in apps/web/app/api/site-management/users/route.ts Zeile 20-23 (hasAnyPermission(profile.role, \"users\", [\"view\"])); analoges 403-Verhalten für /api/site-management/dashboard bereits verifiziert in e2e/dashboard.spec.ts Zeile 406-407."
+      },
+      {
+        "stepNo": 6,
+        "action": "Zusammenfassend bestätigen: Während der gesamten Schritte 3-5 wurde zu keinem Zeitpunkt eine echte Nutzerliste, Tabelle oder ein Datensatz aus dem Users-Modul sichtbar oder im Netzwerk-Response-Body (außer der 403-Fehlermeldung) übertragen.",
+        "testData": "",
+        "expectedResult": "Kein Datenleck feststellbar.",
+        "automationNote": "Response-Body von Schritt 5 auf Abwesenheit von Nutzerdatensätzen prüfen (nur { error: ... } erwartet)."
+      }
+    ],
+    "architectNote": "Zweistufiger Schutz bestätigt: proxy.ts erzwingt nur eine gültige Session/Zugriffsprofil, die eigentliche RBAC-Sperre je Ressource läuft client-seitig über dashboard-route-guard.tsx UND zusätzlich serverseitig über hasAnyPermission-Checks in jeder site-management-API-Route. Erwartungsgemäß PASSED. Hinweis: das kurze Aufblitzen der Warnbox in Schritt 3 ist normales, dokumentiertes Verhalten (Client-Guard rendert erst, redirected dann) und darf nicht als Bug gewertet werden.",
+    "labels": [
+      "uc01",
+      "prio1",
+      "rbac",
+      "negative",
+      "direct-url"
+    ]
+  },
+  {
+    "testCaseId": "UC02-TC01",
+    "useCaseNumber": 2,
+    "useCaseName": "769-Einheiten-Live-Matrix",
+    "testCaseTitle": "Block-Übersicht, visuelle Matrix und Live-Komponente laden echte Phase-4-Daten",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Stammdaten/Listings",
+    "role": "Sorumlu/Manager (manager)",
+    "environmentUrl": "/tr/dashboard/listings",
+    "precondition": "Tester ist als Sorumlu (manager) eingeloggt (Ablauf wie UC1-TC1, Schritt 1-3).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Als Sorumlu über die Seitenleiste auf 'Daire Matrisi' klicken.",
+        "testData": "",
+        "expectedResult": "URL wechselt zu /tr/dashboard/listings; Überschrift 'Proje & Daire Matrisi' ist sichtbar.",
+        "automationNote": "clickDashboardMenu(page,'Daire Matrisi'); heading exact 'Proje & Daire Matrisi' (e2e/dashboard.spec.ts Zeile 130)."
+      },
+      {
+        "stepNo": 2,
+        "action": "Zur Block-Übersicht scrollen (Kartenreihe mit Blocknamen).",
+        "testData": "",
+        "expectedResult": "Mindestens die Blockkarten 'Blok A', 'Blok B', 'Blok C', 'Blok D' sind sichtbar, jede mit einer Einheiten-Anzahl.",
+        "automationNote": "Textsuche 'Blok A' etc.; referenziert in e2e/dashboard.spec.ts Zeile 115 (clickDashboardCommand mit /Blok A/)."
+      },
+      {
+        "stepNo": 3,
+        "action": "Weiter scrollen zum Abschnitt 'Görsel daire matrisi' (visuelle Matrix).",
+        "testData": "",
+        "expectedResult": "Ein Raster aus klickbaren Kacheln (eine Kachel pro Wohnung) ist sichtbar; Klick auf eine Kachel öffnet ein Detail-/Aktionspanel.",
+        "automationNote": "Section-Titel copy.matrix.title = 'Görsel daire matrisi' (apps/web/lib/unit-matrix-copy.ts Zeile 393)."
+      },
+      {
+        "stepNo": 4,
+        "action": "Weiter scrollen zum Abschnitt 'Daire matrisi kayıtları' (Phase4LiveOperations-Komponente).",
+        "testData": "",
+        "expectedResult": "Der Abschnitt lädt automatisch Daten und zeigt 5 Metrik-Kacheln sowie eine Datentabelle mit Spalten Daire, Blok/Kat, Satış, Liste, Malik, Sakin, Durum, Borç, Servis; die Tabelle ist nicht leer.",
+        "automationNote": "Komponente apps/web/components/phase4-live-operations.tsx; ruft GET /api/site-management/phase4?limit=769 beim Laden (useEffect/fetchPhase4)."
+      },
+      {
+        "stepNo": 5,
+        "action": "DevTools -> Network Tab öffnen, Seite neu laden und den Request an /api/site-management/phase4?limit=769 suchen.",
+        "testData": "",
+        "expectedResult": "Request liefert HTTP 200 mit einem JSON-Objekt, das ein Feld 'source' enthält (Wert 'supabase' oder 'local-seed').",
+        "automationNote": "Response-Feld 'source' prüfen, Typdefinition in apps/web/lib/site-management-repository.ts (Phase4SiteData)."
+      },
+      {
+        "stepNo": 6,
+        "action": "Im Abschnitt 'Daire matrisi kayıtları' den Button 'Veriyi yenile' klicken.",
+        "testData": "",
+        "expectedResult": "Icon dreht sich kurz (Ladezustand), danach bleiben die Metrik-Kacheln und die Tabelle weiterhin befüllt (kein Leerlaufen, kein Fehler).",
+        "automationNote": "Button copy.live.refresh = 'Veriyi yenile' (apps/web/lib/unit-matrix-copy.ts Zeile 382), löst fetchPhase4() erneut aus."
+      },
+      {
+        "stepNo": 7,
+        "action": "Oben auf der Seite die statische Kennzahl 'Toplam Daire' (Gesamtzahl Wohnungen) notieren, danach die Gesamtzahl der Zeilen/Einheiten in der Live-Tabelle aus Schritt 4 vergleichen.",
+        "testData": "",
+        "expectedResult": "Beide Zahlen sollten übereinstimmen (bei 769 Einheiten insgesamt). Eine Abweichung ist ein dokumentationswürdiger Befund, aber kein Absturz.",
+        "automationNote": "Statischer Wert kommt aus apps/web/lib/site-management-data.ts, Live-Wert aus /api/site-management/phase4 - unterschiedliche Datenpfade, mögliche Inkonsistenzquelle."
+      },
+      {
+        "stepNo": 8,
+        "action": "Im Abschnitt 'Veri kalite bulguları' (Datenqualitätsbefunde, Teil der Live-Komponente) prüfen, ob mindestens ein Befund-Eintrag mit Schweregrad-Badge angezeigt wird.",
+        "testData": "",
+        "expectedResult": "Mindestens ein Befund-Eintrag (z. B. zu Block B oder Block D) mit einer Schweregrad-Badge (z. B. 'warning'/'info') ist sichtbar und rein informativ (kein Fehler beim Laden).",
+        "automationNote": "copy.live.findingsTitle = 'Veri kalite bulguları'; Datenquelle apps/web/lib/site-management-data.ts Zeile 3258 (importFindings)."
+      }
+    ],
+    "architectNote": "Die Live-Komponente (Phase4LiveOperations) ist echt verdrahtet (echter Fetch auf /api/site-management/phase4, Realtime-Abo auf 11 Tabellen laut CLAUDE.md Abschnitt 3.2/4.1 Migration ...0004). Erwartungsgemäß PASSED. Schritt 7 (Zahlenvergleich statisch vs. live) ist bewusst als Beobachtungspunkt aufgenommen, da beide Zahlen aus unterschiedlichen Datenquellen stammen und potenziell divergieren können, ohne dass das ein harter Fehler ist.",
+    "labels": [
+      "uc02",
+      "prio1",
+      "listings",
+      "golden-path",
+      "phase4-live"
+    ]
+  },
+  {
+    "testCaseId": "UC02-TC02",
+    "useCaseNumber": 2,
+    "useCaseName": "769-Einheiten-Live-Matrix",
+    "testCaseTitle": "Import-Vorschau/-Commit ohne Datei-Upload: 'Değişiklik iste' wird trotz vorhandener Datenwarnungen nicht blockiert",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Stammdaten/Listings",
+    "role": "Sorumlu/Manager (manager)",
+    "environmentUrl": "/tr/dashboard/listings",
+    "precondition": "Tester ist als Sorumlu eingeloggt und befindet sich auf /tr/dashboard/listings, Abschnitt 'Daire matrisi kayıtları' ist sichtbar (siehe TC1 Schritt 1-4). WICHTIG: Es existiert auf dieser Seite KEINE Datei-Upload-Funktion (kein Dateiauswahl-Dialog, kein Drag&Drop) - dieser Testfall prüft bewusst das tatsächliche, upload-freie Verhalten der beiden Buttons statt eines angenommenen Upload-Workflows.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf der Seite gezielt nach einem Datei-Upload-Element suchen (z. B. Button 'Dosya Seç', Drag&Drop-Fläche, <input type=\"file\">) - im gesamten sichtbaren Bereich von /dashboard/listings.",
+        "testData": "",
+        "expectedResult": "Es existiert kein Datei-Upload-Element auf dieser Seite.",
+        "automationNote": "page.locator('input[type=file]').count() sollte 0 sein; Code-Review von apps/web/app/[locale]/dashboard/listings/page.tsx und components/phase4-live-operations.tsx bestätigt keine Upload-Logik."
+      },
+      {
+        "stepNo": 2,
+        "action": "Im Abschnitt 'Daire matrisi kayıtları' den Button 'Veri kontrolü' klicken (Datenprüfung/Vorschau).",
+        "testData": "",
+        "expectedResult": "Button zeigt kurz einen Ladezustand, wechselt danach in einen sichtbaren Erfolgszustand (grüner Rahmen); es erscheint KEINE Liste von markierten Fehlern/Dubletten/fehlenden Feldern irgendwo auf der Seite.",
+        "automationNote": "page.getByRole('button', {name:'Veri kontrolü'}).click(); danach toHaveAttribute('data-state','success') - identisch zu e2e/dashboard.spec.ts Zeile 156-157. API-Call: POST /api/site-management/import/preview mit body {batchId: erste vorhandene Batch-ID}."
+      },
+      {
+        "stepNo": 3,
+        "action": "Direkt danach, OHNE irgendeine Korrektur vorzunehmen, den Button 'Değişiklik iste' klicken (Änderung anfragen/Commit).",
+        "testData": "",
+        "expectedResult": "Der Button wird NICHT blockiert: er zeigt ebenfalls einen Erfolgszustand (grüner Rahmen, data-state=success), keine Fehlermeldung, kein Blockade-Dialog - obwohl der zugrunde liegende Batch 'IMP-769-01' bekannte 'warningRows' (source-missing Einheiten) enthält.",
+        "automationNote": "page.getByRole('button', {name:'Değişiklik iste'}).click(); toHaveAttribute('data-state','success') - identisch zu e2e/dashboard.spec.ts Zeile 158-159. POST /api/site-management/import/commit; Server-Code loggt nur eine Aktion und liefert immer Status 202, unabhängig vom Datenzustand (apps/web/app/api/site-management/import/commit/route.ts)."
+      },
+      {
+        "stepNo": 4,
+        "action": "DevTools -> Network Tab öffnen, Schritt 3 wiederholen und den Response-Body des POST-Requests an /api/site-management/import/commit inspizieren.",
+        "testData": "",
+        "expectedResult": "HTTP-Status 202; Response enthält status:'commit_requested' und eine Meldung, dass der Commit-Antrag 'für eine geprüfte Freigabe in eine Warteschlange gestellt' wurde ('...queued for audited approval.') - es findet also KEIN sofortiger, echter Datenbank-Schreibvorgang der Wohnungsdaten statt, sondern nur ein Audit-Log-Eintrag plus erneuter Datenabruf.",
+        "automationNote": "Response JSON prüfen: { status: 'commit_requested', message, action, phase4 }; Code: apps/web/app/api/site-management/import/commit/route.ts Zeile 50-57."
+      },
+      {
+        "stepNo": 5,
+        "action": "Im Abschnitt 'Veri doğrulama merkezi' (Datenprüfzentrum) die Batch-Karte 'IMP-769-01' anklicken.",
+        "testData": "Batch-ID: IMP-769-01",
+        "expectedResult": "Es öffnet sich lediglich eine Detail-/Erfolgsmeldung (z. B. Toast/State-Änderung) mit den bereits angezeigten Kennzahlen (Total/Valid/Warning/Rejected Rows) - es öffnet sich KEIN Datei-Upload- oder Korrektur-Dialog, in dem die Dublette/das fehlende Feld tatsächlich bearbeitet werden könnte.",
+        "automationNote": "DashboardActionButton mit actionType='import.batch.view' - schreibt nur einen Log-Eintrag (apps/web/app/[locale]/dashboard/listings/page.tsx Zeile 644-661), keine Bearbeitungsfunktion vorhanden."
+      },
+      {
+        "stepNo": 6,
+        "action": "Ergebnis zusammenfassend dokumentieren: War der 'Değişiklik iste'-Commit in Schritt 3 blockiert oder nicht?",
+        "testData": "",
+        "expectedResult": "Nicht blockiert (siehe Schritt 3+4) - dies ist der zu dokumentierende IST-Zustand.",
+        "automationNote": "Kein weiterer Automatisierungsschritt nötig, dient der Testfall-Zusammenfassung."
+      }
+    ],
+    "architectNote": "WICHTIGER BEFUND: Der ursprünglich angenommene Workflow ('Testdatei mit Dublette + fehlendem Pflichtfeld hochladen, Vorschau markiert Fehler, Commit ohne Korrektur wird blockiert') existiert im aktuellen Code NICHT. Es gibt auf /dashboard/listings keinerlei Datei-Upload-UI. Die beiden echten Schreib-Buttons heißen exakt 'Veri kontrolü' (Vorschau) und 'Değişiklik iste' (Commit) und wirken IMMER auf den bereits vorhandenen ersten Import-Batch (IMP-769-01) - nicht auf eine neu hochgeladene Datei. Beide zugehörigen API-Routen (import/preview, import/commit) führen KEINE inhaltliche Validierung durch, sondern schreiben nur einen Audit-Log-Eintrag und liefern IMMER Erfolg (201 bzw. 202) - unabhängig vom Datenzustand des Batches. 'Commit' bedeutet zudem nur 'Anfrage in eine Freigabe-Warteschlange stellen' (mode: approval_queue), keinen synchronen DB-Schreibvorgang. Erwartungsgemäß zeigt dieser Testfall: Commit wird NICHT blockiert - das ist heute korrektes (aber lückenhaftes) Code-Verhalten gegenüber der ursprünglich angenommenen Sollfunktion einer echten Blockade bei fehlerhaften Daten. Für die Qualitätssicherung ist wichtig, diesen Unterschied zwischen Erwartung und Code VOR einer Kundenvorführung zu kennen, um die Buttons nicht versehentlich als 'echte Datenqualitäts-Gate' zu präsentieren.",
+    "labels": [
+      "uc02",
+      "prio1",
+      "listings",
+      "negative",
+      "import",
+      "ist-zustand",
+      "no-upload"
+    ]
+  },
+  {
+    "testCaseId": "UC03-TC01",
+    "useCaseNumber": 3,
+    "useCaseName": "Echtzeit-Dashboard",
+    "testCaseTitle": "Status-Badge, Zeitstempel und manueller Refresh im ERP-Operationszentrum",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Dashboard/Live-Sync",
+    "role": "Sorumlu/Manager (manager)",
+    "environmentUrl": "/tr/dashboard",
+    "precondition": "Tester ist als Sorumlu eingeloggt (siehe UC1-TC1 Schritt 1-3) und befindet sich auf /tr/dashboard mit normaler Internetverbindung.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf /tr/dashboard im oberen Hero-/Kontrollbereich ('Sorumlu ERP Operasyon Merkezi'-Kachel) die erste Status-Badge betrachten.",
+        "testData": "",
+        "expectedResult": "Die Badge zeigt genau einen der drei Texte: 'Supabase realtime', 'Supabase snapshot' oder 'Yerel seed fallback'.",
+        "automationNote": "Komponente apps/web/components/live-erp-simulation.tsx Zeile 490-496 (sourceLabel-Logik), Texte Zeile 80-82 (TR)."
+      },
+      {
+        "stepNo": 2,
+        "action": "Direkt daneben die zweite Status-Badge betrachten und den angezeigten Uhrzeit-Wert notieren.",
+        "testData": "",
+        "expectedResult": "Die zweite Badge zeigt eine Uhrzeit im Format HH:MM (z. B. '14:32') als Generierungszeitpunkt der Daten.",
+        "automationNote": "formatGeneratedAt() (apps/web/components/live-erp-simulation.tsx Zeile 340-349), StatusBadge Zeile 536-538."
+      },
+      {
+        "stepNo": 3,
+        "action": "Rechts oberhalb des Kontrollbereichs den Button 'Veriyi yenile' klicken.",
+        "testData": "",
+        "expectedResult": "Button-Text wechselt kurzzeitig zu 'Yenileniyor' und danach zu einem Erfolgstext mit Quellenangabe (z. B. 'supabase hazır' oder 'local-seed hazır'); es erscheint kein Fehler und keine Absturzmeldung.",
+        "automationNote": "page.getByRole('button', {name:'Veriyi yenile'}).click(); Text-Logik in apps/web/components/dashboard-refresh-button.tsx Zeile 46-53, i18n-Keys dashboardRefresh.* in messages/tr.json Zeile 777-783; entspricht e2e/dashboard.spec.ts Zeile 99-100."
+      },
+      {
+        "stepNo": 4,
+        "action": "Die zweite Status-Badge (Uhrzeit) aus Schritt 2 erneut prüfen.",
+        "testData": "",
+        "expectedResult": "Der Uhrzeit-Wert hat sich aktualisiert (neuere Uhrzeit als in Schritt 2 notiert) bzw. ist mindestens gleich geblieben, falls Aktualisierung innerhalb derselben Minute erfolgte - im Zweifel Schritt 3 nach 60 Sekunden Wartezeit wiederholen, um eine sichtbare Änderung zu erzwingen.",
+        "automationNote": "Vergleich des Textinhalts der zweiten StatusBadge vor/nach Klick."
+      },
+      {
+        "stepNo": 5,
+        "action": "60 Sekunden ohne weitere Aktion warten (automatischer 30-Sekunden-Poll im Hintergrund) und danach die Seite NICHT neu laden, nur beobachten.",
+        "testData": "",
+        "expectedResult": "Die Uhrzeit-Badge aktualisiert sich mindestens einmal von selbst, ohne dass der Tester etwas klickt.",
+        "automationNote": "useLiveDashboardSnapshot Hook, refreshIntervalMs=30000 (apps/web/hooks/use-live-dashboard-snapshot.ts Zeile 68 und 131-133)."
+      },
+      {
+        "stepNo": 6,
+        "action": "Während der gesamten Schritte 1-5 prüfen, ob unterhalb der Hero-Beschreibung ein roter Fehlertext erscheint.",
+        "testData": "",
+        "expectedResult": "Kein roter Fehlertext ('Veri yenilenemedi. Lütfen tekrar deneyin.') ist zu irgendeinem Zeitpunkt sichtbar, solange die Verbindung normal besteht.",
+        "automationNote": "Bedingtes Rendering in apps/web/app/[locale]/dashboard/page.tsx Zeile 1387-1391 (requestState === 'error')."
+      }
+    ],
+    "architectNote": "Alle Texte und Timing-Werte sind aus dem Code verifiziert (live-erp-simulation.tsx, dashboard-refresh-button.tsx, use-live-dashboard-snapshot.ts). Erwartungsgemäß PASSED - 30-Sekunden-Poll und manueller Refresh sind echt implementiert, keine Simulation.",
+    "labels": [
+      "uc03",
+      "prio1",
+      "dashboard",
+      "live-sync",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC03-TC02",
+    "useCaseNumber": 3,
+    "useCaseName": "Echtzeit-Dashboard",
+    "testCaseTitle": "Verbindungsabbruch zeigt Fehlerhinweis statt Absturz und erholt sich nach Wiederverbindung",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Dashboard/Live-Sync",
+    "role": "Sorumlu/Manager (manager)",
+    "environmentUrl": "/tr/dashboard",
+    "precondition": "Tester ist als Sorumlu eingeloggt, /tr/dashboard ist normal geladen (Status-Badges und Zeitstempel sind sichtbar wie in TC1 Schritt 1-2), DevTools sind verfügbar (Chrome/Edge empfohlen).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf /tr/dashboard bestätigen, dass die Seite fehlerfrei geladen ist (Status-Badge + Uhrzeit-Badge sichtbar, kein roter Fehlertext).",
+        "testData": "",
+        "expectedResult": "Normale Ausgangslage wie in TC1 beschrieben.",
+        "automationNote": "Baseline-Check vor Fehlersimulation."
+      },
+      {
+        "stepNo": 2,
+        "action": "DevTools öffnen (F12) -> Tab 'Network' -> im Dropdown 'No throttling' die Option 'Offline' auswählen.",
+        "testData": "",
+        "expectedResult": "Das Dropdown zeigt jetzt 'Offline' als aktiven Zustand; alle neuen Netzwerk-Requests der Seite schlagen fehl.",
+        "automationNote": "Playwright-Äquivalent: page.context().setOffline(true) bzw. route.abort() für /api/site-management/dashboard."
+      },
+      {
+        "stepNo": 3,
+        "action": "Den Button 'Veriyi yenile' erneut klicken oder bis zu 30 Sekunden auf den automatischen Hintergrund-Poll warten.",
+        "testData": "",
+        "expectedResult": "Kein Browser-Absturz, keine unbehandelte Fehler-Overlay-Seite. Stattdessen: der Button-Text wechselt zu 'Tekrar deneyin' (erneut versuchen) UND unterhalb der Hero-Beschreibung erscheint der rote Text 'Veri yenilenemedi. Lütfen tekrar deneyin.'.",
+        "automationNote": "state==='error' Pfad in dashboard-refresh-button.tsx (t('retry')) und copy.hero.refreshError in apps/web/lib/dashboard-home-copy.ts Zeile 20 ('Veri yenilenemedi. Lütfen tekrar deneyin.')."
+      },
+      {
+        "stepNo": 4,
+        "action": "Prüfen, ob der Rest der Seite (Seitenleiste, andere KPI-Kacheln, Navigation) weiterhin normal angezeigt und bedienbar bleibt.",
+        "testData": "",
+        "expectedResult": "Nur der Live-Datenbereich zeigt den Fehlerzustand; die übrige Seite (Sidebar-Links, Layout) bleibt vollständig sichtbar und klickbar - kein White-Screen, kein Totalabsturz der Anwendung.",
+        "automationNote": "Sidebar-Links weiterhin per aside.getByRole('link') auffindbar, obwohl requestState==='error'."
+      },
+      {
+        "stepNo": 5,
+        "action": "In DevTools das Netzwerk-Dropdown zurück auf 'No throttling' stellen (Verbindung wiederherstellen).",
+        "testData": "",
+        "expectedResult": "Netzwerk ist wieder aktiv.",
+        "automationNote": "page.context().setOffline(false)."
+      },
+      {
+        "stepNo": 6,
+        "action": "Den nun mit 'Tekrar deneyin' beschrifteten Button erneut klicken.",
+        "testData": "",
+        "expectedResult": "Der Request gelingt: der rote Fehlertext verschwindet, der Button kehrt zu seinem normalen Zustand zurück ('{source} hazır' bzw. 'Veriyi yenile'), und die Uhrzeit-Badge zeigt eine aktuelle Zeit.",
+        "automationNote": "state wechselt zu 'success'; erneuter Textabgleich der Uhrzeit-Badge gegen aktuelle Systemzeit."
+      }
+    ],
+    "architectNote": "Verifiziert über useLiveDashboardSnapshot (catch-Block setzt requestState='error', kein Throw an die UI-Schicht) und die bedingte Fehleranzeige in dashboard/page.tsx. Erwartungsgemäß PASSED im Sinne von 'kein Absturz' - das System ist bewusst so gebaut, dass ein Backend-/Netzwerkausfall nur den Live-Bereich degradiert, nicht die gesamte Seite.",
+    "labels": [
+      "uc03",
+      "prio1",
+      "dashboard",
+      "live-sync",
+      "negative",
+      "offline"
+    ]
+  },
+  {
+    "testCaseId": "UC04-TC01",
+    "useCaseNumber": 4,
+    "useCaseName": "Zugangs- & Käufer-Compliance-Cockpit",
+    "testCaseTitle": "Zugangskontroll- und Käufer-Eignungstabellen laden, Suche/Filter funktioniert, Seite ist rein lesend",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Compliance",
+    "role": "Sorumlu/Manager (manager)",
+    "environmentUrl": "/tr/dashboard/compliance",
+    "precondition": "Tester ist als Sorumlu eingeloggt (siehe UC1-TC1 Schritt 1-3).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Über die Seitenleiste auf 'Erişim & Uyum' klicken.",
+        "testData": "",
+        "expectedResult": "URL wechselt zu /tr/dashboard/compliance; Überschrift (H1) 'Erişim & Uyum' und Unterüberschrift 'Kapı, borç, depozito ve kimlik tek karar motorunda' sind sichtbar.",
+        "automationNote": "clickDashboardMenu(page,'Erişim & Uyum'); heading exact 'Erişim & Uyum' (e2e/dashboard.spec.ts Zeile 134); h1 in apps/web/app/[locale]/dashboard/compliance/page.tsx Zeile 839."
+      },
+      {
+        "stepNo": 2,
+        "action": "Zum Abschnitt mit Überschrift 'Oturum, vatandaşlık ve alıcı uygunluk ön kontrolü' scrollen (Käufer-Eignungsprüfung).",
+        "testData": "",
+        "expectedResult": "Eine Datentabelle ist sichtbar mit Zeilen zu Käufern, u. a. Spalten/Werte zu Namen, Staatsangehörigkeit und Zieleinheit.",
+        "automationNote": "copy.eligibility.title (apps/web/app/[locale]/dashboard/compliance/page.tsx Zeile 153/936); DataTable mit searchValue über buyerName/nationality/targetUnit (Zeile 964-967)."
+      },
+      {
+        "stepNo": 3,
+        "action": "Im Suchfeld dieser Tabelle (Platzhalter 'Ara...') einen bekannten Wert aus der ersten sichtbaren Zeile eingeben (z. B. Staatsangehörigkeit oder Nachname aus Zeile 1).",
+        "testData": "Beispiel: Wert aus der ersten Tabellenzeile (Nationalität oder Name) vor Ort ablesen und exakt eingeben",
+        "expectedResult": "Die Tabelle filtert live auf nur noch übereinstimmende Zeilen; nicht passende Zeilen verschwinden.",
+        "automationNote": "data-testid=\"data-table\", Input mit placeholder 'Ara...' (apps/web/components/data-table.tsx Zeile 437-446, messages/tr.json Zeile 365)."
+      },
+      {
+        "stepNo": 4,
+        "action": "Suchfeld leeren, danach zum Zugangskontroll-Abschnitt (Kapı karar motoru / Gate-Entscheidung) scrollen.",
+        "testData": "",
+        "expectedResult": "Eine zweite Datentabelle ist sichtbar mit Spalten/Werten zu Wohnung (Daire), Bewohnername, Zone und Zugangsmittel/Grund.",
+        "automationNote": "Zweite DataTable, searchValue über flatNumber/residentName/zone/credential/reason (compliance/page.tsx Zeile 1001-1003)."
+      },
+      {
+        "stepNo": 5,
+        "action": "Im Suchfeld dieser zweiten Tabelle die Wohnungsnummer 'A-001' eingeben.",
+        "testData": "A-001",
+        "expectedResult": "Die Ergebnisliste filtert auf Zeilen, die 'A-001' enthalten (falls vorhanden); bei keiner Übereinstimmung wird eine leere Ergebnisliste angezeigt, kein Fehler.",
+        "automationNote": "Gleiches DataTable-Suchmuster wie Schritt 3, anderer Tabellen-Kontext."
+      },
+      {
+        "stepNo": 6,
+        "action": "Beide Tabellen auf Aktions-Buttons wie 'Onayla'/'Reddet'/Bearbeiten-Icons pro Zeile absuchen.",
+        "testData": "",
+        "expectedResult": "Es existieren KEINE Schreib-/Freigabe-Buttons je Zeile - die Seite ist rein lesend (nur Suche/Sortierung möglich).",
+        "automationNote": "Code-Review compliance/page.tsx Zeile 964-1010: DataTable-Spalten enthalten nur render-Funktionen ohne onClick-Schreibaktion."
+      },
+      {
+        "stepNo": 7,
+        "action": "Zum Abschnitt 'Erişim bölgesi yoğunluğu' (Zugangszonen-Dichte) scrollen.",
+        "testData": "",
+        "expectedResult": "Ein Balkendiagramm mit sichtbaren Balken und Achsen-/Zonenbeschriftungen wird angezeigt (kein leerer/kaputter Chart-Bereich).",
+        "automationNote": "copy.accessDensity.title (compliance/page.tsx Zeile 889); Chart-Komponente unter components/charts/bar-chart.tsx."
+      },
+      {
+        "stepNo": 8,
+        "action": "Prüfen, dass die Seite in ihrer Gesamtheit nur für Sorumlu/Yönetim (manager/admin) gedacht ist, indem in der Seitenleiste geprüft wird, dass der Link 'Erişim & Uyum' bei dieser Rolle vorhanden ist (bereits durch Schritt 1 implizit bestätigt).",
+        "testData": "",
+        "expectedResult": "Link ist vorhanden und funktioniert wie in Schritt 1 gezeigt.",
+        "automationNote": "Bestätigt RBAC-Eintrag manager: permission('eids_compliance','view') in apps/web/lib/rbac.ts Zeile 217."
+      }
+    ],
+    "architectNote": "Seite ist gemäß Code-Review durchgängig read-only (keine Schreib-Buttons), Daten kommen aus dem lokalen Compliance-Datensatz (Käufer-Eignung, Zugangskontrolle) - konsistent mit CLAUDE.md-Beschreibung. Erwartungsgemäß PASSED.",
+    "labels": [
+      "uc04",
+      "prio1",
+      "compliance",
+      "golden-path",
+      "read-only"
+    ]
+  },
+  {
+    "testCaseId": "UC04-TC02",
+    "useCaseNumber": 4,
+    "useCaseName": "Zugangs- & Käufer-Compliance-Cockpit",
+    "testCaseTitle": "Mieter sieht kein Compliance-Menü und wird von Direkt-URL auf /dashboard/compliance zurückgeleitet",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Compliance",
+    "role": "Kiracı/Mieter (tenant)",
+    "environmentUrl": "/tr/dashboard/compliance",
+    "precondition": "Tester ist noch nicht als Kiracı eingeloggt; lokale Access-Profile sind aktiv.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf /tr/login den Button 'Demo başlat' klicken, danach die Rollenkarte 'Kiracı' klicken.",
+        "testData": "Rolle: Kiracı (tenant)",
+        "expectedResult": "Redirect zu /tr/dashboard; Überschrift 'Kiracı Çalışma Alanı' ist sichtbar.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Die Seitenleiste öffnen (ggf. 'Menüyü aç') und vollständig auf das Vorhandensein eines Menüpunkts 'Erişim & Uyum' prüfen.",
+        "testData": "",
+        "expectedResult": "Der Menüpunkt 'Erişim & Uyum' erscheint 0 Mal in der Seitenleiste (nur Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim sind vorhanden).",
+        "automationNote": "aside.getByRole('link', { name: exactAccessibleName('Erişim & Uyum') }).toHaveCount(0); RBAC-Grund: role 'tenant' hat in apps/web/lib/rbac.ts keine 'eids_compliance'-Permission."
+      },
+      {
+        "stepNo": 3,
+        "action": "Manuell in der Adressleiste https://cati-blond.vercel.app/tr/dashboard/compliance eingeben und Enter drücken.",
+        "testData": "",
+        "expectedResult": "Kurzzeitig kann die Warnbox 'Bu sayfa rolünüz için kapalı' erscheinen; danach springt die URL automatisch zurück auf /tr/dashboard, Überschrift 'Kiracı Çalışma Alanı' ist sichtbar. Weder die Käufer-Eignungstabelle noch die Zugangskontroll-Tabelle werden zu irgendeinem Zeitpunkt mit echten Daten befüllt sichtbar.",
+        "automationNote": "Gleiches Muster wie UC1-TC2 Schritt 3-4; expect(page).toHaveURL(/\\/tr\\/dashboard$/)."
+      },
+      {
+        "stepNo": 4,
+        "action": "Die Seite bei /tr/dashboard/compliance per Hard-Refresh (F5) direkt neu laden (ohne über die Sidebar zu navigieren).",
+        "testData": "",
+        "expectedResult": "Der Schutzmechanismus greift erneut: kein dauerhafter Zugriff auf die Compliance-Inhalte, finaler Zustand ist wieder /tr/dashboard mit Überschrift 'Kiracı Çalışma Alanı'.",
+        "automationNote": "page.reload() auf /tr/dashboard/compliance; DashboardRouteGuard prüft bei jedem Render erneut hasPermission(user.role,'eids_compliance','view')."
+      },
+      {
+        "stepNo": 5,
+        "action": "DevTools -> Network Tab öffnen, /tr/dashboard/compliance erneut aufrufen und alle ausgehenden API-Requests (z. B. an einen möglichen /api/site-management/compliance-Endpunkt) prüfen.",
+        "testData": "",
+        "expectedResult": "Falls ein solcher Request überhaupt ausgelöst wird, liefert er HTTP 403 bzw. es wird gar kein Request an einen Compliance-Datenendpunkt gesendet, da die Guard-Komponente das Rendering der Datentabellen von vornherein verhindert.",
+        "automationNote": "Netzwerk-Log auf 4xx-Status oder Abwesenheit des Requests prüfen; Verifikation optional, Hauptnachweis ist die UI-Sperre in Schritt 3-4."
+      }
+    ],
+    "architectNote": "Konsistent mit UC1-TC2 (gleicher Guard-Mechanismus, andere Ressource 'eids_compliance' statt 'users'). Erwartungsgemäß PASSED. Memory-Hinweis bereits bestätigt: Compliance-Cockpit ist ausschließlich für admin/manager sichtbar, Owner/Tenant haben ohnehin auch keine Finance-Sicht - insgesamt konsistentes RBAC-Bild.",
+    "labels": [
+      "uc04",
+      "prio1",
+      "compliance",
+      "negative",
+      "direct-url"
+    ]
+  },
+  {
+    "testCaseId": "UC05-TC01",
+    "useCaseNumber": 5,
+    "useCaseName": "Finanzübersicht & Zahlungstransparenz",
+    "testCaseTitle": "Live-Finanzledger und Schuldner-Suche als Muhasebe (Accountant) prüfen",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Finanzen",
+    "role": "Muhasebe / Buchhaltung (accountant)",
+    "environmentUrl": "/tr/dashboard/finance",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig; der Rollenwechsel erfolgt passwortlos über die Demo-Rollenauswahl auf /tr/login. Falls im Browser bereits eine andere Demo-Rolle aktiv ist, wird sie in Schritt 1-2 automatisch überschrieben (kein Logout nötig).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne die Adresse https://cati-blond.vercel.app/tr/login und klicke auf den grünen Button 'Demo başlat' (Demo starten).",
+        "testData": "URL: /tr/login",
+        "expectedResult": "Unter dem Button klappt ein Rollenraster mit 6 Karten auf: Yönetim, Sorumlu, Muhasebe, Personel, Malik, Kiracı.",
+        "automationNote": "Button data-testid=\"demo-full-access\"; Rollenraster-Container data-testid=\"demo-role-menu\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Klicke auf die Rollenkarte 'Muhasebe'.",
+        "testData": "Rolle = accountant",
+        "expectedResult": "Automatischer Redirect auf /tr/dashboard. Die linke Seitenleiste zeigt genau 5 Menüpunkte: Genel Bakış, Belgeler, Finans & Aidat, Raporlar, İletişim (keine Listings/Leads/Tickets/Users/Settings/Calendar/Compliance/Offline).",
+        "automationNote": "data-testid=\"demo-role-option-accountant\"; ruft POST /api/access-profile {role:\"accountant\"} auf."
+      },
+      {
+        "stepNo": 3,
+        "action": "Klicke in der Seitenleiste auf den Menüpunkt 'Finans & Aidat'.",
+        "testData": "",
+        "expectedResult": "Seite /tr/dashboard/finance lädt mit der Überschrift 'Finans, Satış & Aidat'. Vier KPI-Kacheln oben ('Toplam borç', 'Aylık aidat', 'Haziran tahsilat', 'Kısıtlı erişim') zeigen jeweils eine konkrete, nicht-leere Zahl bzw. TRY-Betrag (kein Ladespinner, kein 'NaN', kein Fehlertext).",
+        "automationNote": "Sidebar-Link href=\"/dashboard/finance\"; Seite apps/web/app/[locale]/dashboard/finance/page.tsx."
+      },
+      {
+        "stepNo": 4,
+        "action": "Scrolle zum Kartenbereich 'Finans defteri' (Geldbörsen-Icon, unterhalb der Diagramm-/Borç-yaşlandırma-Karten).",
+        "testData": "",
+        "expectedResult": "Ein Text 'Son güncelleme: <Datum/Uhrzeit>' ist sichtbar; darunter listet 'Son finans kayıtları' mindestens einen Buchungseintrag mit Betrag und Status-Badge (z.B. 'Ödendi', 'Açık', 'Gecikmiş'). Erscheint stattdessen der rote Hinweis 'Finans defteri şu anda alınamadı...', gilt der Schritt als fehlgeschlagen.",
+        "automationNote": "Komponente components/finance-live-ledger.tsx; ruft GET /api/site-management/finance?limit=12 auf."
+      },
+      {
+        "stepNo": 5,
+        "action": "Klicke oben in der Karte 'Aylık nakit akışı' auf den Link 'Kayıtları aç'.",
+        "testData": "",
+        "expectedResult": "Die Seite springt zur unteren Tabelle mit der Spaltenüberschrift 'Daire' (Ankerbereich #finance-accounts); die Tabelle ist bereits gefüllt und absteigend nach Spalte 'Borç' sortiert.",
+        "automationNote": "Anchor-Link <a href=\"#finance-accounts\">; zweites Vorkommen von data-testid=\"data-table\" auf der Seite."
+      },
+      {
+        "stepNo": 6,
+        "action": "Lies die Daire-Nummer aus der OBERSTEN Zeile dieser Tabelle ab (höchster Borç-Wert) und tippe genau diese Nummer in das Suchfeld mit Platzhaltertext 'Ara...' DIESER Tabelle ein.",
+        "testData": "Vom Tester aus Zeile 1 abgelesene Daire-Nummer (z.B. \"A-0xx\")",
+        "expectedResult": "Die Tabelle filtert auf exakt eine Zeile mit identischer Daire-Nummer, passendem Malik-Namen, Borç-Betrag, Yaş (Tage), Durum- und Erişim-Badge sowie einer 'Önerilen aksiyon'.",
+        "automationNote": "input[aria-label=\"Ara...\"] innerhalb #finance-accounts; rein clientseitige Filterung in components/data-table.tsx."
+      },
+      {
+        "stepNo": 7,
+        "action": "Leere das Suchfeld und tippe stattdessen 'A-054' ein (die Einheit, die im Servis-Talepleri-Modul als Ticket SRV-2404 mit Status 'Aidat borcu nedeniyle hizmet bekliyor' bekannt ist).",
+        "testData": "A-054",
+        "expectedResult": "Die Tabelle zeigt den Leerzustand-Text 'Sonuç bulunamadı' -- Daire A-054 erscheint NICHT in dieser Schuldner-Tabelle.",
+        "automationNote": "Erwartetes, code-bestätigtes Verhalten (siehe architectNote), kein Frontend-Fehler."
+      }
+    ],
+    "architectNote": "Bestätigter Fund durch Code-Analyse (lib/site-management-data.ts): Die Finance-Schuldnertabelle wird unabhängig vom Ticket-Modul aus einer Index-basierten Formel berechnet (balanceTry nur >0 bei index%41===0 / %17===0 / %7===0). Für Einheit A-054 (Array-Index 53) ergibt diese Formel einen Kontostand von exakt 0 TRY, obwohl Ticket SRV-2404 für dieselbe Einheit ausdrücklich 'Aidat borcu nedeniyle hizmet bekliyor' (wegen Aidat-Schuld blockiert) anzeigt. Schritt 7 deckt bewusst eine Cross-Modul-Dateninkonsistenz zwischen Ticket- und Finanzmodul auf -- erwartungsgemäß 'Sonuç bulunamadı', kein Bedienfehler des Testers. Zusätzlich zeigt die Tabelle laut Code nur die Top 32 Schuldner von 769 Einheiten (slice(0,32)); es gibt keine dedizierte Pro-Einheit-Transaktionshistorie-Ansicht, nur die letzten 5 globalen Finanzbuchungen in 'Finans defteri' (Schritt 4). Schritt 1-6 sollten PASSED sein (echter Supabase/Seed-Lesepfad vorhanden).",
+    "labels": [
+      "uc05",
+      "prio1",
+      "finance",
+      "golden-path",
+      "accountant",
+      "data-consistency"
+    ]
+  },
+  {
+    "testCaseId": "UC05-TC02",
+    "useCaseNumber": 5,
+    "useCaseName": "Finanzübersicht & Zahlungstransparenz",
+    "testCaseTitle": "RBAC blockiert Finanzansicht für Malik und Kiracı (Menü + Direkt-URL)",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Finanzen",
+    "role": "Malik (owner) und Kiracı (tenant)",
+    "environmentUrl": "/tr/dashboard/finance",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/login, klicke 'Demo başlat', dann auf die Rollenkarte 'Malik'.",
+        "testData": "Rolle = owner",
+        "expectedResult": "Redirect zu /tr/dashboard. Seitenleiste zeigt genau 5 Menüpunkte: Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim. 'Finans & Aidat' ist NICHT in der Liste.",
+        "automationNote": "data-testid=\"demo-role-option-owner\"; Menüfilter via hasPermission(role,\"finance\",\"view\") in dashboard-sidebar.tsx."
+      },
+      {
+        "stepNo": 2,
+        "action": "Tippe die Adresse https://cati-blond.vercel.app/tr/dashboard/finance direkt in die Adressleiste ein und drücke Enter (Direktzugriff ohne Klick auf einen Menüpunkt).",
+        "testData": "",
+        "expectedResult": "Anstelle der Finanzseite erscheint ein gelber Warnkasten mit der Überschrift 'Bu sayfa rolünüz için kapalı' und dem Text 'Yetki modeli güvenlik nedeniyle varsayılan olarak erişimi reddeder...'. Innerhalb von ca. 1 Sekunde erfolgt ein automatischer Redirect zurück zu /tr/dashboard; Finanz-KPI-Kacheln oder -Tabellen werden zu keinem Zeitpunkt sichtbar.",
+        "automationNote": "Komponente apps/web/app/[locale]/dashboard/dashboard-route-guard.tsx; Selektor page.getByText(\"Bu sayfa rolünüz için kapalı\")."
+      },
+      {
+        "stepNo": 3,
+        "action": "Rufe zusätzlich https://cati-blond.vercel.app/tr/dashboard/finance?ref=test auf (mit Query-Parameter).",
+        "testData": "/tr/dashboard/finance?ref=test",
+        "expectedResult": "Gleiches Blockierverhalten wie Schritt 2 (Warnkasten + Redirect) -- Query-Parameter ändern nichts am Guard-Verhalten.",
+        "automationNote": "Guard prüft nur den Pfad-Resource (resourceForDashboardPath), Query-Parameter sind irrelevant."
+      },
+      {
+        "stepNo": 4,
+        "action": "Rufe erneut https://cati-blond.vercel.app/tr/login auf, klicke 'Demo başlat', dann auf die Rollenkarte 'Kiracı' (kein vorheriges Logout nötig).",
+        "testData": "Rolle = tenant",
+        "expectedResult": "Redirect zu /tr/dashboard. Seitenleiste zeigt dieselben 5 Menüpunkte wie beim Malik (Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim); auch hier fehlt 'Finans & Aidat'.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 5,
+        "action": "Tippe erneut direkt https://cati-blond.vercel.app/tr/dashboard/finance in die Adressleiste ein.",
+        "testData": "",
+        "expectedResult": "Identisches Blockierverhalten wie in Schritt 2 (Warnkasten 'Bu sayfa rolünüz için kapalı' + automatischer Redirect zu /tr/dashboard).",
+        "automationNote": "Gleicher Guard, Rolle=tenant."
+      }
+    ],
+    "architectNote": "RBAC-Konstante technisch bestätigt (lib/rbac.ts + dashboard-route-guard.tsx): owner/tenant haben serverseitig KEINE 'finance:view'-Berechtigung. Der Schutz greift zweistufig -- die Sidebar blendet den Link aus UND ein Client-Guard blockiert selbst den direkten URL-Aufruf, noch bevor Finanzinhalte gerendert werden (DashboardRouteGuard rendert bei fehlender Berechtigung sofort den Warnkasten statt der children, kein Kurz-Aufblitzen sensibler Daten). Erwartungsgemäß PASSED in beiden Rollen.",
+    "labels": [
+      "uc05",
+      "prio1",
+      "finance",
+      "negative",
+      "rbac",
+      "owner",
+      "tenant"
+    ]
+  },
+  {
+    "testCaseId": "UC06-TC01",
+    "useCaseNumber": 6,
+    "useCaseName": "Service-Auftrag Ende-zu-Ende",
+    "testCaseTitle": "Servicetalep von Kiracı über KI-Assistent bis Freigabe und Personal-Zuweisung",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Service/Tickets",
+    "role": "Kiracı (tenant) -> Sorumlu (manager) -> Personel (staff)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig. WICHTIG: Es gibt in der Dashboard-UI KEIN separates 'Neues Ticket'-Formular für Malik/Kiracı -- der einzige echte Schreibkanal für Bewohner ist der KI-Assistent (Sparkles-Icon unten rechts), der bei erkannter Serviceabsicht automatisch einen Ticket-Entwurf anlegt.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/login, klicke 'Demo başlat', dann auf die Rollenkarte 'Kiracı'.",
+        "testData": "Rolle = tenant",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Klicke unten rechts auf den runden, türkisfarbenen Chat-Button mit Sparkle-Symbol (Tooltip 'AI asistanını aç').",
+        "testData": "",
+        "expectedResult": "Ein Chat-Panel mit Titel '1Çatı Operasyon Asistanı' öffnet sich; eine Begrüßungsnachricht des Assistenten ist bereits sichtbar.",
+        "automationNote": "Trigger data-testid=\"ai-assistant-open\"; Panel data-testid=\"ai-assistant-panel\"."
+      },
+      {
+        "stepNo": 3,
+        "action": "Tippe in das Eingabefeld unten im Panel (Platzhaltertext 'Servis, rezervasyon, belge veya mesaj hakkında sorun...') den folgenden Text ein und klicke danach auf den runden Sende-Button (Papierflieger-Symbol, 'Gönder').",
+        "testData": "A-018 dairesinde banyoda tesisat sorunu var, servis talebi oluştur.",
+        "expectedResult": "Die eigene Nachricht erscheint rechts als Sprechblase; nach kurzer 'tippt...'-Animation antwortet der Assistent mit einer Sprechblase, deren Text sinngemäß den Satz 'Ticket taslağı gönderildi: A-018 dairesinde banyoda tesisat sorunu var, servis talebi oluştur. Uygulamadan önce insan onayı gerekir.' enthält.",
+        "automationNote": "Eingabefeld aria-label=\"AI asistana mesaj yaz\"; Sende-Button aria-label=\"Gönder\"; ruft POST /api/ai/chat {message} auf; Antwortfeld payload.ticketDraft.id/title."
+      },
+      {
+        "stepNo": 4,
+        "action": "Rufe erneut https://cati-blond.vercel.app/tr/login auf, klicke 'Demo başlat', dann auf die Rollenkarte 'Sorumlu' (kein Logout nötig).",
+        "testData": "Rolle = manager",
+        "expectedResult": "Redirect zu /tr/dashboard; Seitenleiste zeigt alle 13 Menüpunkte inkl. 'Servis Talepleri'.",
+        "automationNote": "data-testid=\"demo-role-option-manager\"."
+      },
+      {
+        "stepNo": 5,
+        "action": "Klicke auf 'Servis Talepleri' in der Seitenleiste. Scrolle zum Abschnitt 'AI ve onay kuyruğu' (Sparkles-Icon, Badge zeigt Anzahl offener Onay-Anfragen) und suche dort die Karte mit Status-Badge 'Onaya gönderildi' und Titel 'AI servis taslağı' (mehrere ähnliche Karten können vorhanden sein -- der Titel ist generisch ohne Daire-Nummer, notfalls die zuletzt hinzugekommene/oberste Karte verwenden).",
+        "testData": "",
+        "expectedResult": "Mindestens eine Karte mit Status 'Onaya gönderildi', Risiko-Badge 'medium' und Freigaberolle 'manager' ist sichtbar.",
+        "automationNote": "DashboardSection title=\"AI ve onay kuyruğu\" in app/[locale]/dashboard/tickets/page.tsx; Selektor über Text \"Onaya gönderildi\"."
+      },
+      {
+        "stepNo": 6,
+        "action": "Klicke auf dieser Karte auf den grünen Button 'Onayla'.",
+        "testData": "",
+        "expectedResult": "Der Status-Badge auf der Karte wechselt innerhalb weniger Sekunden von 'Onaya gönderildi' zu 'Onaylandı'.",
+        "automationNote": "Button-Text \"Onayla\" (CheckCircle2-Icon); ruft PATCH /api/site-management/actions {id,status:\"approved\"} auf; löst window-Event \"site-management:changed\" (Auto-Refresh der Tabellen) aus."
+      },
+      {
+        "stepNo": 7,
+        "action": "Scrolle zur Tabelle 'Tam servis talebi kaydı' (unten auf der Seite, #ticket-table) und tippe 'A-018' in deren Suchfeld ('Ara...') ein. Prüfe zusätzlich in der Tabelle 'Tam saha görev kaydı' (#workforce-table, Suchfeld 'A-018').",
+        "testData": "A-018",
+        "expectedResult": "In #ticket-table erscheint ein neuer Eintrag für Daire A-018 mit Öncelik-Badge 'Orta', Durum-Badge 'Atandı' und einem Konu-Text, der auf 'tesisat' verweist. In #workforce-table existiert ein zugehöriger neuer Görev-Eintrag mit Ekip 'Teknik'.",
+        "automationNote": "GET /api/site-management/tickets?limit=50 liefert tickets[]/workforceTasks[]; Suchfeld input[aria-label=\"Ara...\"] innerhalb #ticket-table bzw. #workforce-table."
+      },
+      {
+        "stepNo": 8,
+        "action": "Rufe https://cati-blond.vercel.app/tr/login auf, klicke 'Demo başlat', dann die Rollenkarte 'Personel' (kein Logout nötig), und öffne erneut 'Servis Talepleri'.",
+        "testData": "Rolle = staff",
+        "expectedResult": "Im Abschnitt 'Saha görevleri, SLA ve medya kanıtı' bzw. in der Tabelle 'Tam saha görev kaydı' (Suchfeld 'A-018') ist derselbe Görev-Eintrag sichtbar, inkl. Ekip 'Teknik', Prioritäts- und Status-Badges sowie Checkliste. Finanzbeträge sind für diese Rolle ausgeblendet/maskiert (z.B. Preis durch SLA-Stundenangabe ersetzt).",
+        "automationNote": "fieldView-Filter (shouldMaskFinance) in tickets/page.tsx; visibleServiceTicketsForRole(\"staff\",...) blendet nur Kategorie \"Tahsilat\" aus, alles andere bleibt sichtbar."
+      }
+    ],
+    "architectNote": "Positiv bestätigter Ende-zu-Ende-Schreibpfad (lib/site-management-repository.ts materializeApprovedTicketRequest): Freigabe erzeugt real einen service_tickets-, service_orders- und workforce_tasks-Datensatz plus einen notification_deliveries-Platzhalter. WICHTIGER FALLSTRICK für den Tester: Die AI-Onay-Karte selbst zeigt generisch nur 'AI servis taslağı' ohne Daire-Nummer -- bei mehreren gleichzeitig offenen KI-Entwürfen (z.B. wenn UC6-TC2 oder UC7 kurz danach ausgeführt werden) ist die richtige Karte nicht eindeutig zuordenbar, nur über Zeitpunkt/Reihenfolge erkennbar; Testfälle sollten daher nacheinander, nicht parallel, ausgeführt werden. Die 'tesisat sorunu' (ohne Notfallwort) wird laut Code intern trotzdem über denselben Katalogeintrag MAINT-PLUMB geroutet wie ein echter Wasserschaden (Team 'Teknik', SLA 4h) -- das System unterscheidet SLA/Team NICHT nach Dringlichkeitswort, nur die Öncelik-Anzeige ändert sich (hier 'Orta' statt 'Acil'). Erwartungsgemäß PASSED.",
+    "labels": [
+      "uc06",
+      "prio1",
+      "tickets",
+      "golden-path",
+      "tenant",
+      "manager",
+      "staff",
+      "ai-assistant"
+    ]
+  },
+  {
+    "testCaseId": "UC06-TC02",
+    "useCaseNumber": 6,
+    "useCaseName": "Service-Auftrag Ende-zu-Ende",
+    "testCaseTitle": "Manager lehnt Servicetalep ab -- kein Ticket/Auftrag/Aufgabe entsteht",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Service/Tickets",
+    "role": "Kiracı (tenant) -> Sorumlu (manager)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig. Diese Anfrage sollte inhaltlich anders formuliert sein als in UC6-TC1, damit beide Karten in der Onay-Warteschlange unterscheidbar bleiben.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/login, klicke 'Demo başlat', dann die Rollenkarte 'Kiracı'.",
+        "testData": "Rolle = tenant",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Öffne den KI-Assistenten (Sparkle-Button unten rechts), tippe folgenden Text in das Eingabefeld ein und sende ihn.",
+        "testData": "A-018 dairesinde antre lambası bozuk, servis talebi oluştur.",
+        "expectedResult": "Assistenten-Antwort enthält sinngemäß den Hinweis 'Ticket taslağı gönderildi: ... Uygulamadan önce insan onayı gerekir.'",
+        "automationNote": "data-testid=\"ai-assistant-open\"; POST /api/ai/chat."
+      },
+      {
+        "stepNo": 3,
+        "action": "Rufe /tr/login auf, klicke 'Demo başlat', dann die Rollenkarte 'Sorumlu'; öffne 'Servis Talepleri' und scrolle zu 'AI ve onay kuyruğu'.",
+        "testData": "Rolle = manager",
+        "expectedResult": "Eine neue Karte mit Status 'Onaya gönderildi' und Titel 'AI servis taslağı' ist sichtbar (unterscheidbar von einer eventuellen Karte aus UC6-TC1 nur über Zeitpunkt, da beide generisch betitelt sind -- die zuletzt hinzugekommene/oberste Karte wählen).",
+        "automationNote": "Gleicher Selektor wie UC6-TC1 Schritt 5."
+      },
+      {
+        "stepNo": 4,
+        "action": "Klicke auf dieser Karte auf den roten Button 'Reddet'.",
+        "testData": "",
+        "expectedResult": "Der Status-Badge wechselt von 'Onaya gönderildi' zu 'Reddedildi'.",
+        "automationNote": "Button-Text \"Reddet\" (XCircle-Icon); PATCH /api/site-management/actions {id,status:\"rejected\"}."
+      },
+      {
+        "stepNo": 5,
+        "action": "Tippe in der Tabelle 'Tam servis talebi kaydı' (#ticket-table, Suchfeld 'Ara...') den Wert 'A-018' ein und prüfe die Trefferliste.",
+        "testData": "A-018",
+        "expectedResult": "Es erscheint KEIN neuer Eintrag mit dem Betreff 'antre lambası' bzw. mit einem Zeitstempel, der der soeben abgelehnten Anfrage entspricht (nur ggf. bereits vorher existierende A-018-Tickets, falls UC6-TC1 zuvor gelaufen ist).",
+        "automationNote": "GET /api/site-management/tickets liefert bei Ablehnung kein neues Ticket, da materializeApprovedTicketRequest nur bei status===\"approved\" aufgerufen wird."
+      },
+      {
+        "stepNo": 6,
+        "action": "Prüfe ebenso in der Tabelle 'Tam saha görev kaydı' (#workforce-table, Suchfeld 'A-018'), dass kein neuer, der Ablehnung entsprechender Görev-Eintrag existiert.",
+        "testData": "A-018",
+        "expectedResult": "Keine neue Aufgabe mit Bezug zu 'antre lambası' auffindbar.",
+        "automationNote": "Gleiche Datenquelle wie Schritt 5, Feld workforceTasks[]."
+      },
+      {
+        "stepNo": 7,
+        "action": "Lade die Seite /tr/dashboard/tickets neu (Browser-Refresh) und scrolle erneut zu 'AI ve onay kuyruğu'.",
+        "testData": "",
+        "expectedResult": "Die abgelehnte Karte bleibt mit Status 'Reddedildi' protokolliert bzw. verschwindet aus der aktiven Warteschlange, taucht aber nicht erneut als 'Onaya gönderildi' auf -- die Ablehnung ist persistent, kein Ticket wurde nachträglich doch noch erzeugt.",
+        "automationNote": "Persistenz über client_action_requests-Tabelle/Log; kein erneuter Materialisierungsversuch bei reinem Seiten-Reload."
+      }
+    ],
+    "architectNote": "Code-bestätigt (app/api/site-management/actions/route.ts): materializeApprovedTicketRequest wird ausschließlich bei status==='approved' aufgerufen; bei 'rejected' bleibt materializedTicket=null, es wird also garantiert kein service_ticket/service_order/workforce_task angelegt. Erwartungsgemäß PASSED. Gleicher Fallstrick wie in TC1: Die generische Kartenbeschriftung 'AI servis taslağı' erschwert die eindeutige Zuordnung, falls mehrere Anfragen parallel in der Warteschlange stehen -- Testfälle nacheinander ausführen.",
+    "labels": [
+      "uc06",
+      "prio1",
+      "tickets",
+      "negative",
+      "tenant",
+      "manager",
+      "reject"
+    ]
+  },
+  {
+    "testCaseId": "UC07-TC01",
+    "useCaseNumber": 7,
+    "useCaseName": "Notfall-Meldung mit Sofort-Erkennung",
+    "testCaseTitle": "Notfall-Schlüsselwort 'yangın' löst automatische Hochstufung und Pflichtfreigabe aus",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Service/Notfall",
+    "role": "Kiracı (tenant) -> Sorumlu (manager)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig. HINWEIS: Das Feld 'Benachrichtigungskanal' im System ist reine Metadaten (kein echter SMS/Push-Versand) -- NICHT auf tatsächlichen Empfang einer Nachricht auf einem Gerät testen, dieser Test prüft nur die automatische Klassifizierung und den Pflicht-Freigabe-Fluss.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/login, klicke 'Demo başlat', dann die Rollenkarte 'Kiracı'.",
+        "testData": "Rolle = tenant",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Öffne den KI-Assistenten (Sparkle-Button unten rechts, Tooltip 'AI asistanını aç') und tippe folgenden Text in das Eingabefeld ein.",
+        "testData": "A-018 dairesinde yangın çıktı, acil servis talebi oluştur.",
+        "expectedResult": "Text steht im Eingabefeld, der runde Sende-Button ist aktiv (nicht ausgegraut).",
+        "automationNote": "data-testid=\"ai-assistant-open\"; Eingabefeld aria-label=\"AI asistana mesaj yaz\"."
+      },
+      {
+        "stepNo": 3,
+        "action": "Klicke auf den Sende-Button ('Gönder').",
+        "testData": "",
+        "expectedResult": "Nach kurzer 'tippt...'-Animation antwortet der Assistent mit einer Sprechblase, die sinngemäß den Satz 'Ticket taslağı gönderildi: A-018 dairesinde yangın çıktı, acil servis talebi oluştur. Uygulamadan önce insan onayı gerekir.' enthält -- die Nachricht ist nur ein Entwurf, es wurde noch KEIN echtes Ticket erzeugt.",
+        "automationNote": "POST /api/ai/chat; payload.ticketDraft.priority intern \"urgent\", category \"life-safety\" (nicht direkt in der UI sichtbar, erst nach Freigabe verifizierbar)."
+      },
+      {
+        "stepNo": 4,
+        "action": "Rufe /tr/login auf, klicke 'Demo başlat', dann die Rollenkarte 'Sorumlu'; öffne 'Servis Talepleri'.",
+        "testData": "Rolle = manager",
+        "expectedResult": "Seite lädt; im rot umrandeten Info-Kästchen 'Acil senaryo rotaları' (oben im Bereich 'Servis katalogu ve sipariş kapısı') ist die Referenz-Route 'Gaz, duman, yangın' mit 'SLA 1 saat - Güvenlik + yönetici' sichtbar (rein informativ, nicht an die konkrete Anfrage gebunden).",
+        "automationNote": "emergencyCatalog-Karten in tickets/page.tsx; Text \"Gaz, duman, yangın\"."
+      },
+      {
+        "stepNo": 5,
+        "action": "Scrolle zu 'AI ve onay kuyruğu' und finde die Karte mit Status 'Onaya gönderildi' und Titel 'AI servis taslağı' (ggf. die zuletzt hinzugekommene, da der Titel generisch ist).",
+        "testData": "",
+        "expectedResult": "Karte ist sichtbar mit Freigaberolle 'manager' und Risiko-Badge 'medium'.",
+        "automationNote": "Gleicher Selektor wie UC6."
+      },
+      {
+        "stepNo": 6,
+        "action": "Klicke auf 'Onayla'.",
+        "testData": "",
+        "expectedResult": "Status wechselt zu 'Onaylandı'.",
+        "automationNote": "PATCH /api/site-management/actions {status:\"approved\"}."
+      },
+      {
+        "stepNo": 7,
+        "action": "Tippe in der Tabelle 'Tam servis talebi kaydı' (#ticket-table, Suchfeld 'Ara...') den Wert 'A-018' ein und öffne/prüfe den neuesten Treffer.",
+        "testData": "A-018",
+        "expectedResult": "Neuer Eintrag mit Öncelik-Badge 'Acil' (NICHT 'Orta'/'Yüksek') ist sichtbar -- bestätigt die automatische Hochstufung durch das Schlüsselwort 'yangın'.",
+        "automationNote": "priorityLabels.urgent=\"Acil\"; GET /api/site-management/tickets."
+      },
+      {
+        "stepNo": 8,
+        "action": "Tippe in der Tabelle 'Tam saha görev kaydı' (#workforce-table, Suchfeld 'Ara...') ebenfalls 'A-018' ein.",
+        "testData": "A-018",
+        "expectedResult": "Der zugehörige neue Görev-Eintrag zeigt Ekip 'Güvenlik' (NICHT 'Teknik') mit Öncelik 'Acil' -- bestätigt die automatische Weiterleitung an die Sicherheits-/Notfallwarteschlange statt an ein normales Wartungsteam.",
+        "automationNote": "emergencyScenarios[\"life_safety\"].catalogCode=EMERG-LIFE-SAFETY -> team \"Guvenlik\", slaHours 1 (lib/site-management-repository.ts); Spalte \"Ekip\" in #workforce-table."
+      }
+    ],
+    "architectNote": "Code-verifiziert (app/api/ai/chat/route.ts detectTicketCategory/detectTicketPriority sowie lib/site-management-repository.ts): Das Schlüsselwort 'yangın' triggert zuverlässig category='life-safety' und (zusammen mit 'acil') priority='urgent'. Feiner Fallstrick: In der Trigger-Liste der Notfall-Materialisierung (lib/site-management-repository.ts emergencyScenarios) fehlt die Punkt-i-Variante 'yangın' (nur 'yangin' ohne Tüpfel-ı ist gelistet) -- das System kompensiert dies aber zuverlässig über die bereits vom Chat-Endpoint korrekt erkannte Kategorie 'life-safety', deren Teilstring 'life' den Fallback-Treffer auf EMERG-LIFE-SAFETY auslöst, daher bleibt das Ergebnis stabil. WICHTIG für den Tester: Die Risiko-Badge-Stufe auf der Onay-Karte selbst bleibt in JEDEM Fall 'medium' (lib/action-catalog.ts: ticket.create.ai_draft hat statisch riskLevel:'medium', unabhängig von Notfall-Inhalt) -- ein Manager kann NICHT allein an der Kartenfarbe/dem Risiko-Badge erkennen, ob es sich um einen Notfall handelt; das zeigt sich erst am Öncelik-Feld NACH der Freigabe (Schritt 7-8). Das ist ein dokumentierenswerter UX-Verbesserungspunkt. Benachrichtigungskanal ('Push' laut Katalog) wird nur als Datenbank-Metadatum gesetzt, in der UI nirgends angezeigt -- daher kein UI-Testschritt dafür vorgesehen.",
+    "labels": [
+      "uc07",
+      "prio1",
+      "emergency",
+      "golden-path",
+      "tenant",
+      "manager",
+      "auto-escalation"
+    ]
+  },
+  {
+    "testCaseId": "UC07-TC02",
+    "useCaseNumber": 7,
+    "useCaseName": "Notfall-Meldung mit Sofort-Erkennung",
+    "testCaseTitle": "Normale Meldung ohne Notfall-Schlüsselwort wird NICHT als Notfall eingestuft",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "Service/Notfall",
+    "role": "Kiracı (tenant) -> Sorumlu (manager)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Browser mit Zugriff auf https://cati-blond.vercel.app. Kein vorheriger Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/login, klicke 'Demo başlat', dann die Rollenkarte 'Kiracı'.",
+        "testData": "Rolle = tenant",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-tenant\"."
+      },
+      {
+        "stepNo": 2,
+        "action": "Öffne den KI-Assistenten und sende folgenden Text (bewusst OHNE Notfall-Wörter wie 'acil', 'yangın', 'kritik', 'hemen').",
+        "testData": "A-018 dairesinde mutfak dolabı kapısı bozuk, servis talebi oluştur.",
+        "expectedResult": "Assistenten-Antwort enthält sinngemäß 'Ticket taslağı gönderildi: A-018 dairesinde mutfak dolabı kapısı bozuk, servis talebi oluştur. Uygulamadan önce insan onayı gerekir.' -- Ton/Inhalt der Antwort enthält kein Notfall-Vokabular.",
+        "automationNote": "POST /api/ai/chat; erwartete interne Werte: category=\"access-maintenance\", priority=\"normal\"."
+      },
+      {
+        "stepNo": 3,
+        "action": "Rufe /tr/login auf, klicke 'Demo başlat', dann die Rollenkarte 'Sorumlu'; öffne 'Servis Talepleri' und scrolle zu 'AI ve onay kuyruğu'.",
+        "testData": "Rolle = manager",
+        "expectedResult": "Neue Karte mit Status 'Onaya gönderildi' ist sichtbar; Risiko-Badge zeigt 'medium' (identisch zu jeder anderen KI-Anfrage inkl. der Notfall-Anfrage aus TC1 -- siehe architectNote, keine visuelle Notfall-Kennzeichnung auf Kartenebene).",
+        "automationNote": "Gleicher Aufbau wie UC7-TC1 Schritt 5."
+      },
+      {
+        "stepNo": 4,
+        "action": "Klicke auf 'Onayla'.",
+        "testData": "",
+        "expectedResult": "Status wechselt zu 'Onaylandı'.",
+        "automationNote": "PATCH /api/site-management/actions."
+      },
+      {
+        "stepNo": 5,
+        "action": "Tippe in der Tabelle 'Tam servis talebi kaydı' (#ticket-table, Suchfeld 'Ara...') den Wert 'A-018' ein und öffne den neuesten Treffer (Betreff bezieht sich auf 'mutfak dolabı').",
+        "testData": "A-018",
+        "expectedResult": "Der Öncelik-Badge zeigt 'Orta' (medium), NICHT 'Acil' -- die Meldung wurde korrekt NICHT als Notfall eingestuft.",
+        "automationNote": "priorityLabels.medium=\"Orta\"; ticketPriorityForDb(\"normal\") bleibt intern \"normal\", die Anzeige mappt via mapTicketPriority auf \"medium\"/\"Orta\"."
+      },
+      {
+        "stepNo": 6,
+        "action": "Prüfe in der Tabelle 'Tam saha görev kaydı' (#workforce-table, Suchfeld 'A-018') das Ekip-Feld des zugehörigen neuen Görev-Eintrags.",
+        "testData": "A-018",
+        "expectedResult": "Ekip ist NICHT 'Güvenlik', und die Aufgabe erscheint NICHT in der 1-Stunden-SLA-Notfallroute -- normale Wartungszuweisung statt Sicherheits-Eskalation.",
+        "automationNote": "category \"access-maintenance\" matched laut Code keinen deterministischen Notfall-Katalogcode (siehe architectNote); konkretes Team kann je nach Fallback-Zuordnung variieren, ausschlaggebend ist NUR das Fehlen der Güvenlik-1h-Notfallroute."
+      }
+    ],
+    "architectNote": "Code-bestätigt (app/api/ai/chat/route.ts detectTicketPriority-Regex): Weder 'mutfak', 'dolap' noch 'kapı'/'bozuk' lösen die Prioritäts- oder Notfall-Kategorieerkennung aus, Ergebnis bleibt zuverlässig priority='normal'/category='access-maintenance'. Nebenfund: Für 'access-maintenance' existiert in lib/site-management-repository.ts (serviceCatalogItemForAction/catalogItemForTicket) KEIN direkter Keyword-Treffer (dortige Liste nutzt 'lockout'/'erisim'/'guven', nicht den Slug 'access'), daher greift für dieses konkrete Beispiel ein Index-basierter Fallback-Katalogeintrag -- das genaue Team in Schritt 6 ist deshalb nicht exakt vorhersagbar, wohl aber zuverlässig NICHT 'Güvenlik' mit 1h-SLA. Bewusst 'access-maintenance' statt eines deterministischeren Nicht-Notfall-Beispiels gewählt, um die Nicht-Eskalation klar von UC7-TC1 abzugrenzen. Erwartungsgemäß PASSED (keine Falsch-Eskalation).",
+    "labels": [
+      "uc07",
+      "prio1",
+      "emergency",
+      "negative",
+      "tenant",
+      "manager",
+      "no-false-escalation"
+    ]
+  },
+  {
+    "testCaseId": "UC08-TC01",
+    "useCaseNumber": 8,
+    "useCaseName": "Digitale Neuanmeldung (Eigentümer/Mieter/Personal)",
+    "testCaseTitle": "Malik-Registrierung Ende-zu-Ende mit simulierter Identitätsprüfung",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "New Level Premium/Onboarding",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/new-level-premium#register",
+    "precondition": "Browser ohne aktive 1Çatı-Sitzung (kein Login-Cookie gesetzt), JavaScript aktiviert. Produktions-Demo unter https://cati-blond.vercel.app ist erreichbar.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne im Browser die Adresse https://cati-blond.vercel.app/tr/new-level-premium und scrolle bis zum Abschnitt mit der Überschrift '1Çatı hesabınızı buradan başlatın' (Badge darüber: 'Erişim kaydı').",
+        "testData": "",
+        "expectedResult": "Seite lädt vollständig, der Registrierungsabschnitt (id='register') ist sichtbar mit Intro-Text 'Rolünüzü seçin ve talebinizi gönderin...'.",
+        "automationNote": "GET /tr/new-level-premium; Ziel-Section per Anker #register anspringbar. Kein data-testid auf der Section selbst gefunden – Selektor über sichtbaren Überschriftstext."
+      },
+      {
+        "stepNo": 2,
+        "action": "Prüfe die drei Rollen-Auswahlkarten oberhalb des Formulars.",
+        "testData": "",
+        "expectedResult": "Genau drei Karten sind sichtbar: 'Malik' (Beschreibung 'Kendi daireniz için tam erişim talep edin.'), 'Kiracı', 'Personel'. 'Malik' ist standardmäßig als aktive Auswahl hervorgehoben (Rahmen/Ring).",
+        "automationNote": "Buttons ohne data-testid (nlp-registration.tsx, role-Buttons); Selektor über role='button' + Text 'Malik'/'Kiracı'/'Personel'. UI-Selector noch zu ergänzen (data-testid empfehlenswert für Automatisierung)."
+      },
+      {
+        "stepNo": 3,
+        "action": "Falls 'Malik' nicht bereits aktiv ist, klicke auf die Karte 'Malik'.",
+        "testData": "Rolle = Malik (owner)",
+        "expectedResult": "Formular darunter zeigt malik-spezifische Felder: 'Ad soyad', 'E-posta', 'Telefon (opsiyonel)', 'Blok ve daire (ör. B3 / 12)', 'Kanıt türü' (Dropdown), 'Kanıt referansı', sowie darunter 'Kimlik türü', 'Kimlik / pasaport numarası', 'Veren ülke' und den Button 'Kimliğimi doğrula'.",
+        "automationNote": "Formular-Container ohne festen Selector – Felder über sichtbares Label-Text ansprechen (label-Elemente umschließen input direkt)."
+      },
+      {
+        "stepNo": 4,
+        "action": "Fülle die Pflichtfelder aus: Ad soyad, E-posta, Blok ve daire, Kanıt referansı, Kimlik / pasaport numarası. Lasse 'Kanıt türü' auf Standardwert TAPU und 'Kimlik türü' auf Standardwert T.C. Kimlik.",
+        "testData": "Ad soyad='Test Malik Kullanıcı'; E-posta='test.malik.qa@example.com'; Blok ve daire='B3 / 12'; Kanıt referansı='TEST-TAPU-0001'; Kimlik / pasaport numarası='12345'",
+        "expectedResult": "Alle Eingaben werden ohne Validierungsfehler übernommen, jedes Feld zeigt exakt den eingegebenen Wert.",
+        "automationNote": "input[type=text]/input[type=email] per Label-Text; keine data-testid vorhanden."
+      },
+      {
+        "stepNo": 5,
+        "action": "Klicke auf den Button 'Kimliğimi doğrula' (Identität bestätigen).",
+        "testData": "Ausweisnummer aus Schritt 4 ('12345', 5 Zeichen)",
+        "expectedResult": "Button wechselt kurz zu 'Doğrulanıyor...' mit Spinner, danach erscheint ein grünes Badge 'Kimlik doğrulandı' mit Häkchen-Symbol. Der Button 'Kimliğimi doğrula' wird danach deaktiviert (bereits verifiziert).",
+        "automationNote": "POST /api/site-management/identity-verification (Body: idType, idNumber, issuingCountry, fullName). Simulierte Regel: jede idNumber mit >= 5 Zeichen liefert status='verified'. Kein data-testid auf Button – Text-Selector 'Kimliğimi doğrula'."
+      },
+      {
+        "stepNo": 6,
+        "action": "Setze das Häkchen bei der KVKK-Einwilligung: 'Kişisel verilerimin bu talebin değerlendirilmesi için KVKK kapsamında işlenmesini onaylıyorum.'",
+        "testData": "Checkbox = angehakt",
+        "expectedResult": "Checkbox ist aktiviert; der zuvor deaktivierte Button 'Erişim talebini gönder' wird klickbar (disabled-Zustand entfällt).",
+        "automationNote": "input[type=checkbox] required; Submit-Button hat disabled={pending || !consent}."
+      },
+      {
+        "stepNo": 7,
+        "action": "Klicke auf 'Erişim talebini gönder' (Zugangsanfrage senden).",
+        "testData": "",
+        "expectedResult": "Button zeigt kurz 'Gönderiliyor...' mit Spinner. Danach ersetzt eine grüne Erfolgskarte das Formular mit Überschrift 'Talep alındı' und dem Text 'Referans numaranız: {konkrete Referenz}. Meşruiyet kontrolünden sonra bir yönetici erişiminizi açacaktır.' – {ref} ist durch eine tatsächliche, nicht-leere Referenz ersetzt.",
+        "automationNote": "POST /api/site-management/registration (role='owner', payload wie in nlp-registration.tsx submit()). Response JSON enthält reference-Feld, das im Erfolgstext eingesetzt wird. role='status' auf dem Erfolgs-Div."
+      },
+      {
+        "stepNo": 8,
+        "action": "Notiere die angezeigte Referenznummer aus der Erfolgskarte für Nachverfolgung/Traceability.",
+        "testData": "",
+        "expectedResult": "Eine sichtbare, nicht-leere Referenz ist vorhanden. Format kann ein lesbarer Code (z. B. 'NLP-REG-ABC123') oder – bei echtem Supabase-Backend – eine rohe UUID sein; beide Formate gelten als bestanden.",
+        "automationNote": "Regex-Assertion auf beliebigen nicht-leeren String im successBody-Text, kein fixes Format erzwingen."
+      }
+    ],
+    "architectNote": "Echter Supabase-Schreibpfad (RPC in client_action_requests) – erwartungsgemäß PASSED. Die 'Kimliğimi doğrula'-Prüfung ist bewusst simuliert (jede Nummer >=5 Zeichen wird sofort bestätigt) – nicht als echte Identitätsprüfung gegenüber Kunden darstellen. Referenzformat kann kosmetisch zwischen lokalem Demo-Modus und echtem Supabase abweichen, das ist kein Fehler.",
+    "labels": [
+      "uc08",
+      "prio1",
+      "onboarding",
+      "golden-path",
+      "registration",
+      "new-level-premium"
+    ]
+  },
+  {
+    "testCaseId": "UC08-TC02",
+    "useCaseNumber": 8,
+    "useCaseName": "Digitale Neuanmeldung (Eigentümer/Mieter/Personal)",
+    "testCaseTitle": "Privilegierte Rolle (Manager/Muhasebe/Admin) über öffentliches Formular serverseitig blockiert",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 1,
+    "component": "New Level Premium/Onboarding",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/new-level-premium#register",
+    "precondition": "Browser ohne aktive 1Çatı-Sitzung. Entwicklerkonsole (F12) muss nutzbar sein, um einen direkten fetch-Aufruf gegen die öffentliche API abzusetzen (Sicherheitstest, kein normaler UI-Weg).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/new-level-premium#register und betrachte die drei Rollenkarten im Registrierungsformular.",
+        "testData": "",
+        "expectedResult": "Es sind ausschließlich die Karten 'Malik', 'Kiracı' und 'Personel' sichtbar. Es existiert KEINE Karte oder Option mit Text 'Yönetici', 'Sorumlu', 'Muhasebe', 'Manager', 'Accountant' oder 'Admin' im gesamten Formularbereich.",
+        "automationNote": "DOM-Suche nach Text 'Yönetici'/'Muhasebe'/'Sorumlu' innerhalb #register – darf 0 Treffer liefern."
+      },
+      {
+        "stepNo": 2,
+        "action": "Lies den Hinweistext im grau hinterlegten Kasten mit Schloss-Symbol direkt unterhalb der drei Rollenkarten.",
+        "testData": "",
+        "expectedResult": "Text lautet exakt bzw. sinngemäß: 'Sorumlu, Muhasebe ve Yönetim rolleri bu genel formdan talep edilemez. Bunları yalnızca mevcut bir yönetici sistem içinden atar.' – bestätigt die bewusste UI-seitige Einschränkung.",
+        "automationNote": "Text-Assertion auf sichtbaren String im internalNote-Block."
+      },
+      {
+        "stepNo": 3,
+        "action": "Öffne die Browser-Entwicklerkonsole (Taste F12, Tab 'Console') auf derselben Seite.",
+        "testData": "",
+        "expectedResult": "Konsole ist geöffnet und Eingaben sind möglich.",
+        "automationNote": "Bei automatisierten Tests: direkter HTTP-Request per Test-Framework (z. B. Playwright request.post) statt Browser-Konsole verwenden."
+      },
+      {
+        "stepNo": 4,
+        "action": "Führe in der Konsole einen direkten POST-Aufruf gegen den Registrierungs-Endpunkt mit einer privilegierten Rolle aus, um den UI-Schutz zu umgehen: fetch(\"/api/site-management/registration\", {method:\"POST\", headers:{\"Content-Type\":\"application/json\"}, body: JSON.stringify({role:\"manager\", fullName:\"Security Test\", email:\"sectest@example.com\", consent:true})}).then(r => r.status).then(console.log)",
+        "testData": "role='manager', fullName='Security Test', email='sectest@example.com', consent=true",
+        "expectedResult": "Die Konsole gibt den HTTP-Statuscode 403 aus (nicht 200 oder 201).",
+        "automationNote": "Direkter API-Test: POST /api/site-management/registration mit role='manager' MUSS 403 liefern (server-seitiger Hard-Gate in app/api/site-management/registration/route.ts, PUBLIC_ROLES=['owner','tenant','staff'])."
+      },
+      {
+        "stepNo": 5,
+        "action": "Öffne den Netzwerk-Tab (Network) der Entwicklerkonsole, wähle den soeben ausgeführten 'registration'-Request aus und prüfe den Tab 'Response'.",
+        "testData": "",
+        "expectedResult": "Response-Body enthält ein Feld 'error' mit einem Text in der Art 'This role cannot be requested here. Manager, accounting and admin access is assigned internally by an administrator.' Es gibt KEIN 'reference'-Feld in der Antwort, d. h. es wurde kein Datensatz angelegt.",
+        "automationNote": "JSON-Body-Assertion: error vorhanden, reference nicht vorhanden."
+      },
+      {
+        "stepNo": 6,
+        "action": "Wiederhole den Aufruf aus Schritt 4 zweimal, jeweils mit role='accountant' und anschließend role='admin'.",
+        "testData": "role='accountant'; danach role='admin'",
+        "expectedResult": "Beide Aufrufe liefern ebenfalls HTTP-Status 403 mit derselben bzw. sinngemäß gleichen Fehlermeldung wie in Schritt 4/5.",
+        "automationNote": "Parametrisierter API-Test über alle drei gesperrten Rollen (manager, accountant, admin)."
+      }
+    ],
+    "architectNote": "Serverseitiger Hard-Gate ist im Code eindeutig vorhanden (isPublicRole-Prüfung, PUBLIC_ROLES-Whitelist) und nicht clientseitig umgehbar – erwartungsgemäß zuverlässig PASSED. Guter, stabiler Regressionstest, da unabhängig von UI-Änderungen direkt gegen die API geprüft wird.",
+    "labels": [
+      "uc08",
+      "prio1",
+      "onboarding",
+      "negative",
+      "security",
+      "rbac",
+      "api"
+    ]
+  },
+  {
+    "testCaseId": "UC09-TC01",
+    "useCaseNumber": 9,
+    "useCaseName": "Cati Training Videobibliothek",
+    "testCaseTitle": "Video suchen, abspielen, Geschwindigkeit ändern und Vollbild nutzen",
+    "testCaseType": "Golden Path",
+    "priorityTier": 1,
+    "component": "Training",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/videos",
+    "precondition": "Browser mit Ton/Lautsprecher verfügbar (Videos sind türkisch vertont). Keine Anmeldung nötig, Seite liegt außerhalb des geschützten /dashboard-Bereichs.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/videos.",
+        "testData": "",
+        "expectedResult": "Seite lädt mit dem Badge 'Cati Training', der Überschrift '1Çatı ile site yönetimini tek merkezden görün, yönetin ve büyütün.' und zwei Buttons 'Ürün turunu başlat' sowie 'Müşteri portalını aç'.",
+        "automationNote": "GET /tr/videos."
+      },
+      {
+        "stepNo": 2,
+        "action": "Klicke auf den Button 'Ürün turunu başlat' (springt zum Anker #video-library).",
+        "testData": "",
+        "expectedResult": "Der Bereich mit der Überschrift 'Ürün turu kütüphanesi' wird sichtbar: oben ein aktiver Videoplayer, darunter Suchfeld und eine Liste/Grid von Video-Karten.",
+        "automationNote": "data-testid='video-library' (Section), data-testid='video-player' (Player-Container)."
+      },
+      {
+        "stepNo": 3,
+        "action": "Gib im Suchfeld mit Platzhaltertext 'Video ara' oberhalb der Videoliste ein Wort aus einem sichtbar gelisteten Videotitel ein.",
+        "testData": "Suchbegriff = ein Wort aus einem sichtbaren Videotitel in der Liste, z. B. 'Dashboard' oder 'Finans' (konkretes Wort vor Ort aus der tatsächlich angezeigten Liste ablesen)",
+        "expectedResult": "Die Liste der Video-Karten filtert sich live: nur noch Video(s), deren Titel den Suchbegriff enthalten, bleiben sichtbar; die Trefferzahl-Anzeige (z. B. 'X video') reduziert sich entsprechend.",
+        "automationNote": "Such-Input ohne bekanntes data-testid – Selector über placeholder-Text 'Video ara'. UI-Selector noch zu ergänzen."
+      },
+      {
+        "stepNo": 4,
+        "action": "Klicke auf eine der gefilterten Video-Karten in der Liste.",
+        "testData": "",
+        "expectedResult": "Der Player oben wechselt zu diesem Video: die Anzeige 'Şu an oynatılıyor' zeigt jetzt den Titel des angeklickten Videos, das Video beginnt zu laden (Poster-Bild wechselt).",
+        "automationNote": "data-testid='video-card-{slug}' pro Karte (slug = Video-Identifier aus dem Katalog)."
+      },
+      {
+        "stepNo": 5,
+        "action": "Klicke auf den Play-Button im Player, um die Wiedergabe zu starten.",
+        "testData": "",
+        "expectedResult": "Das Video spielt hör- und sichtbar ab: Zeitanzeige/Fortschrittsbalken läuft, das Play-Icon wechselt sichtbar zu einem Pause-Icon.",
+        "automationNote": "video-Element innerhalb data-testid='video-player'; isPlaying-State prüfbar über Pause-Icon-Sichtbarkeit."
+      },
+      {
+        "stepNo": 6,
+        "action": "Öffne die Geschwindigkeits-Steuerung (Label 'Hız') und wähle einen anderen Wert als 1x.",
+        "testData": "Wiedergabegeschwindigkeit = 1.5x",
+        "expectedResult": "Die Wiedergabe läuft hörbar/spürbar schneller als Echtzeit; die gewählte Geschwindigkeit (1.5x bzw. '1.5') ist in der Steuerung als aktiv markiert (playbackRates-Liste: 0.5/0.75/1/1.25/1.5/2).",
+        "automationNote": "playbackRate-Property des <video>-Elements per JS auslesbar (sollte 1.5 sein) statt rein visueller Prüfung."
+      },
+      {
+        "stepNo": 7,
+        "action": "Klicke auf den Vollbild-Button (Tooltip 'Tam ekran').",
+        "testData": "",
+        "expectedResult": "Der Videoplayer füllt den gesamten Bildschirm aus (Browser-Vollbildmodus aktiv). Ein erneuter Klick bzw. Taste ESC beendet den Vollbildmodus wieder, die Seite kehrt zur normalen Ansicht zurück.",
+        "automationNote": "document.fullscreenElement sollte nach Klick gesetzt sein; CSS-Klasse [&:fullscreen] auf videoFrameRef-Container."
+      },
+      {
+        "stepNo": 8,
+        "action": "Prüfe den Untertitel-Button (Captions-Icon, Tooltip zu Altyazı) im Player.",
+        "testData": "",
+        "expectedResult": "Der Button ist sichtbar, aber dauerhaft deaktiviert/inaktiv und zeigt konsequent den Zustand 'Altyazı yok' (keine Untertitel) an – unabhängig vom gewählten Video.",
+        "automationNote": "Button-Zustand 'disabled' bzw. Label-Text 'Altyazı yok' prüfen; dies ist erwartetes Verhalten, siehe architectNote."
+      }
+    ],
+    "architectNote": "19 echte, live gehostete Schulungsvideos (per HTTP-Check bestätigt), voll ausgestatteter Player. WICHTIG: Ton ist bei allen Videos ausschließlich Türkisch, unabhängig von der UI-Sprache; der Untertitel-Button ist immer vorhanden aber immer deaktiviert ('Altyazı yok'). Das ist bekanntes, akzeptiertes Verhalten und darf NICHT als Fehler/FAILED gewertet werden – bei nicht-türkischsprachigen Testpersonen vorher erwähnen. Alle übrigen Schritte (Suche, Play, Geschwindigkeit, Vollbild) sollten erwartungsgemäß PASSED sein, da der Player echte Medien-URLs bedient.",
+    "labels": [
+      "uc09",
+      "prio1",
+      "training",
+      "golden-path",
+      "video"
+    ]
+  },
+  {
+    "testCaseId": "UC10-TC01",
+    "useCaseNumber": 10,
+    "useCaseName": "QR-Meldekanal vor Ort",
+    "testCaseTitle": "QR-Code scannen führt zum vorausgewählten Meldeformular",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "New Level Premium/Meldung",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/new-level-premium/report-poster",
+    "precondition": "Ein Desktop/Laptop-Browser für den Poster sowie zusätzlich ein echtes Smartphone mit Kamera-App im selben Netzwerk (für den Scan-Schritt) verfügbar. Falls kein Smartphone verfügbar ist, kann die abgelesene URL manuell im mobilen Browser eingegeben werden.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne im Desktop-Browser https://cati-blond.vercel.app/tr/new-level-premium/report-poster.",
+        "testData": "",
+        "expectedResult": "Seite lädt mit Überschrift 'Bir sorun mu var? Karekodu okutun.', zeigt einen großen schwarz umrandeten QR-Code mittig sowie darunter die nummerierte Schrittliste: 1. Karekodu telefon kameranızla okutun, 2. Konumu ve kısa bir not yazın, 3. Referans numaranızı alın.",
+        "automationNote": "GET /tr/new-level-premium/report-poster; QR-Code ist serverseitig als Inline-SVG gerendert (Bibliothek 'qrcode'), aria-label='QR code'."
+      },
+      {
+        "stepNo": 2,
+        "action": "Lies den Text unter 'Ya da şu adrese gidin:' unterhalb des QR-Codes.",
+        "testData": "",
+        "expectedResult": "Es wird eine vollständige URL im Format 'https://<aktuelle-domain>/tr/new-level-premium#report' angezeigt (Domain entspricht der tatsächlich aufgerufenen Live-Domain, Pfad endet auf '#report').",
+        "automationNote": "Text-Element unterhalb urlLabel; targetUrl wird serverseitig aus request-Host + x-forwarded-proto gebildet."
+      },
+      {
+        "stepNo": 3,
+        "action": "Scanne den angezeigten QR-Code mit der Kamera-App eines echten Smartphones. Falls kein Scanner verfügbar ist, tippe stattdessen die in Schritt 2 abgelesene URL manuell in einen mobilen Browser ein.",
+        "testData": "URL = die in Schritt 2 abgelesene Adresse",
+        "expectedResult": "Das Smartphone erkennt einen gültigen, anklickbaren Link zur Live-Domain (bzw. die manuell eingegebene URL lädt erfolgreich im mobilen Browser).",
+        "automationNote": "Manueller Schritt, nicht sinnvoll browser-automatisierbar; alternativ QR-Inhalt per Bilddecoder-Bibliothek dekodieren und URL-String direkt gegen erwartetes Muster prüfen."
+      },
+      {
+        "stepNo": 4,
+        "action": "Öffne den erkannten/eingegebenen Link auf dem Smartphone bzw. im mobilen Browser.",
+        "testData": "",
+        "expectedResult": "Die Seite '/tr/new-level-premium' öffnet und springt automatisch zum dunkel hinterlegten Abschnitt mit Überschrift 'Bir sorunu bildirin, hesaba gerek yok' (id='report') – ohne dass manuell gescrollt werden muss.",
+        "automationNote": "Anker-Navigation zu #report; Section-Element mit id='report' (Komponente NlpReport)."
+      },
+      {
+        "stepNo": 5,
+        "action": "Prüfe die Felder im geöffneten Meldeformular, insbesondere das Dropdown 'Konu'.",
+        "testData": "",
+        "expectedResult": "Dropdown 'Konu' zeigt als Standardauswahl 'Teknik / arıza' (technical) vorausgewählt. Die Felder 'Konum (ör. B blok lobi, havuz, otopark)', 'Kısa açıklama' und 'Geri dönüş için e-posta/telefon (opsiyonel)' sind leer und eingabebereit. Kein Login/Konto wird verlangt.",
+        "automationNote": "select-Element mit Default-State category='technical' (useState-Default im Code)."
+      },
+      {
+        "stepNo": 6,
+        "action": "Wechsle zurück zum Desktop-Browser-Tab mit der Poster-Seite und klicke auf den Button 'Posteri yazdır' (Poster drucken) am unteren Seitenrand.",
+        "testData": "",
+        "expectedResult": "Der Browser-Druckdialog öffnet sich mit einer Druckvorschau, die nur den Poster-Inhalt (QR-Code, Titel, Schrittliste, URL) zeigt; Navigationsleiste/Footer sind in der Druckansicht ausgeblendet.",
+        "automationNote": "PrintButton ruft window.print() auf; Klassen mit 'print:hidden' blenden Navigationselemente im Druckmodus aus. window.print() lässt sich in Headless-E2E-Tests nur eingeschränkt automatisiert prüfen (Aufruf abfangen/spy statt echten Dialog verifizieren)."
+      }
+    ],
+    "architectNote": "Der QR-Code ist ein ECHTER, serverseitig generierter SVG-Code (Bibliothek 'qrcode') und verlinkt korrekt auf die aktuelle Live-Domain mit Anker '#report' – das öffentliche, kontolose Meldeformular (NlpReport), NICHT das Registrierungsformular. Erwartungsgemäß PASSED für Anzeige, Scan und Formular-Vorauswahl. Der Druckdialog-Schritt ist im manuellen Test gut prüfbar, aber in automatisierten Headless-Läufen nur über einen window.print()-Spy verifizierbar, nicht über eine echte Druckvorschau.",
+    "labels": [
+      "uc10",
+      "prio2",
+      "meldekanal",
+      "qr",
+      "golden-path",
+      "new-level-premium"
+    ]
+  },
+  {
+    "testCaseId": "UC11-TC01",
+    "useCaseNumber": 11,
+    "useCaseName": "KI-Assistent auf der Webseite (Public Concierge)",
+    "testCaseTitle": "Mehrsprachige Themenerkennung: Datenschutz (DE) und Registrierung (EN)",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "Public AI",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/",
+    "precondition": "Browser ohne aktive 1Çatı-Sitzung. Startseite lädt vollständig inklusive des Chat-Widgets unten rechts.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/ (Startseite).",
+        "testData": "",
+        "expectedResult": "Seite lädt vollständig; unten rechts ist ein rundes Chat-Icon-Widget sichtbar.",
+        "automationNote": "GET /tr/; Widget-Root data-testid='site-concierge'."
+      },
+      {
+        "stepNo": 2,
+        "action": "Klicke auf das runde Widget unten rechts, um das Menü zu öffnen.",
+        "testData": "",
+        "expectedResult": "Ein kleines Menü klappt auf mit zwei Optionen: grüner 'WhatsApp'-Button und 'Ç1atı asistanı'-Button (Text: '1Çatı asistanı').",
+        "automationNote": "data-testid='concierge-toggle'; Menü-Optionen data-testid='concierge-whatsapp' und data-testid='concierge-ai-open'."
+      },
+      {
+        "stepNo": 3,
+        "action": "Klicke auf den Button '1Çatı asistanı'.",
+        "testData": "",
+        "expectedResult": "Ein Chat-Panel öffnet sich unten rechts mit dem Titel '1Çatı Asistanı' und einer bereits vorhandenen Begrüßungsnachricht des Assistenten, die mit 'Merhaba! 1Çatı'nın ne olduğunu...' beginnt.",
+        "automationNote": "data-testid='concierge-ai-open' klicken; Panel data-testid='concierge-panel'."
+      },
+      {
+        "stepNo": 4,
+        "action": "Gib im Eingabefeld (Platzhalter '1Çatı hakkında sorun...') eine erkennbare deutsche Frage zum Datenschutz ein und sende sie ab (Senden-Button oder Enter).",
+        "testData": "Eingabetext = 'Sind meine Daten sicher?'",
+        "expectedResult": "Innerhalb weniger Sekunden erscheint eine vollständige, sprachlich korrekte DEUTSCHE Antwort zum Thema Datenschutz/KVKK. Kein türkischer oder englischer Antworttext, keine Fehlermeldung ('Yanıt alınamadı' / 'No answer received' / 'Keine Antwort erhalten').",
+        "automationNote": "POST /api/ai/public-chat/stream (bzw. Fallback POST /api/ai/public-chat) mit {message, locale, page}. Sprach-/Themenerkennung deterministisch: deutsche Schlüsselwörter/Umlaute -> language='de'."
+      },
+      {
+        "stepNo": 5,
+        "action": "Prüfe inhaltlich, ob die Antwort zum Thema Datenschutz passt (z. B. Nennung von KVKK, Datenverarbeitung, Sicherheit) und ob KEIN WhatsApp-Hinweiskästchen angezeigt wird.",
+        "testData": "",
+        "expectedResult": "Antwort ist inhaltlich zum gestellten Thema passend, keine allgemeine Ausweich-Antwort. Kein Element mit data-testid='public-ai-handoff' ist sichtbar (da das Thema erkannt wurde, keine Eskalation nötig).",
+        "automationNote": "Assertion: shouldEscalate=false in der Response; kein DOM-Element data-testid='public-ai-handoff'."
+      },
+      {
+        "stepNo": 6,
+        "action": "Stelle im gleichen Chat-Fenster direkt im Anschluss eine englische Frage zur Registrierung.",
+        "testData": "Eingabetext = 'How do I register?'",
+        "expectedResult": "Die Antwort erscheint jetzt vollständig auf ENGLISCH und behandelt inhaltlich das Thema Registrierung/Anmeldung (z. B. Verweis auf die Registrierungsseite oder den Ablauf) – die Sprachumschaltung innerhalb derselben Konversation funktioniert korrekt.",
+        "automationNote": "Response language='en' erwartet trotz UI-Locale 'tr'; Themenerkennung 'register'/'how' -> englische, registrierungsbezogene Antwort."
+      },
+      {
+        "stepNo": 7,
+        "action": "Bewerte die zweite (englische) Antwort über das Daumen-hoch-Symbol.",
+        "testData": "",
+        "expectedResult": "Der Text neben den Daumen-Symbolen wechselt zu 'Feedback logged' (englische Support-Copy, da Antwortsprache Englisch war), beide Feedback-Buttons werden danach deaktiviert (kein erneutes Klicken möglich).",
+        "automationNote": "data-testid='public-ai-feedback-positive'; POST /api/ai/public-chat/feedback wird im Hintergrund aufgerufen (best-effort, Fehler dort dürfen UI-Feedback nicht blockieren)."
+      }
+    ],
+    "architectNote": "KEIN echter LLM-Aufruf, sondern eine deterministische Wissensdatenbank mit Sprach-/Themenerkennung (Umlaute/deutsche Schlüsselwörter -> de, 'how'/'register' u. ä. -> en, kyrillisch -> ru, sonst tr). Bei erkannten Themen wie Datenschutz und Registrierung erscheint sofort eine ausformulierte, überzeugend wirkende Antwort. Erwartungsgemäß PASSED für beide Sprachfälle, da dies zu den gut abgedeckten Standardthemen der Wissensdatenbank gehört. Nicht als 'echte KI/LLM' gegenüber dem Kunden darstellen.",
+    "labels": [
+      "uc11",
+      "prio2",
+      "public-ai",
+      "golden-path",
+      "i18n",
+      "concierge"
+    ]
+  },
+  {
+    "testCaseId": "UC11-TC02",
+    "useCaseNumber": 11,
+    "useCaseName": "KI-Assistent auf der Webseite (Public Concierge)",
+    "testCaseTitle": "Themenfremde Frage löst sauberen WhatsApp-Fallback aus, kein Absturz",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 2,
+    "component": "Public AI",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr/",
+    "precondition": "Browser ohne aktive 1Çatı-Sitzung; Startseite lädt vollständig inklusive Chat-Widget. Kann direkt im Anschluss an TC1 in derselben Sitzung durchgeführt werden.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Öffne https://cati-blond.vercel.app/tr/ (Startseite), falls noch nicht offen.",
+        "testData": "",
+        "expectedResult": "Seite lädt vollständig, Chat-Widget unten rechts ist sichtbar (data-testid='site-concierge').",
+        "automationNote": "GET /tr/."
+      },
+      {
+        "stepNo": 2,
+        "action": "Öffne den KI-Chat wie im Golden-Path-Testfall (Widget-Icon klicken -> '1Çatı asistanı' klicken).",
+        "testData": "",
+        "expectedResult": "Chat-Panel '1Çatı Asistanı' ist geöffnet und einsatzbereit mit sichtbarer Begrüßungsnachricht.",
+        "automationNote": "data-testid='concierge-toggle' -> data-testid='concierge-ai-open' -> Panel data-testid='concierge-panel'."
+      },
+      {
+        "stepNo": 3,
+        "action": "Gib eine bewusst themenfremde, mehrdeutige Frage ein, die nichts mit 1Çatı zu tun hat, und sende sie ab.",
+        "testData": "Eingabetext = 'Wie ist das Wetter heute?'",
+        "expectedResult": "Es kommt zu KEINEM Absturz des Chat-Fensters, KEINER leeren Antwort und KEINER sichtbaren technischen Fehlermeldung oder Stacktrace in der UI. Innerhalb weniger Sekunden erscheint eine Antwort.",
+        "automationNote": "POST /api/ai/public-chat/stream; Assertion: HTTP-Response ok, DOM-Chat enthält nach Absenden eine neue assistant-Nachricht ungleich Fehlertext."
+      },
+      {
+        "stepNo": 4,
+        "action": "Prüfe die erscheinende Antwort und das darunter angezeigte Element.",
+        "testData": "",
+        "expectedResult": "Der Assistent antwortet mit einer allgemein gehaltenen Ausweich-Antwort und zeigt zusätzlich einen WhatsApp-Weiterleitungs-Hinweiskasten mit einem Link/Button zur Fortsetzung auf WhatsApp (Text je erkannter Sprache, z. B. 'WhatsApp'ta devam et' auf Türkisch).",
+        "automationNote": "data-testid='public-ai-handoff' MUSS sichtbar sein; Assertion shouldEscalate=true in der zugrunde liegenden Response."
+      },
+      {
+        "stepNo": 5,
+        "action": "Klicke auf den WhatsApp-Weiterleitungs-Link innerhalb des Hinweiskästchens.",
+        "testData": "",
+        "expectedResult": "Ein neuer Browser-Tab öffnet sich zu einer wa.me-URL (WhatsApp), vorausgefüllt mit einer Standard-Kontaktnachricht. Der ursprüngliche Chat-Tab bleibt im Hintergrund unverändert geöffnet, kein Absturz des ursprünglichen Tabs.",
+        "automationNote": "Link target='_blank' href beginnt mit 'https://wa.me/'; neuer Tab/Window-Handle in Playwright abfangbar (page.waitForEvent('popup'))."
+      },
+      {
+        "stepNo": 6,
+        "action": "Wechsle zurück zum ursprünglichen Tab und stelle eine zweite, ebenfalls themenfremde Frage in anderer Formulierung.",
+        "testData": "Eingabetext = 'Kann ich hier eine Pizza bestellen?'",
+        "expectedResult": "Auch hier erscheint erneut eine saubere Ausweich-Antwort mit WhatsApp-Hinweis, kein Systemfehler, kein leeres Chat-Fenster und keine der beiden generischen technischen Fehlermeldungen ('Yanıt alınamadı' / 'No answer received' / 'Keine Antwort erhalten') – ein solcher Text wäre ein echter technischer Fehler, keine funktionale Ausweich-Antwort.",
+        "automationNote": "Wiederholte Prüfung wie Schritt 3-4 mit zweitem Eingabetext; Regressionscheck, dass Fallback-Pfad reproduzierbar und nicht nur einmalig funktioniert."
+      }
+    ],
+    "architectNote": "Erwartetes und korrektes Verhalten laut Architektur: bei unklaren/themenfremden Fragen fällt das System IMMER auf eine allgemeine Antwort mit WhatsApp-Weiterleitung zurück – das ist explizit KEIN Fehlerfall und sollte vom Tester vorher gekannt werden, um es nicht live als 'die KI weiß keine Antwort' fälschlich als Bug zu melden. Dieser Testfall gilt nur dann als FAILED, wenn tatsächlich ein technischer Fehler auftritt (Absturz, leere Antwort, generische Fehlermeldung statt sauberem Ausweich-Text mit WhatsApp-Hinweis).",
+    "labels": [
+      "uc11",
+      "prio2",
+      "public-ai",
+      "negative",
+      "edge-case",
+      "concierge"
+    ]
+  },
+  {
+    "testCaseId": "UC12-TC01",
+    "useCaseNumber": 12,
+    "useCaseName": "Interner KI-Assistent",
+    "testCaseTitle": "Manager stellt Kennzahlen-/Risikofrage an den internen KI-Assistenten und erhält nur einen Vorschlag mit Freigabehinweis",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "Internes AI",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard",
+    "precondition": "Browser offen auf https://cati-blond.vercel.app. Kein aktives Login erforderlich (Demo-Rollenwechsel). Keine vorherige KI-Konversation im Verlauf.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse /tr/login aufrufen.",
+        "testData": "",
+        "expectedResult": "Login-Seite lädt, grüner Button \"Demo başlat\" (Demo starten) ist sichtbar.",
+        "automationNote": "URL: /tr/login"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf grünen Button \"Demo başlat\" klicken.",
+        "testData": "",
+        "expectedResult": "Ein Rollenraster mit 6 Rollenkarten öffnet sich.",
+        "automationNote": "data-testid=\"demo-full-access\" -> öffnet data-testid=\"demo-role-menu\""
+      },
+      {
+        "stepNo": 3,
+        "action": "Rollenkarte für Manager anklicken.",
+        "testData": "",
+        "expectedResult": "Automatischer Redirect zu /tr/dashboard, Dashboard-Seite mit Sidebar (13 Menüpunkte: Dashboard, Listings, Leads, Tickets, Calendar, Compliance, Finance, Documents, Reports, Communications, Offline, Users, Settings) lädt.",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 4,
+        "action": "Unten rechts auf den runden, schwebenden Button mit Sparkle-Icon klicken, um den KI-Assistenten zu öffnen.",
+        "testData": "",
+        "expectedResult": "Ein Chat-Panel öffnet sich mit Titel \"1Çatı Operasyon Asistanı\" und zwei Badges \"Aynı dilde yanıt\" (gleiche Sprache) und \"İnsan onaylı aksiyon\" (Aktion mit menschlicher Freigabe). Eine Willkommensnachricht des Assistenten ist bereits vorhanden.",
+        "automationNote": "Trigger-Button data-testid=\"ai-assistant-open\"; Panel data-testid=\"ai-assistant-panel\""
+      },
+      {
+        "stepNo": 5,
+        "action": "In das Textfeld unten im Panel eine Frage zu Kennzahlen/Risiken eintippen und mit Enter oder dem Senden-Button abschicken.",
+        "testData": "En riskli 3 daireyi listele ve depozito iadesi için ne önerirsin?",
+        "expectedResult": "Die eigene Nachricht erscheint rechtsbündig im Chatverlauf, danach kurz ein 3-Punkte-Tippindikator, danach eine Antwort des Assistenten (linksbündig, Bot-Icon).",
+        "automationNote": "Eingabefeld: aria-label=\"AI asistana mesaj yaz\"; Senden-Button: aria-label entspricht t(\"send\"); POST /api/ai/chat mit body {message, locale}"
+      },
+      {
+        "stepNo": 6,
+        "action": "Antworttext des Assistenten vollständig lesen und daraufhin prüfen, ob er behauptet, selbst eine Finanz- oder Zugangsaktion bereits ausgeführt zu haben (z.B. \"ödemeyi gerçekleştirdim\", \"erişimi kapattım\", \"iade işlemini tamamladım\").",
+        "testData": "",
+        "expectedResult": "Die Antwort enthält KEINE Formulierung, die eine eigenständig durchgeführte Finanz-/Zugangs-/Berechtigungsaktion behauptet. Stattdessen ist die Antwort als Empfehlung/Vorschlag formuliert und verweist (explizit im Text oder über das dauerhaft sichtbare Badge \"İnsan onaylı aksiyon\") auf notwendige menschliche Freigabe, bevor etwas umgesetzt wird.",
+        "automationNote": "Response-Feld \"reply\" aus /api/ai/chat JSON; falls ticketDraft im Payload vorhanden ist, muss der angehängte Text \"insan onayı gerekir\" (Freigabe erforderlich) enthalten, siehe ticketDraftMessage() in ai-assistant.tsx"
+      }
+    ],
+    "architectNote": "Der System-Prompt in app/api/ai/chat/route.ts verbietet dem Modell explizit, Finanz-/Zugangs-/Berechtigungsaktionen direkt auszuführen; erwartungsgemäß PASSED. Falls kein AI-Gateway konfiguriert ist (AI_API_URL/AI_API_KEY fehlen), kommt automatisch die deterministische Fallback-Antwort (source: deterministic-fallback) — auch diese hält sich an das Verbot, da sie rein aus Seed-Daten generiert wird. Bei RBAC-Verweigerung würde source: rbac-guard greifen (für Manager nicht erwartet). In jedem Fall darf der Text niemals eine bereits vollzogene Finanz-/Zugangsaktion behaupten.",
+    "labels": [
+      "uc12",
+      "prio2",
+      "ai",
+      "rbac",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC13-TC01",
+    "useCaseNumber": 13,
+    "useCaseName": "Personal- & Rollenübersicht",
+    "testCaseTitle": "Manager prüft, dass Personalverzeichnis und Rollenabdeckungs-Tabelle echte Daten laden",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "Nutzer/Personal",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/users",
+    "precondition": "Manager-Rolle ist bereits über den Demo-Rollenwechsel aktiv (siehe UC12 TC1, Schritte 1-3). Netzwerkzugriff auf die Anwendung ist gegeben.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse /tr/dashboard/users direkt aufrufen (oder in der Sidebar den Menüpunkt \"Kullanıcılar\" anklicken, falls dieser Text sichtbar ist).",
+        "testData": "",
+        "expectedResult": "Seite lädt mit Titel \"Kullanıcılar & Roller\" (Nutzer & Rollen) und Untertitel zu Malik/Kiracı/Personel-Verwaltung, ohne Fehlerseite oder 404.",
+        "automationNote": "URL: /tr/dashboard/users"
+      },
+      {
+        "stepNo": 2,
+        "action": "Zum Abschnitt mit der Überschrift \"Kişi ve rol dizini\" (Personen- und Rollenverzeichnis, Komponente PeopleDirectoryLive) scrollen und beobachten.",
+        "testData": "",
+        "expectedResult": "Innerhalb weniger Sekunden erscheint eine gefüllte Tabelle mit mindestens einer Zeile (Spalten u.a. \"Personel\", \"Sakin\", \"Malik / Kiracı\", \"Riskli kayıt\"). Es erscheint NICHT der Fehlertext \"Kişi dizini şu anda alınamadı. Yenile butonu ile tekrar deneyin veya API durumunu kontrol edin.\"",
+        "automationNote": "Component: components/people-directory-live.tsx; UI-Selector noch zu ergänzen (kein data-testid im Code gefunden), Fehlertext als Negativ-Marker verwenden"
+      },
+      {
+        "stepNo": 3,
+        "action": "Innerhalb desselben Abschnitts den Unterblock \"Personel iş yükü\" (Personal-Arbeitslast) auf geladene Werte prüfen.",
+        "testData": "",
+        "expectedResult": "Zahlen/Karten mit Arbeitslast-Daten sind sichtbar und nicht dauerhaft im Ladezustand (kein Skeleton/Spinner nach 5 Sekunden mehr).",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "Weiter nach unten zum Abschnitt \"Rol kapsamı\" (Rollenabdeckung) scrollen.",
+        "testData": "",
+        "expectedResult": "Eine Liste/Tabelle mit bis zu 6 Rollen-Einträgen (aus roleCoverage-Datensatz) ist sichtbar, jede Zeile zeigt Rolle, Aufgabe (\"Görev\"), Limit und Kapsam (Scope).",
+        "automationNote": "Überschrift-Text \"Rol kapsamı\" als Anker; Datenquelle: site-management-data.ts roleCoverage bzw. Supabase-Tabelle role_coverage"
+      },
+      {
+        "stepNo": 5,
+        "action": "Seite per Browser-Refresh (F5) neu laden und erneut beide Abschnitte (Kişi ve rol dizini, Rol kapsamı) beobachten.",
+        "testData": "",
+        "expectedResult": "Beide Abschnitte laden erneut konsistent mit Daten (gleiche oder aktualisierte, aber nicht leere Inhalte); kein dauerhafter Fehlerzustand.",
+        "automationNote": "Wiederholung von Schritt 2-4 nach Reload"
+      }
+    ],
+    "architectNote": "PeopleDirectoryLive ist laut Vorgabe echt (liest Live-/Seed-Daten über Repository-Pattern mit source-Feld); erwartungsgemäß PASSED. Falls Supabase nicht konfiguriert ist, greift automatisch der lokale Seed-Fallback — das ist kein Fehler, sondern Normalverhalten laut site-management-repository.ts.",
+    "labels": [
+      "uc13",
+      "prio2",
+      "users",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC13-TC02",
+    "useCaseNumber": 13,
+    "useCaseName": "Personal- & Rollenübersicht",
+    "testCaseTitle": "Mieterzugriff-Panel: Einladung erstellen wird nach Seiten-Reload NICHT gespeichert (nur lokaler Browser-Zustand)",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 2,
+    "component": "Nutzer/Personal",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/users",
+    "precondition": "Manager-Rolle ist bereits über den Demo-Rollenwechsel aktiv. Auf /tr/dashboard/users befindet sich aktuell KEINE Einladung mit dem Testnamen \"QA Test Kiracı\" (falls doch vorhanden von einem früheren Testlauf: das ist unkritisch, der Zustand ist ohnehin nicht persistent und verschwindet beim nächsten Reload).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Auf /tr/dashboard/users zum Abschnitt mit der Überschrift \"Kiracı zaman erişimi\" (Mieter-Zeitzugang, Komponente TenantAccessPanel) scrollen.",
+        "testData": "",
+        "expectedResult": "Der Abschnitt zeigt drei Summen-Kacheln \"Aktif\", \"Yakında bitiyor\" und \"Süresi doldu\" sowie oben rechts einen Button \"Davet oluştur\" (Einladung erstellen) und darunter eine Liste bestehender Einträge.",
+        "automationNote": "Panel-Titel \"Kiracı zaman erişimi\"; Listen-Container data-testid=\"tenant-access-list\""
+      },
+      {
+        "stepNo": 2,
+        "action": "Aktuelle Anzahl der Einträge in der Liste sowie den Wert der Kachel \"Aktif\" notieren (Ausgangszustand).",
+        "testData": "",
+        "expectedResult": "Ein konkreter Ausgangswert ist notiert, z.B. \"Aktif = 4, Liste hat 6 Einträge\" (tatsächlicher Wert je nach Seed-Daten).",
+        "automationNote": "Anzahl Kind-Elemente von data-testid=\"tenant-access-list\" vor der Aktion zählen"
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf den Button \"Davet oluştur\" klicken.",
+        "testData": "",
+        "expectedResult": "Ein Formular mit den Feldern \"Kiracı adı\" (Mietername), \"Daire (ör. B3 / 12)\" (Einheit) und einem Dropdown \"Süre\" (Dauer, Optionen 30/90/180 gün) klappt auf.",
+        "automationNote": "Eingabefelder: aria-label=\"Kiracı adı\" und aria-label=\"Daire (ör. B3 / 12)\""
+      },
+      {
+        "stepNo": 4,
+        "action": "Formularfelder ausfüllen: Mietername = \"QA Test Kiracı\", Einheit = \"A-018\", Süre auf Standardwert 90 gün belassen. Danach den Button \"Zaman sınırlı davet oluştur\" (Zeitlich begrenzte Einladung erstellen) klicken.",
+        "testData": "Kiracı adı = QA Test Kiracı; Daire = A-018; Süre = 90 gün",
+        "expectedResult": "Ein neuer Eintrag mit Status-Badge \"Aktif\", Name \"QA Test Kiracı\", Einheit \"A-018\" und einem generierten Einladungscode im Format \"NLP-INV-XXXXXX\" erscheint ganz oben in der Liste. Die Kachel \"Aktif\" erhöht sich um 1 gegenüber dem in Schritt 2 notierten Wert.",
+        "automationNote": "createInvite() in tenant-access-panel.tsx erzeugt Code via `NLP-INV-${Date.now()...}`; neuer Eintrag ist erstes Element in data-testid=\"tenant-access-list\""
+      },
+      {
+        "stepNo": 5,
+        "action": "Den in Schritt 4 angezeigten Einladungscode (z.B. \"NLP-INV-AB12C3\") notieren.",
+        "testData": "",
+        "expectedResult": "Ein konkreter, eindeutiger Code ist notiert.",
+        "automationNote": ""
+      },
+      {
+        "stepNo": 6,
+        "action": "Browser-Seite mit F5 (bzw. Reload-Button des Browsers) neu laden, OHNE die URL zu ändern.",
+        "testData": "",
+        "expectedResult": "Seite /tr/dashboard/users lädt neu, Manager-Rolle bleibt aktiv (kein erneuter Login nötig, da Rolle über Demo-Cookie persistiert).",
+        "automationNote": "page.reload() in Playwright"
+      },
+      {
+        "stepNo": 7,
+        "action": "Erneut zum Abschnitt \"Kiracı zaman erişimi\" scrollen und die Liste sowie die Kachel \"Aktif\" mit dem in Schritt 2 notierten Ausgangszustand vergleichen.",
+        "testData": "",
+        "expectedResult": "Der in Schritt 4 erstellte Eintrag \"QA Test Kiracı\" / \"A-018\" / Code aus Schritt 5 ist NICHT mehr in der Liste vorhanden. Die Kachel \"Aktif\" zeigt wieder exakt den in Schritt 2 notierten Ausgangswert. Die Liste ist auf den Ausgangszustand vor Schritt 3 zurückgesetzt.",
+        "automationNote": "Erwartetes (korrektes) Ergebnis: Eintrag fehlt nach Reload, da TenantAccessPanel nur useState() ohne Persistenzschicht nutzt (kein API-Call, kein Supabase-Insert) — bei einem Fund, dass der Eintrag NACH dem Reload noch da ist, wäre das überraschend und müsste separat verifiziert werden (würde auf einen bisher unbekannten Persistenzpfad hindeuten)."
+      }
+    ],
+    "architectNote": "Bewusst als Risikotest angelegt: das Panel TenantAccessPanel hält seinen Zustand ausschließlich in lokalem React useState (siehe extend()/revoke()/createInvite() in components/tenant-access-panel.tsx), es gibt keinen Fetch/Insert gegen Supabase oder eine API-Route. Erwartungsgemäß PASSED im Sinne von \"Eintrag verschwindet nach Reload wie erwartet\" — das ist das korrekte, dokumentierte IST-Verhalten, NICHT ein Bug, der behoben werden muss. Wichtig für Vertrieb/Demo-Teams: dieses Panel darf gegenüber dem Kunden niemals als voll funktionsfähige, persistente Mieterverwaltung dargestellt werden.",
+    "labels": [
+      "uc13",
+      "prio2",
+      "users",
+      "tenant-access",
+      "negative",
+      "demo-risk"
+    ]
+  },
+  {
+    "testCaseId": "UC14-TC01",
+    "useCaseNumber": 14,
+    "useCaseName": "Mehrsprachigkeit live",
+    "testCaseTitle": "Sprachumschalter wechselt Navigation und Haupttext der Startseite vollständig in TR/EN/DE/RU ohne Restsprache",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "i18n",
+    "role": "Öffentlich (kein Login)",
+    "environmentUrl": "/tr",
+    "precondition": "Browser offen, kein Login erforderlich. Startseite ist auf Standard-Locale Türkisch (tr) erreichbar.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse https://cati-blond.vercel.app/tr aufrufen.",
+        "testData": "",
+        "expectedResult": "Startseite lädt in türkischer Sprache. Navigationspunkt für die Startseite zeigt \"Ana Sayfa\", der Kontakt-Menüpunkt zeigt \"İletişim\", die Hero-Überschrift lautet \"Emlak operasyonunuzu tek ERP merkezinde yönetin\".",
+        "automationNote": "Nav-Keys: nav.home=\"Ana Sayfa\", nav.contacts=\"İletişim\" (messages/tr.json); Hero-Key hero.headline"
+      },
+      {
+        "stepNo": 2,
+        "action": "Im Sprachumschalter (Dropdown mit Weltkugel-Icon, oben in der Kopfzeile) den Eintrag \"EN - English\" auswählen.",
+        "testData": "EN - English",
+        "expectedResult": "URL wechselt auf /en, Seite lädt in Englisch. Navigationspunkt Startseite zeigt \"Home\", Kontakt-Menüpunkt zeigt \"Contact\", Hero-Überschrift lautet \"Run your real estate operation from one ERP center\". Keine türkischen Restwörter in Navigation oder Hero-Bereich sichtbar.",
+        "automationNote": "data-testid=\"locale-switcher\" (natives <select>-Element), Option-Value \"en\"; erwartete Werte aus messages/en.json"
+      },
+      {
+        "stepNo": 3,
+        "action": "Im selben Sprachumschalter den Eintrag \"DE - Deutsch\" auswählen.",
+        "testData": "DE - Deutsch",
+        "expectedResult": "URL wechselt auf /de, Seite lädt in Deutsch. Navigationspunkt Startseite zeigt \"Startseite\", Kontakt-Menüpunkt zeigt \"Kontakt\", Hero-Überschrift lautet \"Steuern Sie den Immobilienbetrieb aus einem ERP-Zentrum\". Keine englischen oder türkischen Restwörter in Navigation oder Hero-Bereich sichtbar.",
+        "automationNote": "data-testid=\"locale-switcher\", Option-Value \"de\"; erwartete Werte aus messages/de.json"
+      },
+      {
+        "stepNo": 4,
+        "action": "Im selben Sprachumschalter den Eintrag \"RU - Русский\" auswählen.",
+        "testData": "RU - Русский",
+        "expectedResult": "URL wechselt auf /ru, Seite lädt in Russisch (kyrillische Schrift). Navigationspunkt Startseite zeigt \"Главная\", Kontakt-Menüpunkt zeigt \"Контакты\", Hero-Überschrift lautet \"Управляйте операциями недвижимости из одного ERP-центра\". Keine lateinischen Restwörter (außer Eigennamen wie \"1Çatı\"/\"ERP\") in Navigation oder Hero-Bereich sichtbar.",
+        "automationNote": "data-testid=\"locale-switcher\", Option-Value \"ru\"; erwartete Werte aus messages/ru.json"
+      },
+      {
+        "stepNo": 5,
+        "action": "Abschließend im Sprachumschalter wieder \"TR - Türkçe\" auswählen, um zur Ausgangslage zurückzukehren, und die URL-Struktur kontrollieren (kein doppeltes Locale-Präfix wie /en/en).",
+        "testData": "TR - Türkçe",
+        "expectedResult": "URL kehrt zu /tr zurück, Seite zeigt wieder türkischen Text wie in Schritt 1. Zu keinem Zeitpunkt während der vorigen Schritte trat eine URL wie /en/en oder /tr/de auf.",
+        "automationNote": "Prüfung: window.location.pathname beginnt exakt mit genau einem der Präfixe /tr, /en, /de, /ru"
+      }
+    ],
+    "architectNote": "Laut Code-Audit sind alle 4 Sprachen strukturell vollständig (keine fehlenden Übersetzungsschlüssel gefunden) und der Locale-Switcher baut die Ziel-URL bewusst manuell, um Doppel-Locale-Bugs zu vermeiden. Erwartungsgemäß PASSED. Sollte dennoch ein englischer/türkischer Reststring auftauchen, ist das ein echter i18n-Bug und kein bekanntes Verhalten.",
+    "labels": [
+      "uc14",
+      "prio2",
+      "i18n",
+      "golden-path",
+      "public"
+    ]
+  },
+  {
+    "testCaseId": "UC15-TC01",
+    "useCaseNumber": 15,
+    "useCaseName": "Sicherer Dokumentenzugriff",
+    "testCaseTitle": "Owner der Wohnung A-001 lädt ein eigenes Dokument über den signierten 60-Sekunden-Link herunter",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "Dokumente",
+    "role": "Eigentümer (owner)",
+    "environmentUrl": "/tr/dashboard/documents",
+    "precondition": "VORAB beim Admin-/Entwicklerteam erfragen, ob die Umgebungsvariable DOCUMENT_STORAGE_MODE=supabase in der getesteten Umgebung gesetzt ist — ohne diese Variable schlägt der Download mit 404 fehl (siehe architectNote). Owner-Rolle ist über den Demo-Rollenwechsel (/tr/login → \"Demo başlat\" → Rollenkarte \"owner\"/Malik) aktiv.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse /tr/login aufrufen, auf \"Demo başlat\" klicken, dann Rollenkarte für Owner/Malik anklicken.",
+        "testData": "",
+        "expectedResult": "Redirect zu /tr/dashboard, Sidebar zeigt genau 5 Menüpunkte: Dashboard, Tickets, Calendar, Documents, Communications (kein Finance/Users/Settings/Listings/Leads/Compliance sichtbar).",
+        "automationNote": "data-testid=\"demo-role-option-owner\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf den Menüpunkt für Dokumente klicken bzw. direkt /tr/dashboard/documents aufrufen.",
+        "testData": "",
+        "expectedResult": "Dokumente-Seite lädt, eine Tabelle mit Dokumentenzeilen ist sichtbar, gefiltert auf die Owner-Wohnungen A-001, A-054, D-023.",
+        "automationNote": "URL: /tr/dashboard/documents"
+      },
+      {
+        "stepNo": 3,
+        "action": "In der Dokumententabelle eine Zeile mit Wohnungsnummer A-001 suchen.",
+        "testData": "A-001",
+        "expectedResult": "Mindestens eine Dokumentzeile mit Flat-Nummer A-001 ist in der Liste vorhanden.",
+        "automationNote": "Spalte flatNumber === \"A-001\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In dieser Zeile das Aktionsmenü öffnen (Button/Icon für \"Belge aksiyonları\", Dokumentaktionen) und den Eintrag \"Belgeyi indir\" (Dokument herunterladen) anklicken.",
+        "testData": "",
+        "expectedResult": "Der Download startet (Browser-Downloadleiste/-dialog zeigt eine Datei) ODER das Dokument öffnet sich mit Content-Disposition attachment; es erscheint KEINE Fehlermeldung.",
+        "automationNote": "Menü-Button aria-label=\"{document.id} Belge aksiyonlari\"; Menüeintrag aria-label=\"Belgeyi indir\"; Ziel-URL: /api/site-management/documents/{documentId}/file?disposition=attachment"
+      },
+      {
+        "stepNo": 5,
+        "action": "Heruntergeladene Datei öffnen bzw. deren Dateigröße/-typ prüfen.",
+        "testData": "",
+        "expectedResult": "Datei ist kein leeres/beschädigtes Dokument (Dateigröße > 0 Byte, Dateityp passt zur erwarteten Dokumentkategorie, z.B. PDF).",
+        "automationNote": "Playwright: page.waitForEvent('download'), dann download.path() prüfen"
+      },
+      {
+        "stepNo": 6,
+        "action": "Zur Kontrolle in der Dokumentenliste nach einer Wohnung suchen, die NICHT zu den Owner-Demo-Wohnungen (A-001, A-054, D-023) gehört, z.B. A-018.",
+        "testData": "A-018",
+        "expectedResult": "Kein Dokument mit Flat-Nummer A-018 wird in der Liste angezeigt — RBAC-Scoping funktioniert (Owner sieht nur eigene Wohnungen).",
+        "automationNote": "Negativabgleich gegen role-scoped-views.ts Owner-Liste"
+      }
+    ],
+    "architectNote": "Funktioniert nur, wenn DOCUMENT_STORAGE_MODE=supabase gesetzt ist (lib/document-storage.ts). Ist das nicht der Fall oder existiert keine tatsächlich angehängte Datei zum Demo-Dokument, liefert /api/site-management/documents/{id}/file einen 404 mit der Meldung \"Document file is not attached yet.\" (tr: \"Dosya henüz bağlı değil\") — in diesem Fall vor dem Testlauf beim Team erfragen, ob das erwartetes IST-Verhalten ist, und den Test ggf. bewusst als bekannt-fehlschlagend (expected FAILED, Konfigurationslücke) dokumentieren statt als Produktfehler zu werten.",
+    "labels": [
+      "uc15",
+      "prio2",
+      "documents",
+      "rbac",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC16-TC01",
+    "useCaseNumber": 16,
+    "useCaseName": "Auswertungen & Berichte",
+    "testCaseTitle": "Reports-Seite zeigt in türkischer Sprache englische Textreste im Rapor-Register (bekannter Übersetzungsfehler)",
+    "testCaseType": "Negativ-/Grenzfall",
+    "priorityTier": 2,
+    "component": "Reports",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/reports",
+    "precondition": "Manager-Rolle ist über den Demo-Rollenwechsel aktiv. UI-Sprache ist Türkisch (Standard-Locale tr, kein Sprachwechsel vorgenommen).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse /tr/dashboard/reports aufrufen.",
+        "testData": "",
+        "expectedResult": "Reports-Seite lädt vollständig ohne Fehlerseite, mit Cashflow-Kacheln oben und einem Berichte-Register weiter unten.",
+        "automationNote": "URL: /tr/dashboard/reports"
+      },
+      {
+        "stepNo": 2,
+        "action": "Die Cashflow-/Schuldenalter-Kacheln (\"... gün borç\") im oberen Bereich der Seite auf Sprache prüfen.",
+        "testData": "",
+        "expectedResult": "Alle sichtbaren Beschriftungen in diesem Bereich sind auf Türkisch (z.B. Kartentitel endet auf \"gün borç\", Hinweistext \"AI aksiyon listesinde önceliklendirilir.\").",
+        "automationNote": "Erwartungsgemäß korrekt (Kontrollschritt, nicht Ziel des Bugs)"
+      },
+      {
+        "stepNo": 3,
+        "action": "Zum Abschnitt mit der Kartenüberschrift \"Rapor register\" scrollen und den direkt darunterstehenden Beschreibungstext (kleinere, graue Schrift unter dem Titel) vollständig lesen.",
+        "testData": "",
+        "expectedResult": "ERWARTET (Soll): Der Beschreibungstext ist vollständig auf Türkisch. TATSÄCHLICH ZU PRÜFEN: Der Text lautet unverändert englisch: \"Board, finance, operation, access and guest reports stay searchable here; export remains a logged user action.\" Wenn dieser englische Satz erscheint, ist der Testschritt als FAILED zu werten.",
+        "automationNote": "DashboardSection description-Prop, Übersetzungsschlüssel identisch mit dem englischen Text in app/[locale]/dashboard/reports/page.tsx Zeile ~262 (next-intl Fallback fehlt für tr)"
+      },
+      {
+        "stepNo": 4,
+        "action": "Direkt neben der Überschrift \"Rapor register\" das kleine Badge (rechts, mit Zahl) ansehen.",
+        "testData": "",
+        "expectedResult": "ERWARTET (Soll): Badge zeigt eine Zahl gefolgt von einem türkischen Wort für Datensätze (z.B. \"{Zahl} kayıt\"). TATSÄCHLICH ZU PRÜFEN: Badge zeigt \"{Zahl} records\" mit dem englischen Wort \"records\". Wenn \"records\" erscheint, ist der Testschritt als FAILED zu werten.",
+        "automationNote": "StatusBadge Inhalt: {localizedReportCards.length} {t(\"records\")} — Übersetzungsschlüssel \"records\" ohne tr-Eintrag"
+      },
+      {
+        "stepNo": 5,
+        "action": "Screenshot des gesamten \"Rapor register\"-Kartenkopfs (Titel, Badge, Beschreibungstext) für die Fehlerdokumentation anfertigen.",
+        "testData": "",
+        "expectedResult": "Screenshot zeigt eindeutig Titel, Badge und Beschreibungstext in einem Bild zur Nachvollziehbarkeit für das Entwicklerteam.",
+        "automationNote": "Playwright: page.locator('#report-register').screenshot()"
+      },
+      {
+        "stepNo": 6,
+        "action": "Zur Kontrolle denselben Abschnittstyp beim zweiten Register weiter unten (\"AI automation register\") auf denselben Fehlertyp prüfen: Titel und Beschreibungstext lesen.",
+        "testData": "",
+        "expectedResult": "ERWARTET (Soll): Titel und Beschreibung auf Türkisch. TATSÄCHLICH ZU PRÜFEN: Titel \"AI automation register\" und Beschreibung \"Every automation keeps the audience, supported languages and required human approval visible before preparation.\" bleiben ebenfalls englisch — falls ja, zusätzlicher FAILED-Beleg für denselben systematischen Fehler.",
+        "automationNote": "gleiche Ursache wie Schritt 3/4, anderer Abschnitt (id=\"ai-automation-register\")"
+      }
+    ],
+    "architectNote": "Bekannter, bereits im Code verifizierter Fehler: die Übersetzungsschlüssel in app/[locale]/dashboard/reports/page.tsx sind die englischen Sätze selbst (t(\"Board, finance, operation...\") und t(\"records\")), es existiert kein passender tr-Eintrag in messages/tr.json, weshalb next-intl auf den englischen Schlüsseltext zurückfällt. Erwartungsgemäß FAILED bei Schritt 3, 4 und 6 — dieser Testfall dient bewusst dazu, den Fehler reproduzierbar zu dokumentieren, nicht um eine funktionierende Übersetzung zu bestätigen.",
+    "labels": [
+      "uc16",
+      "prio2",
+      "reports",
+      "i18n-bug",
+      "known-issue"
+    ]
+  },
+  {
+    "testCaseId": "UC17-TC01",
+    "useCaseNumber": 17,
+    "useCaseName": "Transparente Systemeinstellungen",
+    "testCaseTitle": "Admin prüft ehrliche Live/Demo/Müşteri-bekliyor-Kennzeichnung aller externen Integrationen in den Einstellungen",
+    "testCaseType": "Golden Path",
+    "priorityTier": 2,
+    "component": "Settings",
+    "role": "Administrator (admin)",
+    "environmentUrl": "/tr/dashboard/settings",
+    "precondition": "Admin-Rolle ist über den Demo-Rollenwechsel (/tr/login → \"Demo başlat\" → Rollenkarte \"admin\") aktiv.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Adresse /tr/dashboard/settings aufrufen.",
+        "testData": "",
+        "expectedResult": "Einstellungen-Seite lädt vollständig, mit Abschnitten zu Operationseinstellungen und einem Abschnitt mit Überschrift \"Faz 13 entegrasyon hazırlığı\" (Phase-13-Integrationsbereitschaft).",
+        "automationNote": "URL: /tr/dashboard/settings"
+      },
+      {
+        "stepNo": 2,
+        "action": "Im Integrationsabschnitt den Beschreibungstext unter der Überschrift lesen.",
+        "testData": "",
+        "expectedResult": "Text lautet sinngemäß, dass Supabase als angebundenes Backend läuft, während Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter im Demo-/anbieterbereiten Modus bleiben, bis Kundenverträge/API-Schlüssel freigegeben sind — auf Türkisch.",
+        "automationNote": "Text: \"Supabase bağlı backend olarak çalışır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.\""
+      },
+      {
+        "stepNo": 3,
+        "action": "Direkt darunter die drei Sammel-Badges (Zusammenfassung) ansehen: \"Canlı\" (Live), \"Demo\" und \"Müşteri bekliyor\" (Wartet auf Kunde), jeweils mit einer Zahl.",
+        "testData": "",
+        "expectedResult": "Alle drei Badges sind sichtbar mit jeweils einer nicht-negativen Ganzzahl. Die Summe der drei Zahlen entspricht der Gesamtzahl der aufgeführten Integrationsanbieter (mind. so viele wie in der folgenden Tabelle sichtbar).",
+        "automationNote": "StatusBadge-Texte: copy.live=\"Canlı\", copy.demo=\"Demo\", copy.waitingClient=\"Müşteri bekliyor\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In der darunterliegenden Kachel-/Kartenübersicht (erste 6 Anbieter) sowie in der vollständigen Tabelle jeden einzelnen Anbieter-Eintrag auf sein Status-Badge prüfen.",
+        "testData": "",
+        "expectedResult": "Jeder Anbieter zeigt genau eines von vier Status-Badges: \"Bağlı\" (Verbunden/Live), \"Demo hazır\" (Demo bereit), \"Müşteri bekleniyor\" (Wartet auf Kunde) oder \"Manuel yedek\" (Manueller Ersatz). Kein Anbieter zeigt einen widersprüchlichen oder leeren Status.",
+        "automationNote": "integrationStatus-Mapping: connected=\"Bağlı\", demo_ready=\"Demo hazır\", blocked_pending_client=\"Müşteri bekleniyor\", manual_fallback=\"Manuel yedek\""
+      },
+      {
+        "stepNo": 5,
+        "action": "Gezielt nach Zahlungs-/Bank-/Zugangsanbietern in der Tabelle suchen (Spalte Anbieter/Provider) und deren Status-Badge notieren.",
+        "testData": "z.B. Zeilen mit Kategorie Zahlung/Bank/Erişim",
+        "expectedResult": "KEIN Zahlungs-, Bank- oder Zugangsanbieter zeigt das Badge \"Bağlı\" (Verbunden/Live), solange laut docs/PROJECT-HANDBOOK.md die entsprechende Vendor-/Vertragsentscheidung offen ist — diese müssen \"Demo hazır\" oder \"Müşteri bekleniyor\" zeigen.",
+        "automationNote": "Kreuzabgleich gegen lib/site-management-data.ts integrationProviders und PROJECT-HANDBOOK.md §6 offene Entscheidungen"
+      },
+      {
+        "stepNo": 6,
+        "action": "In derselben Tabelle die Risiko-Spalte (\"Risk\") jedes Anbieters mit hohem Risiko (\"Yüksek\") gegenprüfen, ob dieser konsistent NICHT als \"Bağlı\" markiert ist.",
+        "testData": "",
+        "expectedResult": "Anbieter mit Risiko \"Yüksek\" (Hoch) sind nie gleichzeitig als \"Bağlı\" (Live/Verbunden) gekennzeichnet — hohes Risiko und volle Live-Anbindung schließen sich in der Demo-Darstellung plausibel aus.",
+        "automationNote": "Tabellen-Spalten \"risk\" und \"status\" aus derselben DataTable-Zeile vergleichen"
+      }
+    ],
+    "architectNote": "Laut Code-Audit ist dies bewusst so gestaltet: die Settings-Seite zeigt ehrlich Live/Demo/Müşteri-bekliyor-Badges je externer Anbindung als Transparenz-Pluspunkt. Erwartungsgemäß PASSED. Sollte ein Zahlungs-/Bank-/Zugangsanbieter fälschlich als \"Bağlı\" erscheinen, wäre das ein schwerwiegender Irreführungs-Fund (Demo würde einen nicht vorhandenen Live-Zustand vortäuschen) und sofort zu eskalieren.",
+    "labels": [
+      "uc17",
+      "prio2",
+      "settings",
+      "transparency",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC18-TC01",
+    "useCaseNumber": 18,
+    "useCaseName": "Buchung / Einzug / Auszug",
+    "testCaseTitle": "Manager kann keine neue, dauerhafte Buchung im Kalender anlegen (Simulation ohne Schreibpfad)",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Buchung",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/calendar",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app und einen aktuellen Chromium-Browser. Kein bestehendes Login nötig (Demo-Rollenwahl wird genutzt).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Browser öffnen und zu https://cati-blond.vercel.app/tr/login navigieren.",
+        "testData": "URL: https://cati-blond.vercel.app/tr/login",
+        "expectedResult": "Login-Seite lädt, grüner Button 'Demo başlat' (Demo starten) ist sichtbar.",
+        "automationNote": "Playwright: page.goto('/tr/login')"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf den Button 'Demo başlat' klicken.",
+        "testData": "-",
+        "expectedResult": "Ein Rollenraster mit 6 Rollenkarten öffnet sich (Yönetim, Sorumlu, Muhasebe, Personel, Malik, Kiracı).",
+        "automationNote": "data-testid=\"demo-full-access\" -> data-testid=\"demo-role-menu\" wird sichtbar"
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf die Rollenkarte 'Sorumlu' (Manager) klicken.",
+        "testData": "role=manager",
+        "expectedResult": "Automatischer Redirect zu /tr/dashboard. Sidebar zeigt 13 Menüpunkte, darunter 'Rezervasyon' (Kalender/Buchung).",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In der linken Sidebar auf den Menüpunkt 'Rezervasyon' (Kalender/Buchung) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/calendar lädt und zeigt eine Kalender-/Buchungsübersicht mit bestehenden Einträgen.",
+        "automationNote": "UI-Selector noch zu ergänzen; Route: /tr/dashboard/calendar"
+      },
+      {
+        "stepNo": 5,
+        "action": "Auf der gesamten Seite (inkl. Scroll bis zum Ende) nach einem Button/Formular zum Anlegen einer NEUEN Buchung für eine freie Einheit suchen (z.B. 'Yeni Rezervasyon', 'Randevu Oluştur', '+'-Symbol).",
+        "testData": "Zieleinheit (frei, nicht in Demo-Set): A-099",
+        "expectedResult": "Es ist entweder kein Button zum Anlegen einer neuen Buchung auffindbar, oder ein vorhandener Button öffnet höchstens ein Formular ohne erkennbaren echten Speicherpfad.",
+        "automationNote": "UI-Selector noch zu ergänzen; Netzwerk-Tab parallel beobachten (DevTools) auf POST/PUT-Requests"
+      },
+      {
+        "stepNo": 6,
+        "action": "Falls ein Formular vorhanden ist: Pflichtfelder ausfüllen (Einheit, Datum, Zweck) und den Bestätigungs-Button klicken.",
+        "testData": "unit=A-099, date=heute+7 Tage, purpose=QA-Test-Buchung",
+        "expectedResult": "Es erscheint höchstens eine clientseitige Erfolgsmeldung; im Netzwerk-Tab ist entweder kein API-Call zu erkennen oder die Antwort weist erkennbar auf 'simulation'/'providerMode: simulation' hin.",
+        "automationNote": "API-Endpunkt vermutlich unter /api/site-management/... mit Feld providerMode - noch zu bestätigen"
+      },
+      {
+        "stepNo": 7,
+        "action": "Die Seite per Browser-Reload (F5) neu laden und erneut die vollständige Buchungsliste durchsehen.",
+        "testData": "-",
+        "expectedResult": "Die in Schritt 6 versuchte Buchung für Einheit A-099 ist NICHT in der Liste vorhanden bzw. nicht dauerhaft gespeichert.",
+        "automationNote": "Assertion: page.reload() dann Liste auf Abwesenheit von 'A-099' prüfen"
+      }
+    ],
+    "architectNote": "Laut Code-Audit liefert die zugrundeliegende Buchungs-API explizit 'source: local-demo-contract, providerMode: simulation, liveProviderConnected: false' - es existiert kein echter Schreibpfad für neue Buchungen. Dieser Testfall dokumentiert bewusst die fehlende SOLL-Funktion; erwartetes Ergebnis ist heute 'failed' bzw. 'open' (kein Button auffindbar ODER Buchung nicht persistent) - kein Fehler des Testers, sondern dokumentierte Produktlücke fürs Backlog.",
+    "labels": [
+      "uc18",
+      "prio3",
+      "buchung",
+      "calendar",
+      "soll-zielfunktion",
+      "simulation"
+    ]
+  },
+  {
+    "testCaseId": "UC18-TC02",
+    "useCaseNumber": 18,
+    "useCaseName": "Buchung / Einzug / Auszug",
+    "testCaseTitle": "Owner sieht bestehende Demo-Buchungen inkl. kritischem Fall B-040 korrekt mit Status",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Buchung",
+    "role": "Eigentümer (owner)",
+    "environmentUrl": "/tr/dashboard/calendar",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren.",
+        "testData": "-",
+        "expectedResult": "Login-Seite lädt mit Button 'Demo başlat'.",
+        "automationNote": "page.goto('/tr/login')"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf 'Demo başlat' klicken.",
+        "testData": "-",
+        "expectedResult": "Rollenraster mit 6 Karten öffnet sich.",
+        "automationNote": "data-testid=\"demo-full-access\""
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf die Rollenkarte 'Malik' (Eigentümer) klicken.",
+        "testData": "role=owner",
+        "expectedResult": "Redirect zu /tr/dashboard. Sidebar zeigt genau 5 Menüpunkte: Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim - KEIN Finans, Kullanıcılar, Ayarlar, Daire Matrisi, Müşteri Adayları, Erişim & Uyum.",
+        "automationNote": "data-testid=\"demo-role-option-owner\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In der Sidebar auf 'Rezervasyon' (Kalender) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/calendar lädt fehlerfrei.",
+        "automationNote": "Route: /tr/dashboard/calendar"
+      },
+      {
+        "stepNo": 5,
+        "action": "Die angezeigte Buchungsliste/Kalenderansicht auf enthaltene Einheiten-IDs prüfen.",
+        "testData": "Erwartete Einheiten: A-012, B-040, D-087",
+        "expectedResult": "Alle drei Einheiten A-012, B-040 und D-087 sind in der Ansicht sichtbar (nicht mehr, nicht weniger als dieses feste Set an eigenen Objekten).",
+        "automationNote": "Assertion auf Textinhalte 'A-012', 'B-040', 'D-087' auf der Seite"
+      },
+      {
+        "stepNo": 6,
+        "action": "Den Eintrag für Einheit B-040 gezielt öffnen bzw. genau ansehen.",
+        "testData": "unit=B-040",
+        "expectedResult": "Der Eintrag zeigt einen eindeutig erkennbaren Status-Hinweis zu 'Kaution-Review'/'Zugang gesperrt' (deposit review / access blocked) als Badge oder Textlabel - keine normale, unauffällige Buchung.",
+        "automationNote": "UI-Selector noch zu ergänzen; Statusbadge-Text prüfen"
+      },
+      {
+        "stepNo": 7,
+        "action": "Die Seite per F5 neu laden und Schritt 5 und 6 wiederholen.",
+        "testData": "-",
+        "expectedResult": "Exakt dieselben drei Einheiten und derselbe Status für B-040 erscheinen erneut - reproduzierbares, konsistentes Ergebnis.",
+        "automationNote": "page.reload() + gleiche Assertions erneut ausführen"
+      }
+    ],
+    "architectNote": "Dies ist reine Leseansicht auf hartkodierte Demo-Daten (lib/role-scoped-views.ts) - unabhängig von Supabase-Anbindung stabil reproduzierbar. Sollte zuverlässig 'passed' liefern.",
+    "labels": [
+      "uc18",
+      "prio3",
+      "buchung",
+      "calendar",
+      "ist-zustand",
+      "owner",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC19-TC01",
+    "useCaseNumber": 19,
+    "useCaseName": "Zahlung manuell verbuchen",
+    "testCaseTitle": "Accountant findet keine Möglichkeit, eine neue Zahlung/Buchung im Finance-Bereich zu erfassen",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Finanzen",
+    "role": "Buchhaltung (accountant)",
+    "environmentUrl": "/tr/dashboard/finance",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren.",
+        "testData": "-",
+        "expectedResult": "Login-Seite lädt.",
+        "automationNote": "page.goto('/tr/login')"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf 'Demo başlat' klicken.",
+        "testData": "-",
+        "expectedResult": "Rollenraster öffnet sich.",
+        "automationNote": "data-testid=\"demo-full-access\""
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf die Rollenkarte 'Muhasebe' (Buchhaltung) klicken.",
+        "testData": "role=accountant",
+        "expectedResult": "Redirect zu /tr/dashboard. Sidebar zeigt genau 5 Menüpunkte: Genel Bakış, Belgeler, Finans & Aidat, Raporlar, İletişim.",
+        "automationNote": "data-testid=\"demo-role-option-accountant\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In der Sidebar auf 'Finans & Aidat' (Finanzen) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/finance lädt und zeigt eine Ledger-Tabelle mit bestehenden Buchungen (Datum, Betrag, Einheit, Status).",
+        "automationNote": "Route: /tr/dashboard/finance"
+      },
+      {
+        "stepNo": 5,
+        "action": "Die gesamte Seite inkl. aller Tabs/Karten/Buttons nach einer Funktion zum Anlegen einer NEUEN Zahlungsbuchung durchsuchen (z.B. 'Yeni Ödeme', 'Kayıt Ekle', '+'-Symbol).",
+        "testData": "-",
+        "expectedResult": "Kein Button/Formular zum manuellen Erfassen einer neuen Zahlung/Buchung ist auffindbar.",
+        "automationNote": "UI-Selector noch zu ergänzen; Suche nach Buttons mit create/add-Bezug"
+      },
+      {
+        "stepNo": 6,
+        "action": "Falls entgegen Erwartung ein Button existiert: darauf klicken und versuchen, eine Testbuchung anzulegen.",
+        "testData": "amount=100 TRY, unit=A-054, type=Aidat ödemesi",
+        "expectedResult": "Entweder öffnet sich kein Formular, oder ein Speichern-Versuch führt zu keiner erfolgreichen, dauerhaften Buchung (kein 2xx-API-Erfolg mit neuem Ledger-Eintrag).",
+        "automationNote": "DevTools-Netzwerk-Tab auf POST/PATCH gegen /api/site-management/finance beobachten"
+      },
+      {
+        "stepNo": 7,
+        "action": "Seite per F5 neu laden und die Ledger-Tabelle mit dem Stand aus Schritt 4 vergleichen.",
+        "testData": "-",
+        "expectedResult": "Die Ledger-Tabelle ist unverändert gegenüber Schritt 4 - keine neue Buchung für Einheit A-054/100 TRY vorhanden.",
+        "automationNote": "Assertion: Zeilenanzahl/Inhalt der Tabelle vor/nach Vergleich"
+      }
+    ],
+    "architectNote": "Laut Code-Audit existiert im gesamten Code KEINE Insert/Update-Funktion für Finanzbuchungen - Finance-Ledger ist ausschließlich lesend implementiert (nur SELECT). Erwartetes Ergebnis ist heute 'failed'/'open' (kein Button auffindbar bzw. wirkungslos); dies dokumentiert bewusst die fehlende SOLL-Funktion fürs Backlog, kein Testfehler.",
+    "labels": [
+      "uc19",
+      "prio3",
+      "finanzen",
+      "finance",
+      "soll-zielfunktion",
+      "kein-schreibpfad"
+    ]
+  },
+  {
+    "testCaseId": "UC19-TC02",
+    "useCaseNumber": 19,
+    "useCaseName": "Zahlung manuell verbuchen",
+    "testCaseTitle": "Accountant kann bestehende Finance-Ledger-Einträge korrekt und vollständig lesen",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Finanzen",
+    "role": "Buchhaltung (accountant)",
+    "environmentUrl": "/tr/dashboard/finance",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Muhasebe' klicken.",
+        "testData": "role=accountant",
+        "expectedResult": "Redirect zu /tr/dashboard mit 5 Sidebar-Menüpunkten (siehe TC1, Schritt 3).",
+        "automationNote": "data-testid=\"demo-full-access\" -> data-testid=\"demo-role-option-accountant\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Finans & Aidat' klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/finance lädt ohne Fehleranzeige.",
+        "automationNote": "Route: /tr/dashboard/finance"
+      },
+      {
+        "stepNo": 3,
+        "action": "Die Ledger-Tabelle auf vollständige, plausible Werte in jeder Spalte prüfen (Datum, Betrag, Währung, Einheit, Status).",
+        "testData": "-",
+        "expectedResult": "Mindestens 5 Einträge sind sichtbar, keine Spalte zeigt 'undefined', 'NaN', 'null' oder einen leeren Platzhalter.",
+        "automationNote": "UI-Selector noch zu ergänzen; DataTable-Komponente im Code: components/data-table.tsx"
+      },
+      {
+        "stepNo": 4,
+        "action": "Prüfen, ob ein Status-/Quellen-Hinweis vorhanden ist, der auf Live-/Supabase-Daten hindeutet (z.B. Badge 'Supabase live' oder vergleichbar).",
+        "testData": "-",
+        "expectedResult": "Ein Quellen-Badge ist sichtbar (Supabase-Live oder lokaler Seed-Fallback, je nach Umgebungskonfiguration) - keine widersprüchliche/fehlende Quellenangabe.",
+        "automationNote": "Feld 'source' in API-Antwort von /api/site-management/finance parallel im Netzwerk-Tab prüfen"
+      },
+      {
+        "stepNo": 5,
+        "action": "Falls vorhanden: eine Export-Funktion (z.B. 'Dışa Aktar'/Exportieren) anklicken.",
+        "testData": "-",
+        "expectedResult": "Die Export-Aktion löst eine sichtbare Rückmeldung aus (Download oder Bestätigungsmeldung).",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 6,
+        "action": "In der Sidebar auf 'Raporlar' (Berichte) wechseln und nach einem Audit-Log-Eintrag zur Export-Aktion aus Schritt 5 suchen.",
+        "testData": "-",
+        "expectedResult": "Ein Audit-Log-Eintrag zur Export-Aktion ist auffindbar, sofern die Reports-Seite einen entsprechenden Aktivitäts-/Protokollbereich zeigt.",
+        "automationNote": "Route: /tr/dashboard/reports"
+      },
+      {
+        "stepNo": 7,
+        "action": "Zurück zu /tr/dashboard/finance navigieren und die Seite per F5 neu laden.",
+        "testData": "-",
+        "expectedResult": "Die Ledger-Daten aus Schritt 3 bleiben vollständig und unverändert lesbar - kein Datenverlust, keine Fehlermeldung.",
+        "automationNote": "page.goto('/tr/dashboard/finance') + reload + gleiche Assertions"
+      }
+    ],
+    "architectNote": "Finance-Ledger ist ein echter, funktionierender Lesepfad gegen Supabase (nur SELECT, kein Schreibpfad). Sollte zuverlässig 'passed' liefern.",
+    "labels": [
+      "uc19",
+      "prio3",
+      "finanzen",
+      "finance",
+      "ist-zustand",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC20-TC01",
+    "useCaseNumber": 20,
+    "useCaseName": "Foto-/Video-Nachweis für Serviceaufträge",
+    "testCaseTitle": "Staff findet keine Upload-Oberfläche für Foto-/Video-Nachweis am zugewiesenen Ticket",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Service/Workforce",
+    "role": "Personal (staff)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig. Bekanntes Demo-Ticket: SRV-2402 (Wasserleck) für Einheit A-018.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren.",
+        "testData": "-",
+        "expectedResult": "Login-Seite lädt.",
+        "automationNote": "page.goto('/tr/login')"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf 'Demo başlat' klicken.",
+        "testData": "-",
+        "expectedResult": "Rollenraster öffnet sich.",
+        "automationNote": "data-testid=\"demo-full-access\""
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf die Rollenkarte 'Personel' (Personal/Staff) klicken.",
+        "testData": "role=staff",
+        "expectedResult": "Redirect zu /tr/dashboard. Sidebar zeigt genau 6 Menüpunkte: Genel Bakış, Servis Talepleri, Rezervasyon, Belgeler, İletişim, Offline Senkron.",
+        "automationNote": "data-testid=\"demo-role-option-staff\""
+      },
+      {
+        "stepNo": 4,
+        "action": "In der Sidebar auf 'Servis Talepleri' (Tickets) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/tickets lädt mit einer Liste zugewiesener Tickets, u.a. SRV-2402 für Einheit A-018.",
+        "automationNote": "Route: /tr/dashboard/tickets"
+      },
+      {
+        "stepNo": 5,
+        "action": "Das Ticket SRV-2402 (Einheit A-018, Wasserleck) öffnen bzw. anklicken.",
+        "testData": "ticket=SRV-2402, unit=A-018",
+        "expectedResult": "Eine Ticket-Detailansicht mit Statusinformationen, Priorität und SLA öffnet sich.",
+        "automationNote": "UI-Selector noch zu ergänzen; Ticket-Zeile per Text 'SRV-2402' oder 'A-018' identifizieren"
+      },
+      {
+        "stepNo": 6,
+        "action": "Die Detailansicht auf eine Upload-Funktion für Foto/Video (z.B. Button 'Fotoğraf Yükle', 'Kanıt Ekle', Datei-Auswahl-Dialog) durchsuchen.",
+        "testData": "-",
+        "expectedResult": "Keine Upload-Oberfläche/kein Datei-Auswahl-Dialog ist auffindbar; höchstens ein reiner Zähler (z.B. 'Medya: 0') ohne Interaktionsmöglichkeit ist sichtbar.",
+        "automationNote": "UI-Selector noch zu ergänzen; DB-Tabelle media_reports existiert laut Audit, aber keine API-Route zum Upload"
+      },
+      {
+        "stepNo": 7,
+        "action": "Falls entgegen Erwartung ein Upload-Button existiert: eine Testdatei auswählen und den Upload versuchen.",
+        "testData": "Testdatei: test-photo.jpg",
+        "expectedResult": "Der Upload schlägt fehl bzw. es erfolgt keine erfolgreiche Serverantwort, da keine Backend-Route für Medien-Upload existiert.",
+        "automationNote": "Netzwerk-Tab auf POST mit multipart/form-data beobachten - erwartungsgemäß 404/kein Call"
+      }
+    ],
+    "architectNote": "Laut Code-Audit existiert die Datenbanktabelle media_reports, jedoch KEINE Bedienoberfläche und KEINE API zum Hochladen - nur ein Zähler wird angezeigt. Erwartetes Ergebnis ist heute 'failed'/'open' (keine Upload-Möglichkeit vorhanden); dokumentiert bewusst die Produktlücke fürs Backlog.",
+    "labels": [
+      "uc20",
+      "prio3",
+      "service",
+      "workforce",
+      "soll-zielfunktion",
+      "kein-schreibpfad"
+    ]
+  },
+  {
+    "testCaseId": "UC20-TC02",
+    "useCaseNumber": 20,
+    "useCaseName": "Foto-/Video-Nachweis für Serviceaufträge",
+    "testCaseTitle": "Staff kann ein Ticket auch ohne Foto-/Video-Nachweis als erledigt markieren",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Service/Workforce",
+    "role": "Personal (staff)",
+    "environmentUrl": "/tr/dashboard/tickets",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig. Bekanntes Demo-Ticket: SRV-2402 (Wasserleck) für Einheit A-018, aktuell nicht als erledigt markiert.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Personel' klicken.",
+        "testData": "role=staff",
+        "expectedResult": "Redirect zu /tr/dashboard mit 6 Sidebar-Menüpunkten (siehe TC1, Schritt 3).",
+        "automationNote": "data-testid=\"demo-full-access\" -> data-testid=\"demo-role-option-staff\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Servis Talepleri' (Tickets) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/tickets lädt mit Ticket SRV-2402 in der Liste.",
+        "automationNote": "Route: /tr/dashboard/tickets"
+      },
+      {
+        "stepNo": 3,
+        "action": "Ticket SRV-2402 (Einheit A-018) öffnen und aktuellen Status notieren.",
+        "testData": "ticket=SRV-2402",
+        "expectedResult": "Aktueller Status ist erkennbar (z.B. 'in_progress'/'assigned') und weder Foto- noch Video-Nachweis ist vorhanden.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "Ohne einen Nachweis hinzuzufügen, den Status-Wechsel-Mechanismus des Tickets nutzen (Button/Dropdown Richtung 'Tamamlandı'/Erledigt/Kapatıldı) und bestätigen.",
+        "testData": "Ziel-Status: Tamamlandı (Erledigt)",
+        "expectedResult": "Der Statuswechsel wird ohne Fehlermeldung oder Pflichtfeld-Validierung ('Nachweis erforderlich') akzeptiert - keine Blockade erscheint.",
+        "automationNote": "UI-Selector noch zu ergänzen; Status-Dropdown/-Button in Ticket-Detailansicht"
+      },
+      {
+        "stepNo": 5,
+        "action": "Prüfen, ob nach der Aktion eine Erfolgsmeldung oder ein aktualisierter Status-Badge sichtbar ist.",
+        "testData": "-",
+        "expectedResult": "Der Status-Badge des Tickets zeigt sichtbar 'Tamamlandı'/Erledigt (oder vergleichbar) an, ohne dass ein Nachweis-Feld ausgefüllt wurde.",
+        "automationNote": "UI-Selector noch zu ergänzen; StatusBadge-Komponente components/status-badge.tsx"
+      }
+    ],
+    "architectNote": "Zeigt, dass die 'Pflicht-Nachweis vor Abschluss'-Regel heute technisch NICHT erzwungen wird - der Abschluss wird nicht durch eine fehlende Foto-/Video-Anlage blockiert. Erwartetes Ergebnis: 'passed' (kein Blocker vorhanden), was zugleich den Prozess-Risikopunkt aus TC1 bestätigt und ins Backlog gehört (Pflichtfeld-Validierung fehlt).",
+    "labels": [
+      "uc20",
+      "prio3",
+      "service",
+      "workforce",
+      "ist-zustand",
+      "risikopunkt"
+    ]
+  },
+  {
+    "testCaseId": "UC21-TC01",
+    "useCaseNumber": 21,
+    "useCaseName": "Neuanmeldung in echtes Konto umwandeln",
+    "testCaseTitle": "Nach Admin-Genehmigung einer Registrierungsanfrage entsteht kein nutzbares Login-Konto",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Onboarding/Admin",
+    "role": "Öffentlich (kein Login) für Schritt 1-4, danach Administrator (admin)",
+    "environmentUrl": "/tr/new-level-premium",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig für die Registrierung; Admin-Zugriff erfolgt über Demo-Rollenwahl.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/new-level-premium navigieren und zum Registrierungsbereich der Seite scrollen.",
+        "testData": "-",
+        "expectedResult": "Die Landingpage lädt und zeigt ein Registrierungsformular mit drei Rollenkarten 'Malik' (Eigentümer), 'Kiracı' (Mieter), 'Personel' (Personal).",
+        "automationNote": "page.goto('/tr/new-level-premium'); Komponente components/new-level-premium/nlp-registration.tsx"
+      },
+      {
+        "stepNo": 2,
+        "action": "Die Rollenkarte 'Malik' (Eigentümer) auswählen, Pflichtfelder ausfüllen (voller Name, E-Mail, Ausweisart, Ausweisnummer) und die KVKK-Einwilligung aktivieren.",
+        "testData": "fullName=QA Test Malik, email=qa-owner-test@example.com, idType=Kimlik, idNumber=12345",
+        "expectedResult": "Alle Felder akzeptieren die Eingabe ohne Validierungsfehler.",
+        "automationNote": "UI-Selector noch zu ergänzen; Formularfelder in nlp-registration.tsx"
+      },
+      {
+        "stepNo": 3,
+        "action": "Auf den Button 'Erişim talebini gönder' (Zugangsanfrage senden) klicken.",
+        "testData": "-",
+        "expectedResult": "Eine Erfolgskarte mit Titel 'Talep alındı' (Anfrage erhalten) erscheint, inkl. einer Referenznummer (Format z.B. NLP-REG-XXXXXX oder UUID).",
+        "automationNote": "API: POST /api/site-management/registration; Erfolgsanzeige in nlp-registration.tsx Zeile ~500-507"
+      },
+      {
+        "stepNo": 4,
+        "action": "Die angezeigte Referenznummer notieren.",
+        "testData": "Referenznummer aus Schritt 3",
+        "expectedResult": "Referenznummer ist eindeutig sichtbar und kopierbar.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 5,
+        "action": "In einem neuen Tab zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Yönetim' (Admin) klicken.",
+        "testData": "role=admin",
+        "expectedResult": "Redirect zu /tr/dashboard mit vollem 13-Punkte-Menü.",
+        "automationNote": "data-testid=\"demo-role-option-admin\""
+      },
+      {
+        "stepNo": 6,
+        "action": "Auf der Dashboard-Startseite /tr/dashboard im Aktivitätsbereich ('Letzte Aktivitäten'/Son Aktiviteler, falls vorhanden) sowie auf den Seiten 'Kullanıcılar & Roller' (/tr/dashboard/users) und 'Servis Talepleri' (/tr/dashboard/tickets, Onay Kuyruğu) gezielt nach der Referenznummer bzw. dem Namen 'QA Test Malik' suchen und, falls ein Genehmigen/Ablehnen-Steuerelement dafür gefunden wird (z.B. Buttons 'Onayla'/'Reddet'), die Anfrage genehmigen.",
+        "testData": "Suchbegriff: QA Test Malik / Referenznummer aus Schritt 4",
+        "expectedResult": "Entweder wird KEIN dediziertes Genehmigen/Ablehnen-Steuerelement für diese spezifische Registrierungsanfrage gefunden, oder ein 'Onayla'-Klick liefert eine Erfolgsmeldung, ohne dass danach sichtbare Zugangsdaten (Passwort/Einladungslink) angezeigt werden.",
+        "automationNote": "PATCH /api/site-management/actions ist serverseitig vorhanden (Onayla/Reddet-Buttons in dashboard/tickets/page.tsx nutzen diesen Endpunkt), jedoch keine bestätigte UI-Bindung für actionType 'registration.request.owner' gefunden - UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 7,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren und versuchen, sich über das E-Mail/Passwort-Formular (NICHT über 'Demo başlat') mit der in Schritt 2 verwendeten E-Mail und einem beliebigen Testpasswort anzumelden.",
+        "testData": "email=qa-owner-test@example.com, password=Test1234!",
+        "expectedResult": "Der Login schlägt fehl (Fehlermeldung 'Giriş başarısız' oder vergleichbar) - es existiert kein nutzbares Konto mit Zugangsdaten für diese E-Mail.",
+        "automationNote": "UI-Selector noch zu ergänzen; E-Mail/Passwort-Formular in app/[locale]/login/page.tsx"
+      }
+    ],
+    "architectNote": "Laut Code-Audit gibt es KEINE Funktion, die aus einer genehmigten Registrierungsanfrage ein nutzbares Nutzerkonto mit Zugangsdaten erzeugt (kein Supabase-Auth-User-Provisioning-Pfad im Code gefunden). Zusätzlich konnte im Code-Audit KEIN eindeutig beschrifteter, dedizierter Genehmigungs-UI-Einstiegspunkt speziell für 'registration.request.*'-Einträge lokalisiert werden (die vorhandenen Onayla/Reddet-Buttons auf der Tickets-Seite sind auf service_tickets/service_orders/workforce_tasks/media_reports beschränkt). Erwartetes Ergebnis für Schritt 6/7 ist daher 'failed'/'open' - dies ist eine bewusste, formale Dokumentation der Produktlücke fürs Backlog, kein Testfehler.",
+    "labels": [
+      "uc21",
+      "prio3",
+      "onboarding",
+      "admin",
+      "soll-zielfunktion",
+      "kein-schreibpfad"
+    ]
+  },
+  {
+    "testCaseId": "UC21-TC02",
+    "useCaseNumber": 21,
+    "useCaseName": "Neuanmeldung in echtes Konto umwandeln",
+    "testCaseTitle": "Eingegangene Registrierungsanfrage wird korrekt und dauerhaft im System sichtbar",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Onboarding/Admin",
+    "role": "Öffentlich (kein Login) für Schritt 1-3, danach Administrator (admin)",
+    "environmentUrl": "/tr/new-level-premium",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig für die Registrierung.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/new-level-premium navigieren, Rollenkarte 'Kiracı' (Mieter) auswählen und Pflichtfelder ausfüllen (voller Name, E-Mail, Einladungscode), KVKK-Einwilligung aktivieren.",
+        "testData": "fullName=QA Test Kiracı, email=qa-tenant-test@example.com, inviteCode=TEST-INV-01",
+        "expectedResult": "Formular akzeptiert alle Eingaben ohne Validierungsfehler.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 2,
+        "action": "Auf den Button 'Erişim talebini gönder' klicken.",
+        "testData": "-",
+        "expectedResult": "Erfolgskarte 'Talep alındı' mit Referenznummer erscheint.",
+        "automationNote": "API: POST /api/site-management/registration"
+      },
+      {
+        "stepNo": 3,
+        "action": "Die Referenznummer sowie den Namen 'QA Test Kiracı' notieren.",
+        "testData": "-",
+        "expectedResult": "Referenznummer eindeutig sichtbar.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "In einem neuen Tab zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Yönetim' (Admin) klicken.",
+        "testData": "role=admin",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-admin\""
+      },
+      {
+        "stepNo": 5,
+        "action": "Auf der Dashboard-Startseite /tr/dashboard den Aktivitäts-/Verlaufsbereich auf einen Eintrag mit dem Namen 'QA Test Kiracı' oder dem Text 'tenant access request'/'Kiracı erişim talebi' durchsuchen.",
+        "testData": "Suchbegriff: QA Test Kiracı",
+        "expectedResult": "Ein Eintrag zur eingereichten Registrierungsanfrage ist im Aktivitätsverlauf sichtbar - bestätigt, dass der Request tatsächlich serverseitig (nicht nur clientseitig) gespeichert wurde.",
+        "automationNote": "UI-Selector noch zu ergänzen; Feed über snapshot.recentActions in app/[locale]/dashboard/page.tsx"
+      },
+      {
+        "stepNo": 6,
+        "action": "Die Seite per F5 neu laden und den Aktivitätsbereich erneut prüfen.",
+        "testData": "-",
+        "expectedResult": "Derselbe Eintrag zu 'QA Test Kiracı' ist nach dem Neuladen weiterhin vorhanden - Daten sind persistent gespeichert, nicht nur im Browser-Zwischenspeicher.",
+        "automationNote": "page.reload() + gleiche Assertion"
+      }
+    ],
+    "architectNote": "Bestätigt, dass die Registrierungsanfrage selbst (inkl. Referenznummer) über den echten Schreibpfad (Supabase RPC submit_public_intake bzw. lokaler Seed-Fallback) zuverlässig gespeichert und für einen Admin sichtbar wird. Bestätigt NICHT automatisch eine dedizierte Genehmigungs-UI (siehe TC1) - dieser Testfall prüft ausschließlich Erfassung/Sichtbarkeit/Persistenz und sollte 'passed' liefern.",
+    "labels": [
+      "uc21",
+      "prio3",
+      "onboarding",
+      "admin",
+      "ist-zustand",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC22-TC01",
+    "useCaseNumber": 22,
+    "useCaseName": "Eigene Wohnung korrekt zugeordnet sehen",
+    "testCaseTitle": "Zwei unterschiedliche Owner-Konten zeigen im Demo-Modus dieselben hartkodierten Einheiten statt echter, unterschiedlicher Zuordnung",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Zugang/Datenschutz",
+    "role": "Eigentümer (owner)",
+    "environmentUrl": "/tr/dashboard/documents",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein zweites, echtes Supabase-Owner-Testkonto mit abweichender Wohnungszuordnung ist dem Tester bekannt vorausgesetzt (falls doch vorhanden, dessen Zugangsdaten bereithalten).",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Malik' (Eigentümer) klicken.",
+        "testData": "role=owner",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-owner\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Belgeler' (Dokumente) klicken und die dort angezeigten Wohnungs-/Einheiten-IDs notieren.",
+        "testData": "-",
+        "expectedResult": "Es werden genau die Einheiten A-001, A-054 und D-023 angezeigt.",
+        "automationNote": "Route: /tr/dashboard/documents"
+      },
+      {
+        "stepNo": 3,
+        "action": "Prüfen, ob ein zweites, echtes Owner-Testkonto mit garantiert ABWEICHENDER Wohnungszuordnung (z.B. Einheit C-101) verfügbar ist (E-Mail/Passwort-Login über das Standard-Login-Formular, nicht über 'Demo başlat').",
+        "testData": "Zweites Konto (vom Projektteam bereitzustellen, falls vorhanden)",
+        "expectedResult": "Es ist zu dokumentieren, ob ein solches zweites Konto überhaupt existiert/bereitgestellt wurde.",
+        "automationNote": "UI-Selector noch zu ergänzen; E-Mail/Passwort-Formular in app/[locale]/login/page.tsx"
+      },
+      {
+        "stepNo": 4,
+        "action": "Falls ein zweites Konto verfügbar ist: sich damit über das E-Mail/Passwort-Formular einloggen und erneut zu /tr/dashboard/documents navigieren.",
+        "testData": "Zweites Konto Zugangsdaten",
+        "expectedResult": "Es sollten ANDERE Wohnungs-IDs als A-001/A-054/D-023 angezeigt werden, entsprechend der echten Zuordnung des zweiten Kontos.",
+        "automationNote": "Route: /tr/dashboard/documents"
+      },
+      {
+        "stepNo": 5,
+        "action": "Die Ergebnisse aus Schritt 2 und Schritt 4 miteinander vergleichen.",
+        "testData": "-",
+        "expectedResult": "Die angezeigten Einheiten-Sets müssen sich zwischen den beiden unterschiedlichen Owner-Konten unterscheiden.",
+        "automationNote": "Assertion: Mengenvergleich der IDs beider Logins"
+      }
+    ],
+    "architectNote": "Für den Demo-Modus existiert nur EIN hartkodiertes Owner-Rollenprofil (lib/role-scoped-views.ts) - jeder Owner-Login über 'Demo başlat' zeigt IMMER dieselben Einheiten A-001/A-054/D-023, unabhängig von einer echten Datenbankzuordnung. Ohne ein zweites, echtes Supabase-Owner-Konto mit abweichender Einheit kann dieser Testfall im aktuellen Stand nicht bestanden werden - erwartetes Ergebnis 'failed' bzw. 'blocked/open' (kein zweites Testkonto verfügbar); dokumentiert bewusst die fehlende echte Owner-zu-Wohnung-Zuordnungsprüfung im Demo-Stand.",
+    "labels": [
+      "uc22",
+      "prio3",
+      "zugang",
+      "datenschutz",
+      "soll-zielfunktion",
+      "rbac"
+    ]
+  },
+  {
+    "testCaseId": "UC22-TC02",
+    "useCaseNumber": 22,
+    "useCaseName": "Eigene Wohnung korrekt zugeordnet sehen",
+    "testCaseTitle": "Owner-Demo-Login zeigt konsistent und reproduzierbar A-001/A-054/D-023 (Tickets/Dokumente) bzw. A-012/B-040/D-087 (Kalender)",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Zugang/Datenschutz",
+    "role": "Eigentümer (owner)",
+    "environmentUrl": "/tr/dashboard",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Malik' (Eigentümer) klicken.",
+        "testData": "role=owner",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-owner\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Servis Talepleri' (Tickets) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite zeigt Tickets ausschließlich für die Einheiten A-001, A-054, D-023 (u.a. SRV-2401, SRV-2404, SRV-2410).",
+        "automationNote": "Route: /tr/dashboard/tickets"
+      },
+      {
+        "stepNo": 3,
+        "action": "In der Sidebar auf 'Belgeler' (Dokumente) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite zeigt Dokumente ausschließlich für dieselben drei Einheiten A-001, A-054, D-023.",
+        "automationNote": "Route: /tr/dashboard/documents"
+      },
+      {
+        "stepNo": 4,
+        "action": "In der Sidebar auf 'Rezervasyon' (Kalender) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite zeigt Buchungen für die Einheiten A-012, B-040, D-087.",
+        "automationNote": "Route: /tr/dashboard/calendar"
+      },
+      {
+        "stepNo": 5,
+        "action": "Erneut zu /tr/login navigieren, 'Demo başlat' klicken und wieder Rollenkarte 'Malik' klicken (Rollenwechsel ohne Logout).",
+        "testData": "role=owner",
+        "expectedResult": "Erneuter Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-owner\""
+      },
+      {
+        "stepNo": 6,
+        "action": "Schritt 2, 3 und 4 wiederholen.",
+        "testData": "-",
+        "expectedResult": "Exakt dieselben Einheiten-Sets erscheinen erneut (A-001/A-054/D-023 für Tickets/Dokumente, A-012/B-040/D-087 für Kalender) - reproduzierbar und konsistent bei jedem neuen Login.",
+        "automationNote": "Gleiche Assertions wie Schritt 2-4 erneut ausführen"
+      }
+    ],
+    "architectNote": "Bestätigt den bekannten, stabilen Demo-Zustand (hartkodiert in lib/role-scoped-views.ts). Sollte zuverlässig 'passed' liefern und dient als Referenz dafür, was im Demo für die Owner-Rolle verlässlich vorführbar ist.",
+    "labels": [
+      "uc22",
+      "prio3",
+      "zugang",
+      "datenschutz",
+      "ist-zustand",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC23-TC01",
+    "useCaseNumber": 23,
+    "useCaseName": "Kommunikations-Center",
+    "testCaseTitle": "Manager 'sendet' Rundschreiben, es kommt jedoch nachweislich nichts real bei einem Empfänger an (nur Audit-Log)",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Kommunikation",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/communications",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Sorumlu' (Manager) klicken.",
+        "testData": "role=manager",
+        "expectedResult": "Redirect zu /tr/dashboard mit vollem 13-Punkte-Menü inkl. 'İletişim'.",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'İletişim' (Kommunikation) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/communications lädt mit Entwurfsformular, Vorlagenauswahl und Zielgruppenauswahl.",
+        "automationNote": "Route: /tr/dashboard/communications"
+      },
+      {
+        "stepNo": 3,
+        "action": "Eine Zielgruppe auswählen (z.B. 'Tüm Malikler'/Alle Eigentümer), einen Testtext eingeben und den Button 'Gönder' (Senden) klicken.",
+        "testData": "Zielgruppe=Tüm Malikler, Text=QA Testrundschreiben",
+        "expectedResult": "Eine sichtbare Erfolgsmeldung/Bestätigung des 'Versands' erscheint im UI.",
+        "automationNote": "UI-Selector noch zu ergänzen; Button-Text 'Gönder'"
+      },
+      {
+        "stepNo": 4,
+        "action": "In der Sidebar auf 'Raporlar' (Berichte) wechseln und nach einem neuen Audit-Log-Eintrag zur soeben ausgeführten Kommunikationsaktion suchen.",
+        "testData": "Suchbegriff: QA Testrundschreiben",
+        "expectedResult": "Ein neuer Audit-Log-Eintrag zur Kommunikationsaktion ist sichtbar - bestätigt, dass NUR ein Log geschrieben wurde.",
+        "automationNote": "Route: /tr/dashboard/reports"
+      },
+      {
+        "stepNo": 5,
+        "action": "Prüfen (z.B. über einen bekannten Test-E-Mail-Posteingang, falls einer für den Test bereitgestellt wurde, oder durch Rückfrage im Team), ob die Nachricht TATSÄCHLICH bei einem realen externen Empfänger angekommen ist.",
+        "testData": "-",
+        "expectedResult": "Es kommt KEINE echte E-Mail/SMS/Push-Nachricht bei einem realen externen Empfänger an - kein Versanddienst ist angebunden.",
+        "automationNote": "Kann nicht rein UI-seitig automatisiert werden; erfordert externen Postfach-Check oder Bestätigung, dass kein SMTP/Push-Provider konfiguriert ist (AGENTS.md/Env-Variablen prüfen)"
+      }
+    ],
+    "architectNote": "Laut Code-Audit schreibt der Sende-Button ausschließlich einen Audit-Log-Eintrag; es existiert keine echte Versandintegration (E-Mail/SMS/Push). Der reine UI-Teil (Schritt 3) liefert erwartungsgemäß eine Erfolgsmeldung, aber der eigentliche 'echte Versand'-Teil (Schritt 5) wird erwartungsgemäß bestätigen, dass nichts real verschickt wurde - Testergebnis für diesen Aspekt erwartungsgemäß 'failed'/'open', dokumentiert bewusst die fehlende Versandintegration.",
+    "labels": [
+      "uc23",
+      "prio3",
+      "kommunikation",
+      "communications",
+      "soll-zielfunktion",
+      "simulation"
+    ]
+  },
+  {
+    "testCaseId": "UC23-TC02",
+    "useCaseNumber": 23,
+    "useCaseName": "Kommunikations-Center",
+    "testCaseTitle": "Entwurf, Vorlagenauswahl und Zielgruppenauswahl im Kommunikations-Center funktionieren fehlerfrei in der Oberfläche",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Kommunikation",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/communications",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Sorumlu' (Manager) klicken.",
+        "testData": "role=manager",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'İletişim' (Kommunikation) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/communications lädt fehlerfrei.",
+        "automationNote": "Route: /tr/dashboard/communications"
+      },
+      {
+        "stepNo": 3,
+        "action": "Aus der Vorlagenauswahl die erste verfügbare Vorlage auswählen.",
+        "testData": "Erste verfügbare Vorlage (z.B. Wartungsankündigung)",
+        "expectedResult": "Das Entwurfstextfeld wird automatisch mit dem Inhalt der gewählten Vorlage befüllt.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "Aus der Zielgruppenauswahl eine Zielgruppe wählen (z.B. 'Tüm Kiracılar'/Alle Mieter).",
+        "testData": "Zielgruppe=Tüm Kiracılar",
+        "expectedResult": "Die Auswahl wird visuell im Formular als aktiv markiert (z.B. Chip, markiertes Dropdown-Element).",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 5,
+        "action": "Den vorausgefüllten Entwurfstext manuell um einen Testsatz ergänzen.",
+        "testData": "Zusatztext: QA-Ergänzung",
+        "expectedResult": "Die Änderung erscheint sofort im Textfeld ohne Fehleranzeige oder Datenverlust.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 6,
+        "action": "Auf den Button 'Gönder' (Senden) klicken.",
+        "testData": "-",
+        "expectedResult": "Eine sichtbare Erfolgsmeldung im UI erscheint; das Formular verhält sich über den gesamten Entwurfs-/Auswahl-/Absende-Zyklus fehlerfrei (keine Konsolenfehler, kein Absturz).",
+        "automationNote": "Button-Text 'Gönder'; Browser-Konsole parallel auf Fehler prüfen"
+      }
+    ],
+    "architectNote": "Der Entwurfs-/Vorlagen-/Zielgruppen-Teil der Oberfläche ist echt funktionsfähig (reine, clientseitige Formularlogik) - nur die eigentliche Zustellung ist simuliert (siehe TC1). Sollte zuverlässig 'passed' liefern für den UI-Teil.",
+    "labels": [
+      "uc23",
+      "prio3",
+      "kommunikation",
+      "communications",
+      "ist-zustand",
+      "golden-path"
+    ]
+  },
+  {
+    "testCaseId": "UC24-TC01",
+    "useCaseNumber": 24,
+    "useCaseName": "Kaufinteressenten-Pipeline (Leads)",
+    "testCaseTitle": "Manager findet keine Funktion, einen neuen externen Kaufinteressenten mit Stufe 'neu' auf der Leads-Seite anzulegen",
+    "testCaseType": "SOLL-Zielfunktion",
+    "priorityTier": 3,
+    "component": "Vertrieb",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/leads",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig.",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Sorumlu' (Manager) klicken.",
+        "testData": "role=manager",
+        "expectedResult": "Redirect zu /tr/dashboard mit vollem 13-Punkte-Menü inkl. 'Müşteri Adayları'.",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Müşteri Adayları' (Leads) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/leads lädt und zeigt eine Liste/Tabelle mit Personen inkl. Risiko-Score-Spalte.",
+        "automationNote": "Route: /tr/dashboard/leads"
+      },
+      {
+        "stepNo": 3,
+        "action": "Die gesamte Seite (inkl. aller Buttons/Karten) nach einer Funktion zum Anlegen eines komplett NEUEN Eintrags durchsuchen (z.B. 'Yeni Müşteri Ekle', '+ Lead', 'Yeni Kayıt').",
+        "testData": "-",
+        "expectedResult": "Kein Button zum Anlegen eines neuen, nicht bereits als Bestandsbewohner existierenden Kaufinteressenten ist auffindbar.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "Prüfen, ob die angezeigten Einträge Vertriebsstufen (z.B. 'neu'/'kontaktiert'/'qualifiziert'/'gewonnen') oder einen Opportunity-/Deal-Wert (z.B. in TRY) enthalten.",
+        "testData": "-",
+        "expectedResult": "Keine solchen Stufen- oder Opportunity-Wert-Felder sind vorhanden; stattdessen wird ausschließlich ein Risiko-Score pro Bestandsbewohner angezeigt.",
+        "automationNote": "UI-Selector noch zu ergänzen; Tabellenspalten prüfen"
+      },
+      {
+        "stepNo": 5,
+        "action": "Falls entgegen Erwartung ein 'Neu anlegen'-Button existiert: darauf klicken und einen fiktiven externen Interessenten anlegen, der NICHT in der Bewohner-Datenbank existiert.",
+        "testData": "Name=QA Test Interessent, Telefon=+90 500 000 00 00",
+        "expectedResult": "Die Anlage schlägt fehl, oder der neue Eintrag ist nach einem Seiten-Reload nicht mehr in der Liste vorhanden.",
+        "automationNote": "DevTools-Netzwerk-Tab auf POST-Requests beobachten; page.reload() danach Assertion auf Abwesenheit des Namens"
+      }
+    ],
+    "architectNote": "Laut Code-Audit existiert kein Lead-/Opportunity-Datenmodell; die Leads-Seite zeigt trotz des Namens nur dieselben Bestandsbewohner-Daten wie /dashboard/users, lediglich anders dargestellt (Risiko-Score statt Team-/Pipeline-Karten). Erwartetes Ergebnis 'failed'/'open' (keine Anlage-Funktion für externe Interessenten auffindbar); dokumentiert bewusst die fehlende SOLL-Funktion fürs Backlog.",
+    "labels": [
+      "uc24",
+      "prio3",
+      "vertrieb",
+      "leads",
+      "soll-zielfunktion",
+      "kein-datenmodell"
+    ]
+  },
+  {
+    "testCaseId": "UC24-TC02",
+    "useCaseNumber": 24,
+    "useCaseName": "Kaufinteressenten-Pipeline (Leads)",
+    "testCaseTitle": "Leads-Seite zeigt die Risiko-/Prioritätsliste der Bestandsbewohner korrekt und konsistent zur Users-Seite an",
+    "testCaseType": "IST-Ist-Zustand",
+    "priorityTier": 3,
+    "component": "Vertrieb",
+    "role": "Manager (manager)",
+    "environmentUrl": "/tr/dashboard/leads",
+    "precondition": "Tester hat Zugriff auf https://cati-blond.vercel.app. Kein bestehendes Login nötig. Bekannter Demo-Fall: Einheit A-054 mit Ticket SRV-2404 (Aidat-Schuld/Beitragsrückstand, Status 'waiting_payment').",
+    "steps": [
+      {
+        "stepNo": 1,
+        "action": "Zu https://cati-blond.vercel.app/tr/login navigieren, 'Demo başlat' klicken, Rollenkarte 'Sorumlu' (Manager) klicken.",
+        "testData": "role=manager",
+        "expectedResult": "Redirect zu /tr/dashboard.",
+        "automationNote": "data-testid=\"demo-role-option-manager\""
+      },
+      {
+        "stepNo": 2,
+        "action": "In der Sidebar auf 'Müşteri Adayları' (Leads) klicken.",
+        "testData": "-",
+        "expectedResult": "Seite /tr/dashboard/leads lädt fehlerfrei.",
+        "automationNote": "Route: /tr/dashboard/leads"
+      },
+      {
+        "stepNo": 3,
+        "action": "Prüfen, dass jeder sichtbare Eintrag mindestens Name, zugeordnete Wohnungs-ID und einen Risiko-Score/Prioritätsindikator zeigt.",
+        "testData": "-",
+        "expectedResult": "Alle sichtbaren Einträge zeigen vollständige Werte - kein leeres Feld, kein 'undefined'/'NaN'-Platzhalter.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      },
+      {
+        "stepNo": 4,
+        "action": "Den Eintrag für Einheit A-054 auf der Leads-Seite suchen und dessen angezeigte Basisdaten notieren.",
+        "testData": "unit=A-054",
+        "expectedResult": "Ein Eintrag für Einheit A-054 mit Risiko-Hinweis (z.B. Bezug zu Ticket SRV-2404/Aidat-Schuld) ist sichtbar.",
+        "automationNote": "UI-Selector noch zu ergänzen; Textsuche 'A-054'"
+      },
+      {
+        "stepNo": 5,
+        "action": "In der Sidebar auf 'Kullanıcılar & Roller' (Users) wechseln und denselben Eintrag für Einheit A-054 suchen.",
+        "testData": "unit=A-054",
+        "expectedResult": "Dieselbe Person/Wohnung erscheint mit konsistenten Basisdaten (Name, Einheit) auf beiden Seiten.",
+        "automationNote": "Route: /tr/dashboard/users"
+      },
+      {
+        "stepNo": 6,
+        "action": "Zurück zu 'Müşteri Adayları' (Leads) navigieren und, falls vorhanden, eine Sortier- oder Filterfunktion nach Risiko anwenden.",
+        "testData": "-",
+        "expectedResult": "Sortierung/Filterung funktioniert fehlerfrei und ordnet die Einträge sichtbar nach dem gewählten Risiko-Kriterium.",
+        "automationNote": "UI-Selector noch zu ergänzen"
+      }
+    ],
+    "architectNote": "Bestätigt, dass die Leads-Seite als funktionierende, konsistente Risiko-/Prioritätsansicht auf denselben Bestandsbewohner-Daten wie die Users-Seite arbeitet. Sollte 'passed' liefern - unter der ausdrücklichen Einschränkung, dass dies KEINE echte Vertriebs-/Opportunity-Pipeline ist (Stufen wie neu/kontaktiert/qualifiziert/gewonnen fehlen bewusst, siehe TC1).",
+    "labels": [
+      "uc24",
+      "prio3",
+      "vertrieb",
+      "leads",
+      "ist-zustand",
+      "golden-path"
+    ]
+  }
+]
