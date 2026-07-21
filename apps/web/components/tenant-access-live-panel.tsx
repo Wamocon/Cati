@@ -27,7 +27,7 @@ const copy = {
   tr: {
     title: "Kiracı erişim yönetimi",
     body: "Malik, sahip olduğu bağımsız bölüm için süreli erişim oluşturur. Kod yalnızca bir kez gösterilir; kabul, uzatma ve iptal denetim kaydına yazılır.",
-    unavailable: "Canlı davet işlemleri için gerçek kimlik doğrulaması ve organizasyon ilişkisi gerekir. Yerel rol demosu veritabanı yetkisini taklit etmez.",
+    unavailable: "Canlı davet işlemleri için doğrulanmış hesap ve aktif organizasyon bağlantısı gerekir.",
     loading: "Kiracı erişimi yükleniyor…",
     retry: "Yeniden dene",
     createTitle: "Süreli davet oluştur",
@@ -61,7 +61,7 @@ const copy = {
   en: {
     title: "Tenant access management",
     body: "An owner sponsors time-boxed access to an owned unit. The secret is shown once; redemption, extension, and revocation are audited.",
-    unavailable: "Live invitations require real authentication and an organization relationship. Local role demos never imitate database authority.",
+    unavailable: "Live invitations require a verified account and an active organization link.",
     loading: "Loading tenant access…",
     retry: "Retry",
     createTitle: "Create time-boxed invitation",
@@ -95,7 +95,7 @@ const copy = {
   de: {
     title: "Mieterzugang verwalten",
     body: "Eigentümer vergeben zeitlich begrenzten Zugang zu eigenen Einheiten. Der Code wird einmal angezeigt; Annahme, Verlängerung und Widerruf werden auditiert.",
-    unavailable: "Live-Einladungen erfordern echte Authentifizierung und eine Organisationsbeziehung. Lokale Rollendemos simulieren keine Datenbankrechte.",
+    unavailable: "Live-Einladungen erfordern ein verifiziertes Konto und eine aktive Organisationsverbindung.",
     loading: "Mieterzugang wird geladen…",
     retry: "Erneut versuchen",
     createTitle: "Befristete Einladung erstellen",
@@ -129,7 +129,7 @@ const copy = {
   ru: {
     title: "Доступ арендатора",
     body: "Собственник выдаёт временный доступ к своему объекту. Секрет показывается один раз; активация, продление и отзыв аудируются.",
-    unavailable: "Для реальных приглашений нужны аутентификация и связь с организацией. Локальная демо-роль не имитирует права БД.",
+    unavailable: "Для реальных приглашений нужны подтверждённая учётная запись и активная связь с организацией.",
     loading: "Загрузка доступа…",
     retry: "Повторить",
     createTitle: "Создать временное приглашение",

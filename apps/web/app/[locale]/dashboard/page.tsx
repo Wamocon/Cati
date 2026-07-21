@@ -671,16 +671,18 @@ function GlobalOperationsScene({
 function RoleFocusedDashboard({
   copy,
   role,
-  roleLabel,
 }: {
   copy: DashboardHomeCopy
   role: FocusedRole
-  roleLabel: string
 }) {
   const config = roleWorkspaceConfig[role]
+  const dashboardT = useTranslations("dashboard")
   if (!config) return null
 
   const workspaceCopy = copy.roleWorkspaces[role]
+  // A single grid of real, RBAC-gated shortcuts. Labels are pulled from the
+  // exact same source as the sidebar (dashboard.menu.*) so the cards read as
+  // navigation, not as duplicated descriptions of it.
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
@@ -692,41 +694,31 @@ function RoleFocusedDashboard({
           {workspaceCopy.title}
         </h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-          {workspaceCopy.description} {copy.erpWorld.activeRole}:{" "}
-          <span className="font-semibold text-foreground">{roleLabel}</span>.
+          {workspaceCopy.description}
         </p>
       </div>
 
       <RoleFocusedLiveDashboard role={role} />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
-          const cardCopies = workspaceCopy.cards as Record<
-            RoleWorkspaceCardKey,
-            { title: string; description: string }
-          >
-          const cardCopy = cardCopies[card.copyKey]
-
+          const label = dashboardT(`menu.${card.resource}`)
           return (
             <CommandLink
               key={card.href}
               href={card.href}
-              ariaLabel={cardCopy.title}
+              ariaLabel={label}
               role={role}
             >
               <Card3D glow={false}>
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <card.icon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-sm font-black text-card-foreground">
-                      {cardCopy.title}
-                    </h2>
-                    <p className="mt-2 text-xs leading-5 text-muted-foreground">
-                      {cardCopy.description}
-                    </p>
-                  </div>
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm font-black text-card-foreground">
+                    {label}
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover/command:text-primary" />
                 </div>
               </Card3D>
             </CommandLink>
@@ -735,32 +727,6 @@ function RoleFocusedDashboard({
       </div>
 
       {role === "owner" || role === "tenant" ? <TenantAccessLivePanel /> : null}
-
-      <Card3D glow={false}>
-        <div className="flex items-start gap-3">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div>
-            <h2 className="text-sm font-bold text-card-foreground">
-              {copy.roleWorkspaces.common.boundariesTitle}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {copy.roleWorkspaces.common.boundariesBody}
-            </p>
-            {workspaceCopy.accessNotes.length ? (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {workspaceCopy.accessNotes.map((constraint) => (
-                  <span
-                    key={constraint}
-                    className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground"
-                  >
-                    {constraint}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </Card3D>
     </div>
   )
 }
@@ -1024,13 +990,7 @@ export default function DashboardHomePage() {
   )
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
-    return (
-      <RoleFocusedDashboard
-        copy={copy}
-        role={user.role}
-        roleLabel={roleLabel}
-      />
-    )
+    return <RoleFocusedDashboard copy={copy} role={user.role} />
   }
 
   return (

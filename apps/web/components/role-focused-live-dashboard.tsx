@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Building2,
   CalendarCheck,
+  CheckCircle2,
   Clock3,
   CreditCard,
   FileText,
@@ -14,11 +15,11 @@ import {
   ShieldCheck,
   TicketCheck,
   Wifi,
-  WifiOff,
   type LucideIcon,
 } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { StatusBadge } from "@/components/status-badge"
+import { formatDualFromCents } from "@/lib/currency"
 import type {
   FocusedDashboardRole,
   RoleDashboardItem,
@@ -42,16 +43,10 @@ const localeNames: Record<DashboardLocale, string> = {
 const copy = {
   en: {
     eyebrow: "Your live workspace",
-    sourceLive: "Verified live data",
-    sourceQa: "Local QA data",
-    qaWarning: "These are controlled demo records and are never mixed with production data.",
     lastUpdated: "Last updated",
-    realtime: {
-      checking: "Connecting",
-      connected: "Live updates on",
-      error: "Live channel interrupted",
-      recovery: "30-second refresh",
-    },
+    live: "Live",
+    current: "Up to date",
+    updating: "Updating…",
     refresh: "Refresh dashboard",
     loading: "Loading your authorized records…",
     error: "Your dashboard could not be refreshed. Your access scope was not widened.",
@@ -83,16 +78,10 @@ const copy = {
   },
   tr: {
     eyebrow: "Canlı çalışma alanınız",
-    sourceLive: "Doğrulanmış canlı veri",
-    sourceQa: "Yerel QA verisi",
-    qaWarning: "Bunlar kontrollü demo kayıtlarıdır ve üretim verileriyle asla karıştırılmaz.",
     lastUpdated: "Son güncelleme",
-    realtime: {
-      checking: "Bağlanıyor",
-      connected: "Canlı güncelleme açık",
-      error: "Canlı bağlantı kesildi",
-      recovery: "30 saniyelik yenileme",
-    },
+    live: "Canlı",
+    current: "Güncel",
+    updating: "Güncelleniyor…",
     refresh: "Paneli yenile",
     loading: "Yetkili kayıtlarınız yükleniyor…",
     error: "Panel yenilenemedi. Erişim kapsamınız genişletilmedi.",
@@ -124,16 +113,10 @@ const copy = {
   },
   de: {
     eyebrow: "Ihr Live-Arbeitsbereich",
-    sourceLive: "Verifizierte Live-Daten",
-    sourceQa: "Lokale QA-Daten",
-    qaWarning: "Dies sind kontrollierte Demo-Datensätze; sie werden nie mit Produktionsdaten vermischt.",
     lastUpdated: "Zuletzt aktualisiert",
-    realtime: {
-      checking: "Verbindung wird hergestellt",
-      connected: "Live-Aktualisierung aktiv",
-      error: "Live-Kanal unterbrochen",
-      recovery: "Aktualisierung alle 30 Sekunden",
-    },
+    live: "Aktuell",
+    current: "Aktualisiert",
+    updating: "Wird aktualisiert…",
     refresh: "Dashboard aktualisieren",
     loading: "Ihre autorisierten Datensätze werden geladen…",
     error: "Das Dashboard konnte nicht aktualisiert werden. Ihr Zugriff wurde nicht erweitert.",
@@ -165,16 +148,10 @@ const copy = {
   },
   ru: {
     eyebrow: "Ваше рабочее пространство",
-    sourceLive: "Проверенные live-данные",
-    sourceQa: "Локальные QA-данные",
-    qaWarning: "Это контролируемые демоданные; они никогда не смешиваются с рабочими данными.",
     lastUpdated: "Последнее обновление",
-    realtime: {
-      checking: "Подключение",
-      connected: "Live-обновления включены",
-      error: "Live-канал прерван",
-      recovery: "Обновление каждые 30 секунд",
-    },
+    live: "В реальном времени",
+    current: "Актуально",
+    updating: "Обновление…",
     refresh: "Обновить панель",
     loading: "Загружаются доступные вам записи…",
     error: "Панель не обновилась. Область доступа не была расширена.",
@@ -251,11 +228,10 @@ function formatMetric(
     return new Intl.NumberFormat(localeNames[locale], { maximumFractionDigits: 0 }).format(value)
   }
 
-  return new Intl.NumberFormat(localeNames[locale], {
-    style: "currency",
-    currency: currency === "MIXED" || !currency ? "TRY" : currency,
-    maximumFractionDigits: 0,
-  }).format(value / 100)
+  // Currency metrics are stored in minor units (kuruş/cents). Every monetary
+  // figure is shown in both Lira and Euro; "MIXED"/unknown ledgers default to
+  // the Lira-native view. Short form keeps the dense KPI tiles readable.
+  return formatDualFromCents(value, currency === "EUR" ? "EUR" : "TRY", true)
 }
 
 function formatTimestamp(value: string, locale: DashboardLocale) {
@@ -284,6 +260,18 @@ function readableStatus(value: string, locale: DashboardLocale) {
       scheduled: "Scheduled",
       urgent: "Urgent",
       verified: "Verified",
+      occupied: "Occupied",
+      vacant: "Vacant",
+      reserved: "Reserved",
+      maintenance: "Maintenance",
+      blocked: "Blocked",
+      clear: "Clear",
+      minor_debt: "Minor debt",
+      legal: "Legal follow-up",
+      not_started: "Not started",
+      evidence_needed: "Evidence needed",
+      manager_review: "Manager review",
+      finance_ready: "Finance ready",
     },
     tr: {
       active: "Aktif",
@@ -300,6 +288,18 @@ function readableStatus(value: string, locale: DashboardLocale) {
       scheduled: "Planlandı",
       urgent: "Acil",
       verified: "Doğrulandı",
+      occupied: "Dolu",
+      vacant: "Boş",
+      reserved: "Rezerve",
+      maintenance: "Bakımda",
+      blocked: "Bloke",
+      clear: "Temiz",
+      minor_debt: "Az borç",
+      legal: "Hukuki takip",
+      not_started: "Başlamadı",
+      evidence_needed: "Kanıt gerekli",
+      manager_review: "Yönetici incelemesi",
+      finance_ready: "Finansa hazır",
     },
     de: {
       active: "Aktiv",
@@ -316,6 +316,18 @@ function readableStatus(value: string, locale: DashboardLocale) {
       scheduled: "Geplant",
       urgent: "Dringend",
       verified: "Verifiziert",
+      occupied: "Belegt",
+      vacant: "Frei",
+      reserved: "Reserviert",
+      maintenance: "Wartung",
+      blocked: "Gesperrt",
+      clear: "Beglichen",
+      minor_debt: "Geringe Schuld",
+      legal: "Rechtliche Verfolgung",
+      not_started: "Nicht begonnen",
+      evidence_needed: "Nachweis nötig",
+      manager_review: "Managerprüfung",
+      finance_ready: "Finanzbereit",
     },
     ru: {
       active: "Активно",
@@ -332,6 +344,18 @@ function readableStatus(value: string, locale: DashboardLocale) {
       scheduled: "Запланировано",
       urgent: "Срочно",
       verified: "Проверено",
+      occupied: "Занята",
+      vacant: "Свободна",
+      reserved: "Забронирована",
+      maintenance: "Обслуживание",
+      blocked: "Заблокирована",
+      clear: "Погашено",
+      minor_debt: "Небольшой долг",
+      legal: "Правовая стадия",
+      not_started: "Не начато",
+      evidence_needed: "Нужны доказательства",
+      manager_review: "Проверка менеджера",
+      finance_ready: "Готово для финансов",
     },
   }
   return translated[locale][value] ?? value.replaceAll("_", " ")
@@ -479,9 +503,8 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
     )
   }
 
-  const RealtimeIcon = realtimeState === "connected" ? Wifi : WifiOff
-  const visibleWarning =
-    snapshot.source === "local-seed" ? text.qaWarning : snapshot.warning
+  const isLive = realtimeState === "connected"
+  const isUpdating = requestState === "loading" || requestState === "refreshing"
 
   return (
     <section
@@ -503,20 +526,27 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
               data-testid="role-dashboard-source"
               className={cn(
                 "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold",
-                snapshot.source === "supabase"
+                isLive
                   ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                  : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                  : "border-border bg-background text-muted-foreground"
               )}
             >
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {snapshot.source === "supabase" ? text.sourceLive : text.sourceQa}
-            </span>
-            <span
-              data-testid="role-dashboard-realtime"
-              className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs font-bold text-muted-foreground"
-            >
-              <RealtimeIcon className="h-3.5 w-3.5" />
-              {text.realtime[realtimeState]}
+              {isUpdating ? (
+                <>
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  {text.updating}
+                </>
+              ) : isLive ? (
+                <>
+                  <Wifi className="h-3.5 w-3.5" />
+                  {text.live}
+                </>
+              ) : (
+                <>
+                  <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                  {text.current}
+                </>
+              )}
             </span>
             <button
               type="button"
@@ -536,11 +566,6 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
         >
           {text.lastUpdated}: {formatTimestamp(snapshot.generatedAt, locale)}
         </p>
-        {visibleWarning ? (
-          <p className="mt-3 rounded-lg border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-xs leading-5 text-amber-800 dark:text-amber-200">
-            {visibleWarning}
-          </p>
-        ) : null}
         {requestState === "error" ? (
           <p className="mt-3 text-xs font-semibold text-rose-600" role="status">
             {text.error}
@@ -637,9 +662,12 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
               })}
             </div>
           ) : (
-            <p className="mt-3 rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
-              {text.empty}
-            </p>
+            <div className="mt-3 flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border px-5 py-6 text-center">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
+              <p className="text-sm font-medium text-muted-foreground">{text.empty}</p>
+            </div>
           )}
         </div>
       </div>

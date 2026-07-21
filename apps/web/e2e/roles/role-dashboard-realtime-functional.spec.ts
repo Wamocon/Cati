@@ -8,16 +8,14 @@ test.describe("role-focused live dashboard", () => {
 
       const dashboard = page.getByTestId("role-dashboard-live")
       await expect(dashboard).toBeVisible()
-      await expect(page.getByTestId("role-dashboard-source")).toContainText(
-        "QA",
-        {
-          timeout: 20_000,
-        }
-      )
+      const sourcePill = page.getByTestId("role-dashboard-source")
+      await expect(sourcePill).toBeVisible({ timeout: 20_000 })
+      // The backend/source name must never leak to end users (was "…QA data").
+      await expect(sourcePill).not.toContainText("QA")
+      await expect(sourcePill).not.toContainText("Supabase")
       await expect(
         page.getByTestId("role-dashboard-freshness")
       ).not.toContainText("-")
-      await expect(page.getByTestId("role-dashboard-realtime")).toBeVisible()
       await expect(dashboard.locator("a")).not.toHaveCount(0)
 
       if (role === "tenant") {
