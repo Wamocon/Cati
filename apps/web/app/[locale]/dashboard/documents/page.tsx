@@ -178,15 +178,19 @@ function DocumentUploadPanel({
             t("Dosya çok büyük veya yükleme sınırı aşıldı. Lütfen daha küçük bir dosya seçin.")
           )
         }
-        let serverMessage = ""
-        try {
-          serverMessage = contentType.includes("application/json")
-            ? String((await response.json())?.error ?? "")
-            : (await response.text()).trim()
-        } catch {
-          serverMessage = ""
+        // Nur die eigene JSON-Fehlerantwort der App anzeigen; einen rohen
+        // Nicht-JSON-Body (z. B. Proxy/Gateway-HTML bei 5xx) NIE ins UI
+        // durchreichen, sondern generisch lokalisiert melden.
+        if (contentType.includes("application/json")) {
+          let serverMessage = ""
+          try {
+            serverMessage = String(((await response.json()) as { error?: unknown })?.error ?? "")
+          } catch {
+            serverMessage = ""
+          }
+          throw new Error(serverMessage.slice(0, 200) || t("Yükleme başarısız."))
         }
-        throw new Error(serverMessage.slice(0, 200) || t("Yükleme başarısız."))
+        throw new Error(t("Yükleme başarısız."))
       }
 
       const payload = await response.json()
