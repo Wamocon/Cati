@@ -704,5 +704,17 @@ WHERE company_id = '11111111-1111-4111-8111-111111111111'
 ON CONFLICT (company_id, entity_table, entity_external_id) WHERE entity_external_id IS NOT NULL DO UPDATE
 SET title = EXCLUDED.title, summary = EXCLUDED.summary, metadata = EXCLUDED.metadata, updated_at = NOW();
 
+-- Reconcile role assignments to each seeded profile's current role (multi-role
+-- model). The seed creates users as tenant via the signup trigger, then elevates
+-- profiles.role directly, so drop the stale assignment and make the current role
+-- the single primary assignment.
+DELETE FROM public.profile_role_assignments a
+USING public.profiles p
+WHERE a.profile_id = p.id AND a.role <> p.role;
+
+INSERT INTO public.profile_role_assignments (profile_id, role, is_primary, granted_by)
+SELECT id, role, TRUE, id FROM public.profiles
+ON CONFLICT (profile_id, role) DO UPDATE SET is_primary = TRUE;
+
 -- Drop the provisioning identity again so nothing else inherits it.
 SELECT set_config('request.jwt.claims', '', false);

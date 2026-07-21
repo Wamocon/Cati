@@ -5,7 +5,7 @@ import { ShieldAlert } from "lucide-react"
 import { useLocale } from "next-intl"
 import { usePathname, useRouter } from "@/app/navigation"
 import { useUser } from "@/components/user-provider"
-import { hasPermission } from "@/lib/rbac"
+import { hasAnyRolePermission } from "@/lib/rbac"
 import { resourceForDashboardPath } from "@/lib/dashboard-routing"
 
 const deniedCopy = {
@@ -33,7 +33,9 @@ export function DashboardRouteGuard({ children }: { children: React.ReactNode })
   const pathname = usePathname()
   const router = useRouter()
   const resource = resourceForDashboardPath(pathname)
-  const allowed = hasPermission(user.role, resource, "view")
+  // Allow the page if ANY of the user's roles can view the resource (union),
+  // matching the widened sidebar. Single-role users are unaffected.
+  const allowed = hasAnyRolePermission(user.roles, resource, "view")
   const copy = deniedCopy[locale as keyof typeof deniedCopy] ?? deniedCopy.tr
 
   useEffect(() => {

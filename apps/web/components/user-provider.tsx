@@ -8,6 +8,10 @@ export interface UserContextValue {
   email?: string
   full_name?: string | null
   role: Role
+  // Every business role the user holds (primary `role` is the highest-level
+  // entry). Nav and route-guard checks widen to the union of these roles.
+  roles: Role[]
+  isActive: boolean
   company_id?: string | null
   phone?: string | null
   language?: string | null

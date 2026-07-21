@@ -307,6 +307,45 @@ export function getRolePermissions(role: Role): Permission[] {
   return rolePermissions[role] ?? []
 }
 
+/**
+ * Numeric hierarchy level of a role (higher = broader authority).
+ * Mirrors the SQL public.role_level() helper. Unknown roles resolve to 0.
+ */
+export function roleLevel(role: Role | null | undefined): number {
+  if (!isValidRole(role)) return 0
+  return roleDefinitions.find((r) => r.key === role)?.level ?? 0
+}
+
+/**
+ * Multi-role permission check: true if ANY of the assigned roles grants the
+ * permission. Used only where a user may hold several business roles at once;
+ * single-role callers keep using hasPermission(role, ...) unchanged.
+ */
+export function hasAnyRolePermission(
+  roles: readonly Role[] | null | undefined,
+  resource: Resource,
+  action: Action
+): boolean {
+  if (!roles || roles.length === 0) return false
+  return roles.some((role) => hasPermission(role, resource, action))
+}
+
+/**
+ * Union of every resource reachable by any of the assigned roles.
+ */
+export function effectiveResourcesForRoles(
+  roles: readonly Role[] | null | undefined
+): Resource[] {
+  if (!roles || roles.length === 0) return []
+  const seen = new Set<Resource>()
+  for (const role of roles) {
+    for (const resource of getAccessibleResources(role)) {
+      seen.add(resource)
+    }
+  }
+  return Array.from(seen)
+}
+
 export function getAccessibleResources(
   role: Role | null | undefined
 ): Resource[] {

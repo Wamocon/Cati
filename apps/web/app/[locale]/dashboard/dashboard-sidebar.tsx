@@ -28,7 +28,11 @@ import { useLocale, useTranslations } from "next-intl"
 import { Link, usePathname } from "@/app/navigation"
 import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
-import { hasPermission, roleDefinitions, type Resource } from "@/lib/rbac"
+import {
+  hasAnyRolePermission,
+  roleDefinitions,
+  type Resource,
+} from "@/lib/rbac"
 import { dashboardRoutes } from "@/lib/dashboard-routing"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
@@ -114,8 +118,11 @@ export function DashboardSidebar() {
     locale
   )
 
+  // Widen navigation to the union of all roles the user holds so a multi-role
+  // user sees every panel any of their roles can reach. Single-role users keep
+  // the exact same menu as before (roles === [role]).
   const filteredMenu = menu.filter((item) =>
-    hasPermission(user.role, item.resource, "view")
+    hasAnyRolePermission(user.roles, item.resource, "view")
   )
   const mobileMenuId = "dashboard-mobile-sidebar"
   const mobileMenuTitleId = "dashboard-mobile-sidebar-title"

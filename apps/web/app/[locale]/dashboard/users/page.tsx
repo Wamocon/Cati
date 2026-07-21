@@ -8,6 +8,7 @@ import { DataTable } from "@/components/data-table"
 import { PeopleDirectoryLive } from "@/components/people-directory-live"
 import { RoleGovernancePanel } from "@/components/role-governance-panel"
 import { RegistrationReviewPanel } from "@/components/registration-review-panel"
+import { UserAdministrationPanel } from "@/components/user-administration-panel"
 import { StatusBadge } from "@/components/status-badge"
 import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
 import {
@@ -264,6 +265,8 @@ export default function UsersPage() {
           </div>
         </Card3D>
       </div>
+
+      <UserAdministrationPanel />
 
       <RoleGovernancePanel />
 
