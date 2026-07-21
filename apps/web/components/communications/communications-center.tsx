@@ -261,6 +261,7 @@ export function CommunicationsCenter() {
     if (eligibleParticipants.length === 1 && threadDraft.participantProfileIds.length === 0) {
       autoFilledScopeKey.current = scopeKey
       const only = eligibleParticipants[0].profileId
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time-per-scope auto-select of the sole eligible participant; guarded by the autoFilledScopeKey ref so it cannot cascade
       setThreadDraft((current) =>
         current.participantProfileIds.length === 0
           ? { ...current, participantProfileIds: [only] }

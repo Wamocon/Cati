@@ -218,11 +218,9 @@ function DepositRow({
 }
 
 function RestrictionRow({
-  intlLocale,
   item,
   t,
 }: {
-  intlLocale: string
   item: Phase7RestrictionDecision
   t: (value: string) => string
 }) {
@@ -460,7 +458,7 @@ export function PaymentRestrictionControl() {
               {formatCents(data?.summary.depositExposureCents ?? 0, currency)} {t("Depozito")}
             </StatusBadge>
           </div>
-          {topRestrictions.map((item) => <RestrictionRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
+          {topRestrictions.map((item) => <RestrictionRow key={item.id} item={item} t={t} />)}
           {topReconciliation.map((item) => (
             <WorkItem key={item.id} icon={CreditCard}>
               <div className="flex flex-wrap items-start justify-between gap-2">
