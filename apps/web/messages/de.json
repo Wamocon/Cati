@@ -1,4 +1,131 @@
 {
+  "accountantFinance": {
+    "title": "Buchhaltung und Dienstleisterfinanzen",
+    "subtitle": "Dienstleisterrechnungen, Guthaben von Dienstleistern und allen Rollen, Kostenaufschlüsselungen nach Block und Rolle sowie Kontoauszüge in einer Buchhaltungsansicht.",
+    "readOnlyBadge": "Nur Ansicht",
+    "refresh": "Aktualisieren",
+    "refreshing": "Wird aktualisiert",
+    "loading": "Buchhaltungsbereich wird vorbereitet...",
+    "loadErrorTitle": "Buchhaltungsfinanzen sind vorübergehend nicht verfügbar",
+    "loadErrorBody": "Es wurde kein Datensatz geändert. Aktualisieren Sie den Bereich oder versuchen Sie es in Kürze erneut.",
+    "retry": "Erneut versuchen",
+    "approxNote": "Umgerechnete Euro- und Lira-Werte sind ungefähr und dienen nur als Referenz.",
+    "kpi": {
+      "openInvoices": "Offene Dienstleisterrechnungen",
+      "creditTotal": "Gesamtguthaben",
+      "costTotal": "Gesamtkosten",
+      "bankStatements": "Kontoauszüge"
+    },
+    "invoices": {
+      "title": "Dienstleisterrechnungen",
+      "subtitle": "Jede Dienstleisterrechnung mit Block, Betrag und offenem Saldo. Verrechnen Sie eine offene Rechnung mit einem passenden Guthaben.",
+      "offset": "Mit Guthaben verrechnen",
+      "noBlock": "Nicht zugeordnet",
+      "empty": "Es sind noch keine Dienstleisterrechnungen erfasst.",
+      "col": {
+        "provider": "Dienstleister",
+        "block": "Block",
+        "invoiceNo": "Rechnungsnr.",
+        "amount": "Betrag",
+        "open": "Offen",
+        "due": "Fällig",
+        "status": "Status",
+        "action": "Aktion"
+      }
+    },
+    "status": {
+      "open": "Offen",
+      "partially_offset": "Teilweise verrechnet",
+      "paid": "Bezahlt",
+      "void": "Storniert"
+    },
+    "offset": {
+      "title": "Rechnung mit einem Guthaben verrechnen",
+      "invoiceLabel": "Rechnung",
+      "creditLabel": "Guthaben",
+      "selectCredit": "Passendes Guthaben auswählen",
+      "amountLabel": "Verrechnungsbetrag",
+      "reasonLabel": "Grund (optional)",
+      "reasonPlaceholder": "Warum diese Verrechnung angewendet wird",
+      "max": "Maximum: {amount}",
+      "submit": "Verrechnung anwenden",
+      "submitting": "Wird angewendet...",
+      "cancel": "Abbrechen",
+      "success": "Die Verrechnung wurde angewendet. Salden aktualisiert.",
+      "error": "Die Verrechnung konnte nicht angewendet werden. Prüfen Sie den Betrag und das gewählte Guthaben und versuchen Sie es erneut.",
+      "noCredits": "Für diese Rechnung ist kein Guthaben in derselben Währung verfügbar."
+    },
+    "byBlock": {
+      "title": "Guthaben und Kosten nach Block",
+      "subtitle": "Blöcke A bis G mit der Gesamtsumme über die Anlage.",
+      "total": "Gesamt",
+      "col": {
+        "block": "Block",
+        "credit": "Guthaben",
+        "cost": "Kosten"
+      }
+    },
+    "byRole": {
+      "title": "Kosten und Guthaben nach Rolle",
+      "subtitle": "Guthaben und Kosten, die jeder Rolle zugeordnet sind.",
+      "col": {
+        "role": "Rolle",
+        "credit": "Guthaben",
+        "cost": "Kosten"
+      }
+    },
+    "role": {
+      "service_provider": "Dienstleister",
+      "owner": "Eigentümer",
+      "tenant": "Mieter",
+      "manager": "Verwaltung",
+      "accountant": "Buchhaltung",
+      "staff": "Personal",
+      "admin": "Administration",
+      "company": "Unternehmen"
+    },
+    "providerCredits": {
+      "title": "Guthaben von Dienstleistern",
+      "subtitle": "Verfügbares Guthaben bei jedem Dienstleister.",
+      "empty": "Es sind noch keine Dienstleisterguthaben erfasst.",
+      "col": {
+        "provider": "Dienstleister",
+        "block": "Block",
+        "amount": "Guthaben"
+      }
+    },
+    "bank": {
+      "title": "Kontoauszüge",
+      "subtitle": "Alle Kontoauszüge. Öffnen Sie einen Auszug, um die Bewegungen zu sehen.",
+      "empty": "Es sind noch keine Kontoauszüge erfasst.",
+      "col": {
+        "opening": "Anfangssaldo",
+        "closing": "Endsaldo",
+        "net": "Nettobewegung"
+      },
+      "line": {
+        "date": "Datum",
+        "description": "Beschreibung",
+        "direction": "Richtung",
+        "amount": "Betrag"
+      }
+    },
+    "direction": {
+      "credit": "Haben",
+      "debit": "Soll"
+    },
+    "offsets": {
+      "title": "Erfasste Verrechnungen",
+      "subtitle": "Verlauf der mit Guthaben verrechneten Rechnungen.",
+      "empty": "Es wurden noch keine Verrechnungen erfasst.",
+      "col": {
+        "invoice": "Rechnung",
+        "amount": "Betrag",
+        "reason": "Grund",
+        "date": "Datum"
+      }
+    }
+  },
   "metadata": {
     "title": "1Cati ERP | Immobilien-CRM und Standortbetrieb",
     "description": "1Cati verbindet CRM, Portfolio, Service, Finanzen, Dokumente, Compliance und rollenbasierte Abläufe in einem ERP-Arbeitsbereich."

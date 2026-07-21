@@ -1,4 +1,131 @@
 {
+  "accountantFinance": {
+    "title": "Accounting and Provider Finance",
+    "subtitle": "Provider invoices, credit balances from providers and every role, block and role cost breakdowns, and bank statements in one accounting view.",
+    "readOnlyBadge": "Review only",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing",
+    "loading": "Preparing the accounting workspace...",
+    "loadErrorTitle": "Accounting finance is temporarily unavailable",
+    "loadErrorBody": "No record was changed. Refresh the workspace or try again shortly.",
+    "retry": "Try again",
+    "approxNote": "Converted euro and lira values are approximate and for reference only.",
+    "kpi": {
+      "openInvoices": "Open provider invoices",
+      "creditTotal": "Total credit balances",
+      "costTotal": "Total costs",
+      "bankStatements": "Bank statements"
+    },
+    "invoices": {
+      "title": "Service-provider invoices",
+      "subtitle": "Every provider invoice with its block, amount and open balance. Offset an open invoice against a matching credit balance.",
+      "offset": "Offset against credit",
+      "noBlock": "Not assigned",
+      "empty": "No provider invoices are recorded yet.",
+      "col": {
+        "provider": "Provider",
+        "block": "Block",
+        "invoiceNo": "Invoice no",
+        "amount": "Amount",
+        "open": "Open",
+        "due": "Due",
+        "status": "Status",
+        "action": "Action"
+      }
+    },
+    "status": {
+      "open": "Open",
+      "partially_offset": "Partially offset",
+      "paid": "Paid",
+      "void": "Void"
+    },
+    "offset": {
+      "title": "Offset invoice against a credit balance",
+      "invoiceLabel": "Invoice",
+      "creditLabel": "Credit balance",
+      "selectCredit": "Select a matching credit balance",
+      "amountLabel": "Offset amount",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Why this offset is being applied",
+      "max": "Maximum: {amount}",
+      "submit": "Apply offset",
+      "submitting": "Applying...",
+      "cancel": "Cancel",
+      "success": "The offset was applied. Balances refreshed.",
+      "error": "The offset could not be applied. Review the amount and the selected credit balance, then retry.",
+      "noCredits": "No credit balance in the same currency is available for this invoice."
+    },
+    "byBlock": {
+      "title": "Credit balances and costs by block",
+      "subtitle": "Blocks A to G with the total across the site.",
+      "total": "Total",
+      "col": {
+        "block": "Block",
+        "credit": "Credit balance",
+        "cost": "Cost"
+      }
+    },
+    "byRole": {
+      "title": "Costs and credit balances by role",
+      "subtitle": "Credit balances and costs attributed to each role.",
+      "col": {
+        "role": "Role",
+        "credit": "Credit balance",
+        "cost": "Cost"
+      }
+    },
+    "role": {
+      "service_provider": "Service providers",
+      "owner": "Owners",
+      "tenant": "Tenants",
+      "manager": "Management",
+      "accountant": "Accounting",
+      "staff": "Staff",
+      "admin": "Administration",
+      "company": "Company"
+    },
+    "providerCredits": {
+      "title": "Credit balances from service providers",
+      "subtitle": "Available credit held with each provider.",
+      "empty": "No provider credit balances are recorded yet.",
+      "col": {
+        "provider": "Provider",
+        "block": "Block",
+        "amount": "Credit balance"
+      }
+    },
+    "bank": {
+      "title": "Bank statements",
+      "subtitle": "All bank statements. Open a statement to see its movements.",
+      "empty": "No bank statements are recorded yet.",
+      "col": {
+        "opening": "Opening balance",
+        "closing": "Closing balance",
+        "net": "Net movement"
+      },
+      "line": {
+        "date": "Date",
+        "description": "Description",
+        "direction": "Direction",
+        "amount": "Amount"
+      }
+    },
+    "direction": {
+      "credit": "Credit",
+      "debit": "Debit"
+    },
+    "offsets": {
+      "title": "Recorded offsets",
+      "subtitle": "History of invoices offset against credit balances.",
+      "empty": "No offsets have been recorded yet.",
+      "col": {
+        "invoice": "Invoice",
+        "amount": "Amount",
+        "reason": "Reason",
+        "date": "Date"
+      }
+    }
+  },
   "metadata": {
     "title": "1Cati ERP | Real Estate CRM and Site Operations Platform",
     "description": "1Cati unifies CRM, portfolio, service, finance, documents, compliance and role-based operations in one ERP workspace for Turkish real estate teams."

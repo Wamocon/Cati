@@ -435,6 +435,31 @@ SELECT
 FROM ledger_units
 ON CONFLICT (company_id, idempotency_key) WHERE idempotency_key IS NOT NULL DO NOTHING;
 
+-- Ensure the booking-resource infrastructure exists for the reservation demo
+-- site. Migration 00000000000032 seeds resource types/resources from companies,
+-- but on a fresh database the companies are created by THIS seed (which runs
+-- after migrations), so the migration found none. Re-create the minimum here,
+-- then reference it: reservations.bookable_resource_id is NOT NULL since #32.
+INSERT INTO public.booking_resource_types (company_id, code, name, category)
+SELECT s.company_id, 'shared-facility', 'Shared facility', 'shared_facility'
+FROM public.sites s
+WHERE s.id = '33333333-3333-4333-8333-333333333333'
+ON CONFLICT (company_id, code) DO NOTHING;
+
+INSERT INTO public.bookable_resources (
+  company_id, site_id, resource_type_id, code, name,
+  commissioning_state, capacity_mode, capacity,
+  min_duration_minutes, default_duration_minutes, max_duration_minutes,
+  maximum_advance_days, approval_requirement, price_truth, deposit_truth, access_requirement
+)
+SELECT s.company_id, s.id, rt.id, 'seed-amenity', 'Amenity',
+       'active', 'exclusive', 1, 5, 60, 2880, 730, 'none', 'free', 'not_required', 'manual'
+FROM public.sites s
+JOIN public.booking_resource_types rt
+  ON rt.company_id = s.company_id AND rt.code = 'shared-facility'
+WHERE s.id = '33333333-3333-4333-8333-333333333333'
+ON CONFLICT (site_id, code) DO NOTHING;
+
 WITH reservation_units AS (
   SELECT id, company_id, site_id, unit_no, row_number() OVER (ORDER BY unit_no) AS rn
   FROM public.units
@@ -445,26 +470,44 @@ INSERT INTO public.reservations (
   company_id,
   site_id,
   unit_id,
+  bookable_resource_id,
+  resource_name,
   guest_name,
   check_in_at,
   check_out_at,
+  buffer_before_minutes,
+  buffer_after_minutes,
+  buffered_start_at,
+  buffered_end_at,
   status,
   access_code_status,
   cleaning_status,
-  deposit_status
+  deposit_status,
+  request_fingerprint
 )
 SELECT
-  company_id,
-  site_id,
-  id,
-  (ARRAY['Murat A.', 'Nina Volkova', 'Corporate Group', 'Olga Ivanova'])[rn],
-  NOW() + ((rn - 2) || ' days')::interval,
-  NOW() + ((rn + 3) || ' days')::interval,
-  CASE WHEN rn = 1 THEN 'checked_in' WHEN rn = 2 THEN 'scheduled' ELSE 'scheduled' END,
-  CASE WHEN rn = 2 THEN 'pending' ELSE 'issued' END,
-  CASE WHEN rn = 1 THEN 'done' ELSE 'pending' END,
-  CASE WHEN rn = 2 THEN 'held' ELSE 'pending' END
-FROM reservation_units
+  ru.company_id,
+  ru.site_id,
+  ru.id,
+  br.id,
+  'Amenity',
+  (ARRAY['Murat A.', 'Nina Volkova', 'Corporate Group', 'Olga Ivanova'])[ru.rn],
+  NOW() + ((ru.rn - 2) || ' days')::interval,
+  NOW() + ((ru.rn + 3) || ' days')::interval,
+  -- Zero buffers so buffered_* equals check_in/out, satisfying the immutable
+  -- buffer-snapshot guard (booking_assert_buffer_snapshot, migration 32).
+  0,
+  0,
+  NOW() + ((ru.rn - 2) || ' days')::interval,
+  NOW() + ((ru.rn + 3) || ' days')::interval,
+  CASE WHEN ru.rn = 1 THEN 'checked_in' WHEN ru.rn = 2 THEN 'scheduled' ELSE 'scheduled' END,
+  CASE WHEN ru.rn = 2 THEN 'pending' ELSE 'issued' END,
+  CASE WHEN ru.rn = 1 THEN 'done' ELSE 'pending' END,
+  CASE WHEN ru.rn = 2 THEN 'held' ELSE 'pending' END,
+  md5('seed-reservation:' || ru.id::text)
+FROM reservation_units ru
+JOIN public.bookable_resources br
+  ON br.site_id = ru.site_id AND br.code = 'seed-amenity'
 ON CONFLICT DO NOTHING;
 
 WITH document_units AS (

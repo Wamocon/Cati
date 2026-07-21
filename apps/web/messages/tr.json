@@ -1,4 +1,131 @@
 {
+  "accountantFinance": {
+    "title": "Muhasebe ve Sağlayıcı Finansı",
+    "subtitle": "Sağlayıcı faturaları, sağlayıcılardan ve tüm rollerden alacak bakiyeleri, blok ve rol bazında maliyet dökümleri ve banka ekstreleri tek muhasebe görünümünde.",
+    "readOnlyBadge": "Yalnızca inceleme",
+    "refresh": "Yenile",
+    "refreshing": "Yenileniyor",
+    "loading": "Muhasebe çalışma alanı hazırlanıyor...",
+    "loadErrorTitle": "Muhasebe finansı şu anda kullanılamıyor",
+    "loadErrorBody": "Hiçbir kayıt değişmedi. Çalışma alanını yenileyin veya kısa süre sonra tekrar deneyin.",
+    "retry": "Tekrar dene",
+    "approxNote": "Çevrilen euro ve lira değerleri yaklaşıktır ve yalnızca referans amaçlıdır.",
+    "kpi": {
+      "openInvoices": "Açık sağlayıcı faturaları",
+      "creditTotal": "Toplam alacak bakiyesi",
+      "costTotal": "Toplam maliyet",
+      "bankStatements": "Banka ekstreleri"
+    },
+    "invoices": {
+      "title": "Sağlayıcı faturaları",
+      "subtitle": "Her sağlayıcı faturası; bloğu, tutarı ve açık bakiyesiyle birlikte. Açık bir faturayı uygun bir alacak bakiyesine mahsup edin.",
+      "offset": "Alacağa mahsup et",
+      "noBlock": "Atanmadı",
+      "empty": "Henüz sağlayıcı faturası kaydı yok.",
+      "col": {
+        "provider": "Sağlayıcı",
+        "block": "Blok",
+        "invoiceNo": "Fatura no",
+        "amount": "Tutar",
+        "open": "Açık",
+        "due": "Vade",
+        "status": "Durum",
+        "action": "İşlem"
+      }
+    },
+    "status": {
+      "open": "Açık",
+      "partially_offset": "Kısmen mahsup",
+      "paid": "Ödendi",
+      "void": "İptal"
+    },
+    "offset": {
+      "title": "Faturayı alacak bakiyesine mahsup et",
+      "invoiceLabel": "Fatura",
+      "creditLabel": "Alacak bakiyesi",
+      "selectCredit": "Uygun bir alacak bakiyesi seçin",
+      "amountLabel": "Mahsup tutarı",
+      "reasonLabel": "Gerekçe (isteğe bağlı)",
+      "reasonPlaceholder": "Bu mahsubun neden uygulandığı",
+      "max": "En fazla: {amount}",
+      "submit": "Mahsubu uygula",
+      "submitting": "Uygulanıyor...",
+      "cancel": "İptal",
+      "success": "Mahsup uygulandı. Bakiyeler güncellendi.",
+      "error": "Mahsup uygulanamadı. Tutarı ve seçilen alacak bakiyesini kontrol edip tekrar deneyin.",
+      "noCredits": "Bu fatura için aynı para biriminde alacak bakiyesi bulunmuyor."
+    },
+    "byBlock": {
+      "title": "Blok bazında alacak ve maliyet",
+      "subtitle": "A'dan G'ye bloklar ve site genelindeki toplam.",
+      "total": "Toplam",
+      "col": {
+        "block": "Blok",
+        "credit": "Alacak bakiyesi",
+        "cost": "Maliyet"
+      }
+    },
+    "byRole": {
+      "title": "Rol bazında maliyet ve alacak",
+      "subtitle": "Her role atanan alacak bakiyeleri ve maliyetler.",
+      "col": {
+        "role": "Rol",
+        "credit": "Alacak bakiyesi",
+        "cost": "Maliyet"
+      }
+    },
+    "role": {
+      "service_provider": "Servis sağlayıcılar",
+      "owner": "Malikler",
+      "tenant": "Kiracılar",
+      "manager": "Yönetim",
+      "accountant": "Muhasebe",
+      "staff": "Personel",
+      "admin": "Yönetici",
+      "company": "Şirket"
+    },
+    "providerCredits": {
+      "title": "Servis sağlayıcılardan alacak bakiyeleri",
+      "subtitle": "Her sağlayıcıda tutulan kullanılabilir alacak.",
+      "empty": "Henüz sağlayıcı alacak bakiyesi kaydı yok.",
+      "col": {
+        "provider": "Sağlayıcı",
+        "block": "Blok",
+        "amount": "Alacak bakiyesi"
+      }
+    },
+    "bank": {
+      "title": "Banka ekstreleri",
+      "subtitle": "Tüm banka ekstreleri. Hareketleri görmek için bir ekstreyi açın.",
+      "empty": "Henüz banka ekstresi kaydı yok.",
+      "col": {
+        "opening": "Açılış bakiyesi",
+        "closing": "Kapanış bakiyesi",
+        "net": "Net hareket"
+      },
+      "line": {
+        "date": "Tarih",
+        "description": "Açıklama",
+        "direction": "Yön",
+        "amount": "Tutar"
+      }
+    },
+    "direction": {
+      "credit": "Alacak",
+      "debit": "Borç"
+    },
+    "offsets": {
+      "title": "Kaydedilen mahsuplar",
+      "subtitle": "Alacak bakiyelerine mahsup edilen faturaların geçmişi.",
+      "empty": "Henüz mahsup kaydedilmedi.",
+      "col": {
+        "invoice": "Fatura",
+        "amount": "Tutar",
+        "reason": "Gerekçe",
+        "date": "Tarih"
+      }
+    }
+  },
   "metadata": {
     "title": "1Çatı ERP | Emlak, Site Yönetimi ve CRM Platformu",
     "description": "1Çatı, Türkiye emlak operasyonları için CRM, portföy, aidat, servis, belge, uyumluluk ve rol bazlı ekip yönetimini tek ERP çalışma alanında birleştirir."

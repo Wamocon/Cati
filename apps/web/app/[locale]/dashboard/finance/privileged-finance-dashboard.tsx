@@ -12,6 +12,7 @@ import {
   TrendingDown,
   WalletCards,
 } from "lucide-react"
+import { AccountantFinancePanel } from "@/components/accountant-finance-panel"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
 import { Card3D } from "@/components/3d-card"
@@ -348,6 +349,10 @@ export function PrivilegedFinanceDashboard() {
       </div>
 
       <ManualPaymentConsole />
+
+      <div id="accountant-finance" className="scroll-mt-24">
+        <AccountantFinancePanel />
+      </div>
 
       <div id="finance-restrictions" className="scroll-mt-24">
         <PaymentRestrictionControl />
