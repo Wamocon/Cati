@@ -1,12 +1,13 @@
 # instruction.md — Arbeits- und Zustandsleitfaden für 1Çatı (für KI-Coding-Agenten)
 
 > Zweck: Diese Datei ist der **Wiedereinstiegspunkt für zukünftige Phasen**. Beim Weiterarbeiten zuerst diese Datei lesen, dann `docs/SYSTEM-STATE.md` (konsolidierter technischer Stand), dann `CLAUDE.md` (tiefe technische Referenz) und `docs/PROJECT-HANDBOOK.md` (Phasenwahrheit).
-> Zuletzt aktualisiert: 16.07.2026 · Branch: `waleri-dev` (deckungsgleich mit `origin/main`, siehe §4) · Code-Stand: `c84f7b2` · Vertraulich.
+> Zuletzt aktualisiert: 21.07.2026 · Branch: `waleri-dev` · Code-Stand: `32b8ebe` (3 neue Fix-Commits über der 16.07-Basis, siehe §12) · Vertraulich.
 > Reihenfolge bei Widersprüchen: aktueller **Code** > `docs/SYSTEM-STATE.md` > `docs/PROJECT-HANDBOOK.md` > `CLAUDE.md` > diese Datei.
 > Seit 07.07.2026: **Code-Tiefenanalyse** (14 Bereiche) mit korrigierter Phasenwahrheit, **Kundendokumente** (Anforderungsdokument v2 + Kundenversion, Benutzerhandbuch v2 + Kundenversion) und **PowerPoint-Präsentationen** (lang + Pitch) inkl. Design-/Render-Pipeline (§9).
 > Seit 10.07.2026: der **parallele Strang (`yash_dev`)** hat 25 Commits auf `main` gebracht — „Cati Training" (Video-Library), Security-Header/CSP, Public-AI-Telemetrie, Emergency-Service-Routing, Live-Dokumenten-Download, Dark-Mode entfernt.
 > Seit 11.07.2026: **CEO-Vertriebsphase gestartet.** CEO-OnePager (PPTX+PNG), finale Präsentationsskripte, 21 Heygen-Vertonungsskripte. **⚠ Vor jeder Kunden-/CEO-Aussage §9.1 lesen** (verifizierte vs. verbotene Zahlen — Vorsicht: §9.1 selbst ist Stand 11.07. und nicht mehr vollständig deckungsgleich mit dem Code, siehe §9.2).
 > **Seit 16.07.2026 — GROSSES Update, ändert vieles unten:** `origin/main` hat 12 neue Commits gebracht (251 Dateien, +97.344/-12.844 Zeilen) und wurde per Fast-Forward in `waleri-dev` übernommen. Neu: **`docs/SYSTEM-STATE.md`** als konsolidierter „was existiert heute wirklich"-Snapshot (bitte ab sofort zuerst dort nachsehen, nicht nur hier). Migrationen jetzt **0000–0037** (38 Dateien, alle 38/38 auf Supabase Cloud angewendet). **Phasen 10–14 laufen jetzt als „✅ Built"**, nicht mehr „Foundation mit getrennten Schichten" — mehrere in §10 (alt) dokumentierte Lücken sind laut `SYSTEM-STATE.md` geschlossen (Details §10, komplett überarbeitet). **Die `waleri-dev`-Exklusivvorgabe wurde in `CLAUDE.md` offiziell aufgehoben** — neue Arbeit auf Feature-/Fix-Branches, nicht mehr zwingend auf `waleri-dev` (§4). **⚠ Alle in dieser Datei/Session zuvor erzeugten Testartefakte (24-Anwendungsfälle-Priorität, Xray-Testfälle, ISTQB-Dokumente, Fehlertabelle) basieren auf dem Stand VOR diesem Update — vor Weiterverwendung gegen den neuen Code re-verifizieren** (§9.3).
+> **Seit 20.–21.07.2026 — UI-/i18n-/Funktions-Fehlerbehebung (Kundentest `docs/test/Fehler_20.07.26.docx`, 15 Befunde F01–F15):** 12 Befunde direkt behoben, **F09** nach Kundenwahl umgesetzt (idempotenter sichtbarer Auftrags-Entwurf), **F14** nach DB-Analyse revertiert (Offline-Sync für `accountant` ist DB-seitig ausgeschlossen — Rückfrage offen), **F06/F07** nur i18n-Teil (Rest = Cloud-Datenverknüpfung, vom Kunden zurückgestellt). 3 Commits (`31c526b`, `012f7c7`, `32b8ebe`), Gates typecheck/lint/build **grün**, E2E nicht gelaufen (aber gezielt geprüft: keine Assertion-Regression). **Details + offene Entscheidungen: §12. Neue durable Lehren zu i18n/Upload/RBAC: §7 Punkt 14–19.**
 
 ---
 
@@ -129,6 +130,14 @@ pnpm --dir apps/web test:e2e:structured
 12. **[MITTEL] Ausgefüllte Word-Testprotokolle programmatisch auslesen:** Statusmarkierungen per Farb-Highlight (`python-docx`, `run.font.highlight_color`) werden von Word beim Bearbeiten oft in mehrere Runs aufgesplittet — die Zuordnung „welche der 4 Status-Checkboxen wurde markiert" braucht eine Offset-Berechnung gegen den bekannten Vorlagentext, nicht nur den Run-Text selbst.
 13. **[NIEDRIG] Im Arbeitsverzeichnis liegt eine offenbar unvollständige Browser-Download-Datei** `docs/requirements/Nicht bestätigt 314475.crdownload` (unversioniert) — sieht nach einem abgebrochenen Download aus, kein Deliverable. Vor dem nächsten Commit-Sweep prüfen/aufräumen.
 
+**Neu aus Session 20.–21.07.2026 (Dashboard-i18n/UX/Funktion — wiederkehrende Muster):**
+14. **[HOCH] Dashboard-i18n ist ein Laufzeit-String-Wörterbuch, kein next-intl-Katalog.** `lib/operational-copy.ts` (`localizeDashboardText`/`localizeDashboardTextPart`) hat flache `en/de/ru/tr`-Tabellen + `dashboardTextOverrides` + `portalWorkflowText`, jeweils **Quell-String → Übersetzung**. Fehlt ein Key, wird der **rohe Quell-String** ausgegeben — und Quell-Strings sind türkisch (teils englisch), daher „leakt" auf `/de`/`/ru` Türkisch/Englisch durch (Ursache von F03/F08/F10/F12/F15). **Regel:** jede neue `t()`-umschlossene UI-Copy braucht Keys in de/ru (+ tr/en für englische Quell-Strings). Getrennte Copy-Quellen: `lib/unit-matrix-copy.ts` (Wohnungsmatrix, hartkodiert je Locale), `lib/business-copy.*.ts` (Katalog/Statuslabels). `messages/*.json` (next-intl) wird für diese Dashboard-Freitexte **nicht** genutzt.
+15. **[HOCH] Exakter Key-Match zählt byte-genau.** ASCII vs. türkische Diakritika (`bulunamadi` ≠ `bulunamadı`), ASCII-Türkisch in Detail-Strings vs. Diakritika in Intros — immer gegen den echten Code-Quellstring matchen (Grep), nicht gegen eine „schöner geschriebene" Fassung. Dupe-Keys brechen ESLint `no-dupe-keys`: vor dem Einfügen je Tabelle prüfen (das Prüfskript liegt im Scratchpad als `dupecheck.py`; die verschachtelten `dashboardTextOverrides`/`portalWorkflowText`-Sub-Objekte erzeugen dort **erwartete** Pseudo-Dups pro Locale — nur die flachen `en/de/ru/tr`-Segmente müssen dup-frei sein).
+16. **[MITTEL] Cloud-Seed-Strings ≠ TS-Seed-Strings.** Service-Katalog-Beschreibungen weichen zwischen `supabase/migrations/…0006` (Cloud, z. B. „Daire teslimi ve kisa konaklama sonrasi temizlik.") und `lib/site-management-data.ts` (lokaler Seed, längere Fassung) ab — **ein** Wörterbuch-Key deckt nicht beide. Die Demo ist cloud-backed → für sichtbare Übersetzung die **Cloud-Seed-Strings** ins Wörterbuch aufnehmen (angewendete Migration nie editieren; alternativ Seeds langfristig angleichen).
+17. **[KRITISCH] F14: Offline-Sync ist für die Rolle `accountant` auf DB-Ebene ausgeschlossen**, nicht nur im Frontend. `offline_sync_clients.role_snapshot` (Migration `0035`) hat eine CHECK-Constraint ohne `accountant`; die Sync-RPCs lehnen die Rolle ab; ein Security-E2E-Test (`e2e/operations/booking-handover-business-functional.spec.ts`) sichert die Verweigerung ab. „Freischalten" per reiner `rbac.ts`-Änderung erzeugt Frontend/DB-Inkonsistenz **und** bricht den Test → nur mit Migration (CHECK + RPC-Allowlist) + Testanpassung + Security-Review. (Auch als Memory gesichert.)
+18. **[HOCH] Client-Antworten defensiv parsen.** `response.json()`/`res.json()` **nie** vor `response.ok` + Content-Type-Check aufrufen — eine Nicht-JSON-Fehlerantwort (typisch: Vercel-**413** „Request Entity Too Large" bei >~4,5 MB, obwohl die UI 25 MB bewirbt) crasht sonst mit „Unexpected token 'R'…" (Ursache F11). Muster: `if (!res.ok || !ct.includes("application/json")) { const text = await res.text(); … }`. Für echte Großdateien: Direct-to-Storage (Supabase signed upload URL) statt Body durch die Serverless-Funktion.
+19. **[MITTEL] `DashboardActionButton`/`DashboardActionMenu` schreiben nur einen Audit-Log-Eintrag** (`POST /api/site-management/actions`) — **keine Navigation, keine Domänen-Persistenz**; der scheinbare „Spinner" ist nur der transiente `disabled`-Zustand während des Fetch. Nicht mit einem Navigations-/Speicher-Button verwechseln (war Kern von F05 „Karten führen ins Leere" und F09 „Aktion ohne Effekt"). `DashboardActionMenu` bietet `onActionComplete(item, "success"|"error")` für echte Folgeaktionen im UI.
+
 ---
 
 ## 8. Nächste Phasen (Roadmap) — grundlegend aktualisiert seit 16.07.
@@ -195,3 +204,30 @@ Diese Datei enthielt bis 11.07. einen ausführlichen Abschnitt „Code-Tiefenana
 - **Vertriebs-/CEO-Material:** §9 · **vor jeder Zahl gegenüber Kunde/CEO → §9.1 lesen**, neue Dokumente §9.2 vor Verwendung inhaltlich prüfen.
 - **Jira/Xray:** `scripts/jira-xray-sync.mjs` (15-Phasen-Sync, bestehend) und `scripts/jira-xray-uat-import.mjs` (neu, diese Session, §9.3) — beide immer erst mit `--dry-run`/`--check`, nie ungefragt `--live`.
 - Kanonische Doku-Reihenfolge: diese Datei → `docs/SYSTEM-STATE.md` → `CLAUDE.md` → `AGENTS.md` → `docs/PROJECT-HANDBOOK.md` → `docs/requirements/option-3-ai-site-crm/` (BRD/PRD/TRD/Security/QA/Vendor).
+
+---
+
+## 12. Session 20.–21.07.2026 — Kundentest „Fehler_20.07.26.docx" (15 UI-/i18n-/Funktionsbefunde)
+
+Quelle: `docs/test/Fehler_20.07.26.docx` (11 annotierte Screenshots mit Rahmen + Sprechblasen; Rollen **Manager** + **Accountant**; Locale `/de`; cloud-backed Demo mit „Supabase live"-Badges). **Alle 15 Befunde im Code lokalisiert** (Triage via Fan-out-Subagenten). Hauptdateien: `components/phase4-live-operations.tsx`, `lib/unit-matrix-copy.ts`, `app/[locale]/dashboard/{listings,tickets,documents}/page.tsx`, `lib/operational-copy.ts`, `lib/communications-repository.ts`.
+
+**Behoben (3 Commits `31c526b` Wohnungsmatrix / `012f7c7` Tickets+Dokumente+i18n / `32b8ebe` Kommunikation):**
+
+| # | Befund | Fix |
+|---|---|---|
+| F01 | Rote Matrix-Kachel = „Unbekannt" (Fallback-Kollision `blocked`/`unknown`) | `blocked` rot, `unknown` neutral-grau, **sichtbare Legende**, Label = `common.unknown` |
+| F02 | „Schuld"/„Mit Schuld" (DE) | → „Rückstand"/„Mit Rückstand" (Label, Spaltenkopf, Filter) |
+| F03 | Audit-Panel: rohe `action_type`-Keys + eingefrorene RU-Titel | laufzeit-lokalisiert (Label-Mapping + `entity_external_id`) |
+| F04 | Tabellenzeilen nicht klickbar | `onRowClick` → Einheit selektieren |
+| F05 | 4 Projektumfang-Karten „führen ins Leere" | = reine Info-Karten (waren Audit-Log-Buttons, §7.19) |
+| F08/F10/F12/F15 + F06-String | Türkisch/Englisch auf `/de` (Tickets-Detail, Accountant-Ansicht, Routing-Queues, Status-Labels, „Saklama sınıfı", serviceLevel-Chips, Cloud-Seed-Katalog, Empty-State) | fehlende DE/RU/EN/TR-Keys in `operational-copy.ts` ergänzt (§7.14–16); Kanonwerte unverändert |
+| F09 | „Auftrag vorbereiten" folgenlos + beliebig wiederholbar | **idempotenter, sichtbarer Auftrags-Entwurf** in der Auftragskontrolle (`onActionComplete`) |
+| F11 | Upload-Crash „Unexpected token 'R'…" | defensiver Parse-Guard + Pre-Flight-Größencheck + freundliche 413-Meldung (§7.18) |
+| F13 | Accountant kann kein Portalgespräch starten (Bootstrap-Deadlock) | firmenweite Ziel-Sites (wie Admin; RLS bleibt Grenze) |
+
+**Offen / erfordert Entscheidung (bei Wiederaufnahme zuerst hier ansetzen):**
+- **F14 — Offline-Sync für `accountant`:** nach DB-Analyse **revertiert** (netto-neutral). Grund: DB-seitig bewusst ausgeschlossen (§7.17). Entscheidung ausstehend: „by design" lassen (empfohlen) vs. security-reviewte Freischaltung (Migration + Testanpassung).
+- **F06/F07 — leeres EINHEIT-Dropdown + gesperrtes „Anfrage senden":** nur i18n-String behoben. Funktionsursache = Cloud-Konto `manager`/`admin` (`profiles.company_id`) nicht mit den 769 New-Level-Einheiten verknüpft → RLS liefert 0 Einheiten (vgl. `docs/SYSTEM-STATE.md`: nur owner/tenant wurden verknüpft). Braucht DB-Verknüpfung; Kunde hat es zurückgestellt.
+- **F11-Limit:** UI bewirbt 25 MB, Vercel kappt ~4,5 MB → Direct-to-Storage als nächster Schritt (Entscheidung offen).
+
+**Verifikation:** typecheck/lint/build grün. E2E-Suite **nicht** gelaufen (braucht Server+Browser); gezielt geprüft, dass keine E2E-Assertion die geänderten Strings/Interaktionen nutzt („Operations triage queue" wird in Tests nur als **Datenwert** genutzt, den ich nicht geändert habe). **Vor Merge auf `main`: vollständigen E2E-Lauf nachholen.**
