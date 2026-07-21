@@ -23,10 +23,6 @@ import { StatusBadge } from "@/components/status-badge"
 import {
   accessLabels,
   cashFlow,
-  formatEur,
-  formatEurShort,
-  formatTry,
-  formatTryShort,
   getDebtAccounts,
   getDebtAging,
   getPaymentPlanSummary,
@@ -37,12 +33,30 @@ import {
   type PaymentPlanStatus,
   type PaymentStatus,
 } from "@/lib/site-management-data"
+import { formatDual, formatDualShort } from "@/lib/currency"
 import { clientProfile } from "@/lib/client-context"
 import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
   toIntlLocale,
 } from "@/lib/operational-copy"
+
+// Maps the Turkish month abbreviations used in the cash-flow seed to a month
+// index (0-11) so the latest data point can drive a localized month label.
+const TR_MONTH_ABBR_TO_INDEX: Record<string, number> = {
+  Oca: 0,
+  Şub: 1,
+  Mar: 2,
+  Nis: 3,
+  May: 4,
+  Haz: 5,
+  Tem: 6,
+  Ağu: 7,
+  Eyl: 8,
+  Eki: 9,
+  Kas: 10,
+  Ara: 11,
+}
 
 function paymentVariant(status: PaymentStatus) {
   if (status === "clear") return "success"
@@ -87,6 +101,14 @@ export function PrivilegedFinanceDashboard() {
   const accounts = getDebtAccounts()
   const debtAging = getDebtAging()
   const latestCashFlow = cashFlow.at(-1)
+  // Derive the collection-card label from the latest data point's month instead
+  // of a hardcoded "June", so it stays correct if the series window shifts.
+  const latestMonthIndex =
+    TR_MONTH_ABBR_TO_INDEX[latestCashFlow?.label ?? ""] ?? new Date().getMonth()
+  const latestMonthName = new Intl.DateTimeFormat(toIntlLocale(locale), {
+    month: "long",
+  }).format(new Date(Date.UTC(2000, latestMonthIndex, 1)))
+  const collectionCardLabel = `${latestMonthName} ${t("Tahsilat")}`
   const legalAccounts = accounts.filter(
     (account) => account.paymentStatus === "legal"
   ).length
@@ -94,6 +116,9 @@ export function PrivilegedFinanceDashboard() {
     (account) => account.paymentStatus === "overdue"
   ).length
   const planSummary = getPaymentPlanSummary()
+  // Shared styling so each KPI tile reads as an interactive drill-in link.
+  const kpiLinkClass =
+    "group/command block rounded-xl outline-none transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
   const pageIntro = {
     tr: `${clientProfile.clientName} için satış ödemeleri, aidat, borç yaşlandırma, depozito, ödeme doğrulama, kira geliri ve erişim kısıtı kararları aynı finans akışında yönetilir.`,
     en: `${clientProfile.clientName} manages sales payments, dues, debt aging, deposits, payment verification, rental income and access-hold decisions in one finance flow.`,
@@ -113,63 +138,79 @@ export function PrivilegedFinanceDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <WalletCards className="h-8 w-8 text-rose-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Toplam borç")}
-              </p>
-              <p className="text-2xl font-black">
-                {formatTryShort(summary.totalDebtTry)}
-              </p>
+        <a href="#finance-accounts" className={kpiLinkClass} aria-label={t("Toplam borç")}>
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <WalletCards className="h-8 w-8 shrink-0 text-rose-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Toplam borç")}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(summary.totalDebtTry)}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <ReceiptText className="h-8 w-8 text-teal-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Aylık aidat")}
-              </p>
-              <p className="text-2xl font-black">
-                {formatTryShort(summary.monthlyExpectedTry)}
-              </p>
+          </Card3D>
+        </a>
+        <a href="#finance-ledger" className={kpiLinkClass} aria-label={t("Aylık aidat")}>
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <ReceiptText className="h-8 w-8 shrink-0 text-teal-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Aylık aidat")}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(summary.monthlyExpectedTry)}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <Banknote className="h-8 w-8 text-sky-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Haziran tahsilat")}
-              </p>
-              <p className="text-2xl font-black">
-                {formatTryShort(latestCashFlow?.collectedTry ?? 0)}
-              </p>
+          </Card3D>
+        </a>
+        <a href="#finance-cashflow" className={kpiLinkClass} aria-label={collectionCardLabel}>
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <Banknote className="h-8 w-8 shrink-0 text-sky-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {collectionCardLabel}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
+                </p>
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <LockKeyhole className="h-8 w-8 text-amber-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Kısıtlı erişim")}
-              </p>
-              <AnimatedCounter
-                value={summary.restrictedAccess}
-                className="text-2xl font-black"
-              />
+          </Card3D>
+        </a>
+        <a
+          href="#finance-restrictions"
+          className={kpiLinkClass}
+          aria-label={t("Kısıtlı erişim")}
+        >
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <LockKeyhole className="h-8 w-8 shrink-0 text-amber-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Kısıtlı erişim")}
+                </p>
+                <AnimatedCounter
+                  value={summary.restrictedAccess}
+                  className="text-2xl font-black"
+                />
+              </div>
             </div>
-          </div>
-        </Card3D>
+          </Card3D>
+        </a>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <Card3D className="xl:col-span-2" glow={false}>
+        <Card3D
+          id="finance-cashflow"
+          className="scroll-mt-24 xl:col-span-2"
+          glow={false}
+        >
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-sm font-bold text-card-foreground">
@@ -184,7 +225,7 @@ export function PrivilegedFinanceDashboard() {
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge variant="success">
                 {t("Tahsilat")}{" "}
-                {formatTryShort(latestCashFlow?.collectedTry ?? 0)}
+                {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
               </StatusBadge>
               <a
                 href="#finance-accounts"
@@ -202,7 +243,7 @@ export function PrivilegedFinanceDashboard() {
               color: "var(--primary)",
             }))}
             ariaLabel={t("Tahsilat nakit akışı grafiği")}
-            formatValue={(value) => formatTryShort(value)}
+            formatValue={(value) => formatDualShort(value)}
             height={250}
             totalLabel={t("Toplam")}
           />
@@ -223,7 +264,9 @@ export function PrivilegedFinanceDashboard() {
                     {bucket.label} {t("gün")}
                   </span>
                   <span className="text-muted-foreground">
-                    {formatTryShort(bucket.value)}
+                    {bucket.value > 0
+                      ? formatDualShort(bucket.value)
+                      : t("Açık kalem yok")}
                   </span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -300,11 +343,15 @@ export function PrivilegedFinanceDashboard() {
         </Card3D>
       </div>
 
-      <FinanceLiveLedger />
+      <div id="finance-ledger" className="scroll-mt-24">
+        <FinanceLiveLedger />
+      </div>
 
       <ManualPaymentConsole />
 
-      <PaymentRestrictionControl />
+      <div id="finance-restrictions" className="scroll-mt-24">
+        <PaymentRestrictionControl />
+      </div>
 
       <Card3D glow={false}>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -322,7 +369,7 @@ export function PrivilegedFinanceDashboard() {
             </p>
           </div>
           <StatusBadge variant="warning">
-            {t("Açık vade")} {formatEurShort(planSummary.openExposureEur)}
+            {t("Açık vade")} {formatDualShort(planSummary.openExposureEur, "EUR")}
           </StatusBadge>
         </div>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -379,14 +426,14 @@ export function PrivilegedFinanceDashboard() {
               header: "Liste",
               sortable: true,
               sortValue: (plan) => plan.listPriceEur,
-              render: (plan) => formatEur(plan.listPriceEur),
+              render: (plan) => formatDualShort(plan.listPriceEur, "EUR"),
             },
             {
               key: "paid",
               header: "Ödenen",
               sortable: true,
               sortValue: (plan) => plan.paidEur,
-              render: (plan) => formatEur(plan.paidEur),
+              render: (plan) => formatDualShort(plan.paidEur, "EUR"),
             },
             {
               key: "next",
@@ -394,7 +441,7 @@ export function PrivilegedFinanceDashboard() {
               render: (plan) => (
                 <span className="inline-flex items-center gap-1">
                   <CalendarClock className="h-3.5 w-3.5 text-muted-foreground" />
-                  {formatEur(plan.nextDueEur)} /{" "}
+                  {formatDualShort(plan.nextDueEur, "EUR")} /{" "}
                   {shortDate(plan.nextDueAt, locale)}
                 </span>
               ),
@@ -442,7 +489,7 @@ export function PrivilegedFinanceDashboard() {
               sortValue: (account) => account.balanceTry,
               render: (account) => (
                 <span className="font-semibold">
-                  {formatTry(account.balanceTry)}
+                  {formatDual(account.balanceTry)}
                 </span>
               ),
             },

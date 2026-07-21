@@ -20,6 +20,7 @@ import {
   toIntlLocale,
 } from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
+import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
   FinanceLedgerData,
@@ -41,12 +42,10 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
+// Show every ledger figure in both Lira and Euro via the shared helper. The
+// stored records are integer minor units (kuruş/cents).
+function formatCents(cents: number, currency = "TRY") {
+  return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
 function shortDate(value: string | null, locale = "tr-TR") {
@@ -227,9 +226,9 @@ export function FinanceLiveLedger() {
 
       <div className="grid gap-3 py-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          ["Açık bakiye", formatCents(data?.summary.openLedgerCents ?? 0, currency, intlLocale)],
-          ["Gecikmiş", formatCents(data?.summary.overdueLedgerCents ?? 0, currency, intlLocale)],
-          ["Bu ay tahsilat", formatCents(data?.summary.paidThisMonthCents ?? 0, currency, intlLocale)],
+          ["Açık bakiye", formatCents(data?.summary.openLedgerCents ?? 0, currency)],
+          ["Gecikmiş", formatCents(data?.summary.overdueLedgerCents ?? 0, currency)],
+          ["Bu ay tahsilat", formatCents(data?.summary.paidThisMonthCents ?? 0, currency)],
           ["Açık kayıt", data?.summary.openEntries ?? 0],
         ].map(([label, value]) => (
           <div key={label} className="rounded-lg border border-border/70 bg-muted/30 p-3">
@@ -257,7 +256,7 @@ export function FinanceLiveLedger() {
                 </p>
               </div>
               <p className="text-sm font-black text-foreground">
-                {formatCents(entry.amountCents, entry.currency, intlLocale)}
+                {formatCents(entry.amountCents, entry.currency)}
               </p>
               <StatusBadge variant={statusVariant(entry.status)}>
                 {t(statusLabel(entry.status))}

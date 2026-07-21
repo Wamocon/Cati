@@ -15,6 +15,7 @@ import {
 import { Card3D } from "@/components/3d-card"
 import { StatusBadge } from "@/components/status-badge"
 import { resolveDashboardLocale, toIntlLocale } from "@/lib/operational-copy"
+import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
   OwnerFinanceData,
@@ -29,25 +30,18 @@ type FetchMode = "initial" | "background" | "page"
 const POLL_RECOVERY_MS = 30_000
 const DUE_STATUSES = new Set(["open", "partially_paid", "overdue"])
 
+// Owner-facing balances show in both Lira and Euro via the shared helper.
+// Mixed-currency or unknown aggregates fall back to the mixed label. Stored
+// amounts are integer minor units (kuruş/cents).
 function formatMoney(
   cents: number | null,
   currency: string,
-  locale: string,
   mixedCurrencyLabel: string
 ) {
   if (cents === null || currency === "MIXED") {
     return mixedCurrencyLabel
   }
-
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(cents / 100)
-  } catch {
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(cents / 100)} ${currency}`
-  }
+  return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
 function formatDate(value: string | null, locale: string, includeTime = false) {
@@ -487,7 +481,6 @@ export function OwnerFinanceStatement() {
                 value: formatMoney(
                   selectedSummary.openBalanceCents,
                   selectedSummary.currency,
-                  intlLocale,
                   t("mixedCurrencies")
                 ),
                 icon: WalletCards,
@@ -499,7 +492,6 @@ export function OwnerFinanceStatement() {
                 value: formatMoney(
                   selectedSummary.overdueBalanceCents,
                   selectedSummary.currency,
-                  intlLocale,
                   t("mixedCurrencies")
                 ),
                 icon: AlertCircle,
@@ -511,7 +503,6 @@ export function OwnerFinanceStatement() {
                 value: formatMoney(
                   selectedSummary.recordedPaymentsCents,
                   selectedSummary.currency,
-                  intlLocale,
                   t("mixedCurrencies")
                 ),
                 icon: CheckCircle2,
@@ -721,7 +712,6 @@ export function OwnerFinanceStatement() {
                                 ? -entry.amountCents
                                 : entry.amountCents,
                               entry.currency,
-                              intlLocale,
                               t("mixedCurrencies")
                             )}
                           </td>

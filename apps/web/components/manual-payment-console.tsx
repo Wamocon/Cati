@@ -19,6 +19,7 @@ import {
   toIntlLocale,
 } from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
+import { formatDualFromCents } from "@/lib/currency"
 import type {
   ManualPaymentMethod,
   ManualPaymentRecord,
@@ -78,16 +79,10 @@ function newIdempotencyKey(prefix: string) {
   return `${prefix}-${id}`
 }
 
-function formatMoney(cents: number, currency: string, locale: string) {
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 2,
-    }).format(cents / 100)
-  } catch {
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(cents / 100)} ${currency}`
-  }
+// Show manual-payment amounts in both Lira and Euro via the shared helper.
+// Stored amounts are integer minor units (kuruş/cents).
+function formatMoney(cents: number, currency: string) {
+  return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
 function formatDate(value: string, locale: string, includeTime = false) {
@@ -404,7 +399,7 @@ export function ManualPaymentConsole() {
         <div className="rounded-xl border border-border/70 bg-muted/25 p-3">
           <p className="text-xs font-bold uppercase text-muted-foreground">{t("unreconciledTotal")}</p>
           <p className="mt-1 text-2xl font-black text-foreground">
-            {formatMoney(unreconciledCents, summaryCurrency, intlLocale)}
+            {formatMoney(unreconciledCents, summaryCurrency)}
           </p>
         </div>
         <div className="rounded-xl border border-border/70 bg-muted/25 p-3">
@@ -439,7 +434,7 @@ export function ManualPaymentConsole() {
                   <option value="">{t("selectAccount")}</option>
                   {data?.accounts.map((account) => (
                     <option key={account.id} value={account.id}>
-                      {account.unitNo} â€” {account.ownerName}
+                      {account.unitNo} - {account.ownerName}
                     </option>
                   ))}
                 </select>
@@ -575,13 +570,13 @@ export function ManualPaymentConsole() {
               <article key={payment.id} data-payment-id={payment.id} className="rounded-xl border border-border/70 bg-background/70 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-black text-foreground">{payment.unitNo} â€” {payment.ownerName}</p>
+                    <p className="font-black text-foreground">{payment.unitNo} - {payment.ownerName}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {payment.reference} / {t(`methods.${payment.method}`)} / {formatDate(payment.receivedAt, intlLocale, true)}
                     </p>
                   </div>
                   <p className="text-base font-black text-foreground">
-                    {formatMoney(payment.amountCents, payment.currency, intlLocale)}
+                    {formatMoney(payment.amountCents, payment.currency)}
                   </p>
                 </div>
                 <p className="mt-2 text-sm leading-5 text-muted-foreground">{payment.businessNote}</p>

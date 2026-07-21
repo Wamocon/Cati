@@ -1861,13 +1861,15 @@ export const buyerEligibility: BuyerEligibilityRecord[] = [
   },
 ]
 
+// Contiguous, chronological six-month window ending at the latest month (Haz).
+// Collection trends up over the window; open debt trends down.
 export const cashFlow: CashFlowPoint[] = [
-  { label: "Kas", collectedTry: 1112000, outstandingTry: 426000, serviceSpendTry: 172000 },
-  { label: "Şub", collectedTry: 1186000, outstandingTry: 398000, serviceSpendTry: 164000 },
-  { label: "Mar", collectedTry: 1248000, outstandingTry: 372000, serviceSpendTry: 188000 },
-  { label: "Nis", collectedTry: 1321000, outstandingTry: 341000, serviceSpendTry: 205000 },
-  { label: "May", collectedTry: 1289000, outstandingTry: 389000, serviceSpendTry: 192000 },
-  { label: "Haz", collectedTry: 1376000, outstandingTry: 417000, serviceSpendTry: 218000 },
+  { label: "Oca", collectedTry: 1118000, outstandingTry: 452000, serviceSpendTry: 168000 },
+  { label: "Şub", collectedTry: 1164000, outstandingTry: 431000, serviceSpendTry: 176000 },
+  { label: "Mar", collectedTry: 1225000, outstandingTry: 402000, serviceSpendTry: 184000 },
+  { label: "Nis", collectedTry: 1283000, outstandingTry: 379000, serviceSpendTry: 197000 },
+  { label: "May", collectedTry: 1329000, outstandingTry: 358000, serviceSpendTry: 206000 },
+  { label: "Haz", collectedTry: 1376000, outstandingTry: 341000, serviceSpendTry: 218000 },
 ]
 
 export const siteActivities = [

@@ -23,6 +23,7 @@ import {
   toIntlLocale,
 } from "@/lib/operational-copy"
 import { createClient } from "@/lib/supabase/client"
+import { formatDual, formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
   PaymentRestrictionData,
@@ -49,20 +50,14 @@ function hasSupabasePublicEnv() {
   )
 }
 
-function formatCents(cents: number, currency = "TRY", locale = "tr-TR") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
+// Both restriction thresholds and deposit figures show in Lira and Euro via the
+// shared helper. Ledger amounts are integer minor units (kuruş/cents).
+function formatCents(cents: number, currency = "TRY") {
+  return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
-function formatEur(value: number, locale = "tr-TR") {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value)
+function formatEur(value: number) {
+  return formatDual(value, { currency: "EUR" })
 }
 
 function shortDate(value: string | null, locale = "tr-TR") {
@@ -185,7 +180,7 @@ function PaymentPlanRow({
             {plan.dealName} / {plan.buyerName}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatEur(plan.nextDueEur, intlLocale)} {t("vade")} / {shortDate(plan.nextDueAt, intlLocale)} / {plan.completionPercent}% {t("tamamlandı")}
+            {formatEur(plan.nextDueEur)} {t("vade")} / {shortDate(plan.nextDueAt, intlLocale)} / {plan.completionPercent}% {t("tamamlandı")}
           </p>
         </div>
         <StatusBadge variant={planVariant(plan.status)}>{t(planLabel(plan.status))}</StatusBadge>
@@ -212,7 +207,7 @@ function DepositRow({
             {item.unitNo ?? item.reservationId} / {item.guestName ?? t("Misafir")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("Çıkış")} {shortDate(item.checkOutAt, intlLocale)} / {formatCents(item.depositCents, item.currency, intlLocale)}
+            {t("Çıkış")} {shortDate(item.checkOutAt, intlLocale)} / {formatCents(item.depositCents, item.currency)}
           </p>
         </div>
         <StatusBadge variant={depositVariant(item.depositStatus)}>{t(depositLabel(item.depositStatus))}</StatusBadge>
@@ -239,7 +234,7 @@ function RestrictionRow({
             {item.unitNo ?? item.unitId} / {item.residentName ?? t("Kayıt")}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {formatCents(item.balanceCents, item.currency, intlLocale)} / {item.agingBucket} {t("gün")}
+            {formatCents(item.balanceCents, item.currency)} / {item.agingBucket} {t("gün")}
           </p>
         </div>
         <StatusBadge variant={restrictionVariant(item)}>{t(riskLabel(item.riskLevel))}</StatusBadge>
@@ -446,7 +441,7 @@ export function PaymentRestrictionControl() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-black text-foreground">{t("Ödeme planı ve depozito işi")}</h3>
             <StatusBadge variant="warning">
-              {t("Açık vade")} {formatEur(data?.summary.openPlanExposureEur ?? 0, intlLocale)}
+              {t("Açık vade")} {formatEur(data?.summary.openPlanExposureEur ?? 0)}
             </StatusBadge>
           </div>
           {topPlan.map((plan) => <PaymentPlanRow key={plan.id} intlLocale={intlLocale} plan={plan} t={t} />)}
@@ -462,7 +457,7 @@ export function PaymentRestrictionControl() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-black text-foreground">{t("Kısıt ve mutabakat kuyruğu")}</h3>
             <StatusBadge variant="danger">
-              {formatCents(data?.summary.depositExposureCents ?? 0, currency, intlLocale)} {t("Depozito")}
+              {formatCents(data?.summary.depositExposureCents ?? 0, currency)} {t("Depozito")}
             </StatusBadge>
           </div>
           {topRestrictions.map((item) => <RestrictionRow key={item.id} intlLocale={intlLocale} item={item} t={t} />)}
@@ -474,7 +469,7 @@ export function PaymentRestrictionControl() {
                     {t(providerLabel(item.provider))} / {item.providerReference ?? item.id}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {formatCents(item.amountCents, item.currency, intlLocale)} / {shortDate(item.paidAt, intlLocale)}
+                    {formatCents(item.amountCents, item.currency)} / {shortDate(item.paidAt, intlLocale)}
                   </p>
                 </div>
                 <StatusBadge variant={reconVariant(item)}>{t(reconLabel(item.status))}</StatusBadge>
