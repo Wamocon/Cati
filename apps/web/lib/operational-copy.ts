@@ -1,5 +1,6 @@
 import { localizeBusinessCopy } from "@/lib/business-copy"
 import type { DashboardLocale } from "@/lib/unit-matrix-copy"
+import { pinProperNouns } from "@/lib/proper-nouns"
 
 type TranslationTable = Record<string, string>
 
@@ -3264,9 +3265,10 @@ export function localizeDashboardText(
     dashboardTextOverrides[locale][value.trim()] ??
     portalWorkflowText[locale][value] ??
     portalWorkflowText[locale][value.trim()]
-  if (override) return override
+  // Brand/development names (e.g. "New Level Premium") stay verbatim in every locale.
+  if (override) return pinProperNouns(override)
   const businessCopy = localizeBusinessCopy(value, locale)
-  return (
+  return pinProperNouns(
     tables[locale][value] ??
     tables[locale][value.trim()] ??
     getNormalizedTable(locale).get(normalizeDashboardLookupKey(value)) ??
@@ -3293,7 +3295,7 @@ export function localizeDashboardTextPart(
       return current.split(source).join(target)
     }, value)
 
-  return withOverrides
+  const localized = withOverrides
     .replace(/satış planı/g, localizeDashboardText("satış planı", locale))
     .replace(/Malik kaydı bekliyor/g, localizeDashboardText("Malik kaydı bekliyor", locale))
     .replace(/Yasal takip ve erişim kısıtı/g, localizeDashboardText("Yasal takip ve erişim kısıtı", locale))
@@ -3303,4 +3305,7 @@ export function localizeDashboardTextPart(
     .replace(/\bgorev\b/g, locale === "tr" ? "görev" : localizeDashboardText("Görev", locale).toLocaleLowerCase(toIntlLocale(locale)))
     .replace(/\bkanit\b/g, locale === "tr" ? "kanıt" : "evidence")
     .replace(/\bborc\b/g, locale === "tr" ? "borç" : localizeDashboardText("Borç", locale).toLocaleLowerCase(toIntlLocale(locale)))
+
+  // Keep brand/development names verbatim after all substring localization.
+  return pinProperNouns(localized)
 }

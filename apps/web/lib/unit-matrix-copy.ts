@@ -12,6 +12,7 @@ import type {
   PaymentStatus,
 } from "@/lib/site-management-data"
 import type { NewLevelPremiumSaleStatus } from "@/lib/new-level-premium-data"
+import { pinProperNouns } from "@/lib/proper-nouns"
 
 export type DashboardLocale = "tr" | "en" | "de" | "ru"
 
@@ -750,8 +751,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Sales portfolio",
   },
   tr: {
-    "New Level Premium": "Yeni Seviye Premium",
-    "New Level Premium price-list package": "Yeni Seviye Premium fiyat listesi paketi",
+    "New Level Premium": "New Level Premium",
+    "New Level Premium price-list package": "New Level Premium fiyat listesi paketi",
     "Malik kaydı bekliyor": "Malik kaydı bekliyor",
     "Operasyon Kullanıcısı": "Operasyon Kullanıcısı",
     "Sakin kaydı bekliyor": "Sakin kaydı bekliyor",
@@ -759,8 +760,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Satış portföyü",
   },
   de: {
-    "New Level Premium": "Neues Niveau Premium",
-    "New Level Premium price-list package": "Neues Niveau Premium Preislisten-Paket",
+    "New Level Premium": "New Level Premium",
+    "New Level Premium price-list package": "New Level Premium Preislisten-Paket",
     "Malik kaydı bekliyor": "Eigentümerdatensatz ausstehend",
     "Operasyon Kullanıcısı": "Operationsbenutzer",
     "Sakin kaydı bekliyor": "Bewohnerdatensatz ausstehend",
@@ -768,8 +769,8 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
     "Satış portföyü": "Verkaufsportfolio",
   },
   ru: {
-    "New Level Premium": "Новый уровень Премиум",
-    "New Level Premium price-list package": "Пакет прайс-листа «Новый уровень Премиум»",
+    "New Level Premium": "New Level Premium",
+    "New Level Premium price-list package": "Пакет прайс-листа «New Level Premium»",
     "Malik kaydı bekliyor": "Запись владельца ожидается",
     "Operasyon Kullanıcısı": "Операционный пользователь",
     "Sakin kaydı bekliyor": "Запись жильца ожидается",
@@ -780,5 +781,7 @@ const operationalValueCopy: Record<DashboardLocale, Record<string, string>> = {
 
 export function localizeOperationalValue(value: string | null | undefined, locale: DashboardLocale) {
   if (!value) return "-"
-  return operationalValueCopy[locale][value] ?? value
+  // Brand/development names (e.g. "New Level Premium") stay verbatim in every
+  // locale; normalize any localized variant that slips through back to canonical.
+  return pinProperNouns(operationalValueCopy[locale][value] ?? value)
 }

@@ -5,10 +5,10 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 
 const copy = {
   tr: {
-    eyebrow: "Yeni Seviye Premium / Avsallar · 1Çatı ERP",
+    eyebrow: "New Level Premium / Avsallar · 1Çatı ERP",
     title: "Daireyi de, onu yöneten sistemi de alıyorsunuz.",
     intro:
-      "Yeni Seviye Premium'un arkasında 1Çatı duruyor: finans, servis, belge, rezervasyon ve erişimi tek çatı altında toplayan rol bazlı ERP. Satın alırken kurulan güven, mülkiyete geçtikten sonra aynı sistemle sürüyor.",
+      "New Level Premium'un arkasında 1Çatı duruyor: finans, servis, belge, rezervasyon ve erişimi tek çatı altında toplayan rol bazlı ERP. Satın alırken kurulan güven, mülkiyete geçtikten sonra aynı sistemle sürüyor.",
     ctaWhy: "1Çatı ne sunuyor?",
     ctaRegister: "Erişim için kayıt ol",
     ctaReport: "Bildirim oluştur",
@@ -35,10 +35,10 @@ const copy = {
     ],
   },
   de: {
-    eyebrow: "Neues Niveau Premium / Avsallar · 1Çatı ERP",
+    eyebrow: "New Level Premium / Avsallar · 1Çatı ERP",
     title: "Sie bekommen die Wohnung und das System dahinter.",
     intro:
-      "Hinter Neues Niveau Premium steht 1Çatı: das rollenbasierte ERP für Finanzen, Service, Dokumente, Reservierungen und Zutritt unter einem Dach. Das Vertrauen aus dem Kauf bleibt Ihnen auch als Eigentümer erhalten.",
+      "Hinter New Level Premium steht 1Çatı: das rollenbasierte ERP für Finanzen, Service, Dokumente, Reservierungen und Zutritt unter einem Dach. Das Vertrauen aus dem Kauf bleibt Ihnen auch als Eigentümer erhalten.",
     ctaWhy: "Was 1Çatı bietet",
     ctaRegister: "Für Zugang registrieren",
     ctaReport: "Anliegen melden",
@@ -50,10 +50,10 @@ const copy = {
     ],
   },
   ru: {
-    eyebrow: "Новый уровень Премиум / Авсаллар · 1Çatı ERP",
+    eyebrow: "New Level Premium / Авсаллар · 1Çatı ERP",
     title: "Вы получаете квартиру и систему, которая ею управляет.",
     intro:
-      "За «Новый уровень Премиум» стоит 1Çatı: ролевая ERP для финансов, сервиса, документов, бронирований и доступа под одной крышей. Доверие, что появилось при покупке, остаётся с вами и после того, как квартира станет вашей.",
+      "За «New Level Premium» стоит 1Çatı: ролевая ERP для финансов, сервиса, документов, бронирований и доступа под одной крышей. Доверие, что появилось при покупке, остаётся с вами и после того, как квартира станет вашей.",
     ctaWhy: "Что даёт 1Çatı",
     ctaRegister: "Регистрация доступа",
     ctaReport: "Сообщить о проблеме",

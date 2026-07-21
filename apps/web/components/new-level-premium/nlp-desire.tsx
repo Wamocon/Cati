@@ -12,7 +12,7 @@ const copy = {
     intro:
       "Satıştan mülkiyete kadar aynı sistemi kullanırsınız. Bu bir broşür değil, her gün dönen operasyon. Her rol yalnızca kendi kapsamını görür.",
     standard: "Standart mülk yazılımı",
-    premium: "1Çatı · Yeni Seviye Premium",
+    premium: "1Çatı · New Level Premium",
     rows: [
       ["Statik panolar", "Her rakamı açıklar, kaynağını gösterir"],
       ["Tek dil", "tr / en / de / ru, dördünde aynı derinlik"],
@@ -52,7 +52,7 @@ const copy = {
     intro:
       "Sie nutzen dasselbe System vom Kauf bis zum Eigentum. Das ist keine Broschüre, sondern laufender Betrieb, in dem jede Rolle nur ihren Bereich sieht.",
     standard: "Standard-Immobiliensoftware",
-    premium: "1Çatı · Neues Niveau Premium",
+    premium: "1Çatı · New Level Premium",
     rows: [
       ["Statische Dashboards", "Erklärt jede Zahl, nennt ihre Quelle"],
       ["Eine Sprache", "tr / en / de / ru, überall gleiche Tiefe"],
@@ -72,7 +72,7 @@ const copy = {
     intro:
       "Вы используете одну систему от покупки до владения. Это не брошюра, а живая работа, где каждая роль видит только свою зону.",
     standard: "Стандартный софт для недвижимости",
-    premium: "1Çatı · Новый уровень Премиум",
+    premium: "1Çatı · New Level Premium",
     rows: [
       ["Статичные панели", "Объясняет каждую цифру, указывает источник"],
       ["Один язык", "tr / en / de / ru, одна глубина в каждом"],

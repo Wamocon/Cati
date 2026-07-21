@@ -11,7 +11,7 @@
   "nav": {
     "skipToContent": "İçeriğe geç",
     "home": "Ana Sayfa",
-    "newLevel": "Yeni Seviye",
+    "newLevel": "New Level",
     "catalog": "Modüller",
     "about": "Hakkımızda",
     "services": "İş Akışları",
@@ -52,7 +52,7 @@
     "badgeReturnValue": "+24%",
     "badgeListingsValue": "212.298+",
     "previewCity": "Alanya",
-    "projectName": "Yeni Seviye Premium",
+    "projectName": "New Level Premium",
     "projectSubtitle": "Avsallar masterplanından operasyon kaydına",
     "statValues": {
       "activeListings": "212k+",

@@ -9,7 +9,7 @@ const copy = {
     eyebrow: "Tek çatı",
     title: "Bir topluluk. Tek çatı.",
     body:
-      "Yeni Seviye Premium bir yatırım, aynı zamanda yaşayan bir topluluk. 1Çatı, adının anlamına sadık kalarak maliki, kiracıyı, misafiri ve ekibi aynı güvenli çatı altında, dört dilde ve tek bir gerçeklikte buluşturur.",
+      "New Level Premium bir yatırım, aynı zamanda yaşayan bir topluluk. 1Çatı, adının anlamına sadık kalarak maliki, kiracıyı, misafiri ve ekibi aynı güvenli çatı altında, dört dilde ve tek bir gerçeklikte buluşturur.",
     testimonialNote: "Gerçek malik ve yatırımcı görüşleri burada yayınlanacak.",
     finalCta: "Erişim için kayıt olun",
     finalNote: "Erişim, doğrulama ve yönetici onayından sonra açılır.",
@@ -27,7 +27,7 @@ const copy = {
     eyebrow: "Ein Dach",
     title: "Eine Gemeinschaft. Ein Dach.",
     body:
-      "Neues Niveau Premium ist eine Investition und zugleich eine lebendige Gemeinschaft. 1Çatı bringt, seinem Namen treu (\"ein Dach\"), Eigentümer, Mieter, Gast und Team unter einem sicheren Dach zusammen, in vier Sprachen, auf einer gemeinsamen Wahrheit.",
+      "New Level Premium ist eine Investition und zugleich eine lebendige Gemeinschaft. 1Çatı bringt, seinem Namen treu (\"ein Dach\"), Eigentümer, Mieter, Gast und Team unter einem sicheren Dach zusammen, in vier Sprachen, auf einer gemeinsamen Wahrheit.",
     testimonialNote: "Echte Stimmen von Eigentümern und Investoren erscheinen hier.",
     finalCta: "Für Zugang registrieren",
     finalNote: "Der Zugang wird nach Prüfung und Administratorfreigabe geöffnet.",
@@ -36,7 +36,7 @@ const copy = {
     eyebrow: "Одна крыша",
     title: "Одно сообщество. Одна крыша.",
     body:
-      "«Новый уровень Премиум» это инвестиция и при этом живое сообщество. 1Çatı, верный своему имени («одна крыша»), объединяет собственника, арендатора, гостя и команду под одной надёжной крышей, на четырёх языках, на единой истине.",
+      "«New Level Premium» это инвестиция и при этом живое сообщество. 1Çatı, верный своему имени («одна крыша»), объединяет собственника, арендатора, гостя и команду под одной надёжной крышей, на четырёх языках, на единой истине.",
     testimonialNote: "Здесь появятся реальные отзывы собственников и инвесторов.",
     finalCta: "Регистрация доступа",
     finalNote: "Доступ открывается после проверки и одобрения администратором.",

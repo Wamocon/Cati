@@ -1065,7 +1065,7 @@ export function DashboardCommandRibbon() {
         aria-label={copy.aria}
         className="mb-6 rounded-xl border border-border/70 bg-card/84 p-3 shadow-sm backdrop-blur"
       >
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
+        <div className="grid gap-3">
           <button
             type="button"
             onClick={openFilters}
@@ -1084,17 +1084,6 @@ export function DashboardCommandRibbon() {
             </span>
             <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
           </button>
-
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300">
-              <Sparkles className="h-4 w-4" />
-              {copy.attention} {activeCount}
-            </span>
-            <span className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border/80 bg-muted/45 px-3 py-1.5 text-xs font-bold text-muted-foreground">
-              <SlidersHorizontal className="h-4 w-4" />
-              {copy.index} {index.length}
-            </span>
-          </div>
         </div>
 
         {hasAppliedFilters ? (
