@@ -343,7 +343,7 @@
   },
   "dataTable": {
     "search": "Поиск...",
-    "count": "{count} записей",
+    "count": "{count, plural, one {# запись} few {# записи} many {# записей} other {# записей}}",
     "empty": "Ничего не найдено",
     "previous": "Назад",
     "next": "Вперед",

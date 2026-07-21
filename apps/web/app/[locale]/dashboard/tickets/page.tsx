@@ -20,7 +20,6 @@ import {
   TicketCheck,
   Trash2,
   UserCheck,
-  Wrench,
   XCircle,
 } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
@@ -67,7 +66,6 @@ import {
   visibleServiceTicketsForRole,
 } from "@/lib/role-scoped-views"
 import {
-  formatTry,
   priorityLabels,
   serviceCatalogItems,
   serviceOrders,
@@ -82,6 +80,7 @@ import {
   type ServiceStatus,
   type WorkforceTaskRecord,
 } from "@/lib/site-management-data"
+import { formatDual } from "@/lib/currency"
 
 type RequestState = "idle" | "loading" | "success" | "error"
 type WorkflowDecision = "approved" | "rejected"
@@ -332,6 +331,7 @@ const workflowApprovalCopy = {
     title: "AI ve onay kuyruğu",
     description:
       "AI taslak üretir, sistem riski ve onay rolünü gösterir, yönetici kararı olmadan saha/finans/erişim aksiyonu çalışmaz.",
+    info: "Asistan tüm servis taleplerini tarar ve önemli olanları aciliyet, SLA, borç ve acil durum kurallarına göre sıralar. Sıralanan talepler bir yöneticiye onay için gösterilir. Hiçbir işlem bir kişi onaylamadan çalışmaz; bu sabit kurallara dayalı bir sıralamadır, makine öğrenmesi değildir.",
     aiTitle: "AI servis masası katmanı",
     aiBody:
       "SLA, borç kapısı, medya kanıtı ve ekip kapasitesi aynı bağlamda okunur. AI yalnızca taslak ve öneri üretir.",
@@ -351,6 +351,7 @@ const workflowApprovalCopy = {
     title: "AI and approval queue",
     description:
       "AI drafts the request, the system shows risk and approval roles, and no field/finance/access action runs without a manager decision.",
+    info: "The assistant scans every service request and ranks the important ones using fixed rules for urgency, SLA, debt and emergencies. It shows the ranked items to a manager for approval. Nothing runs until a person approves it - this is rule-based ranking, not machine learning.",
     aiTitle: "AI service desk layer",
     aiBody:
       "SLA, debt gate, media evidence and team capacity are read in one context. AI only creates drafts and recommendations.",
@@ -371,6 +372,7 @@ const workflowApprovalCopy = {
     title: "KI- und Freigabewarteschlange",
     description:
       "KI erstellt Entwürfe, das System zeigt Risiko und Freigaberollen, und keine Feld-, Finanz- oder Zugangsaktion läuft ohne Managerentscheidung.",
+    info: "Der Assistent prüft jede Serviceanfrage und ordnet die wichtigen nach festen Regeln für Dringlichkeit, SLA, Schulden und Notfälle. Die sortierten Einträge werden einem Manager zur Freigabe angezeigt. Nichts läuft, bevor eine Person es freigibt - das ist regelbasierte Sortierung, kein maschinelles Lernen.",
     aiTitle: "KI-Service-Desk-Schicht",
     aiBody:
       "SLA, Schuldenregel, Mediennachweis und Teamkapazität werden in einem Kontext gelesen. KI erstellt nur Entwürfe und Empfehlungen.",
@@ -393,6 +395,7 @@ const workflowApprovalCopy = {
     title: "AI и очередь одобрения",
     description:
       "AI готовит черновик, система показывает риск и роли одобрения, а полевые, финансовые и доступные действия не выполняются без решения менеджера.",
+    info: "Ассистент просматривает все сервисные заявки и ранжирует важные по фиксированным правилам срочности, SLA, задолженности и аварийных ситуаций. Отсортированные заявки показываются менеджеру для одобрения. Ничего не выполняется, пока человек не одобрит - это ранжирование по правилам, а не машинное обучение.",
     aiTitle: "AI-слой сервис-деска",
     aiBody:
       "SLA, долговой барьер, медиа-доказательства и загрузка команды читаются в одном контексте. AI создает только черновики и рекомендации.",
@@ -660,6 +663,85 @@ function visibleTasksForTickets(
   return tasks.filter((task) => visibleTicketIds.has(task.ticketId))
 }
 
+// Localized SLA-hour display. Negative remaining hours are shown as an explicit
+// "overdue by Xh" phrase instead of a bare negative number.
+function slaHoursLabel(
+  hours: number,
+  locale: ReturnType<typeof resolveDashboardLocale>
+) {
+  if (hours < 0) {
+    const overdue = Math.abs(hours)
+    if (locale === "en") return `overdue by ${overdue}h`
+    if (locale === "de") return `${overdue} h überfällig`
+    if (locale === "ru") return `просрочено на ${overdue} ч`
+    return `${overdue} saat gecikti`
+  }
+  const unit =
+    locale === "en"
+      ? "hours"
+      : locale === "de"
+        ? "Stunden"
+        : locale === "ru"
+          ? "ч"
+          : "saat"
+  return `${hours} ${unit}`
+}
+
+// Demo cost visibility: use the ticket's estimated cost when present, otherwise
+// derive a deterministic placeholder from priority so every ticket shows an
+// estimate. Clearly labelled as an estimate in the UI (never a booked amount).
+function estimatedTicketCostTry(ticket: ServiceTicket) {
+  if (ticket.estimatedCostTry > 0) return ticket.estimatedCostTry
+  const byPriority: Record<ServicePriority, number> = {
+    urgent: 4500,
+    high: 3000,
+    medium: 1800,
+    low: 900,
+  }
+  return byPriority[ticket.priority] ?? 1500
+}
+
+// Unit-type tokens that must never be shown as a ticket subject (the subject
+// should describe the requested work, not the kind of unit).
+const UNIT_TYPE_SUBJECT_TOKENS = new Set([
+  "flat",
+  "unit",
+  "daire",
+  "apartment",
+  "apartments",
+  "studio",
+  "penthouse",
+  "villa",
+  "duplex",
+  "loft",
+])
+
+function isUnitTypeSubject(value: string | null | undefined) {
+  return Boolean(value && UNIT_TYPE_SUBJECT_TOKENS.has(value.trim().toLowerCase()))
+}
+
+// Strip long raw internal identifiers (e.g. "... 1783348518371") out of a
+// human-facing workflow title so end users see a readable subject, not a
+// database id. The raw value can still be surfaced in a tooltip for ops.
+function stripRawIdentifiers(value: string) {
+  return value
+    .replace(/\b[0-9]{8,}\b/g, "")
+    .replace(/\bTCK-[A-Z0-9]{6,}\b/gi, "")
+    .replace(/\bSRV-[A-Z0-9]{3,}\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/[\s\-·]+$/g, "")
+    .trim()
+}
+
+// Short, friendly ticket reference derived from the raw id. Keeps the last
+// segment so ops can still cross-reference, without exposing the full token.
+function ticketShortRef(id: string) {
+  const trimmed = id.trim()
+  if (!trimmed) return ""
+  const tail = trimmed.split(/[-_:]/).pop() ?? trimmed
+  return `#${tail.slice(-6).toUpperCase()}`
+}
+
 export default function TicketsPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
@@ -670,24 +752,39 @@ export default function TicketsPage() {
     locale
   )
   const displayWorkflowTitle = (item: WorkflowRequestView) => {
-    const localized = t(item.title)
-    if (localized !== item.title) return localized
+    const base = item.actionType.includes("ticket.create")
+      ? workflowDisplay.aiDraft
+      : workflowDisplay.approvalRequest
 
-    if (item.origin === "ai") {
-      const base = item.actionType.includes("ticket.create")
-        ? workflowDisplay.aiDraft
-        : workflowDisplay.approvalRequest
-      const showExternalId =
-        item.entityExternalId &&
-        !/^(ai-ticket-draft|ticket-request|NLP-OPS)/i.test(
-          item.entityExternalId
-        )
-      return showExternalId ? `${base} - ${item.entityExternalId}` : base
+    const localized = t(item.title)
+    // A real translation that is not a bare unit-type token wins, but raw
+    // internal identifiers are stripped so end users never see a database id.
+    if (localized !== item.title && !isUnitTypeSubject(localized)) {
+      return stripRawIdentifiers(localized) || base
     }
 
-    return item.title === item.actionType
-      ? workflowDisplay.approvalRequest
-      : localized
+    // Unit-type-only or action-type-only titles carry no real subject.
+    if (
+      item.origin === "ai" ||
+      item.title === item.actionType ||
+      isUnitTypeSubject(item.title)
+    ) {
+      return base
+    }
+
+    return stripRawIdentifiers(localized) || base
+  }
+  // Subject shown to end users: the actual requested work, never the unit type.
+  const ticketSubjectLabel = (ticket: ServiceTicket) => {
+    const localizedTitle = t(ticket.title)
+    if (
+      localizedTitle.trim() &&
+      !isUnitTypeSubject(ticket.title) &&
+      !isUnitTypeSubject(localizedTitle)
+    ) {
+      return localizedTitle
+    }
+    return t(ticket.category)
   }
   const [queueData, setQueueData] = useState<TicketQueueUiData | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
@@ -1981,7 +2078,11 @@ export default function TicketsPage() {
               {ticketEditState === "loading"
                 ? t("Kaydediliyor")
                 : selectedTicket
-                  ? selectedTicket.id
+                  ? (
+                      <span title={selectedTicket.id}>
+                        {ticketShortRef(selectedTicket.id)}
+                      </span>
+                    )
                   : t("Bos")}
             </StatusBadge>
           </div>
@@ -2016,8 +2117,9 @@ export default function TicketsPage() {
                   className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground transition outline-none focus:border-primary"
                 >
                   {visibleTickets.map((ticket) => (
-                    <option key={ticket.id} value={ticket.id}>
-                      {ticket.id} - {ticket.flatNumber} - {t(ticket.title)}
+                    <option key={ticket.id} value={ticket.id} title={ticket.id}>
+                      {ticketSubjectLabel(ticket)} - {ticket.flatNumber} -{" "}
+                      {ticketShortRef(ticket.id)}
                     </option>
                   ))}
                 </select>
@@ -2156,19 +2258,19 @@ export default function TicketsPage() {
                   {t("Sorumlu")}: {t(selectedTicket.assignee)} · {t("Sevk")}:{" "}
                   {t(selectedSnapshot?.dispatchState ?? "pending")}
                 </p>
-                {(accountantView || selectedNeedsOwnerDecision) && (
+                {(!maskFinance || selectedNeedsOwnerDecision) && (
                   <p className="mt-2 text-xs font-semibold text-foreground">
                     {accountantView && (
                       <>
                         {t("Odeme")}:{" "}
                         {selectedSnapshot?.paymentState === "post_emergency_review"
                           ? paymentDecisionLabel("post_emergency_review", locale)
-                          : t(selectedSnapshot?.paymentState ?? "pending")}{" "}
+                          : t(selectedSnapshot?.paymentState ?? "not_required")}{" "}
                         ·{" "}
                       </>
                     )}
                     {t("Tahmini maliyet")}:{" "}
-                    {formatTry(selectedTicket.estimatedCostTry)}
+                    {formatDual(estimatedTicketCostTry(selectedTicket))}
                   </p>
                 )}
               </div>
@@ -2314,7 +2416,7 @@ export default function TicketsPage() {
                         </select>
                       </label>
                       <label className="block text-xs font-black text-muted-foreground uppercase">
-                        {t("Tahmini maliyet (TRY)")}
+                        {t("Tahmini maliyet")} (₺)
                         <input
                           type="number"
                           min="0"
@@ -2334,7 +2436,7 @@ export default function TicketsPage() {
                         />
                       </label>
                       <label className="block text-xs font-black text-muted-foreground uppercase">
-                        {t("Onay esigi (TRY)")}
+                        {t("Onay eşiği")} (₺)
                         <input
                           type="number"
                           min="0"
@@ -2498,10 +2600,11 @@ export default function TicketsPage() {
         </Card3D>
       </div>
 
-      {(user.role === "admin" || user.role === "manager") && (
+      {operationsView && (
         <DashboardSection
           title={approvalCopy.title}
           description={approvalCopy.description}
+          info={approvalCopy.info}
           icon={Sparkles}
           badge={
             <StatusBadge variant={approvalPending > 0 ? "warning" : "success"}>
@@ -2527,7 +2630,6 @@ export default function TicketsPage() {
                     <StatusBadge variant="warning">
                       {t("İnsan onayı")}
                     </StatusBadge>
-                    <StatusBadge variant="success">Realtime</StatusBadge>
                   </div>
                 </div>
               </div>
@@ -2762,7 +2864,7 @@ export default function TicketsPage() {
                       <p className="text-sm font-black text-foreground">
                         {maskFinance
                           ? `${item.slaHours} ${t("saat")}`
-                          : formatTry(item.basePriceTry)}
+                          : formatDual(item.basePriceTry, { short: true })}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         SLA {item.slaHours} {t("saat")}
@@ -2905,7 +3007,7 @@ export default function TicketsPage() {
                   {!maskFinance && (
                     <>
                       <span>-</span>
-                      <span>{formatTry(order.quotedPriceTry)}</span>
+                      <span>{formatDual(order.quotedPriceTry, { short: true })}</span>
                     </>
                   )}
                 </div>
@@ -2960,7 +3062,7 @@ export default function TicketsPage() {
                   </p>
                 </div>
                 <StatusBadge variant={taskReadinessVariant(task)}>
-                  {task.completionReadiness}%
+                  {t("Hazırlık")} {task.completionReadiness}%
                 </StatusBadge>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -2984,8 +3086,8 @@ export default function TicketsPage() {
               </ul>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {task.mediaCount} {t("medya")} - SLA {task.slaHoursRemaining}{" "}
-                  {t("saat")}
+                  {task.mediaCount} {t("medya")} - SLA{" "}
+                  {slaHoursLabel(task.slaHoursRemaining, locale)}
                 </p>
                 {!clientView && (
                   <DashboardActionMenu
@@ -3090,7 +3192,7 @@ export default function TicketsPage() {
                         )}
                     </div>
                     <h3 className="mt-2 text-sm font-bold text-foreground">
-                      {t(ticket.title)}
+                      {ticketSubjectLabel(ticket)}
                     </h3>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {ticket.flatNumber} - {t(ticket.category)}
@@ -3101,10 +3203,10 @@ export default function TicketsPage() {
                     <p className="text-sm font-bold text-foreground">
                       {maskFinance
                         ? serviceStatusLabel(ticket.status, locale)
-                        : formatTry(ticket.estimatedCostTry)}
+                        : `${t("Tahmini")} ${formatDual(estimatedTicketCostTry(ticket))}`}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      SLA {ticket.slaHoursRemaining} {t("saat")}
+                      SLA {slaHoursLabel(ticket.slaHoursRemaining, locale)}
                     </p>
                   </div>
                 </div>
@@ -3116,83 +3218,66 @@ export default function TicketsPage() {
         <div className="space-y-4">
           <Card3D glow={false}>
             <div className="flex items-start gap-3">
-              <ShieldAlert className="mt-0.5 h-5 w-5 text-rose-600" />
-              <div>
+              <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+              <div className="min-w-0">
                 <h2 className="text-sm font-bold text-card-foreground">
-                  {clientView
-                    ? t("Servis kapsamı")
-                    : t("Servis güvenlik kuralı")}
+                  {t("Servis notları")}
                 </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {clientView
-                    ? t(
-                        "Sadece sizin dairenize veya yetkili kaydınıza bağlı talepler gösterilir."
-                      )
-                    : t(
-                        "Borç blokeli dairelerde teknisyen sahaya çıkmadan önce muhasebe onayı ve ödeme doğrulaması gerekir."
-                      )}
-                </p>
+                <ul className="mt-2 space-y-2 text-xs leading-5 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>
+                      {clientView
+                        ? t(
+                            "Sadece sizin dairenize veya yetkili kaydınıza bağlı talepler gösterilir."
+                          )
+                        : t(
+                            "Borç blokeli dairelerde teknisyen sahaya çıkmadan önce muhasebe onayı ve ödeme doğrulaması gerekir."
+                          )}
+                    </span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>
+                      {clientView
+                        ? t(
+                            "Fotoğraf, açıklama, randevu ve kapanış kararı yönetim ekibiyle aynı kayıt üzerinden paylaşılır."
+                          )
+                        : t(
+                            "Talep, fotoğraf, maliyet, onay, atama ve kapanış kanıtı tek kayıtta tutulur."
+                          )}
+                    </span>
+                  </li>
+                  {!clientView && (
+                    <li className="flex gap-2">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                      <span>
+                        {fieldView
+                          ? t(
+                              "SLA ve kanıt ihtiyacına göre teknik rota sadeleştirilir; finans tutarları saha görünümünde maskelenir."
+                            )
+                          : t(
+                              "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur."
+                            )}
+                      </span>
+                    </li>
+                  )}
+                  {!clientView && queueData?.strategy && (
+                    <>
+                      <li className="flex gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        <span>{t(queueData.strategy.systemOfRecord)}</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                        <span>{t(queueData.strategy.crmRole)}</span>
+                      </li>
+                    </>
+                  )}
+                </ul>
               </div>
             </div>
           </Card3D>
-          <Card3D glow={false}>
-            <div className="flex items-start gap-3">
-              <Wrench className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <h2 className="text-sm font-bold text-card-foreground">
-                  {clientView ? t("Kanıt ve yanıt") : t("Saha iş akışı")}
-                </h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {clientView
-                    ? t(
-                        "Fotoğraf, açıklama, randevu ve kapanış kararı yönetim ekibiyle aynı kayıt üzerinden paylaşılır."
-                      )
-                    : t(
-                        "Talep, fotoğraf, maliyet, onay, atama ve kapanış kanıtı tek kayıtta tutulur."
-                      )}
-                </p>
-              </div>
-            </div>
-          </Card3D>
-          {!clientView && (
-            <Card3D glow={false}>
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-600" />
-                <div>
-                  <h2 className="text-sm font-bold text-card-foreground">
-                    {fieldView ? t("Günlük rota") : t("AI önerisi")}
-                  </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {fieldView
-                      ? t(
-                          "SLA ve kanıt ihtiyacına göre teknik rota sadeleştirilir; finans tutarları saha görünümünde maskelenir."
-                        )
-                      : t(
-                          "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur."
-                        )}
-                  </p>
-                </div>
-              </div>
-            </Card3D>
-          )}
-          {!clientView && queueData?.strategy && (
-            <Card3D glow={false}>
-              <div className="flex items-start gap-3">
-                <TicketCheck className="mt-0.5 h-5 w-5 text-primary" />
-                <div>
-                  <h2 className="text-sm font-bold text-card-foreground">
-                    {t("Ticketing mimarisi")}
-                  </h2>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t(queueData.strategy.systemOfRecord)}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {t(queueData.strategy.crmRole)}
-                  </p>
-                </div>
-              </div>
-            </Card3D>
-          )}
         </div>
       </div>
 
@@ -3227,7 +3312,9 @@ export default function TicketsPage() {
                 key: "id",
                 header: t("Talep"),
                 sortable: true,
-                render: (ticket) => ticket.id,
+                render: (ticket) => (
+                  <span title={ticket.id}>{ticketShortRef(ticket.id)}</span>
+                ),
               },
               {
                 key: "flat",
@@ -3238,7 +3325,7 @@ export default function TicketsPage() {
               {
                 key: "title",
                 header: t("Konu"),
-                render: (ticket) => t(ticket.title),
+                render: (ticket) => ticketSubjectLabel(ticket),
               },
               {
                 key: "priority",
@@ -3288,7 +3375,7 @@ export default function TicketsPage() {
                   <StatusBadge
                     variant={ticket.slaHoursRemaining < 0 ? "danger" : "info"}
                   >
-                    {ticket.slaHoursRemaining} {t("saat")}
+                    {slaHoursLabel(ticket.slaHoursRemaining, locale)}
                   </StatusBadge>
                 ),
               },
@@ -3341,12 +3428,12 @@ export default function TicketsPage() {
                 ? [
                     {
                       key: "cost",
-                      header: t("Maliyet"),
+                      header: `${t("Tahmini")} ${t("Maliyet")}`,
                       sortable: true,
                       sortValue: (ticket: ServiceTicket) =>
-                        ticket.estimatedCostTry,
+                        estimatedTicketCostTry(ticket),
                       render: (ticket: ServiceTicket) =>
-                        formatTry(ticket.estimatedCostTry),
+                        formatDual(estimatedTicketCostTry(ticket)),
                     },
                   ]
                 : []),
@@ -3355,6 +3442,7 @@ export default function TicketsPage() {
         </div>
       </DashboardSection>
 
+      {visibleTasks.length > 0 && (
       <DashboardSection
         title={t("Tam saha görev kaydı")}
         description={t(
@@ -3424,7 +3512,7 @@ export default function TicketsPage() {
                 header: "SLA",
                 sortable: true,
                 sortValue: (task) => task.slaHoursRemaining,
-                render: (task) => `${task.slaHoursRemaining} ${t("saat")}`,
+                render: (task) => slaHoursLabel(task.slaHoursRemaining, locale),
               },
               {
                 key: "proof",
@@ -3466,6 +3554,7 @@ export default function TicketsPage() {
           </section>
         )}
       </DashboardSection>
+      )}
     </div>
   )
 }

@@ -348,7 +348,7 @@
   },
   "dataTable": {
     "search": "Suchen...",
-    "count": "{count} Einträge",
+    "count": "{count, plural, one {# Eintrag} other {# Einträge}}",
     "empty": "Keine Ergebnisse gefunden",
     "previous": "Zurück",
     "next": "Weiter",

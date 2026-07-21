@@ -4,6 +4,17 @@ import type { DashboardLocale } from "@/lib/unit-matrix-copy"
 type TranslationTable = Record<string, string>
 
 const en: TranslationTable = {
+  // --- Tickets/Service module i18n additions ---
+  "Sadece sizin dairenize veya yetkili kaydınıza bağlı talepler gösterilir.":
+    "Only requests linked to your unit or authorized record are shown.",
+  "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur.":
+    "SLA, estimated cost and debt status are scored together to build the daily technical route.",
+  "Aynı gün çok sayıda teknisyen görevi olduğunda bu kaydı kullanın.":
+    "Use this register when there are many technician tasks on the same day.",
+  "Servis notları": "Service notes",
+  "Onay eşiği": "Approval threshold",
+  "Tahmini": "Est.",
+  "Günlük rota": "Daily route",
   // --- Fehler_20.07.26.docx i18n fixes (F08/F10/F12/F06/F15) ---
   "Talep detaylari ve is akisi": "Request details and workflow",
   "Talep detaylari": "Request details",
@@ -680,6 +691,18 @@ const en: TranslationTable = {
 }
 
 const de: TranslationTable = {
+  // --- Tickets/Service module i18n additions ---
+  "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur.":
+    "SLA, geschätzte Kosten und Schuldenstatus werden gemeinsam bewertet, um die tägliche technische Route zu erstellen.",
+  "Saha görevleri, SLA ve medya kaniti": "Außendienstaufgaben, SLA und Mediennachweis",
+  "Servis notları": "Servicehinweise",
+  "Onay eşiği": "Freigabegrenze",
+  "Tahmini": "Gesch.",
+  "Günlük rota": "Tagesroute",
+  "Kanıt ve yanıt": "Nachweis und Antwort",
+  "Servis kapsamı": "Serviceumfang",
+  "Servis güvenlik kuralı": "Servicesicherheitsregel",
+  "Saha iş akışı": "Außendienst-Workflow",
   // --- Fehler_20.07.26.docx i18n fixes (F08/F10/F12/F06/F15) ---
   "Talep detaylari ve is akisi": "Anfragedetails und Arbeitsablauf",
   "Talep detaylari": "Anfragedetails",
@@ -1369,6 +1392,18 @@ const de: TranslationTable = {
 }
 
 const ru: TranslationTable = {
+  // --- Tickets/Service module i18n additions ---
+  "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur.":
+    "SLA, оценочная стоимость и статус задолженности оцениваются вместе для построения дневного технического маршрута.",
+  "Saha görevleri, SLA ve medya kaniti": "Полевые задачи, SLA и медиа-доказательства",
+  "Servis notları": "Служебные заметки",
+  "Onay eşiği": "Порог одобрения",
+  "Tahmini": "Оцен.",
+  "Günlük rota": "Дневной маршрут",
+  "Kanıt ve yanıt": "Доказательство и ответ",
+  "Servis kapsamı": "Область услуг",
+  "Servis güvenlik kuralı": "Правило безопасности услуг",
+  "Saha iş akışı": "Полевой процесс",
   // --- Fehler_20.07.26.docx i18n fixes (F08/F10/F12/F06/F15) ---
   "Talep detaylari ve is akisi": "Детали заявки и рабочий процесс",
   "Talep detaylari": "Детали заявки",

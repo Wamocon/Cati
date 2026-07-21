@@ -343,7 +343,7 @@
   },
   "dataTable": {
     "search": "Search...",
-    "count": "{count} records",
+    "count": "{count, plural, one {# record} other {# records}}",
     "empty": "No results found",
     "previous": "Previous",
     "next": "Next",
