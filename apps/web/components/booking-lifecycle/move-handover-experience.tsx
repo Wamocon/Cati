@@ -14,6 +14,7 @@ import {
 import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { StatusBadge } from "@/components/status-badge"
+import { formatDualFromCents } from "@/lib/currency"
 
 type Locale = "tr" | "en" | "de" | "ru"
 type JsonValue =
@@ -104,7 +105,7 @@ const copy = {
     title: "Taşınma ve teslim",
     body: "Randevu, kontrol listesi, sayaç, durum, kanıt referansı, anahtar/erişim hazırlığı ve devir işlerini tek kalıcı akışta yönetin.",
     refresh: "Yenile",
-    source: "Supabase · yetkili kayıt",
+    source: "Doğrulandı",
     stale: "Veri eski olabilir",
     current: "Güncel",
     loading: "Teslim kayıtları yükleniyor…",
@@ -183,7 +184,7 @@ const copy = {
     title: "Move and handover",
     body: "Manage appointments, checklist, meters, condition, evidence references, key/access preparation, and turnover work in one persisted flow.",
     refresh: "Refresh",
-    source: "Supabase · authoritative",
+    source: "Verified",
     stale: "Data may be stale",
     current: "Current",
     loading: "Loading handovers…",
@@ -262,7 +263,7 @@ const copy = {
     title: "Einzug, Auszug und Übergabe",
     body: "Termin, Checkliste, Zähler, Zustand, Nachweise, Schlüssel-/Zugangsvorbereitung und Folgearbeiten in einem gespeicherten Ablauf verwalten.",
     refresh: "Aktualisieren",
-    source: "Supabase · maßgeblich",
+    source: "Bestätigt",
     stale: "Daten können veraltet sein",
     current: "Aktuell",
     loading: "Übergaben werden geladen…",
@@ -342,7 +343,7 @@ const copy = {
     title: "Заезд, выезд и передача",
     body: "Управляйте встречей, чек-листом, счётчиками, состоянием, ссылками на доказательства, подготовкой ключей/доступа и последующими работами.",
     refresh: "Обновить",
-    source: "Supabase · источник истины",
+    source: "Подтверждено",
     stale: "Данные могут устареть",
     current: "Актуально",
     loading: "Загружаем передачи…",
@@ -671,6 +672,17 @@ function formatDate(value: string, locale: Locale) {
       }).format(date)
     : "-"
 }
+const BILINGUAL_SEPARATOR = /\s[–-]\s|\s\/\s/
+// Bilingual "Türkçe - English" names: show only the active locale's half.
+function pickLocaleHalf(raw: string, locale: Locale): string {
+  const parts = raw.split(BILINGUAL_SEPARATOR).map((part) => part.trim()).filter(Boolean)
+  if (parts.length >= 2) return locale === "tr" ? parts[0] : parts[parts.length - 1]
+  return raw
+}
+function friendlyRef(value: string) {
+  const compact = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+  return compact ? `#${compact.slice(0, 6)}` : "—"
+}
 
 export function MoveHandoverExperience() {
   const locale = localeOf(useLocale())
@@ -839,12 +851,12 @@ export function MoveHandoverExperience() {
           )
           .map((relationship) => ({
             value: `${reservation.id}|${relationship.id}`,
-            label: `${reservation.resourceName} · ${relationship.label}`,
+            label: `${pickLocaleHalf(reservation.resourceName, locale)} · ${relationship.label}`,
             reservation,
             relationship,
           }))
       ),
-    [workspace]
+    [workspace, locale]
   )
   const capabilities = workspace?.scope.capabilities
   const stale =
@@ -1061,8 +1073,8 @@ export function MoveHandoverExperience() {
                                 ? t.moveOut
                                 : t.handover}
                           </h4>
-                          <p className="text-xs text-muted-foreground">
-                            {id.slice(0, 8)}… · v{version}
+                          <p className="text-xs text-muted-foreground" title={id}>
+                            {friendlyRef(id)} · v{version}
                           </p>
                         </div>
                         <span data-testid="handover-appointment-state">
@@ -1735,7 +1747,7 @@ export function MoveHandoverExperience() {
                                       key={text(deposit, "id", "")}
                                       value={text(deposit, "id", "")}
                                     >
-                                      {statusLabel(text(deposit, "status", "pending"), locale)} · {(number(deposit, "depositAmountCents", 0) / 100).toLocaleString(locale)} TRY
+                                      {statusLabel(text(deposit, "status", "pending"), locale)} · {formatDualFromCents(number(deposit, "depositAmountCents", 0), "TRY")}
                                     </option>
                                   ))}
                                 </select>

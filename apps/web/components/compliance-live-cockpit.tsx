@@ -39,6 +39,7 @@ import type {
   ComplianceRiskLevel,
 } from "@/lib/compliance-repository"
 import { createClient } from "@/lib/supabase/client"
+import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
@@ -597,6 +598,160 @@ const factLabels: Record<LocaleKey, Record<string, string>> = {
   },
 }
 
+const factValueLabels: Record<LocaleKey, Record<string, string>> = {
+  tr: {
+    residence: "Oturum / ikamet",
+    investment: "Yatırım",
+    relocation: "Taşınma",
+    restricted: "Kısıtlı",
+    clear: "Uygun",
+    permitted: "İzinli",
+    review_required: "İnceleme gerekli",
+    pending: "Bekliyor",
+    valid: "Geçerli",
+    expired: "Süresi dolmuş",
+    active: "Aktif",
+    blocked: "Blokeli",
+    mobile_code: "Mobil kod",
+    card: "Kart",
+    plate: "Plaka",
+    qr: "QR kod",
+    enter: "Giriş",
+    exit: "Çıkış",
+    "Pre-check only": "Yalnızca ön kontrol",
+    "Pre-check only; no legal guarantee": "Yalnızca ön kontrol; hukuki garanti yok",
+  },
+  en: {
+    residence: "Residence",
+    investment: "Investment",
+    relocation: "Relocation",
+    restricted: "Restricted",
+    clear: "Clear",
+    permitted: "Permitted",
+    review_required: "Review required",
+    pending: "Pending",
+    valid: "Valid",
+    expired: "Expired",
+    active: "Active",
+    blocked: "Blocked",
+    mobile_code: "Mobile code",
+    card: "Access card",
+    plate: "Vehicle plate",
+    qr: "QR code",
+    enter: "Entry",
+    exit: "Exit",
+    "Pre-check only": "Pre-check only",
+    "Pre-check only; no legal guarantee": "Pre-check only; no legal guarantee",
+  },
+  de: {
+    residence: "Wohnsitz",
+    investment: "Kapitalanlage",
+    relocation: "Umzug",
+    restricted: "Eingeschränkt",
+    clear: "Zulässig",
+    permitted: "Zulässig",
+    review_required: "Prüfung erforderlich",
+    pending: "Ausstehend",
+    valid: "Gültig",
+    expired: "Abgelaufen",
+    active: "Aktiv",
+    blocked: "Blockiert",
+    mobile_code: "Mobiler Code",
+    card: "Zugangskarte",
+    plate: "Kennzeichen",
+    qr: "QR-Code",
+    enter: "Zutritt",
+    exit: "Austritt",
+    "Pre-check only": "Nur Vorprüfung",
+    "Pre-check only; no legal guarantee": "Nur Vorprüfung; keine Rechtsgarantie",
+  },
+  ru: {
+    residence: "Проживание",
+    investment: "Инвестиция",
+    relocation: "Переезд",
+    restricted: "Ограничено",
+    clear: "Допустимо",
+    permitted: "Разрешено",
+    review_required: "Требуется проверка",
+    pending: "Ожидает",
+    valid: "Действует",
+    expired: "Истёк",
+    active: "Активно",
+    blocked: "Заблокировано",
+    mobile_code: "Мобильный код",
+    card: "Карта доступа",
+    plate: "Номер авто",
+    qr: "QR-код",
+    enter: "Вход",
+    exit: "Выход",
+    "Pre-check only": "Только предварительная проверка",
+    "Pre-check only; no legal guarantee": "Только предварительная проверка; без юридической гарантии",
+  },
+}
+
+const narrativeCopy: Record<string, Record<LocaleKey, string>> = {
+  "Identity evidence is incomplete and the access provider is not connected.": {
+    tr: "Kimlik kanıtı eksik ve erişim sağlayıcısı bağlı değil.",
+    en: "Identity evidence is incomplete and the access provider is not connected.",
+    de: "Der Identitätsnachweis ist unvollständig und der Zugangsanbieter ist nicht verbunden.",
+    ru: "Доказательство личности неполное, а провайдер доступа не подключён.",
+  },
+  "Verify identity and keep physical access provider-blocked.": {
+    tr: "Kimliği doğrulayın ve fiziksel erişimi sağlayıcı düzeyinde blokede tutun.",
+    en: "Verify identity and keep physical access provider-blocked.",
+    de: "Identität prüfen und physischen Zugang anbieterseitig blockiert halten.",
+    ru: "Проверьте личность и держите физический доступ заблокированным на уровне провайдера.",
+  },
+  "Checkout photos are awaiting manager review.": {
+    tr: "Çıkış fotoğrafları yönetici incelemesini bekliyor.",
+    en: "Checkout photos are awaiting manager review.",
+    de: "Die Auszugsfotos warten auf die Prüfung durch den Manager.",
+    ru: "Фотографии выезда ожидают проверки менеджером.",
+  },
+  "Review evidence; any refund or deduction stays in finance approval.": {
+    tr: "Kanıtları inceleyin; her iade veya kesinti finans onayında kalır.",
+    en: "Review evidence; any refund or deduction stays in finance approval.",
+    de: "Nachweise prüfen; jede Erstattung oder Verrechnung bleibt in der Finanzfreigabe.",
+    ru: "Проверьте доказательства; любой возврат или удержание остаётся в согласовании финансов.",
+  },
+  "Proceed with reservation review and the ROI information pack.": {
+    tr: "Rezervasyon incelemesi ve yatırım getirisi bilgi paketiyle devam edin.",
+    en: "Proceed with reservation review and the ROI information pack.",
+    de: "Mit der Reservierungsprüfung und dem ROI-Informationspaket fortfahren.",
+    ru: "Продолжите с проверкой бронирования и пакетом информации о доходности.",
+  },
+  "Current district suitability requires qualified legal review.": {
+    tr: "Güncel bölge uygunluğu, uzman hukuki inceleme gerektiriyor.",
+    en: "Current district suitability requires qualified legal review.",
+    de: "Die aktuelle Gebietseignung erfordert eine qualifizierte rechtliche Prüfung.",
+    ru: "Текущая пригодность района требует квалифицированной юридической проверки.",
+  },
+  "The configured district is currently marked restricted for this demo scenario.": {
+    tr: "Yapılandırılan bölge bu demo senaryosunda şu anda kısıtlı olarak işaretli.",
+    en: "The configured district is currently marked restricted for this demo scenario.",
+    de: "Der konfigurierte Bezirk ist in diesem Demoszenario derzeit als eingeschränkt markiert.",
+    ru: "Настроенный район в этом демосценарии сейчас отмечен как ограниченный.",
+  },
+  "Do not promise suitability; request current partner advice.": {
+    tr: "Uygunluk sözü vermeyin; güncel partner görüşü isteyin.",
+    en: "Do not promise suitability; request current partner advice.",
+    de: "Keine Eignung zusagen; aktuelle Partnerberatung einholen.",
+    ru: "Не обещайте пригодность; запросите актуальную консультацию партнёра.",
+  },
+  "Do not promise suitability; obtain current qualified advice.": {
+    tr: "Uygunluk sözü vermeyin; güncel uzman görüşü alın.",
+    en: "Do not promise suitability; obtain current qualified advice.",
+    de: "Keine Eignung zusagen; aktuellen qualifizierten Rat einholen.",
+    ru: "Не обещайте пригодность; получите актуальную квалифицированную консультацию.",
+  },
+  "Do not promise suitability; obtain current qualified legal advice.": {
+    tr: "Uygunluk sözü vermeyin; güncel uzman hukuki görüş alın.",
+    en: "Do not promise suitability; obtain current qualified legal advice.",
+    de: "Keine Eignung zusagen; aktuellen qualifizierten Rechtsrat einholen.",
+    ru: "Не обещайте пригодность; получите актуальную квалифицированную юридическую консультацию.",
+  },
+}
+
 function localeKey(locale: string): LocaleKey {
   return locale === "tr" || locale === "de" || locale === "ru" ? locale : "en"
 }
@@ -654,24 +809,36 @@ function formatDate(value: string, locale: LocaleKey) {
   }).format(parsed)
 }
 
-function formatMoney(caseItem: ComplianceCase, locale: LocaleKey) {
+function formatMoney(caseItem: ComplianceCase) {
   if (caseItem.financialExposureCents === null || !caseItem.currency) return "-"
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: caseItem.currency,
-    maximumFractionDigits: 2,
-  }).format(caseItem.financialExposureCents / 100)
+  const currency = caseItem.currency === "EUR" ? "EUR" : "TRY"
+  return formatDualFromCents(caseItem.financialExposureCents, currency)
 }
 
-function formatFact(value: unknown, locale: LocaleKey) {
+function prettify(value: string) {
+  return value.replace(/_/g, " ").replace(/^\w/, (letter) => letter.toUpperCase())
+}
+
+function formatFactValue(key: string, value: unknown, locale: LocaleKey) {
   if (typeof value === "boolean") {
     if (locale === "tr") return value ? "Evet" : "Hayır"
     if (locale === "de") return value ? "Ja" : "Nein"
     if (locale === "ru") return value ? "Да" : "Нет"
     return value ? "Yes" : "No"
   }
-  if (typeof value === "string" || typeof value === "number") return String(value)
+  if (key.endsWith("Cents") && typeof value === "number") {
+    return formatDualFromCents(value, "TRY")
+  }
+  if (typeof value === "string") {
+    return factValueLabels[locale][value] ?? narrativeCopy[value.trim()]?.[locale] ?? prettify(value)
+  }
+  if (typeof value === "number") return String(value)
   return JSON.stringify(value)
+}
+
+function narrative(text: string | null, locale: LocaleKey): string | null {
+  if (!text) return text
+  return narrativeCopy[text.trim()]?.[locale] ?? text
 }
 
 function readApiError(payload: unknown, fallback: string) {
@@ -840,6 +1007,7 @@ export function ComplianceLiveCockpit() {
     : allowedDecisions[0]
   const canDecide =
     Boolean(selectedCase && data?.mutationAvailable) &&
+    loadState !== "error" &&
     (user.role === "admin" || user.role === "manager")
 
   function selectCase(caseId: string) {
@@ -1123,7 +1291,7 @@ export function ComplianceLiveCockpit() {
               <div className="grid gap-3 py-5 sm:grid-cols-2 lg:grid-cols-4">
                 <DetailDatum label={t.reference} value={selectedCase.subjectReference ?? selectedCase.caseNumber} />
                 <DetailDatum label={t.siteUnit} value={`${selectedCase.siteName}${selectedCase.unitLabel ? ` · ${selectedCase.unitLabel}` : ""}`} />
-                <DetailDatum label={t.exposure} value={formatMoney(selectedCase, locale)} />
+                <DetailDatum label={t.exposure} value={formatMoney(selectedCase)} />
                 <DetailDatum label={t.updated} value={formatDate(selectedCase.updatedAt, locale)} />
               </div>
 
@@ -1133,14 +1301,14 @@ export function ComplianceLiveCockpit() {
                     {selectedCase.blocker ? <ShieldAlert className="size-4 text-rose-600" aria-hidden="true" /> : <CheckCircle2 className="size-4 text-emerald-600" aria-hidden="true" />}
                     <h3 className="text-sm font-black text-foreground">{t.blocker}</h3>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{selectedCase.blocker ?? t.noBlocker}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{narrative(selectedCase.blocker, locale) ?? t.noBlocker}</p>
                 </article>
                 <article className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
                   <div className="flex items-center gap-2">
                     <ChevronRight className="size-4 text-primary" aria-hidden="true" />
                     <h3 className="text-sm font-black text-foreground">{t.nextAction}</h3>
                   </div>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{selectedCase.nextAction ?? t.noNextAction}</p>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{narrative(selectedCase.nextAction, locale) ?? t.noNextAction}</p>
                 </article>
               </div>
 
@@ -1151,7 +1319,7 @@ export function ComplianceLiveCockpit() {
                     {facts.map(([key, value]) => (
                       <div key={key} className="border-t border-border/70 pt-3 first:border-t-0 first:pt-0 sm:first:border-t sm:first:pt-3">
                         <dt className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{factLabels[locale][key] ?? key.replace(/([a-z])([A-Z])/g, "$1 $2")}</dt>
-                        <dd className="mt-1 break-words text-sm font-semibold text-foreground">{formatFact(value, locale)}</dd>
+                        <dd className="mt-1 break-words text-sm font-semibold text-foreground">{formatFactValue(key, value, locale)}</dd>
                       </div>
                     ))}
                   </dl>

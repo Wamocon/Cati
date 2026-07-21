@@ -235,7 +235,7 @@ test.describe("persistent communication center", () => {
 
     await page.getByRole("tab", { name: "Delivery" }).click()
     await expect(page.getByText("Provider not connected")).toBeVisible()
-    await expect(page.getByRole("article").getByText("Dead letter", { exact: true })).toBeVisible()
+    await expect(page.getByRole("article").getByText("Undeliverable", { exact: true })).toBeVisible()
     await expect(page.getByText(/sent/i)).toHaveCount(0)
   })
 

@@ -15,6 +15,7 @@ import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
+import { formatDual } from "@/lib/currency"
 import { hasAnyPermission } from "@/lib/rbac"
 
 type JsonValue =
@@ -65,7 +66,7 @@ const copy = {
     title: "Rezervasyon ve tesis kullanımı",
     subtitle:
       "Uygunluğu görün, kuralları okuyun, güvenli bir süre tutun ve sonucu kalıcı kayıttan doğrulayın.",
-    authoritative: "Supabase · yetkili kayıt",
+    authoritative: "Doğrulandı",
     refresh: "Yenile",
     loading: "Rezervasyonlar yükleniyor…",
     unavailable: "Kalıcı rezervasyon hizmeti şu anda hazır değil.",
@@ -89,7 +90,7 @@ const copy = {
     waitlist: "Yer yoksa bekleme listesine katıl",
     guest: "Misafir / sakin adı",
     notes: "Not",
-    hold: "Süreyi güvenli şekilde tut",
+    hold: "Bu zamanı ayır",
     commit: "Rezervasyonu kesinleştir",
     holdReady: "Süre geçici olarak tutuldu. Süre dolmadan kesinleştirin.",
     activeHolds: "Kalıcı süre tutmaları",
@@ -100,7 +101,7 @@ const copy = {
     replayed: "Aynı istek güvenli şekilde tekrarlandı.",
     bookings: "Rezervasyonlar",
     noBookings: "Yetki alanınızda rezervasyon yok.",
-    rules: "Kural ve ücret gerçeği",
+    rules: "Kurallar ve ücretler",
     approval: "Onay",
     payment: "Ödeme",
     deposit: "Kaution / depozito",
@@ -145,12 +146,18 @@ const copy = {
     blackoutConflict: "Alan bakımda, kapalı veya henüz devreye alınmadı.",
     expired: "Geçici tutma süresi doldu. Yeni bir süre tutun.",
     genericError: "İşlem tamamlanamadı; hiçbir başarı kaydı gösterilmedi.",
+    noCharge: "Ücret yok",
+    estimate: "örnek tahmin",
+    selectResource: "Alan seçin",
+    selectUnit: "Daire seçin",
+    selectResident: "Sakin seçin",
+    ref: "Referans",
   },
   en: {
     title: "Booking and shared facilities",
     subtitle:
       "Check eligibility, read the rules, hold a slot safely, and verify the outcome from persisted records.",
-    authoritative: "Supabase · authoritative",
+    authoritative: "Verified",
     refresh: "Refresh",
     loading: "Loading bookings…",
     unavailable: "Persistent booking service is not ready right now.",
@@ -174,7 +181,7 @@ const copy = {
     waitlist: "Join the waitlist if full",
     guest: "Guest / resident name",
     notes: "Notes",
-    hold: "Hold this slot safely",
+    hold: "Reserve this slot",
     commit: "Confirm booking",
     holdReady: "The slot is held temporarily. Confirm it before it expires.",
     activeHolds: "Persisted slot holds",
@@ -187,7 +194,7 @@ const copy = {
     replayed: "The same request was replayed safely.",
     bookings: "Bookings",
     noBookings: "No booking is visible in your scope.",
-    rules: "Rules and fee truth",
+    rules: "Rules & fees",
     approval: "Approval",
     payment: "Payment",
     deposit: "Deposit",
@@ -233,12 +240,18 @@ const copy = {
       "The resource is under maintenance, closed, or not commissioned.",
     expired: "The temporary hold expired. Create a new hold.",
     genericError: "The action did not complete; no success is being shown.",
+    noCharge: "No charge",
+    estimate: "demo estimate",
+    selectResource: "Select a resource",
+    selectUnit: "Select a unit",
+    selectResident: "Select a resident",
+    ref: "Ref.",
   },
   de: {
     title: "Buchung und Gemeinschaftsangebote",
     subtitle:
       "Berechtigung prüfen, Regeln lesen, Termin sicher halten und das Ergebnis aus dem gespeicherten Datensatz bestätigen.",
-    authoritative: "Supabase · maßgeblich",
+    authoritative: "Bestätigt",
     refresh: "Aktualisieren",
     loading: "Buchungen werden geladen…",
     unavailable: "Der dauerhafte Buchungsdienst ist derzeit nicht bereit.",
@@ -262,7 +275,7 @@ const copy = {
     waitlist: "Bei Belegung auf die Warteliste",
     guest: "Gast / Bewohner",
     notes: "Notiz",
-    hold: "Termin sicher halten",
+    hold: "Diesen Termin reservieren",
     commit: "Buchung bestätigen",
     holdReady:
       "Der Termin ist vorübergehend gehalten. Bitte vor Ablauf bestätigen.",
@@ -276,7 +289,7 @@ const copy = {
     replayed: "Dieselbe Anfrage wurde sicher wiederholt.",
     bookings: "Buchungen",
     noBookings: "Keine Buchung im eigenen Berechtigungsbereich.",
-    rules: "Regeln und Gebührenstatus",
+    rules: "Regeln & Gebühren",
     approval: "Freigabe",
     payment: "Zahlung",
     deposit: "Kaution",
@@ -323,12 +336,18 @@ const copy = {
     expired: "Die Haltefrist ist abgelaufen. Bitte neu anfragen.",
     genericError:
       "Die Aktion wurde nicht abgeschlossen; es wird kein Erfolg angezeigt.",
+    noCharge: "Keine Gebühr",
+    estimate: "Beispielwert",
+    selectResource: "Angebot auswählen",
+    selectUnit: "Wohnung auswählen",
+    selectResident: "Bewohner auswählen",
+    ref: "Ref.",
   },
   ru: {
     title: "Бронирование и общие зоны",
     subtitle:
       "Проверьте доступ, правила и стоимость, безопасно удержите время и подтвердите результат по сохранённой записи.",
-    authoritative: "Supabase · источник истины",
+    authoritative: "Подтверждено",
     refresh: "Обновить",
     loading: "Загружаем бронирования…",
     unavailable: "Сервис постоянного хранения бронирований сейчас не готов.",
@@ -352,7 +371,7 @@ const copy = {
     waitlist: "Добавить в лист ожидания, если занято",
     guest: "Гость / житель",
     notes: "Примечание",
-    hold: "Безопасно удержать время",
+    hold: "Забронировать это время",
     commit: "Подтвердить бронирование",
     holdReady: "Время временно удерживается. Подтвердите до истечения срока.",
     activeHolds: "Сохранённые удержания времени",
@@ -364,7 +383,7 @@ const copy = {
     replayed: "Тот же запрос безопасно повторён.",
     bookings: "Бронирования",
     noBookings: "В вашей области доступа нет бронирований.",
-    rules: "Правила и статус оплаты",
+    rules: "Правила и сборы",
     approval: "Согласование",
     payment: "Оплата",
     deposit: "Депозит",
@@ -409,6 +428,12 @@ const copy = {
       "Объект закрыт, обслуживается или не введён в эксплуатацию.",
     expired: "Срок удержания истёк. Создайте новое удержание.",
     genericError: "Действие не завершено; успех не отображается.",
+    noCharge: "Без оплаты",
+    estimate: "пример",
+    selectResource: "Выберите объект",
+    selectUnit: "Выберите квартиру",
+    selectResident: "Выберите жителя",
+    ref: "Ном.",
   },
 } as const
 
@@ -574,6 +599,80 @@ function variant(value: string) {
 }
 function shortId(value: string) {
   return value.length > 12 ? `${value.slice(0, 8)}…` : value
+}
+function friendlyRef(value: string) {
+  const compact = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
+  return compact ? `#${compact.slice(0, 6)}` : "—"
+}
+
+const resourceCategoryLabels: Record<Locale, Record<string, string>> = {
+  tr: {
+    spa_treatment: "Spa bakımı", spa_room: "Spa odası", sauna: "Sauna", steam_room: "Buhar odası",
+    sports_court: "Spor sahası", game_room: "Oyun odası", event_area: "Etkinlik alanı", shuttle: "Servis",
+    shared_facility: "Ortak alan", move_loading_slot: "Taşınma yükleme alanı", handover_appointment: "Konut teslim randevusu",
+  },
+  en: {
+    spa_treatment: "Spa treatment", spa_room: "Spa room", sauna: "Sauna", steam_room: "Steam room",
+    sports_court: "Sports court", game_room: "Game room", event_area: "Event area", shuttle: "Shuttle",
+    shared_facility: "Shared facility", move_loading_slot: "Move loading slot", handover_appointment: "Handover appointment",
+  },
+  de: {
+    spa_treatment: "Spa-Anwendung", spa_room: "Spa-Raum", sauna: "Sauna", steam_room: "Dampfbad",
+    sports_court: "Sportplatz", game_room: "Spielzimmer", event_area: "Eventbereich", shuttle: "Shuttle",
+    shared_facility: "Gemeinschaftsbereich", move_loading_slot: "Umzugs-Ladezone", handover_appointment: "Wohnungsübergabe-Termin",
+  },
+  ru: {
+    spa_treatment: "Спа-процедура", spa_room: "Спа-комната", sauna: "Сауна", steam_room: "Парная",
+    sports_court: "Спортивная площадка", game_room: "Игровая комната", event_area: "Зона мероприятий", shuttle: "Шаттл",
+    shared_facility: "Общая зона", move_loading_slot: "Зона погрузки при переезде", handover_appointment: "Встреча передачи жилья",
+  },
+}
+
+const BILINGUAL_SEPARATOR = /\s[–-]\s|\s\/\s/
+
+// Some resource names are stored bilingually as "Türkçe - English". Show only the
+// active locale's half so EN mode does not render both languages at once.
+function pickLocaleHalf(raw: string, locale: Locale): string {
+  const parts = raw.split(BILINGUAL_SEPARATOR).map((part) => part.trim()).filter(Boolean)
+  if (parts.length >= 2) return locale === "tr" ? parts[0] : parts[parts.length - 1]
+  return raw
+}
+function localizeResourceName(item: Row, locale: Locale): string {
+  const raw = text(item, "name", "")
+  const category = text(item, "category", "")
+  const categoryLabel = resourceCategoryLabels[locale][category]
+  const parts = raw.split(BILINGUAL_SEPARATOR).map((part) => part.trim()).filter(Boolean)
+  if (parts.length >= 2) {
+    if (locale === "tr") return parts[0]
+    if (locale === "en") return parts[parts.length - 1]
+    return categoryLabel ?? parts[parts.length - 1]
+  }
+  if (categoryLabel && (raw === categoryLabel || raw === resourceCategoryLabels.en[category])) {
+    return categoryLabel
+  }
+  return raw || categoryLabel || "-"
+}
+function resourceTypeLabel(item: Row, locale: Locale): string {
+  const category = text(item, "category", "")
+  return resourceCategoryLabels[locale][category] ?? text(item, "typeName", text(item, "category"))
+}
+function resourceDisplay(item: Row, locale: Locale): string {
+  const name = localizeResourceName(item, locale)
+  const type = resourceTypeLabel(item, locale)
+  return name === type ? name : `${name} · ${type}`
+}
+function sanitizeDescription(value: string): string {
+  return value
+    .replace(/\bUC\d+\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^\s*[·:;,\-–]\s*/, "")
+    .trim()
+}
+function feeText(truth: string, amountTry: number, t: (typeof copy)[Locale]): string {
+  if (truth === "not_required") return t.notRequired
+  if (truth === "waived") return t.waived
+  if (truth === "unavailable") return t.unavailableState
+  return amountTry > 0 ? `${formatDual(amountTry)} · ${t.estimate}` : t.noCharge
 }
 function localIstanbul(minutesFromNow: number) {
   const date = new Date(Date.now() + (180 + minutesFromNow) * 60_000)
@@ -1045,12 +1144,11 @@ export function BookingLifecycleExperience() {
                       className="mt-2 min-h-11 w-full rounded-xl border border-border bg-background px-3 font-normal focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                     >
                       <option value="" disabled>
-                        {t.noResources}
+                        {workspace.resources.length ? t.selectResource : t.noResources}
                       </option>
                       {workspace.resources.map((item) => (
                         <option key={text(item, "id")} value={text(item, "id")}>
-                          {text(item, "name")} ·{" "}
-                          {text(item, "typeName", text(item, "category"))}
+                          {resourceDisplay(item, locale)}
                         </option>
                       ))}
                     </select>
@@ -1073,7 +1171,7 @@ export function BookingLifecycleExperience() {
                       className="mt-2 min-h-11 w-full rounded-xl border border-border bg-background px-3 font-normal focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                     >
                       <option value="" disabled>
-                        {t.noUnits}
+                        {eligibleUnits.length ? t.selectUnit : t.noUnits}
                       </option>
                       {eligibleUnits.map((item) => (
                         <option key={text(item, "id")} value={text(item, "id")}>
@@ -1092,7 +1190,7 @@ export function BookingLifecycleExperience() {
                       className="mt-2 min-h-11 w-full rounded-xl border border-border bg-background px-3 font-normal focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                     >
                       <option value="" disabled>
-                        {t.noResidents}
+                        {eligibleResidents.length ? t.selectResident : t.noResidents}
                       </option>
                       {eligibleResidents.map((item) => (
                         <option
@@ -1139,22 +1237,16 @@ export function BookingLifecycleExperience() {
                     </p>
                     <p>
                       {t.payment}:{" "}
-                      {stateLabel(
-                        text(
-                          selectedResource,
-                          "priceTruth",
-                          "manual_required"
-                        ),
-                        locale
+                      {feeText(
+                        text(selectedResource, "priceTruth", "manual_required"),
+                        number(selectedResource, "capacity", 1) * 500,
+                        t
                       )}{" "}
                       · {t.deposit}:{" "}
-                      {stateLabel(
-                        text(
-                          selectedResource,
-                          "depositTruth",
-                          "manual_required"
-                        ),
-                        locale
+                      {feeText(
+                        text(selectedResource, "depositTruth", "manual_required"),
+                        number(selectedResource, "capacity", 1) * 2000,
+                        t
                       )}
                     </p>
                   </div>
@@ -1263,7 +1355,7 @@ export function BookingLifecycleExperience() {
                             <div className="flex flex-wrap items-start justify-between gap-2">
                               <div>
                                 <p className="text-sm font-bold">
-                                  {text(resource, "name", t.resource)}
+                                  {resource ? localizeResourceName(resource, locale) : t.resource}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
                                   {formatDate(text(hold, "startsAt", ""), locale)} –{" "}
@@ -1319,9 +1411,9 @@ export function BookingLifecycleExperience() {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div>
-                            <h3 className="font-black">{text(item, "name")}</h3>
+                            <h3 className="font-black">{localizeResourceName(item, locale)}</h3>
                             <p className="text-xs text-muted-foreground">
-                              {text(item, "typeName", text(item, "category"))} ·{" "}
+                              {resourceTypeLabel(item, locale)} ·{" "}
                               {text(item, "timezone", "Europe/Istanbul")}
                             </p>
                           </div>
@@ -1337,7 +1429,7 @@ export function BookingLifecycleExperience() {
                           </StatusBadge>
                         </div>
                         <p className="mt-3 text-sm text-muted-foreground">
-                          {text(item, "description", t.rules)}
+                          {sanitizeDescription(text(item, "description", "")) || t.rules}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2 text-xs">
                           <span className="rounded-lg bg-background px-2 py-1">
@@ -1413,10 +1505,10 @@ export function BookingLifecycleExperience() {
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div className="min-w-0">
                           <h3 className="font-black break-words">
-                            {text(booking, "resourceName", t.resource)}
+                            {pickLocaleHalf(text(booking, "resourceName", t.resource), locale)}
                           </h3>
-                          <p className="text-xs text-muted-foreground">
-                            {shortId(id)} · v{version}
+                          <p className="text-xs text-muted-foreground" title={id}>
+                            {t.ref} {friendlyRef(id)} · v{version}
                           </p>
                         </div>
                         <StatusBadge variant={variant(status)}>
@@ -1754,10 +1846,9 @@ export function BookingLifecycleExperience() {
                   >
                     <div>
                       <p className="font-bold">
-                        {text(
-                          item,
-                          "resourceName",
-                          shortId(text(item, "resourceId"))
+                        {pickLocaleHalf(
+                          text(item, "resourceName", shortId(text(item, "resourceId"))),
+                          locale
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground">

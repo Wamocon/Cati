@@ -38,6 +38,37 @@ function statusLabel(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
+const localizedLabels: Record<ThreadDraft["locale"], Record<string, string>> = {
+  tr: {
+    owner: "Malik", tenant: "Kiracı", staff: "Personel", accountant: "Muhasebe", manager: "Yönetici", admin: "Yönetici (admin)",
+    open: "Açık", closed: "Kapalı", archived: "Arşivlendi", pending: "Bekliyor", resolved: "Çözüldü", snoozed: "Ertelendi", active: "Aktif",
+    queued: "Sırada", sent: "Gönderildi", delivered: "Teslim edildi", failed: "Başarısız", read: "Okundu", bounced: "Geri döndü", retrying: "Yeniden deneniyor", dead_letter: "Teslim edilemeyen",
+    draft: "Taslak", disabled: "Devre dışı", published: "Yayında",
+  },
+  en: {
+    owner: "Owner", tenant: "Tenant", staff: "Staff", accountant: "Accountant", manager: "Manager", admin: "Admin",
+    open: "Open", closed: "Closed", archived: "Archived", pending: "Pending", resolved: "Resolved", snoozed: "Snoozed", active: "Active",
+    queued: "Queued", sent: "Sent", delivered: "Delivered", failed: "Failed", read: "Read", bounced: "Bounced", retrying: "Retrying", dead_letter: "Undeliverable",
+    draft: "Draft", disabled: "Disabled", published: "Published",
+  },
+  de: {
+    owner: "Eigentümer", tenant: "Mieter", staff: "Mitarbeiter", accountant: "Buchhaltung", manager: "Manager", admin: "Administrator",
+    open: "Offen", closed: "Geschlossen", archived: "Archiviert", pending: "Ausstehend", resolved: "Gelöst", snoozed: "Zurückgestellt", active: "Aktiv",
+    queued: "In Warteschlange", sent: "Gesendet", delivered: "Zugestellt", failed: "Fehlgeschlagen", read: "Gelesen", bounced: "Unzustellbar", retrying: "Wird wiederholt", dead_letter: "Unzustellbar",
+    draft: "Entwurf", disabled: "Deaktiviert", published: "Veröffentlicht",
+  },
+  ru: {
+    owner: "Собственник", tenant: "Арендатор", staff: "Сотрудник", accountant: "Бухгалтерия", manager: "Менеджер", admin: "Администратор",
+    open: "Открыт", closed: "Закрыт", archived: "В архиве", pending: "Ожидает", resolved: "Решён", snoozed: "Отложен", active: "Активно",
+    queued: "В очереди", sent: "Отправлено", delivered: "Доставлено", failed: "Ошибка", read: "Прочитано", bounced: "Возврат", retrying: "Повтор", dead_letter: "Недоставлено",
+    draft: "Черновик", disabled: "Отключён", published: "Опубликован",
+  },
+}
+
+function localizedStatus(value: string, locale: string) {
+  return localizedLabels[communicationLocale(locale)][value] ?? statusLabel(value)
+}
+
 function dateLabel(value: string | null, locale: string) {
   if (!value) return "-"
   const date = new Date(value)
@@ -79,6 +110,7 @@ export function CommunicationsCenter() {
     participantProfileIds: [],
   }))
   const markedMessageIds = useRef(new Set<string>())
+  const autoFilledScopeKey = useRef<string | null>(null)
 
   const loadWorkspace = useCallback(async (threadId?: string | null, quiet = false) => {
     if (!quiet) setRefreshing(true)
@@ -218,6 +250,31 @@ export function CommunicationsCenter() {
     selectedParticipants.length > 0 &&
     selectedParticipants.length === threadDraft.participantProfileIds.length
   )
+
+  // Reduce new-thread friction: when exactly one participant is eligible for the
+  // current site/unit/category, pre-select them (once per scope) so the admin can
+  // send immediately. A manual de-select is respected for that same scope.
+  useEffect(() => {
+    if (!composerOpen) return
+    const scopeKey = `${threadDraft.siteId}|${threadDraft.unitId}|${threadDraft.scopeKind}`
+    if (autoFilledScopeKey.current === scopeKey) return
+    if (eligibleParticipants.length === 1 && threadDraft.participantProfileIds.length === 0) {
+      autoFilledScopeKey.current = scopeKey
+      const only = eligibleParticipants[0].profileId
+      setThreadDraft((current) =>
+        current.participantProfileIds.length === 0
+          ? { ...current, participantProfileIds: [only] }
+          : current
+      )
+    }
+  }, [
+    composerOpen,
+    eligibleParticipants,
+    threadDraft.siteId,
+    threadDraft.unitId,
+    threadDraft.scopeKind,
+    threadDraft.participantProfileIds.length,
+  ])
 
   function openThreadComposer() {
     if (!canCreateThread) return
@@ -617,7 +674,7 @@ export function CommunicationsCenter() {
                             />
                             <span className="min-w-0">
                               <span className="block truncate text-sm font-bold text-foreground">{participant.displayLabel}</span>
-                              <span className="block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{statusLabel(participant.role)}</span>
+                              <span className="block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">{localizedStatus(participant.role, locale)}</span>
                             </span>
                           </label>
                         )
@@ -670,7 +727,7 @@ export function CommunicationsCenter() {
                       <span className="block truncate text-sm font-black text-foreground">{thread.subject}</span>
                       <span className="mt-1 block truncate text-xs text-muted-foreground">{thread.lastMessagePreview ?? thread.unitLabel ?? "-"}</span>
                       <span className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        <span>{statusLabel(thread.status)}</span>
+                        <span>{localizedStatus(thread.status, locale)}</span>
                         {thread.unreadCount > 0 && <span className="text-primary">{thread.unreadCount} {copy.unread}</span>}
                       </span>
                     </button>
@@ -771,7 +828,7 @@ export function CommunicationsCenter() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-foreground">{delivery.recipientLabel}</p>
-                        <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{delivery.channel} · {statusLabel(delivery.state)}</p>
+                        <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{delivery.channel} · {localizedStatus(delivery.state, locale)}</p>
                       </div>
                       {outbox?.status === "dead_letter" && (
                         <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-black text-red-700 dark:text-red-300">{copy.deadLetter}</span>
@@ -791,7 +848,7 @@ export function CommunicationsCenter() {
                 <article key={template.id} className="min-w-0 rounded-3xl border border-border bg-card p-5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <h2 className="min-w-0 truncate font-black text-foreground">{template.name}</h2>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold uppercase text-muted-foreground">{statusLabel(template.status)}</span>
+                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold uppercase text-muted-foreground">{localizedStatus(template.status, locale)}</span>
                   </div>
                   <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{template.channel} · {template.purpose}</p>
                   <p className="mt-4 text-xs font-bold text-foreground">{copy.variants}: {template.variants.map((variant) => variant.locale.toUpperCase()).join(", ")}</p>
