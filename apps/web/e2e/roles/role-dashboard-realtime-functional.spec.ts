@@ -57,7 +57,10 @@ test.describe("role-focused live dashboard", () => {
     const freshness = page.getByTestId("unit-matrix-freshness")
 
     await expect(matrix).toBeVisible()
-    await expect(source).toContainText("QA")
+    // The backend/source name must never leak to end users (was "…QA seed").
+    await expect(source).toBeVisible()
+    await expect(source).not.toContainText("QA")
+    await expect(source).not.toContainText("Supabase")
     await expect(freshness).toHaveText(/^Son güncelleme:\s*(?!-\s*$).+/)
     await expect(page.getByTestId("unit-matrix-realtime")).toBeVisible()
     await expect(matrix.getByText(/^769 kayıt$/)).toBeVisible()

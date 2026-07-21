@@ -15,8 +15,6 @@ import {
   CalendarClock,
   Check,
   ChevronRight,
-  CircleDot,
-  Database,
   FileKey2,
   Link2,
   LoaderCircle,
@@ -212,12 +210,12 @@ function UnavailablePanel({
         : copy.unavailableRealAuth
   return (
     <section
-      className="rounded-[1.75rem] border border-amber-500/25 bg-amber-500/[0.06] p-6 shadow-sm"
+      className="rounded-[1.75rem] border border-border bg-card p-6 shadow-sm"
       aria-labelledby="buyer-unavailable-title"
     >
       <div className="flex items-start gap-4">
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
-          <AlertTriangle className="h-6 w-6" aria-hidden />
+        <div className="rounded-2xl border border-border bg-muted/50 p-3 text-muted-foreground">
+          <UsersRound className="h-6 w-6" aria-hidden />
         </div>
         <div className="max-w-3xl">
           <h2
@@ -713,28 +711,6 @@ export function BuyerPipelineWorkspace() {
             </p>
           </div>
           <div className="flex max-w-2xl flex-wrap gap-2">
-            <span className="inline-flex max-w-sm items-start gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-emerald-200">
-              <Database className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              <span>
-                <span className="block text-xs font-bold">
-                  {copy.localAuthority}
-                </span>
-                <span className="mt-0.5 block text-[10px] leading-4 text-emerald-100/75">
-                  {copy.localAuthorityDetail}
-                </span>
-              </span>
-            </span>
-            <span className="inline-flex max-w-sm items-start gap-2 rounded-2xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-amber-100">
-              <CircleDot className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              <span>
-                <span className="block text-xs font-bold">
-                  {copy.twentyReady}
-                </span>
-                <span className="mt-0.5 block text-[10px] leading-4 text-amber-100/75">
-                  {copy.twentyDisconnected}
-                </span>
-              </span>
-            </span>
             <button
               type="button"
               onClick={() => void loadWorkspace()}

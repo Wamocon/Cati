@@ -7,6 +7,8 @@ import { DataTable } from "@/components/data-table"
 import { IntegrationHealthPanel } from "@/components/integration-health-panel"
 import { StatusBadge } from "@/components/status-badge"
 import { LocaleSwitcher } from "@/components/locale-switcher"
+import { useUser } from "@/components/user-provider"
+import { isAdmin } from "@/lib/rbac"
 import {
   auditEvents,
   getPlatformControlSummary,
@@ -32,7 +34,8 @@ const settingsCopy = {
       { title: "Dil ve yerelleştirme", desc: "Türkçe ana kullanım, çok dilli sakin desteği ve resmi ton standardı." },
     ],
     integrationsTitle: "Faz 13 entegrasyon hazırlığı",
-    integrationsBody: "Supabase bağlı backend olarak çalışır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.",
+    integrationsBody: "Temel platform bağlı ve çalışır durumdadır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.",
+    viewOnlyNote: "Yalnızca görüntüleme. Yapılandırma değişiklikleri yöneticilere açıktır.",
     live: "Canlı",
     demo: "Demo",
     waitingClient: "Müşteri bekliyor",
@@ -74,7 +77,8 @@ const settingsCopy = {
       { title: "Language and localization", desc: "Turkish primary operations, multilingual resident support and formal tone standards." },
     ],
     integrationsTitle: "Phase 13 integration readiness",
-    integrationsBody: "Supabase is the connected backend. Payment, bank, SMS, email, access, camera and OAuth providers stay in demo/provider-ready mode until client contracts and API keys are approved.",
+    integrationsBody: "The core platform is connected and operational. Payment, bank, SMS, email, access, camera and OAuth providers stay in demo/provider-ready mode until client contracts and API keys are approved.",
+    viewOnlyNote: "View only. Configuration changes are available to administrators.",
     live: "Live",
     demo: "Demo",
     waitingClient: "Waiting for client",
@@ -116,7 +120,8 @@ const settingsCopy = {
       { title: "Sprache und Lokalisierung", desc: "Türkische Hauptoperationen, mehrsprachige Bewohnerunterstützung und formaler Tonstandard." },
     ],
     integrationsTitle: "Phase-13-Integrationsbereitschaft",
-    integrationsBody: "Supabase läuft als angebundenes Backend. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo-/anbieterbereiten Modus, bis Verträge und API-Schlüssel freigegeben sind.",
+    integrationsBody: "Die Kernplattform ist angebunden und betriebsbereit. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo-/anbieterbereiten Modus, bis Verträge und API-Schlüssel freigegeben sind.",
+    viewOnlyNote: "Nur Ansicht. Konfigurationsänderungen sind Administratoren vorbehalten.",
     live: "Live",
     demo: "Demo",
     waitingClient: "Wartet auf Kunde",
@@ -158,7 +163,8 @@ const settingsCopy = {
       { title: "Язык и локализация", desc: "Турецкий как основной язык операций, многоязычная поддержка резидентов и официальный тон." },
     ],
     integrationsTitle: "Готовность интеграций фазы 13",
-    integrationsBody: "Supabase работает как подключенный backend. Провайдеры оплат, банка, SMS, e-mail, доступа, камер и OAuth остаются в demo/provider-ready режиме до одобрения договоров и API-ключей клиентом.",
+    integrationsBody: "Базовая платформа подключена и работает. Провайдеры оплат, банка, SMS, e-mail, доступа, камер и OAuth остаются в demo/provider-ready режиме до одобрения договоров и API-ключей клиентом.",
+    viewOnlyNote: "Только просмотр. Изменения настроек доступны администраторам.",
     live: "Live",
     demo: "Демо",
     waitingClient: "Ожидает клиента",
@@ -205,7 +211,7 @@ const platformControlDisplayCopy = {
         "Yerel çalışma ortamında yetki profili kullanılabilir; üretim ortamında doğrulanmış kullanıcı profili önceliklidir.",
     },
     "CTL-RBAC-01": {
-      area: "RBAC",
+      area: "Erişim",
       owner: "Güvenlik",
       title: "Rol bazlı menü ve yetki matrisi",
       detail:
@@ -242,7 +248,7 @@ const platformControlDisplayCopy = {
         "Access profiles can be used in local QA; verified user profiles take priority in production.",
     },
     "CTL-RBAC-01": {
-      area: "RBAC",
+      area: "Access",
       owner: "Security",
       title: "Role-based menu and permission matrix",
       detail:
@@ -279,7 +285,7 @@ const platformControlDisplayCopy = {
         "In lokalen QA-Umgebungen können Zugriffsprofile genutzt werden; in Produktion haben verifizierte Benutzerprofile Vorrang.",
     },
     "CTL-RBAC-01": {
-      area: "RBAC",
+      area: "Zugriff",
       owner: "Sicherheit",
       title: "Rollenbasiertes Menü und Berechtigungsmatrix",
       detail:
@@ -316,7 +322,7 @@ const platformControlDisplayCopy = {
         "В локальной QA-среде можно использовать профили доступа; в production приоритет имеют подтвержденные профили пользователей.",
     },
     "CTL-RBAC-01": {
-      area: "RBAC",
+      area: "Доступ",
       owner: "Безопасность",
       title: "Ролевое меню и матрица прав",
       detail:
@@ -388,6 +394,8 @@ export default function SettingsPage() {
   const rawLocale = useLocale()
   const locale = resolveSettingsLocale(rawLocale)
   const copy = settingsCopy[locale]
+  const user = useUser()
+  const canConfigure = isAdmin(user.role)
   const localizeValue = (value: string) =>
     localizeDashboardTextPart(value, locale)
   const summary = getPlatformControlSummary()
@@ -418,6 +426,12 @@ export default function SettingsPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {copy.subtitle}
         </p>
+        {!canConfigure ? (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+            <Eye className="h-4 w-4 shrink-0" />
+            {copy.viewOnlyNote}
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

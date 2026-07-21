@@ -174,12 +174,10 @@ test.describe("UC24 persistent buyer sales room", () => {
       page.getByRole("heading", { level: 1, name: "Buyer pipeline" })
     ).toBeVisible()
     await expect(
-      page.getByText("Persistent buyer pipeline unavailable")
+      page.getByText("No buyers yet")
     ).toBeVisible({ timeout: 15_000 })
     await expect(
-      page.getByText(
-        /local access profile cannot display or create persistent buyer records/i
-      )
+      page.getByText("There are no buyers to show yet.")
     ).toBeVisible()
     await expect(page.getByText("Ada Buyer")).toHaveCount(0)
   })
@@ -191,12 +189,13 @@ test.describe("UC24 persistent buyer sales room", () => {
     await mockBuyerApi(page)
     await page.goto("/en/dashboard/leads")
 
+    // The backend/integration status must never leak to end users.
     await expect(
       page.getByText("Local database authoritative", { exact: true })
-    ).toBeVisible()
+    ).toHaveCount(0)
     await expect(
       page.getByText("Twenty provider-ready", { exact: true })
-    ).toBeVisible()
+    ).toHaveCount(0)
     await expect(page.getByRole("button", { name: "Offer: 1" })).toBeVisible()
     await expect(
       page.getByText("Ada Buyer", { exact: true }).first()

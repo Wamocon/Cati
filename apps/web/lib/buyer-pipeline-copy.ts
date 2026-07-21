@@ -29,10 +29,6 @@ export interface BuyerPipelineCopy {
   kicker: string
   title: string
   intro: string
-  localAuthority: string
-  localAuthorityDetail: string
-  twentyReady: string
-  twentyDisconnected: string
   refresh: string
   loading: string
   loadError: string
@@ -123,30 +119,22 @@ export interface BuyerPipelineCopy {
 }
 
 const tr: BuyerPipelineCopy = {
-  kicker: "UC24 · Operasyonel satış odası",
+  kicker: "Operasyonel satış odası",
   title: "Alıcı hattı",
   intro:
-    "Potansiyel alıcıları ilk temastan kanıtlı devir teslimine kadar, site kapsamı ve iyimser kilitleme ile yönetin.",
-  localAuthority: "Yerel veritabanı yetkili kaynak",
-  localAuthorityDetail:
-    "Kayıtlar yalnızca gerçek kuruluş oturumunda Supabase'e kalıcı olarak yazılır.",
-  twentyReady: "Twenty sağlayıcıya hazır",
-  twentyDisconnected:
-    "Twenty bağlantısı kurulmadı; senkronizasyon iddiası yok.",
+    "Potansiyel alıcıları ilk temastan devir teslimine kadar tek yerden yönetin.",
   refresh: "Yenile",
   loading: "Canlı alıcı hattı yükleniyor",
   loadError: "Canlı alıcı hattı yüklenemedi.",
-  unavailableTitle: "Kalıcı alıcı hattı kullanılamıyor",
-  unavailableRealAuth:
-    "Yerel erişim profili kalıcı alıcı kayıtlarını gösteremez veya oluşturamaz.",
-  unavailableCompany: "Bu oturumun doğrulanmış kuruluş kapsamı yok.",
-  unavailableSite: "Bu yöneticiye aktif bir site kapsamı atanmadı.",
-  unavailableNote:
-    "Supabase ve gerçek kuruluş kimliği etkin olduğunda yalnızca yetkili siteler ve yöneticiler yüklenir. Örnek alıcı gösterilmez.",
+  unavailableTitle: "Henüz alıcı yok",
+  unavailableRealAuth: "Şu anda gösterilecek alıcı yok.",
+  unavailableCompany: "Şu anda gösterilecek alıcı yok.",
+  unavailableSite: "Şu anda gösterilecek alıcı yok.",
+  unavailableNote: "Yeni alıcılar eklendikçe burada görünür.",
   stageRail: "Aşama hattı",
   allStages: "Tüm aşamalar",
   pipeline: "Potansiyel alıcılar",
-  emptyPipeline: "Yetkili kapsamınızda henüz potansiyel alıcı yok.",
+  emptyPipeline: "Şu anda gösterilecek alıcı yok.",
   noMatch: "Bu filtreyle eşleşen alıcı yok.",
   search: "Ad, iletişim, site veya daire ara",
   addBuyer: "Alıcı ekle",
@@ -256,29 +244,22 @@ const tr: BuyerPipelineCopy = {
 }
 
 const en: BuyerPipelineCopy = {
-  kicker: "UC24 · Operational sales room",
+  kicker: "Operational sales room",
   title: "Buyer pipeline",
   intro:
-    "Move prospects from first contact to an evidence-backed hand-off with site scope and optimistic locking.",
-  localAuthority: "Local database authoritative",
-  localAuthorityDetail:
-    "Records persist in Supabase only for a real organization session.",
-  twentyReady: "Twenty provider-ready",
-  twentyDisconnected: "Twenty is not connected; no synchronization is claimed.",
+    "Move prospects from first contact to hand-off, all in one place.",
   refresh: "Refresh",
   loading: "Loading the live buyer pipeline",
   loadError: "The live buyer pipeline could not be loaded.",
-  unavailableTitle: "Persistent buyer pipeline unavailable",
-  unavailableRealAuth:
-    "A local access profile cannot display or create persistent buyer records.",
-  unavailableCompany: "This session has no verified organization scope.",
-  unavailableSite: "This manager has no active site assignment.",
-  unavailableNote:
-    "When Supabase and a real organization identity are active, only authorized sites and managers load. No sample buyers are shown.",
+  unavailableTitle: "No buyers yet",
+  unavailableRealAuth: "There are no buyers to show yet.",
+  unavailableCompany: "There are no buyers to show yet.",
+  unavailableSite: "There are no buyers to show yet.",
+  unavailableNote: "New buyers will appear here as soon as they are added.",
   stageRail: "Stage rail",
   allStages: "All stages",
   pipeline: "Prospects",
-  emptyPipeline: "There are no prospects in your authorized scope yet.",
+  emptyPipeline: "There are no buyers to show yet.",
   noMatch: "No buyer matches this filter.",
   search: "Search name, contact, site, or unit",
   addBuyer: "Add buyer",
@@ -388,31 +369,22 @@ const en: BuyerPipelineCopy = {
 
 const de: BuyerPipelineCopy = {
   ...en,
-  kicker: "UC24 · Operativer Sales Room",
+  kicker: "Operativer Sales Room",
   title: "Käufer-Pipeline",
   intro:
-    "Führen Sie Interessenten vom Erstkontakt bis zur belegten Übergabe – standortbezogen und mit optimistischer Sperre.",
-  localAuthority: "Lokale Datenbank maßgeblich",
-  localAuthorityDetail:
-    "Datensätze werden nur mit einer echten Organisationssitzung in Supabase gespeichert.",
-  twentyReady: "Twenty provider-ready",
-  twentyDisconnected:
-    "Twenty ist nicht verbunden; eine Synchronisierung wird nicht behauptet.",
+    "Führen Sie Interessenten vom Erstkontakt bis zur Übergabe, alles an einem Ort.",
   refresh: "Aktualisieren",
   loading: "Live-Käufer-Pipeline wird geladen",
   loadError: "Die Live-Käufer-Pipeline konnte nicht geladen werden.",
-  unavailableTitle: "Persistente Käufer-Pipeline nicht verfügbar",
-  unavailableRealAuth:
-    "Ein lokales Zugriffsprofil darf keine persistenten Käuferdatensätze anzeigen oder erstellen.",
-  unavailableCompany:
-    "Diese Sitzung hat keinen verifizierten Organisationskontext.",
-  unavailableSite: "Diesem Manager ist kein aktiver Standort zugewiesen.",
-  unavailableNote:
-    "Mit Supabase und echter Organisationsidentität werden ausschließlich berechtigte Standorte und Manager geladen. Es erscheinen keine Demo-Käufer.",
+  unavailableTitle: "Noch keine Käufer",
+  unavailableRealAuth: "Derzeit gibt es keine Käufer anzuzeigen.",
+  unavailableCompany: "Derzeit gibt es keine Käufer anzuzeigen.",
+  unavailableSite: "Derzeit gibt es keine Käufer anzuzeigen.",
+  unavailableNote: "Neu hinzugefügte Käufer erscheinen hier.",
   stageRail: "Phasenleiste",
   allStages: "Alle Phasen",
   pipeline: "Interessenten",
-  emptyPipeline: "Im berechtigten Bereich gibt es noch keine Interessenten.",
+  emptyPipeline: "Derzeit gibt es keine Käufer anzuzeigen.",
   noMatch: "Kein Käufer entspricht diesem Filter.",
   search: "Name, Kontakt, Standort oder Einheit suchen",
   addBuyer: "Käufer anlegen",
@@ -525,29 +497,22 @@ const de: BuyerPipelineCopy = {
 
 const ru: BuyerPipelineCopy = {
   ...en,
-  kicker: "UC24 · Операционный отдел продаж",
+  kicker: "Операционный отдел продаж",
   title: "Воронка покупателей",
   intro:
-    "Ведите покупателей от первого контакта до подтверждённой передачи с учётом объекта и контроля версий.",
-  localAuthority: "Локальная база, источник истины",
-  localAuthorityDetail:
-    "Записи сохраняются в Supabase только в реальной сессии организации.",
-  twentyReady: "Twenty готов к подключению",
-  twentyDisconnected: "Twenty не подключён; синхронизация не заявляется.",
+    "Ведите покупателей от первого контакта до передачи в одном месте.",
   refresh: "Обновить",
   loading: "Загрузка актуальной воронки",
   loadError: "Не удалось загрузить актуальную воронку покупателей.",
-  unavailableTitle: "Постоянная воронка недоступна",
-  unavailableRealAuth:
-    "Локальный профиль доступа не может показывать или создавать постоянные записи покупателей.",
-  unavailableCompany: "У сессии нет подтверждённой области организации.",
-  unavailableSite: "У менеджера нет активного назначения на объект.",
-  unavailableNote:
-    "После подключения Supabase и реальной личности организации загрузятся только разрешённые объекты и менеджеры. Демоданные не показываются.",
+  unavailableTitle: "Покупателей пока нет",
+  unavailableRealAuth: "Сейчас нет покупателей для показа.",
+  unavailableCompany: "Сейчас нет покупателей для показа.",
+  unavailableSite: "Сейчас нет покупателей для показа.",
+  unavailableNote: "Новые покупатели появятся здесь после добавления.",
   stageRail: "Этапы",
   allStages: "Все этапы",
   pipeline: "Потенциальные покупатели",
-  emptyPipeline: "В разрешённой области пока нет покупателей.",
+  emptyPipeline: "Сейчас нет покупателей для показа.",
   noMatch: "Покупатели по фильтру не найдены.",
   search: "Поиск по имени, контакту, объекту или квартире",
   addBuyer: "Добавить покупателя",

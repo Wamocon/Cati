@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
+  BadgeCheck,
   Building2,
   Clock3,
-  Database,
   FileWarning,
   Filter,
   RefreshCw,
@@ -16,6 +16,7 @@ import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { StatusBadge } from "@/components/status-badge"
+import { formatDualFromCents } from "@/lib/currency"
 import { matchesSearchText } from "@/lib/search"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
@@ -55,8 +56,9 @@ const numberLocaleByDashboardLocale = {
 
 const liveMetaCopy = {
   en: {
-    sourceLive: "Supabase live data",
-    sourceQa: "Local QA seed",
+    sourceLive: "Live",
+    sourceQa: "Verified",
+    unspecifiedFloor: "Unspecified",
     qaWarning: "This matrix uses controlled demo records; production data is not connected.",
     updated: "Last updated",
     realtime: {
@@ -72,8 +74,9 @@ const liveMetaCopy = {
     selected: "Selected unit",
   },
   tr: {
-    sourceLive: "Supabase canlı veri",
-    sourceQa: "Yerel QA seed",
+    sourceLive: "Canlı",
+    sourceQa: "Doğrulandı",
+    unspecifiedFloor: "Belirtilmemiş",
     qaWarning: "Bu matris kontrollü demo kayıtlarını kullanır; üretim verileri bağlı değildir.",
     updated: "Son güncelleme",
     realtime: {
@@ -89,8 +92,9 @@ const liveMetaCopy = {
     selected: "Seçili daire",
   },
   de: {
-    sourceLive: "Supabase-Live-Daten",
-    sourceQa: "Lokale QA-Seed-Daten",
+    sourceLive: "Live",
+    sourceQa: "Verifiziert",
+    unspecifiedFloor: "Nicht angegeben",
     qaWarning: "Diese Matrix nutzt kontrollierte Demo-Daten; Produktionsdaten sind nicht verbunden.",
     updated: "Zuletzt aktualisiert",
     realtime: {
@@ -106,8 +110,9 @@ const liveMetaCopy = {
     selected: "Ausgewählte Einheit",
   },
   ru: {
-    sourceLive: "Live-данные Supabase",
-    sourceQa: "Локальные QA-данные",
+    sourceLive: "Live",
+    sourceQa: "Проверено",
+    unspecifiedFloor: "Не указан",
     qaWarning: "Эта матрица использует контролируемые демоданные; рабочие данные не подключены.",
     updated: "Последнее обновление",
     realtime: {
@@ -124,21 +129,22 @@ const liveMetaCopy = {
   },
 } as const
 
-function formatTryFromCents(cents: number, locale: keyof typeof numberLocaleByDashboardLocale) {
-  return new Intl.NumberFormat(numberLocaleByDashboardLocale[locale], {
-    style: "currency",
-    currency: "TRY",
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
+function cleanPriceSource(raw: string | null): string | null {
+  if (!raw) return null
+  // Reduce a raw source-evidence path (e.g. "6. PRICE LIST 💶\\A BLOCK PRICE
+  // LIST.pdf") to a clean, human-readable price-list name. The stored file path
+  // and its emoji/backslash prefixes must never reach end users.
+  const segment = raw.split(/[\\/]/).pop() ?? raw
+  const withoutExtension = segment.replace(/\.[a-z0-9]+$/i, "").trim()
+  return withoutExtension || null
 }
 
-function formatEurFromCents(cents: number | null, locale: keyof typeof numberLocaleByDashboardLocale) {
-  if (cents === null) return "-"
-  return new Intl.NumberFormat(numberLocaleByDashboardLocale[locale], {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(cents / 100)
+function formatFloorLabel(
+  value: string | null | undefined,
+  unspecified: string
+): string {
+  if (!value || value === "-" || value === "Unknown") return unspecified
+  return value
 }
 
 function badgeVariant(status: string) {
@@ -381,10 +387,10 @@ export function Phase4LiveOperations() {
               "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold",
               data?.source === "supabase"
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                : "border-border bg-background text-muted-foreground"
             )}
           >
-            <Database className="h-3.5 w-3.5" />
+            <BadgeCheck className="h-3.5 w-3.5" />
             {data?.source === "supabase" ? metaCopy.sourceLive : metaCopy.sourceQa}
           </span>
           <span
@@ -549,7 +555,7 @@ export function Phase4LiveOperations() {
                     {copy.common.block} {row.blockName}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {row.floorLabel} · {row.units.length} {copy.summary.units}
+                    {formatFloorLabel(row.floorLabel, metaCopy.unspecifiedFloor)} · {row.units.length} {copy.summary.units}
                   </p>
                 </div>
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(3.2rem,1fr))] gap-1.5">
@@ -588,7 +594,7 @@ export function Phase4LiveOperations() {
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground">{copy.table.blockFloor}</p>
-              <p className="mt-1 text-sm font-bold text-foreground">{selectedUnit.blockName ?? "-"} / {selectedUnit.floorLabel ?? "-"}</p>
+              <p className="mt-1 text-sm font-bold text-foreground">{selectedUnit.blockName ?? "-"} / {formatFloorLabel(selectedUnit.floorLabel, metaCopy.unspecifiedFloor)}</p>
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground">{copy.table.status}</p>
@@ -600,7 +606,7 @@ export function Phase4LiveOperations() {
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground">{copy.table.debt}</p>
-              <p className="mt-1 text-sm font-bold text-foreground">{formatTryFromCents(selectedUnit.balanceCents, locale)}</p>
+              <p className="mt-1 text-sm font-bold text-foreground">{formatDualFromCents(selectedUnit.balanceCents, "TRY")}</p>
             </div>
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground">{copy.table.service}</p>
@@ -626,7 +632,8 @@ export function Phase4LiveOperations() {
               key: "block",
               header: copy.live.tableHeaders[1],
               sortable: true,
-              render: (unit) => `${unit.blockName ?? "-"} / ${unit.floorLabel ?? "-"}`,
+              render: (unit) =>
+                `${unit.blockName ?? "-"} / ${formatFloorLabel(unit.floorLabel, metaCopy.unspecifiedFloor)}`,
             },
             {
               key: "sale",
@@ -642,16 +649,23 @@ export function Phase4LiveOperations() {
               header: copy.live.tableHeaders[3],
               sortable: true,
               sortValue: (unit) => unit.listPriceEurCents,
-              render: (unit) => (
-                <div className="space-y-1">
-                  <p className="font-bold">{formatEurFromCents(unit.listPriceEurCents, locale)}</p>
-                  {unit.priceSource ? (
-                    <p className="max-w-[170px] truncate text-xs text-muted-foreground" title={unit.priceSource}>
-                      {unit.priceSource}
+              render: (unit) => {
+                const priceSourceLabel = cleanPriceSource(unit.priceSource)
+                return (
+                  <div className="space-y-1">
+                    <p className="font-bold">
+                      {unit.listPriceEurCents !== null
+                        ? formatDualFromCents(unit.listPriceEurCents, "EUR")
+                        : "-"}
                     </p>
-                  ) : null}
-                </div>
-              ),
+                    {priceSourceLabel ? (
+                      <p className="max-w-[170px] truncate text-xs text-muted-foreground" title={priceSourceLabel}>
+                        {priceSourceLabel}
+                      </p>
+                    ) : null}
+                  </div>
+                )
+              },
             },
             { key: "owner", header: copy.live.tableHeaders[4], render: (unit) => localizeOperationalValue(unit.ownerName, locale) },
             { key: "resident", header: copy.live.tableHeaders[5], render: (unit) => localizeOperationalValue(unit.residentName, locale) },
@@ -671,7 +685,7 @@ export function Phase4LiveOperations() {
               sortValue: (unit) => unit.balanceCents,
               render: (unit) => (
                 <div className="space-y-1">
-                  <p className="font-bold text-foreground">{formatTryFromCents(unit.balanceCents, locale)}</p>
+                  <p className="font-bold text-foreground">{formatDualFromCents(unit.balanceCents, "TRY")}</p>
                   <StatusBadge variant={badgeVariant(unit.paymentStatus)}>
                     {copy.labels.payment[unit.paymentStatus as keyof typeof copy.labels.payment] ?? unit.paymentStatus}
                   </StatusBadge>
@@ -715,7 +729,7 @@ export function Phase4LiveOperations() {
                       {localizeAuditAction(String(action.action_type ?? "action"))}
                     </p>
                     <p className="mt-1 break-words text-xs text-muted-foreground">
-                      {String(action.entity_external_id ?? action.entity_table ?? copy.live.auditFallback)}
+                      {String(action.entity_external_id ?? copy.live.auditFallback)}
                     </p>
                   </div>
                 ))
