@@ -325,24 +325,19 @@ export default function ListingsPage() {
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
+            {/* F05: reine Info-Karten (Projektumfang) - kein Navigationsziel, daher
+                bewusst nicht interaktiv (kein Audit-Write / kein irref. Ladezustand). */}
             {copy.pillars.map((pillar) => (
-              <DashboardActionButton
+              <div
                 key={pillar.title}
-                actionType="portfolio.pillar.view"
-                ariaLabel={pillar.title}
-                className="rounded-xl border border-border/70 bg-muted/40 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
-                entityTable="units"
-                entityExternalId={pillar.title}
-                metadata={{ detail: pillar.detail, portfolio: portfolioDisplayName }}
-                successLabel={copy.actions.detailOpen}
-                title={pillar.title}
+                className="rounded-xl border border-border/70 bg-muted/40 p-3 text-left"
               >
                 <div className="flex items-center gap-2">
                   <pillar.icon className="h-4 w-4 text-primary" />
                   <h3 className="text-sm font-bold text-foreground">{pillar.title}</h3>
                 </div>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">{pillar.detail}</p>
-              </DashboardActionButton>
+              </div>
             ))}
           </div>
         </div>

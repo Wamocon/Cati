@@ -479,7 +479,7 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
       sourcePending: "Quelle ausstehend",
       unknown: "Unbekannt",
     },
-    filters: { debtOnly: "Mit Schuld", reset: "Filter zurücksetzen", search: "Wohnung, Eigentümer, Bewohner oder Block suchen" },
+    filters: { debtOnly: "Mit Rückstand", reset: "Filter zurücksetzen", search: "Wohnung, Eigentümer, Bewohner oder Block suchen" },
     import: {
       batchOpened: "Paket geöffnet",
       batchTitle: "Datenpaket",
@@ -512,7 +512,7 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
       auditFallback: "Audit-Datensatz",
       auditTitle: "Letzte Audit-Datensätze",
       commit: "Änderung anfragen",
-      debtOnly: "Mit Schuld",
+      debtOnly: "Mit Rückstand",
       description: "Block, Etage, Wohnung, Eigentümer, Bewohner, Schuld, Service und Importdaten werden in einer Operationsansicht geführt. Jede Aktion wird mit Berechtigungs- und Auditkontext protokolliert.",
       filterMatched: "{count} Datensätze gefunden.",
       filterMatchedSuffix: "Für schnelle Nutzung zeigt die Tabelle die ersten 80 Zeilen; alle Datensätze bleiben in Suche und Filtern enthalten.",
@@ -523,7 +523,7 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
       requestError: "Aktion konnte nicht gespeichert werden. Berechtigung oder Verbindung prüfen.",
       requestSaved: "Aktion gespeichert.",
       search: "Wohnung, Eigentümer, Bewohner oder Block suchen",
-      tableHeaders: ["Wohnung", "Block/Etage", "Verkauf", "Liste", "Eigentümer", "Bewohner", "Status", "Schuld", "Service"],
+      tableHeaders: ["Wohnung", "Block/Etage", "Verkauf", "Liste", "Eigentümer", "Bewohner", "Status", "Rückstand", "Service"],
       title: "Wohnungsmatrix-Datensätze",
     },
     matrix: {
@@ -557,7 +557,7 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
     selectedUnit: {
       accessOpen: "Zugangsstatus öffnen",
       blockSummary: "Block {block}, Etage {floor} · {type}",
-      currentDebt: "Schuld",
+      currentDebt: "Rückstand",
       listPrice: "Listenpreis",
       openService: "Offener Service",
       priceSource: "Quelle",
@@ -578,7 +578,7 @@ export const unitMatrixCopy: Record<DashboardLocale, UnitMatrixCopy> = {
     table: {
       access: "Zugang",
       blockFloor: "Block/Etage",
-      debt: "Schuld",
+      debt: "Rückstand",
       open: "offen",
       owner: "Eigentümer",
       price: "Listenpreis",

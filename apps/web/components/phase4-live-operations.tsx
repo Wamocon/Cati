@@ -163,8 +163,15 @@ function unitTileTone(status: string) {
   if (status === "vacant") return "border-sky-500/30 bg-sky-500/12 text-sky-800 dark:text-sky-200"
   if (status === "reserved") return "border-violet-500/30 bg-violet-500/12 text-violet-800 dark:text-violet-200"
   if (status === "maintenance") return "border-amber-500/30 bg-amber-500/12 text-amber-800 dark:text-amber-200"
-  return "border-rose-500/30 bg-rose-500/12 text-rose-800 dark:text-rose-200"
+  // "blocked" (Gesperrt/Restriktion) bleibt bewusst rot.
+  if (status === "blocked") return "border-rose-500/30 bg-rose-500/12 text-rose-800 dark:text-rose-200"
+  // F01: fehlender/unbekannter Status ist neutral (grau), nicht rot -
+  // ein Datenlücken-Sentinel darf nicht wie eine operative Sperre aussehen.
+  return "border-slate-400/30 bg-slate-400/12 text-slate-700 dark:text-slate-300"
 }
+
+// F01: Status-Farbdefinition für die sichtbare Matrix-Legende (Reihenfolge = Anzeige).
+const MATRIX_TONE_STATUSES = ["occupied", "vacant", "reserved", "maintenance", "blocked"] as const
 
 function matchesQuery(unit: Phase4Unit, query: string) {
   const haystack = [
@@ -334,6 +341,25 @@ export function Phase4LiveOperations() {
   const latestActions = data?.recentActions.slice(0, 3) ?? []
   const readiness = data?.importSummary.readinessRate ?? 0
 
+  // F03: Audit-Einträge zur Laufzeit lokalisieren statt rohe action_type-Keys /
+  // bereits übersetzte (eingefrorene) Titel-Strings aus der DB anzuzeigen.
+  const localizeAuditAction = (actionType: string): string => {
+    switch (actionType) {
+      case "unit.detail.view":
+        return copy.actions.detailOpen
+      case "unit.debt.view":
+        return copy.actions.debtOpen
+      case "unit.service.view":
+        return copy.actions.serviceHistory
+      default:
+        return actionType
+          .split(/[._]/)
+          .filter(Boolean)
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+    }
+  }
+
   return (
     <Card3D glow={false} className="overflow-hidden">
       <div className="flex flex-col gap-4 border-b border-border/70 pb-4 lg:flex-row lg:items-start lg:justify-between">
@@ -494,6 +520,23 @@ export function Phase4LiveOperations() {
           </StatusBadge>
         </div>
 
+        {/* F01: sichtbare Farb-Legende, damit Kachelfarben (inkl. rot=Gesperrt, grau=Unbekannt) eindeutig sind. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5" aria-label={copy.table.status}>
+          {MATRIX_TONE_STATUSES.map((status) => (
+            <span
+              key={status}
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground"
+            >
+              <span aria-hidden="true" className={cn("h-3 w-3 rounded-sm border", unitTileTone(status))} />
+              {copy.labels.flat[status]}
+            </span>
+          ))}
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <span aria-hidden="true" className={cn("h-3 w-3 rounded-sm border", unitTileTone("unknown"))} />
+            {copy.common.unknown}
+          </span>
+        </div>
+
         {matrixRows.length ? (
           <div className="mt-4 max-h-[34rem] space-y-3 overflow-y-auto pr-1">
             {matrixRows.map((row) => (
@@ -516,7 +559,7 @@ export function Phase4LiveOperations() {
                       type="button"
                       aria-label={`${unit.unitNo} ${copy.actions.detailOpen}`}
                       aria-pressed={selectedUnit?.id === unit.id}
-                      title={`${unit.unitNo} · ${copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? unit.occupancyStatus}`}
+                      title={`${unit.unitNo} · ${copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? copy.common.unknown}`}
                       onClick={() => setSelectedUnitId(unit.id)}
                       className={cn(
                         "min-h-9 rounded-md border px-1.5 py-1 text-[11px] font-black transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
@@ -551,7 +594,7 @@ export function Phase4LiveOperations() {
               <p className="text-xs font-bold uppercase text-muted-foreground">{copy.table.status}</p>
               <div className="mt-1">
                 <StatusBadge variant={badgeVariant(selectedUnit.occupancyStatus)}>
-                  {copy.labels.flat[selectedUnit.occupancyStatus as keyof typeof copy.labels.flat] ?? selectedUnit.occupancyStatus}
+                  {copy.labels.flat[selectedUnit.occupancyStatus as keyof typeof copy.labels.flat] ?? copy.common.unknown}
                 </StatusBadge>
               </div>
             </div>
@@ -571,6 +614,9 @@ export function Phase4LiveOperations() {
         <DataTable
           data={visibleUnits}
           pageSize={20}
+          rowKey={(unit) => unit.id}
+          rowLabel={(unit) => `${unit.unitNo} ${copy.actions.detailOpen}`}
+          onRowClick={(unit) => setSelectedUnitId(unit.id)}
           searchValue={(unit) =>
             `${unit.unitNo} ${unit.blockName ?? ""} ${unit.floorLabel ?? ""} ${unit.ownerName ?? ""} ${unit.residentName ?? ""} ${unit.saleStatus} ${unit.occupancyStatus} ${unit.paymentStatus}`
           }
@@ -614,7 +660,7 @@ export function Phase4LiveOperations() {
               header: copy.live.tableHeaders[6],
               render: (unit) => (
                 <StatusBadge variant={badgeVariant(unit.occupancyStatus)}>
-                  {copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? unit.occupancyStatus}
+                  {copy.labels.flat[unit.occupancyStatus as keyof typeof copy.labels.flat] ?? copy.common.unknown}
                 </StatusBadge>
               ),
             },
@@ -666,10 +712,10 @@ export function Phase4LiveOperations() {
                 latestActions.map((action) => (
                   <div key={String(action.id)} className="min-w-0 rounded-lg bg-background/70 p-2">
                     <p className="break-words text-xs font-bold text-foreground">
-                      {String(action.action_type ?? "action")}
+                      {localizeAuditAction(String(action.action_type ?? "action"))}
                     </p>
                     <p className="mt-1 break-words text-xs text-muted-foreground">
-                      {String(action.title ?? action.entity_external_id ?? copy.live.auditFallback)}
+                      {String(action.entity_external_id ?? action.entity_table ?? copy.live.auditFallback)}
                     </p>
                   </div>
                 ))
