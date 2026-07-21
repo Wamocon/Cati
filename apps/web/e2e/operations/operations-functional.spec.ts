@@ -20,13 +20,6 @@ test.describe("Functional tests - operational workflows", () => {
     await expect(page.locator("main").getByRole("button").first()).toBeVisible()
   })
 
-  test("offline sync queue is visible for staff role", async ({ page }) => {
-    await openDashboardAs(page, "staff", "/tr/dashboard/offline")
-    await expect(page.locator("main")).toContainText(
-      /Çevrimdışı|Bekleyen işlem|Eşitle|Sahada güvenli|Offline|Sync|Queue|Senkron/i
-    )
-  })
-
   test("document upload policy is visible on documents page", async ({ page }) => {
     await openDashboardAs(page, "manager", "/tr/dashboard/documents")
     await expect(page.locator("main")).toContainText(/Belge|Document|Upload|Vault/i)

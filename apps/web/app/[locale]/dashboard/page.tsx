@@ -402,7 +402,6 @@ const simulationActionIcons = {
   users: Users,
   settings: Network,
   communications: MessageSquareText,
-  offline_sync: Network,
 } satisfies Record<Resource, LucideIcon>
 
 const simulationActionResourceOrder: Resource[] = [
@@ -413,7 +412,6 @@ const simulationActionResourceOrder: Resource[] = [
   "documents",
   "reports",
   "communications",
-  "offline_sync",
   "users",
   "settings",
   "leads",

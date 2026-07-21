@@ -46,9 +46,7 @@ import {
   guestLifecycleEvents,
   integrationProviders,
   messageTemplates,
-  mobileWebCapabilities,
   notificationDeliveries,
-  offlineSyncQueue,
   paymentPlans,
   phaseDeliveryRecords,
   purchaseChecklist,
@@ -824,36 +822,6 @@ function buildCommandIndex(role: Role): CommandItem[] {
         scope: "compliance",
         priority: record.status === "blocked" ? "critical" : record.status === "review_required" || record.status === "partner_review" ? "high" : "normal",
         keywords: `${record.id} ${record.buyerName} ${record.nationality} ${record.buyerGoal} ${record.targetUnit} ${record.status} ${record.legalPartner} ${record.nextAction}`,
-      })
-    })
-  }
-
-  if (canView(role, "offline_sync")) {
-    mobileWebCapabilities.forEach((item) => {
-      add({
-        id: `mobile-capability-${item.id}`,
-        title: item.title,
-        subtitle: `${item.id} / ${item.surface}`,
-        meta: `${item.status} / ${item.priority}`,
-        href: "/dashboard/offline",
-        resource: "offline_sync",
-        scope: "mobile",
-        priority: item.status === "needs_device_test" ? "high" : "normal",
-        keywords: `${item.id} ${item.title} ${item.audience} ${item.surface} ${item.status} ${item.description} ${item.evidence} ${item.qaSignal}`,
-      })
-    })
-
-    offlineSyncQueue.forEach((item) => {
-      add({
-        id: `offline-sync-${item.id}`,
-        title: item.action,
-        subtitle: `${item.id} / ${item.module}`,
-        meta: `${item.role} / ${item.status}`,
-        href: "/dashboard/offline",
-        resource: "offline_sync",
-        scope: "mobile",
-        priority: item.status === "conflict" ? "critical" : item.status === "queued" ? "high" : "normal",
-        keywords: `${item.id} ${item.role} ${item.module} ${item.action} ${item.status} ${item.device} ${item.retryPolicy} ${item.dataScope} ${item.guardrail}`,
       })
     })
   }

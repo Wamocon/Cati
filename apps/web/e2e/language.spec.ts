@@ -25,11 +25,9 @@ async function expectNoTurkishLeakage(page: import("@playwright/test").Page) {
     "Şifresiz e-posta daveti",
     "Müşteri & Malik CRM",
     "Erişim & Uyum",
-    "Mobil Web & Offline Sync",
     "AI iletişim önceliği",
     "Kapı karar motoru",
     "Faz 12 kabiliyet panosu",
-    "Offline güvenlik sınırı",
     "Giriş hazırlığı komuta panosu",
     "Çıkış, erişim ve mutabakat kontrolü",
     "Gezinti ve online tur akışı",
@@ -138,10 +136,6 @@ test.describe("Language access", () => {
         name: "Alle prüfbereiten Fälle an einem Ort steuern",
       })
     ).toBeVisible()
-    await expectNoTurkishLeakage(page)
-
-    await page.goto("/ru/dashboard/offline")
-    await expect(page.getByRole("heading", { name: "Безопасная работа на объекте" })).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/en/dashboard/calendar")

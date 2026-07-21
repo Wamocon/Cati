@@ -10,7 +10,6 @@ import type {
   MessageTemplateRecord,
   NotificationDeliveryRecord,
   NotificationRuleRecord,
-  OfflineSyncRecord,
   ServiceTicket,
   TurnoverTaskRecord,
 } from "./site-management-data"
@@ -207,13 +206,4 @@ export function visibleDocumentsForRole(
     ownerName: scopeLabel,
     retentionRule: document.status === "verified" ? "Portalda görüntülenebilir" : "Yönetim onayı bekliyor",
   }))
-}
-
-export function visibleOfflineSyncQueueForRole(
-  role: Role,
-  records: OfflineSyncRecord[]
-) {
-  if (role === "admin" || role === "manager") return records
-  if (role === "staff") return records.filter((record) => record.role === "staff")
-  return []
 }

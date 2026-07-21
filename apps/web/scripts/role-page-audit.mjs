@@ -106,14 +106,6 @@ const routes = [
       /[İI]leti[sş]im|Communication|Message|Notification|Kommunikation|сообщ/i,
   },
   {
-    path: "/dashboard/offline",
-    resource: "offline_sync",
-    terminalContent:
-      /Offline queue|Sync policy|No queued|Connection state|Replay|Unavailable/i,
-    expectedContent:
-      /[ÇC]evrimd[ıi][sş][ıi]|E[sş]itle|Offline|Sync|Queue|Senkron|Synchron|офлайн/i,
-  },
-  {
     path: "/dashboard/users",
     resource: "users",
     terminalContent:
@@ -146,7 +138,6 @@ const roleAccess = {
     "calendar",
     "documents",
     "communications",
-    "offline_sync",
   ],
   owner: [
     "dashboard",
@@ -155,7 +146,6 @@ const roleAccess = {
     "finance",
     "documents",
     "communications",
-    "offline_sync",
   ],
   tenant: [
     "dashboard",
@@ -163,7 +153,6 @@ const roleAccess = {
     "calendar",
     "documents",
     "communications",
-    "offline_sync",
   ],
 }
 

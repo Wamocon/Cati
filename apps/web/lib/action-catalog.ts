@@ -127,7 +127,6 @@ function fallbackResource(entityTable: string | null): Resource {
     entityTable === "message_templates" ||
     entityTable === "guest_lifecycle_events"
   ) return "communications"
-  if (entityTable === "mobile_web_capabilities" || entityTable === "offline_sync_jobs") return "offline_sync"
   if (entityTable === "integration_providers") return "settings"
   if (entityTable === "ai_recommendations" || entityTable === "ai_image_workflows") return "reports"
   if (entityTable === "access" || entityTable === "compliance") return "eids_compliance"

@@ -57,7 +57,6 @@ const iconsByResource: Record<Resource, React.ElementType> = {
   users: UserCog,
   settings: Settings,
   communications: MessageSquareText,
-  offline_sync: ShieldCheck,
 }
 
 const menu: MenuItem[] = dashboardRoutes.map((item) => ({

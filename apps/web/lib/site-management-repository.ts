@@ -64,7 +64,6 @@ import {
   messageTemplates,
   mobileWebCapabilities,
   notificationDeliveries,
-  offlineSyncQueue,
   paymentPlans,
   roleCoverage,
   roleOnboardingPlans,
@@ -4126,15 +4125,6 @@ function localSeedSearch(
       summary: `${item.audience} ${item.surface} ${item.status} ${item.priority} ${item.description} ${item.evidence}`,
       rank: 1,
       metadata: { surface: item.surface, status: item.status },
-    })),
-    ...offlineSyncQueue.map((item) => ({
-      entityTable: "offline_sync_jobs",
-      entityId: null,
-      entityExternalId: item.id,
-      title: `${item.id} ${item.action}`,
-      summary: `${item.role} ${item.module} ${item.status} ${item.device} ${item.retryPolicy} ${item.dataScope} ${item.guardrail}`,
-      rank: 1,
-      metadata: { role: item.role, module: item.module, status: item.status },
     })),
     ...integrationProviders.map((item) => ({
       entityTable: "integration_providers",

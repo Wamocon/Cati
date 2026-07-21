@@ -22,7 +22,6 @@ export const accessRoles = [
       "/dashboard/documents",
       "/dashboard/reports",
       "/dashboard/communications",
-      "/dashboard/offline",
       "/dashboard/users",
       "/dashboard/settings",
     ],
@@ -41,7 +40,6 @@ export const accessRoles = [
       "/dashboard/documents",
       "/dashboard/reports",
       "/dashboard/communications",
-      "/dashboard/offline",
       "/dashboard/users",
       "/dashboard/settings",
     ],
@@ -54,17 +52,17 @@ export const accessRoles = [
   {
     role: "staff",
     label: "Staff",
-    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/documents", "/dashboard/communications", "/dashboard/offline"],
+    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/documents", "/dashboard/communications"],
   },
   {
     role: "owner",
     label: "Owner",
-    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/finance", "/dashboard/documents", "/dashboard/communications", "/dashboard/offline"],
+    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/finance", "/dashboard/documents", "/dashboard/communications"],
   },
   {
     role: "tenant",
     label: "Tenant",
-    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/documents", "/dashboard/communications", "/dashboard/offline"],
+    expectedLinks: ["/dashboard", "/dashboard/tickets", "/dashboard/calendar", "/dashboard/documents", "/dashboard/communications"],
   },
 ] as const
 
@@ -79,7 +77,6 @@ export const dashboardModules = [
   { path: "/dashboard/documents", name: "Documents", expectedText: /Belge|Document|Upload|Vault/i },
   { path: "/dashboard/reports", name: "Reports", expectedText: /Rapor|Report|Analytics|AI/i },
   { path: "/dashboard/communications", name: "Communication", expectedText: /İletişim merkezi|İletişim|Ileti|Communication|Message|Notification/i },
-  { path: "/dashboard/offline", name: "Offline Sync", expectedText: /Çevrimdışı|Eşitle|Offline|Sync|Queue|Senkron/i },
   { path: "/dashboard/users", name: "Users and Roles", expectedText: /User|Role|Kullan|Personel/i },
   { path: "/dashboard/settings", name: "Settings", expectedText: /Setting|Ayar|Platform|Provider/i },
 ] as const
@@ -105,6 +102,5 @@ export const apiContracts = [
   { path: "/api/site-management/document-packets", method: "GET", role: "manager", expectedStatus: 200 },
   { path: "/api/site-management/document-uploads", method: "GET", role: "manager", expectedStatus: 200 },
   { path: "/api/site-management/integrations", method: "GET", role: "manager", expectedStatus: 200 },
-  { path: "/api/site-management/offline-sync", method: "GET", role: "staff", expectedStatus: 200 },
   { path: "/api/ai/premium", method: "GET", role: "manager", expectedStatus: 200 },
 ] as const

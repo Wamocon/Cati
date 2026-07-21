@@ -21,8 +21,6 @@ import {
   resolveWorkflowAction,
   type WorkflowOrigin,
 } from "@/lib/action-catalog"
-import { visibleOfflineSyncQueueForRole } from "@/lib/role-scoped-views"
-import { offlineSyncQueue } from "@/lib/site-management-data"
 import { isTicketAssignee } from "@/lib/ticket-routing"
 import {
   decideTicketTransition,
@@ -531,22 +529,6 @@ export async function POST(request: NextRequest) {
       403,
       "ACTION_CREATE_FORBIDDEN"
     )
-  }
-
-  if (input.entityTable === "offline_sync_jobs") {
-    const allowedQueue = visibleOfflineSyncQueueForRole(profile.role, offlineSyncQueue)
-    const requestedId = input.entityExternalId ?? input.entityId
-    const canAccessQueueItem = Boolean(
-      requestedId && allowedQueue.some((item) => item.id === requestedId)
-    )
-
-    if (!canAccessQueueItem) {
-      return jsonError(
-        "Your role is not allowed to access this offline sync item.",
-        403,
-        "ACTION_ENTITY_FORBIDDEN"
-      )
-    }
   }
 
   try {

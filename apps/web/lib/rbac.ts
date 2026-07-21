@@ -28,7 +28,6 @@ export const resources = [
   "users",
   "settings",
   "communications",
-  "offline_sync",
 ] as const
 
 export type Resource = (typeof resources)[number]
@@ -196,7 +195,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     ...manage("users"),
     ...manage("settings"),
     ...manage("communications"),
-    ...manage("offline_sync"),
   ],
   manager: [
     ...view("dashboard"),
@@ -227,7 +225,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("users", "view"),
     permission("settings", "view"),
     ...crud("communications"),
-    ...crud("offline_sync"),
   ],
   accountant: [
     ...view("dashboard"),
@@ -256,9 +253,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("documents", "create"),
     permission("communications", "view"),
     permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
-    permission("offline_sync", "update"),
   ],
   owner: [
     ...view("dashboard"),
@@ -273,8 +267,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("finance", "view"),
     permission("communications", "view"),
     permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
   ],
   tenant: [
     ...view("dashboard"),
@@ -286,8 +278,6 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("documents", "create"),
     permission("communications", "view"),
     permission("communications", "create"),
-    permission("offline_sync", "view"),
-    permission("offline_sync", "create"),
   ],
 }
 

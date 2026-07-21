@@ -231,8 +231,7 @@
       "reports": "Reports",
       "communications": "Communication",
       "users": "Users & Roles",
-      "settings": "Settings",
-      "offline_sync": "Offline Sync"
+      "settings": "Settings"
     },
     "modules": {
       "activeListings": "Active Listings",

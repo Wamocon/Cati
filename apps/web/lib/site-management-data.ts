@@ -4,6 +4,12 @@ import {
   newLevelPremiumUnits,
   type NewLevelPremiumSaleStatus,
 } from "./new-level-premium-data"
+import {
+  formatTry,
+  formatTryShort,
+  formatEur,
+  formatEurShort,
+} from "./currency"
 
 // Deterministic local backend data for the residential site-management CRM.
 // The model is shaped around the client request: 769 flats, service, finance,
@@ -498,19 +504,6 @@ export interface MobileWebCapabilityRecord {
   description: string
   evidence: string
   qaSignal: string
-}
-
-export interface OfflineSyncRecord {
-  id: string
-  role: "manager" | "staff" | "owner" | "tenant"
-  module: "tickets" | "calendar" | "documents" | "communications" | "dashboard"
-  action: string
-  status: "synced" | "queued" | "conflict" | "read_only_cached"
-  device: string
-  lastSyncAt: string
-  retryPolicy: string
-  dataScope: string
-  guardrail: string
 }
 
 export interface IntegrationProviderRecord {
@@ -2460,69 +2453,6 @@ export const mobileWebCapabilities: MobileWebCapabilityRecord[] = [
   },
 ]
 
-export const offlineSyncQueue: OfflineSyncRecord[] = [
-  {
-    id: "OFF-9001",
-    role: "staff",
-    module: "tickets",
-    action: "Upload before/after proof for TASK-204",
-    status: "queued",
-    device: "Technician Android Chrome",
-    lastSyncAt: isoDaysFromAnchor(0, 9),
-    retryPolicy: "Retry when online, then manager review after 3 failed attempts",
-    dataScope: "Assigned task only, no finance values",
-    guardrail: "Cannot close job until media reaches server",
-  },
-  {
-    id: "OFF-9002",
-    role: "manager",
-    module: "dashboard",
-    action: "Read daily operation snapshot",
-    status: "read_only_cached",
-    device: "Manager iPhone Safari",
-    lastSyncAt: isoDaysFromAnchor(0, 8),
-    retryPolicy: "Refresh on reconnect",
-    dataScope: "KPI snapshot, no write action",
-    guardrail: "Stale badge remains visible until refresh",
-  },
-  {
-    id: "OFF-9003",
-    role: "tenant",
-    module: "communications",
-    action: "Draft support message from portal thread",
-    status: "queued",
-    device: "Resident mobile browser",
-    lastSyncAt: isoDaysFromAnchor(0, 10),
-    retryPolicy: "Send once online, preserve local timestamp",
-    dataScope: "Own booking/thread only",
-    guardrail: "No broadcast or staff thread access",
-  },
-  {
-    id: "OFF-9004",
-    role: "owner",
-    module: "documents",
-    action: "Open monthly owner statement",
-    status: "synced",
-    device: "Owner tablet browser",
-    lastSyncAt: isoDaysFromAnchor(0, 11),
-    retryPolicy: "Use secure cached copy for 24 hours",
-    dataScope: "Own unit documents only",
-    guardrail: "Expired or changed documents require fresh server check",
-  },
-  {
-    id: "OFF-9005",
-    role: "manager",
-    module: "calendar",
-    action: "Resolve checkout/deposit conflict",
-    status: "conflict",
-    device: "Operations desktop fallback",
-    lastSyncAt: isoDaysFromAnchor(0, 12),
-    retryPolicy: "Manual compare before write",
-    dataScope: "Booking BKG-508 and settlement SET-508",
-    guardrail: "Deposit refund stays blocked until finance approval",
-  },
-]
-
 export const integrationProviders: IntegrationProviderRecord[] = [
   {
     id: "INT-SUPA-01",
@@ -3520,33 +3450,9 @@ export const depositLabels: Record<DepositStatus, string> = {
   refund_ready: "İade hazır",
 }
 
-export function formatTry(amount: number) {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-export function formatTryShort(amount: number) {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ₺`
-  if (amount >= 1_000) return `${Math.round(amount / 1_000)}K ₺`
-  return formatTry(amount)
-}
-
-export function formatEur(amount: number) {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-export function formatEurShort(amount: number) {
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M €`
-  if (amount >= 1_000) return `${Math.round(amount / 1_000)}K €`
-  return formatEur(amount)
-}
+// Currency formatting now lives in ./currency (single source of truth, adds
+// dual Lira+Euro output). Re-exported here so existing importers keep working.
+export { formatTry, formatTryShort, formatEur, formatEurShort }
 
 export function getBlockOverview(): BlockOverview[] {
   return blockNames.map((block) => {
@@ -3755,16 +3661,13 @@ export function getReportSummary() {
   }
 }
 
-export function getMobileWebSummary(records = offlineSyncQueue) {
+export function getMobileWebSummary() {
   return {
     capabilities: mobileWebCapabilities.length,
     ready: mobileWebCapabilities.filter((item) => item.status === "ready").length,
     providerReady: mobileWebCapabilities.filter((item) => item.status === "provider_ready").length,
     needsDeviceTest: mobileWebCapabilities.filter((item) => item.status === "needs_device_test").length,
     simulation: mobileWebCapabilities.filter((item) => item.status === "simulation").length,
-    queuedWrites: records.filter((item) => item.status === "queued").length,
-    conflicts: records.filter((item) => item.status === "conflict").length,
-    readOnlyCached: records.filter((item) => item.status === "read_only_cached").length,
   }
 }
 

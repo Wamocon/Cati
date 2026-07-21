@@ -18,16 +18,6 @@ const sourcePaths = {
     process.cwd(),
     "../../supabase/migrations/00000000000033_move_handover_workflow.sql"
   ),
-  m35: resolve(
-    process.cwd(),
-    "../../supabase/migrations/00000000000035_offline_sync_commands.sql"
-  ),
-  rbac: resolve(process.cwd(), "lib/rbac.ts"),
-  offlineRepository: resolve(process.cwd(), "lib/offline-sync-repository.ts"),
-  offlineExperience: resolve(
-    process.cwd(),
-    "components/offline-sync/offline-experience.tsx"
-  ),
   residentTabs: resolve(
     process.cwd(),
     "components/booking-lifecycle/resident-journey-tabs.tsx"
@@ -337,7 +327,7 @@ async function openAppointmentActions(page: Page): Promise<Locator> {
   return row
 }
 
-test.describe("UC18 booking, handover and offline static business contracts", () => {
+test.describe("UC18 booking and handover static business contracts", () => {
   test("M32 carries a resident hold into a confirmed reservation that M33 can offer as a candidate", () => {
     const m32 = readSource("m32")
     const m33 = readSource("m33")
@@ -732,40 +722,6 @@ test.describe("UC18 booking, handover and offline static business contracts", ()
     expect(reschedule).toContain("public.reschedule_resource_booking_command")
   })
 
-  test("offline-safe commands use the same role matrix in SQL, repository, UI and RBAC", () => {
-    const m35 = readSource("m35")
-    const repository = readSource("offlineRepository")
-    const experience = readSource("offlineExperience")
-    const rbac = readSource("rbac")
-    const accountantStart = rbac.indexOf("accountant: [")
-    const accountantEnd = rbac.indexOf("staff: [", accountantStart)
-
-    expect(m35).toMatch(
-      /p_command_type = 'ticket\.create'[\s\S]*v_role NOT IN \('admin', 'manager', 'owner', 'tenant'\)/i
-    )
-    expect(m35).toMatch(
-      /v_role NOT IN \('admin', 'manager', 'staff'\)[\s\S]*Field notes require assigned staff\/manager/i
-    )
-    expect(repository).toMatch(
-      /ticket\.create[\s\S]*!\["admin", "manager", "owner", "tenant"\]\.includes\(ownerScope\.role\)/i
-    )
-    expect(repository).toMatch(
-      /ticket\.field_note\.append[\s\S]*!\["admin", "staff", "manager"\]\.includes\(ownerScope\.role\)/i
-    )
-    expect(experience).toMatch(
-      /\["admin", "manager", "owner", "tenant"\]\.includes\([\s\S]*user\.role/i
-    )
-    expect(experience).toMatch(
-      /\["admin", "manager", "staff"\]\.includes\(user\.role\)/i
-    )
-    expect(accountantStart).toBeGreaterThan(-1)
-    expect(accountantEnd).toBeGreaterThan(accountantStart)
-    expect(rbac.slice(accountantStart, accountantEnd)).not.toContain(
-      '"offline_sync"'
-    )
-    expect(repository).toContain('ownerScope.role === "accountant"')
-  })
-
   test("Turkish resident-calendar labels are friendly and suppress raw repository fallback copy", () => {
     const tabs = readSource("residentTabs")
     const bookingSource = readSource("bookingExperience")
@@ -1134,7 +1090,7 @@ test.describe("UC18 mocked browser journeys", () => {
     await expect(row.getByTestId("handover-access-prepare")).toHaveCount(0)
   })
 
-  test("accountant is denied handover and offline access without API calls", async ({
+  test("accountant is denied handover access without API calls", async ({
     context,
     page,
   }) => {
@@ -1142,8 +1098,6 @@ test.describe("UC18 mocked browser journeys", () => {
     const unitSecret = "Gizli Daire Z-999"
     let moveHandoverGetCount = 0
     let moveHandoverPostCount = 0
-    let offlineRequestCount = 0
-    let offlinePostCount = 0
 
     await installEmptyBookingRoute(page, "accountant")
     await context.route(
@@ -1178,36 +1132,5 @@ test.describe("UC18 mocked browser journeys", () => {
     }
     expect(moveHandoverGetCount).toBe(0)
     expect(moveHandoverPostCount).toBe(0)
-
-    await context.route(
-      "**/api/site-management/offline-sync**",
-      async (route) => {
-        offlineRequestCount += 1
-        if (route.request().method() === "POST") offlinePostCount += 1
-        await fulfillJson(route, { error: { code: "OFFLINE_FORBIDDEN" } }, 403)
-      }
-    )
-    await openDashboardAs(page, "accountant", "/tr/dashboard/offline")
-    await expect(page).toHaveURL(/\/tr\/dashboard$/)
-    await expect(main).not.toContainText(residentSecret)
-    await expect(main).not.toContainText(unitSecret)
-    await expect(
-      main.getByRole("heading", { name: "Sahada güvenli çalışma" })
-    ).toHaveCount(0)
-    await expect(
-      main.getByRole("heading", { name: "Güvenli çevrimdışı işlem ekle" })
-    ).toHaveCount(0)
-    await expect(main.getByLabel("İşlem")).toHaveCount(0)
-    await expect(
-      main.getByRole("option", { name: "Normal bilet oluştur" })
-    ).toHaveCount(0)
-    await expect(
-      main.getByRole("option", { name: "Saha notu ekle" })
-    ).toHaveCount(0)
-    await expect(
-      main.getByRole("button", { name: "Kuyruğa ekle" })
-    ).toHaveCount(0)
-    expect(offlineRequestCount).toBe(0)
-    expect(offlinePostCount).toBe(0)
   })
 })

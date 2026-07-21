@@ -236,8 +236,7 @@
       "communications": "Kommunikation",
       "users": "Benutzer & Rollen",
       "settings": "Einstellungen",
-      "deals": "Workflows",
-      "offline_sync": "Offline-Sync"
+      "deals": "Workflows"
     },
     "modules": {
       "activeListings": "Aktive Inserate",

@@ -19,10 +19,6 @@ const migrationPaths = {
     process.cwd(),
     "../../supabase/migrations/00000000000034_calendar_ics_feeds.sql"
   ),
-  m35: resolve(
-    process.cwd(),
-    "../../supabase/migrations/00000000000035_offline_sync_commands.sql"
-  ),
 } as const
 
 const legacyHandoverTables = [
@@ -217,16 +213,15 @@ test.describe("Window 3 booking and handover static security gate", () => {
     }
   })
 
-  test("ordered migrations 22, 32, 33, 34 and 35 do not reintroduce the retired attack paths", () => {
+  test("ordered migrations 22, 32, 33 and 34 do not reintroduce the retired attack paths", () => {
     const m22 = readMigration("m22")
     const m32 = readMigration("m32")
     const m33 = readMigration("m33")
     const m34 = readMigration("m34")
-    const m35 = readMigration("m35")
     const boundary = "\n-- Window 3 post-order security boundary --\n"
-    const orderedMigrations = [m22, m32, m33, m34, m35].join(boundary)
-    const postReservationHardening = [m32, m33, m34, m35].join(boundary)
-    const postHandoverHardening = [m33, m34, m35].join(boundary)
+    const orderedMigrations = [m22, m32, m33, m34].join(boundary)
+    const postReservationHardening = [m32, m33, m34].join(boundary)
+    const postHandoverHardening = [m33, m34].join(boundary)
 
     expect(orderedMigrations).toContain(postReservationHardening)
     for (const targets of tableWideSelectTargets(postReservationHardening)) {
@@ -274,14 +269,6 @@ test.describe("Window 3 booking and handover static security gate", () => {
           "preview_calendar_import_command",
         ],
       ],
-      [
-        m35,
-        [
-          "execute_offline_sync_command",
-          "resolve_offline_sync_conflict_command",
-          "list_my_offline_sync_receipts",
-        ],
-      ],
     ]
     for (const [migration, commands] of supportedCommands) {
       for (const command of commands) {
@@ -315,14 +302,6 @@ test.describe("Window 3 booking and handover static security gate", () => {
           "calendar_profile_can_manage_site",
           "calendar_feed_is_current",
           "calendar_reservation_audience_profile",
-        ],
-      ],
-      [
-        m35,
-        [
-          "offline_sync_request_fingerprint",
-          "offline_sync_canonical_jsonb",
-          "offline_sync_domain_key",
         ],
       ],
     ]
