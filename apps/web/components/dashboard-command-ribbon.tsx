@@ -26,6 +26,7 @@ import { Link, usePathname, useRouter } from "@/app/navigation"
 import { AppDialog } from "@/components/app-dialog"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
+import { formatDual } from "@/lib/currency"
 import { hasPermission, type Resource, type Role } from "@/lib/rbac"
 import { normalizeSearchText } from "@/lib/search"
 import {
@@ -40,8 +41,6 @@ import {
   documentPackets,
   documentVault,
   flats,
-  formatEur,
-  formatTry,
   getDebtAccounts,
   guestLifecycleEvents,
   integrationProviders,
@@ -506,7 +505,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `flat-${flat.id}`,
         title: flat.displayNumber,
         subtitle: `${flat.block} blok / ${flat.type}`,
-        meta: `${flat.saleStatus} / ${flat.accessStatus} / ${formatTry(flat.balanceTry)}`,
+        meta: `${flat.saleStatus} / ${flat.accessStatus} / ${formatDual(flat.balanceTry)}`,
         href: "/dashboard/listings",
         resource: "listings",
         scope: "portfolio",
@@ -555,7 +554,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `catalog-${service.id}`,
         title: service.name,
         subtitle: `${service.code} / ${service.team}`,
-        meta: `${formatTry(service.basePriceTry)} / SLA ${service.slaHours} saat`,
+        meta: `${formatDual(service.basePriceTry)} / SLA ${service.slaHours} saat`,
         href: "/dashboard/tickets",
         resource: "tickets",
         scope: "service",
@@ -605,7 +604,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `debt-${account.flatId}`,
         title: account.flatNumber,
         subtitle: account.ownerName,
-        meta: `${formatTry(account.balanceTry)} / ${account.agingBucket} gun`,
+        meta: `${formatDual(account.balanceTry)} / ${account.agingBucket} gun`,
         href: "/dashboard/finance",
         resource: "finance",
         scope: "finance",
@@ -619,7 +618,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `payment-${plan.id}`,
         title: plan.dealName,
         subtitle: `${plan.buyerName} / ${plan.unitType}`,
-        meta: `${formatEur(plan.nextDueEur)} / ${plan.status}`,
+        meta: `${formatDual(plan.nextDueEur, { currency: "EUR" })} / ${plan.status}`,
         href: "/dashboard/finance",
         resource: "finance",
         scope: "finance",
@@ -664,7 +663,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `settlement-${settlement.id}`,
         title: settlement.guestName,
         subtitle: `${settlement.id} / ${settlement.flatNumber}`,
-        meta: `${formatTry(settlement.refundTry)} / ${settlement.status}`,
+        meta: `${formatDual(settlement.refundTry)} / ${settlement.status}`,
         href: "/dashboard/calendar",
         resource: "calendar",
         scope: "calendar",
@@ -816,7 +815,7 @@ function buildCommandIndex(role: Role): CommandItem[] {
         id: `eligibility-${record.id}`,
         title: record.buyerName,
         subtitle: `${record.targetUnit} / ${record.nationality}`,
-        meta: `${record.status} / ${formatEur(record.declaredBudgetEur)}`,
+        meta: `${record.status} / ${formatDual(record.declaredBudgetEur, { currency: "EUR" })}`,
         href: "/dashboard/compliance",
         resource: "eids_compliance",
         scope: "compliance",

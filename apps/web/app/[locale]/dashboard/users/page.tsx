@@ -15,8 +15,8 @@ import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
+import { formatDual } from "@/lib/currency"
 import {
-  formatTry,
   getResidentSummary,
   getStaffSummary,
   roleCoverage,
@@ -305,7 +305,7 @@ export default function UsersPage() {
                   </div>
                   <div className="rounded-lg bg-background/70 p-2">
                     <p className="text-muted-foreground">{copy.limit}</p>
-                    <p className="font-bold text-foreground">{formatTry(member.approvalLimitTry)}</p>
+                    <p className="font-bold text-foreground">{formatDual(member.approvalLimitTry)}</p>
                   </div>
                   <div className="rounded-lg bg-background/70 p-2">
                     <p className="text-muted-foreground">{copy.scope}</p>

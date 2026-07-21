@@ -1,20 +1,24 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { useLocale } from "next-intl"
 import {
   ArrowUpRight,
   Banknote,
+  BarChart3,
   CalendarClock,
   CreditCard,
   Euro,
   LockKeyhole,
   ReceiptText,
   TrendingDown,
+  TrendingUp,
   WalletCards,
 } from "lucide-react"
 import { AccountantFinancePanel } from "@/components/accountant-finance-panel"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { BarChart } from "@/components/charts/bar-chart"
+import { LineChart } from "@/components/charts/line-chart"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
 import { FinanceLiveLedger } from "@/components/finance-live-ledger"
@@ -24,6 +28,7 @@ import { StatusBadge } from "@/components/status-badge"
 import {
   accessLabels,
   cashFlow,
+  getBlockCashFlow,
   getDebtAccounts,
   getDebtAging,
   getPaymentPlanSummary,
@@ -31,11 +36,13 @@ import {
   paymentLabels,
   paymentPlans,
   type AccessStatus,
+  type BlockCashFlowSeries,
   type PaymentPlanStatus,
   type PaymentStatus,
 } from "@/lib/site-management-data"
 import { formatDual, formatDualShort } from "@/lib/currency"
 import { clientProfile } from "@/lib/client-context"
+import { cn } from "@/lib/utils"
 import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
@@ -93,6 +100,168 @@ function shortDate(
     day: "2-digit",
     month: "short",
   }).format(new Date(date))
+}
+
+const CASH_FLOW_RANGES = [3, 6, 12] as const
+type CashFlowRange = (typeof CASH_FLOW_RANGES)[number]
+type CashFlowChartType = "bar" | "line"
+
+// Dynamic "Monthly cash flow" graph: building (block) filter, 3/6/12-month
+// timeline and a bar<->line toggle, driven by the block-scoped monthly series
+// (getBlockCashFlow). Kept as its own client sub-component so the parent stays
+// lean and only this graph re-renders on control changes.
+function MonthlyCashFlowGraph({
+  locale,
+}: {
+  locale: ReturnType<typeof resolveDashboardLocale>
+}) {
+  const t = (value: string) => localizeDashboardTextPart(value, locale)
+  const blockSeries = useMemo<BlockCashFlowSeries[]>(() => getBlockCashFlow(), [])
+  const [building, setBuilding] = useState<string>("all")
+  const [range, setRange] = useState<CashFlowRange>(6)
+  const [chartType, setChartType] = useState<CashFlowChartType>("bar")
+
+  // Localize a Turkish month abbreviation via Intl so all four locales get a
+  // correct short month name without extra translation-table entries.
+  const monthLabel = (trAbbr: string) => {
+    const index = TR_MONTH_ABBR_TO_INDEX[trAbbr]
+    if (index === undefined) return trAbbr
+    return new Intl.DateTimeFormat(toIntlLocale(locale), { month: "short" }).format(
+      new Date(Date.UTC(2000, index, 1))
+    )
+  }
+
+  const monthly = useMemo(() => {
+    const monthCount = blockSeries[0]?.months.length ?? 0
+    const combined =
+      building === "all"
+        ? Array.from({ length: monthCount }, (_, index) => ({
+            label: blockSeries[0].months[index].label,
+            collectedTry: blockSeries.reduce(
+              (sum, series) => sum + series.months[index].collectedTry,
+              0
+            ),
+          }))
+        : (blockSeries.find((series) => series.block === building)?.months ?? []).map(
+            (point) => ({ label: point.label, collectedTry: point.collectedTry })
+          )
+    return combined.slice(-range)
+  }, [blockSeries, building, range])
+
+  const total = monthly.reduce((sum, month) => sum + month.collectedTry, 0)
+  const chartData = monthly.map((month) => ({
+    label: monthLabel(month.label),
+    value: month.collectedTry,
+    color: "var(--primary)",
+  }))
+  const lineData = chartData.map(({ label, value }) => ({ label, value }))
+
+  const buildingLabel =
+    building === "all" ? t("Tümü") : `${t("Blok")} ${building}`
+  const chartAriaLabel = `${t("Aylık nakit akışı")} - ${buildingLabel}`
+  const selectClass =
+    "min-h-9 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-bold text-foreground outline-none transition focus-visible:ring-2 focus-visible:ring-primary"
+  const toggleButtonClass = (active: boolean) =>
+    cn(
+      "inline-flex min-h-8 items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-bold transition",
+      active
+        ? "bg-primary text-primary-foreground"
+        : "text-muted-foreground hover:bg-muted"
+    )
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {t("Blok")}
+            </span>
+            <select
+              className={selectClass}
+              value={building}
+              onChange={(event) => setBuilding(event.target.value)}
+              aria-label={t("Blok")}
+            >
+              <option value="all">{t("Tümü")}</option>
+              {blockSeries.map((series) => (
+                <option key={series.block} value={series.block}>
+                  {t("Blok")} {series.block}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {t("Zaman aralığı")}
+            </span>
+            <select
+              className={selectClass}
+              value={range}
+              onChange={(event) =>
+                setRange(Number(event.target.value) as CashFlowRange)
+              }
+              aria-label={t("Zaman aralığı")}
+            >
+              {CASH_FLOW_RANGES.map((months) => (
+                <option key={months} value={months}>
+                  {t(`Son ${months} ay`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+              {t("Grafik türü")}
+            </span>
+            <div
+              className="inline-flex rounded-lg border border-border bg-background p-0.5"
+              role="group"
+              aria-label={t("Grafik türü")}
+            >
+              <button
+                type="button"
+                aria-pressed={chartType === "bar"}
+                onClick={() => setChartType("bar")}
+                className={toggleButtonClass(chartType === "bar")}
+              >
+                <BarChart3 className="h-3.5 w-3.5" />
+                {t("Sütun")}
+              </button>
+              <button
+                type="button"
+                aria-pressed={chartType === "line"}
+                onClick={() => setChartType("line")}
+                className={toggleButtonClass(chartType === "line")}
+              >
+                <TrendingUp className="h-3.5 w-3.5" />
+                {t("Çizgi")}
+              </button>
+            </div>
+          </div>
+        </div>
+        <StatusBadge variant="success">
+          {t("Toplam")} {formatDualShort(total)}
+        </StatusBadge>
+      </div>
+      {chartType === "bar" ? (
+        <BarChart
+          data={chartData}
+          ariaLabel={chartAriaLabel}
+          formatValue={(value) => formatDualShort(value)}
+          height={250}
+          totalLabel={t("Toplam")}
+        />
+      ) : (
+        <LineChart
+          data={lineData}
+          ariaLabel={chartAriaLabel}
+          formatValue={(value) => formatDualShort(value)}
+          height={250}
+        />
+      )}
+    </div>
+  )
 }
 
 export function PrivilegedFinanceDashboard() {
@@ -237,17 +406,7 @@ export function PrivilegedFinanceDashboard() {
               </a>
             </div>
           </div>
-          <BarChart
-            data={cashFlow.map((month) => ({
-              label: t(month.label),
-              value: month.collectedTry,
-              color: "var(--primary)",
-            }))}
-            ariaLabel={t("Tahsilat nakit akışı grafiği")}
-            formatValue={(value) => formatDualShort(value)}
-            height={250}
-            totalLabel={t("Toplam")}
-          />
+          <MonthlyCashFlowGraph locale={locale} />
         </Card3D>
 
         <Card3D glow={false}>
@@ -469,7 +628,17 @@ export function PrivilegedFinanceDashboard() {
         />
       </Card3D>
 
-      <div id="finance-accounts" className="scroll-mt-24">
+      <Card3D id="finance-accounts" className="scroll-mt-24" glow={false}>
+        <div className="mb-4">
+          <h2 className="text-sm font-bold text-card-foreground">
+            {t("Daire bazlı borç hesapları")}
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t(
+              "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir."
+            )}
+          </p>
+        </div>
         <DataTable
           data={accounts}
           searchValue={(account) =>
@@ -529,7 +698,7 @@ export function PrivilegedFinanceDashboard() {
             },
           ]}
         />
-      </div>
+      </Card3D>
     </div>
   )
 }

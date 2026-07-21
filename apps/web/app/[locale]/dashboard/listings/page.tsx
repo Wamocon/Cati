@@ -28,11 +28,10 @@ import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
+import { formatDual, formatDualShort } from "@/lib/currency"
 import { localizeDashboardTextPart } from "@/lib/operational-copy"
 import {
   flats,
-  formatEur,
-  formatTry,
   getBlockOverview,
   getImportSummary,
   getSummary,
@@ -289,7 +288,7 @@ export default function ListingsPage() {
     {
       key: "debt",
       label: copy.metrics.debtLabel,
-      value: formatTry(summary.totalDebtTry),
+      value: formatDualShort(summary.totalDebtTry),
       helper: copy.metrics.debtHelper,
       icon: WalletCards,
       tone: "text-amber-600",
@@ -432,7 +431,7 @@ export default function ListingsPage() {
                   {block.priceSourceStatus === "parsed" ? copy.summary.priceConnected : copy.summary.priceMissing}
                 </StatusBadge>
                 {block.minBuyNowEur ? (
-                  <StatusBadge variant="info">{formatEur(block.minBuyNowEur)}+</StatusBadge>
+                  <StatusBadge variant="info">{formatDualShort(block.minBuyNowEur, "EUR")}+</StatusBadge>
                 ) : null}
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
@@ -537,7 +536,7 @@ export default function ListingsPage() {
                 <div className="rounded-lg bg-background/70 p-3">
                   <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.listPrice}</p>
                   <p className="mt-1 text-sm font-semibold text-foreground">
-                    {selectedFlat.buyNowEur ? formatEur(selectedFlat.buyNowEur) : copy.selectedUnit.sourcePending}
+                    {selectedFlat.buyNowEur ? formatDual(selectedFlat.buyNowEur, { currency: "EUR" }) : copy.selectedUnit.sourcePending}
                   </p>
                 </div>
                 <div className="rounded-lg bg-background/70 p-3">
@@ -553,7 +552,7 @@ export default function ListingsPage() {
                   )}
                 >
                   <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.currentDebt}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">{formatTry(selectedFlat.balanceTry)}</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{formatDual(selectedFlat.balanceTry)}</p>
                 </div>
                 <div
                   className={cn(
@@ -789,7 +788,7 @@ export default function ListingsPage() {
             sortValue: (flat) => flat.buyNowEur ?? 0,
             render: (flat) => (
               <div className="space-y-1">
-                <p className="font-semibold">{flat.buyNowEur ? formatEur(flat.buyNowEur) : copy.common.sourcePending}</p>
+                <p className="font-semibold">{flat.buyNowEur ? formatDual(flat.buyNowEur, { currency: "EUR" }) : copy.common.sourcePending}</p>
                 <p className="text-xs text-muted-foreground">{flat.priceSource ? copy.selectedUnit.priceSourceConnected : flat.sourceNotes ?? copy.common.unknown}</p>
               </div>
             ),
@@ -808,7 +807,7 @@ export default function ListingsPage() {
             sortValue: (flat) => flat.balanceTry,
             render: (flat) => (
               <div className="space-y-1">
-                <p className="font-semibold">{formatTry(flat.balanceTry)}</p>
+                <p className="font-semibold">{formatDual(flat.balanceTry)}</p>
                 <StatusBadge variant={paymentVariant(flat.paymentStatus)}>{copy.labels.payment[flat.paymentStatus]}</StatusBadge>
               </div>
             ),

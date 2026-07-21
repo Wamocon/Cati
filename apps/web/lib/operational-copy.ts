@@ -5,6 +5,19 @@ import { pinProperNouns } from "@/lib/proper-nouns"
 type TranslationTable = Record<string, string>
 
 const en: TranslationTable = {
+  // --- Dynamic finance cash-flow graph + debt-accounts table title ---
+  "Blok": "Block",
+  "Tümü": "All",
+  "Zaman aralığı": "Time range",
+  "Son 3 ay": "Last 3 months",
+  "Son 6 ay": "Last 6 months",
+  "Son 12 ay": "Last 12 months",
+  "Grafik türü": "Chart type",
+  "Sütun": "Bar",
+  "Çizgi": "Line",
+  "Daire bazlı borç hesapları": "Unit-level debt accounts",
+  "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir.":
+    "The highest-debt units are listed in one table with balance, aging, payment status and access restriction.",
   // --- Tickets/Service module i18n additions ---
   "Sadece sizin dairenize veya yetkili kaydınıza bağlı talepler gösterilir.":
     "Only requests linked to your unit or authorized record are shown.",
@@ -694,6 +707,19 @@ const en: TranslationTable = {
 }
 
 const de: TranslationTable = {
+  // --- Dynamic finance cash-flow graph + debt-accounts table title ---
+  "Blok": "Block",
+  "Tümü": "Alle",
+  "Zaman aralığı": "Zeitraum",
+  "Son 3 ay": "Letzte 3 Monate",
+  "Son 6 ay": "Letzte 6 Monate",
+  "Son 12 ay": "Letzte 12 Monate",
+  "Grafik türü": "Diagrammtyp",
+  "Sütun": "Balken",
+  "Çizgi": "Linie",
+  "Daire bazlı borç hesapları": "Wohnungsbezogene Schuldkonten",
+  "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir.":
+    "Die Wohnungen mit der höchsten Schuld werden in einer Tabelle mit Saldo, Alterung, Zahlungsstatus und Zugangssperre aufgeführt.",
   // --- Tickets/Service module i18n additions ---
   "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur.":
     "SLA, geschätzte Kosten und Schuldenstatus werden gemeinsam bewertet, um die tägliche technische Route zu erstellen.",
@@ -1397,6 +1423,19 @@ const de: TranslationTable = {
 }
 
 const ru: TranslationTable = {
+  // --- Dynamic finance cash-flow graph + debt-accounts table title ---
+  "Blok": "Блок",
+  "Tümü": "Все",
+  "Zaman aralığı": "Диапазон времени",
+  "Son 3 ay": "Последние 3 месяца",
+  "Son 6 ay": "Последние 6 месяцев",
+  "Son 12 ay": "Последние 12 месяцев",
+  "Grafik türü": "Тип графика",
+  "Sütun": "Столбцы",
+  "Çizgi": "Линия",
+  "Daire bazlı borç hesapları": "Счета задолженности по квартирам",
+  "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir.":
+    "Квартиры с наибольшей задолженностью перечислены в одной таблице с балансом, старением, статусом оплаты и ограничением доступа.",
   // --- Tickets/Service module i18n additions ---
   "SLA, tahmini maliyet ve borç durumu birlikte skorlanarak günlük teknik rota oluşturulur.":
     "SLA, оценочная стоимость и статус задолженности оцениваются вместе для построения дневного технического маршрута.",

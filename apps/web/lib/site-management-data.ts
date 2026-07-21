@@ -1872,6 +1872,50 @@ export const cashFlow: CashFlowPoint[] = [
   { label: "Haz", collectedTry: 1376000, outstandingTry: 341000, serviceSpendTry: 218000 },
 ]
 
+// --- Building-wise monthly cash flow (dynamic finance graph) ----------------
+// The finance dashboard exposes a dynamic cash-flow graph with a building (block)
+// filter, a 3/6/12-month timeline and a bar<->line toggle. There is no live
+// per-block monthly ledger in the demo dataset, so each block's monthly series is
+// DERIVED deterministically from the shared monthly totals and that block's real
+// share of the portfolio: collection scales with sold units, outstanding debt
+// with the block's open balance and service spend with unit count. Summing every
+// block for a month reproduces the site-wide figure, so the "all buildings" view
+// stays consistent with the standalone `cashFlow` series. Demo data only.
+
+// Twelve contiguous months ending at the latest cash-flow month (Haz). The last
+// six months mirror `cashFlow` exactly; the first six extend the same trend
+// backward so a 12-month timeline has real history. Deterministic, no randomness.
+const extendedCashFlow: CashFlowPoint[] = [
+  { label: "Tem", collectedTry: 968000, outstandingTry: 511000, serviceSpendTry: 150000 },
+  { label: "Ağu", collectedTry: 1002000, outstandingTry: 498000, serviceSpendTry: 154000 },
+  { label: "Eyl", collectedTry: 1041000, outstandingTry: 486000, serviceSpendTry: 158000 },
+  { label: "Eki", collectedTry: 1067000, outstandingTry: 474000, serviceSpendTry: 160000 },
+  { label: "Kas", collectedTry: 1088000, outstandingTry: 465000, serviceSpendTry: 163000 },
+  { label: "Ara", collectedTry: 1103000, outstandingTry: 456000, serviceSpendTry: 165000 },
+  ...cashFlow,
+]
+
+export interface BlockCashFlowSeries {
+  block: string
+  months: CashFlowPoint[]
+}
+
+export function getBlockCashFlow(): BlockCashFlowSeries[] {
+  const overview = getBlockOverview()
+  const totalSold = overview.reduce((sum, block) => sum + block.sold, 0) || 1
+  const totalDebt = overview.reduce((sum, block) => sum + block.debtTry, 0) || 1
+  const totalUnits = overview.reduce((sum, block) => sum + block.total, 0) || 1
+  return overview.map((block) => ({
+    block: block.block,
+    months: extendedCashFlow.map((point) => ({
+      label: point.label,
+      collectedTry: Math.round(point.collectedTry * (block.sold / totalSold)),
+      outstandingTry: Math.round(point.outstandingTry * (block.debtTry / totalDebt)),
+      serviceSpendTry: Math.round(point.serviceSpendTry * (block.total / totalUnits)),
+    })),
+  }))
+}
+
 export const siteActivities = [
   { id: "ACT-1", actor: "Muhasebe", message: "23 daire için otomatik borç hatırlatma kuyruğu hazırlandı.", type: "Tahsilat", tone: "warning" },
   { id: "ACT-2", actor: "Operasyon", message: "Bugünkü 2 check-out için depozito hasar kontrolü açıldı.", type: "Rezervasyon", tone: "info" },
