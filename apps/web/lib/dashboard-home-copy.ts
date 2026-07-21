@@ -1386,7 +1386,9 @@ const backendTermFallback: Record<DashboardHomeLocale, string> = {
   ru: "операционная запись",
 }
 
-const rawBackendTokenPattern = /^[a-z][a-z0-9]*(_[a-z0-9]+)+$/
+// Matches a bare backend identifier: lowercase segments joined by "_" or "."
+// (e.g. service_tickets, waiting_approval, ticket.create.ai_draft, unit.detail.view).
+const rawBackendTokenPattern = /^[a-z][a-z0-9]*([._][a-z0-9]+)+$/
 
 /**
  * Replace backend table names / status enums with human, localized labels so no

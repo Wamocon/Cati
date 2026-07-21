@@ -2079,7 +2079,7 @@ export default function TicketsPage() {
                 ? t("Kaydediliyor")
                 : selectedTicket
                   ? (
-                      <span title={selectedTicket.id}>
+                      <span title={ticketShortRef(selectedTicket.id)}>
                         {ticketShortRef(selectedTicket.id)}
                       </span>
                     )
@@ -2117,7 +2117,7 @@ export default function TicketsPage() {
                   className="mt-1 min-h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold text-foreground transition outline-none focus:border-primary"
                 >
                   {visibleTickets.map((ticket) => (
-                    <option key={ticket.id} value={ticket.id} title={ticket.id}>
+                    <option key={ticket.id} value={ticket.id} title={ticketShortRef(ticket.id)}>
                       {ticketSubjectLabel(ticket)} - {ticket.flatNumber} -{" "}
                       {ticketShortRef(ticket.id)}
                     </option>
@@ -3313,7 +3313,7 @@ export default function TicketsPage() {
                 header: t("Talep"),
                 sortable: true,
                 render: (ticket) => (
-                  <span title={ticket.id}>{ticketShortRef(ticket.id)}</span>
+                  <span>{ticketShortRef(ticket.id)}</span>
                 ),
               },
               {

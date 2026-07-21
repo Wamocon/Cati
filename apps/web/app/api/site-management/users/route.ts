@@ -10,6 +10,15 @@ import {
   setManagedUserActive,
   UserAdminError,
 } from "@/lib/user-role-admin-repository"
+import { mutationOriginAllowed } from "@/lib/request-security"
+
+function originRejected(request: NextRequest) {
+  if (mutationOriginAllowed(request)) return null
+  return NextResponse.json(
+    { error: "Cross-site request rejected.", code: "USER_ADMIN_ORIGIN_REJECTED" },
+    { status: 403 }
+  )
+}
 
 export const dynamic = "force-dynamic"
 
@@ -118,6 +127,8 @@ async function parseBody(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { profile, response } = await requireAdmin()
   if (!profile) return response
+  const rejected = originRejected(request)
+  if (rejected) return rejected
 
   let body: Record<string, unknown>
   try {
@@ -140,6 +151,8 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   const { profile, response } = await requireAdmin()
   if (!profile) return response
+  const rejected = originRejected(request)
+  if (rejected) return rejected
 
   let body: Record<string, unknown>
   try {
