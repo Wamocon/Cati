@@ -513,7 +513,10 @@ export async function getCommunicationsWorkspace(
       .map((row) => nullableText(row, "unit_id"))
       .filter((id): id is string => Boolean(id))
   )
-  const targetSiteIds = profile.role === "admin"
+  // F13: Accountant (roleScope "finance" = firmenweit) erhält wie der Admin alle
+  // firmen-sichtbaren Sites als Ziel, sonst gäbe es beim ersten Gespräch keine
+  // auswählbare Anlage (Bootstrap-Deadlock). Die RLS erzwingt die echte Grenze.
+  const targetSiteIds = profile.role === "admin" || profile.role === "accountant"
     ? new Set(asRecords(siteResult.data).map((row) => text(row, "id")))
     : profile.role === "manager"
       ? new Set([
