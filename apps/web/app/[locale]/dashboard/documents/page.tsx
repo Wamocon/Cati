@@ -59,6 +59,9 @@ const retentionOptions = [
   { value: "general", label: "General" },
 ]
 
+// F11: clientseitiger Größen-Vorabcheck (spiegelt das beworbene Server-Limit).
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+
 function documentVariant(status: DocumentVaultRecord["status"]) {
   if (status === "verified") return "success"
   if (status === "pending") return "warning"
@@ -148,15 +151,45 @@ function DocumentUploadPanel({
 
     try {
       const formData = new FormData(form)
+
+      // F11: Pre-Flight-Größencheck - übergroße Dateien sofort klar ablehnen,
+      // statt am Plattform-Limit mit kryptischem Fehler zu scheitern.
+      const selectedFile = formData.get("file")
+      if (selectedFile instanceof File && selectedFile.size > MAX_UPLOAD_BYTES) {
+        setState("error")
+        setMessage(
+          t("Dosya çok büyük veya yükleme sınırı aşıldı. Lütfen daha küçük bir dosya seçin.")
+        )
+        return
+      }
+
       const response = await fetch("/api/site-management/document-uploads", {
         method: "POST",
         body: formData,
       })
-      const payload = await response.json()
 
-      if (!response.ok) {
-        throw new Error(payload.error || "Upload failed.")
+      // F11: Antwort defensiv lesen - erst Status/Content-Type prüfen, dann JSON
+      // parsen. Ein Nicht-JSON-Body (z. B. Plattform-413 "Request Entity Too
+      // Large") darf nicht in einen kryptischen JSON.parse-Fehler laufen.
+      const contentType = response.headers.get("content-type") ?? ""
+      if (!response.ok || !contentType.includes("application/json")) {
+        if (response.status === 413) {
+          throw new Error(
+            t("Dosya çok büyük veya yükleme sınırı aşıldı. Lütfen daha küçük bir dosya seçin.")
+          )
+        }
+        let serverMessage = ""
+        try {
+          serverMessage = contentType.includes("application/json")
+            ? String((await response.json())?.error ?? "")
+            : (await response.text()).trim()
+        } catch {
+          serverMessage = ""
+        }
+        throw new Error(serverMessage.slice(0, 200) || t("Yükleme başarısız."))
       }
+
+      const payload = await response.json()
 
       const upload = payload.upload && typeof payload.upload === "object"
         ? (payload.upload as Record<string, unknown>)

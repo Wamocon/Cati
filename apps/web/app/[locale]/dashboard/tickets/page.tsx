@@ -750,6 +750,37 @@ export default function TicketsPage() {
   >({})
   const [selectedTicketId, setSelectedTicketId] = useState("")
   const [selectedProofTaskId, setSelectedProofTaskId] = useState("")
+
+  // F09: "Auftrag vorbereiten" erzeugt einen sichtbaren, idempotenten Auftrags-
+  // Entwurf (genau einer pro Katalog-Position) in der Auftragskontrolle - statt
+  // eines folgenlosen, beliebig oft wiederholbaren Audit-Log-Eintrags.
+  const [preparedOrderDrafts, setPreparedOrderDrafts] = useState<
+    Array<{
+      catalogItemId: string
+      code: string
+      name: string
+      slaHours: number
+      team: string
+      providerType: string
+    }>
+  >([])
+  const registerPreparedOrderDraft = useCallback((item: ServiceCatalogItem) => {
+    setPreparedOrderDrafts((current) =>
+      current.some((draft) => draft.catalogItemId === item.id)
+        ? current
+        : [
+            {
+              catalogItemId: item.id,
+              code: item.code,
+              name: item.name,
+              slaHours: item.slaHours,
+              team: item.team,
+              providerType: item.providerType,
+            },
+            ...current,
+          ]
+    )
+  }, [])
   const ticketSubmissionKey = useRef<string | null>(null)
   const ticketEditKeys = useRef<Record<string, string>>({})
   const ticketTransitionKeys = useRef<Record<string, string>>({})
@@ -2748,6 +2779,9 @@ export default function TicketsPage() {
                         label={t("Servis aksiyonlari")}
                         ariaLabel={`${t(item.name)} ${t("Servis aksiyonlari")}`}
                         buttonClassName="border-primary/25 bg-primary/10 text-primary hover:bg-primary/15"
+                        onActionComplete={(_, actionState) => {
+                          if (actionState === "success") registerPreparedOrderDraft(item)
+                        }}
                         items={[
                           {
                             key: "prepare-order",
@@ -2784,6 +2818,51 @@ export default function TicketsPage() {
               {blockedOrders} {t("blokeli")}
             </StatusBadge>
           </div>
+          {preparedOrderDrafts.length > 0 && (
+            <div
+              className="mb-3 space-y-2 rounded-xl border border-primary/25 bg-primary/[0.05] p-3"
+              data-testid="prepared-order-drafts"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wide text-foreground">
+                  {t("Hazırlanan sipariş taslakları")}
+                </h3>
+                <StatusBadge variant="info">
+                  {preparedOrderDrafts.length} {t("taslak")}
+                </StatusBadge>
+              </div>
+              {preparedOrderDrafts.map((draft) => (
+                <div
+                  key={draft.catalogItemId}
+                  className="flex items-start justify-between gap-3 rounded-lg border border-border bg-background/70 p-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-muted-foreground">{draft.code}</p>
+                    <h4 className="mt-0.5 text-sm font-bold text-foreground">{t(draft.name)}</h4>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {t(draft.team)} · {t(draft.providerType)} · SLA {draft.slaHours} {t("saat")}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <StatusBadge variant="neutral">{t("Taslak")}</StatusBadge>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPreparedOrderDrafts((current) =>
+                          current.filter(
+                            (entry) => entry.catalogItemId !== draft.catalogItemId
+                          )
+                        )
+                      }
+                      className="rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                    >
+                      {t("Kaldır")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="space-y-3">
             {visibleOrders.slice(0, 5).map((order) => (
               <div
