@@ -581,8 +581,8 @@ test.describe("Owner finance statement - user experience", () => {
   }) => {
     await openDashboardAs(page, "owner", "/en/dashboard")
 
-    const ownerFinanceLink = page.getByRole("link", {
-      name: "Balance & Statement",
+    const ownerFinanceLink = page.locator("main").getByRole("link", {
+      name: "Finance & Dues",
     })
     await expect(ownerFinanceLink).toBeVisible()
     await expect(ownerFinanceLink).toHaveAttribute(
@@ -608,7 +608,7 @@ test.describe("Owner finance statement - user experience", () => {
 
     await openDashboardAs(page, "tenant", "/en/dashboard")
     await expect(
-      page.getByRole("link", { name: "Balance & Statement" })
+      page.locator("main").getByRole("link", { name: "Finance & Dues" })
     ).toHaveCount(0)
     await expect(
       page.locator('main a[href$="/dashboard/finance"]')

@@ -734,9 +734,14 @@ test("AI ticket draft remains human-approved and materializes exactly once", asy
       actionExternalId: externalId,
     }
   )
-  const approvalCard = page.getByTestId("workflow-approval-card").filter({
-    hasText: String(stamp),
-  })
+  // The dispatched action-logged event prepends this draft to the front of the
+  // approval queue, so the first matching card is this one. The card now shows a
+  // de-leaked human subject ("AI drafted Cleaning request"); the raw draft id /
+  // external id (which used to carry the stamp) is intentionally no longer shown.
+  const approvalCard = page
+    .getByTestId("workflow-approval-card")
+    .filter({ hasText: "AI drafted" })
+    .first()
   await expect(approvalCard).toBeVisible()
   await approvalCard.locator("select").selectOption("Cleaning queue")
   await approvalCard.getByRole("button", { name: "Approve and assign" }).click()

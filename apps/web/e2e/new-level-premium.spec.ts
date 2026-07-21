@@ -333,7 +333,7 @@ test.describe("New Level Premium landing page", () => {
     ).toBeVisible()
     await expect(
       page.getByText(
-        "Canlı davet işlemleri için gerçek kimlik doğrulaması ve organizasyon ilişkisi gerekir. Yerel rol demosu veritabanı yetkisini taklit etmez."
+        "Canlı davet işlemleri için doğrulanmış hesap ve aktif organizasyon bağlantısı gerekir."
       )
     ).toBeVisible()
     await expect(page.getByText("Ivan Petrov")).toHaveCount(0)

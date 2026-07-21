@@ -369,7 +369,7 @@ test.describe("persistent communication center", () => {
     await page.getByRole("button", { name: "Start first thread" }).click()
     await page.getByLabel("Subject").fill("Site-wide coordination")
 
-    await expect(page.getByText("No eligible participant is available for this scope.", { exact: false })).toBeVisible()
+    await expect(page.getByText("No participant matches this site, unit, and category yet.", { exact: false })).toBeVisible()
     await expect(page.getByRole("button", { name: "Create portal thread" })).toBeDisabled()
     expect(requests).toHaveLength(0)
   })

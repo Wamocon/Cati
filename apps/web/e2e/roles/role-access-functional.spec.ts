@@ -62,7 +62,7 @@ test.describe("Functional tests - role-based access", () => {
     test(`${residentRole} reaches tenant access from the resident dashboard`, async ({ page }) => {
       await openDashboardAs(page, residentRole)
       await expect(page.locator("main")).toContainText(/Kiracı erişim yönetimi|Tenant access management/i)
-      await expect(page.locator("main")).toContainText(/Yerel rol demosu|Local role demos/i)
+      await expect(page.locator("main")).toContainText(/doğrulanmış hesap|verified account/i)
     })
   }
 })

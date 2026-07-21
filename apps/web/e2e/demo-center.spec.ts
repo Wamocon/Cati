@@ -72,8 +72,8 @@ test.describe("Demo center", () => {
       await expect(page.getByTestId("demo-preview")).toBeVisible()
       await expect(page.getByTestId("demo-offer-price")).toContainText("€5")
       await expect(page.getByTestId("demo-role-link")).toHaveCount(6)
-      await expect(page.getByTestId("demo-chapter-card")).toHaveCount(8)
-      await expect(page.getByTestId("demo-chapters").getByRole("link")).toHaveCount(8)
+      await expect(page.getByTestId("demo-chapter-card")).toHaveCount(7)
+      await expect(page.getByTestId("demo-chapters").getByRole("link")).toHaveCount(7)
       await assertNoHorizontalOverflow(page)
 
       if (locale === "en") {
