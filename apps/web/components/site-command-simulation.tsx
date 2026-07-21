@@ -11,12 +11,12 @@ import {
 import { cn } from "@/lib/utils"
 import {
   type BlockOverview,
-  formatTryShort,
   getBlockOverview,
   getSummary,
   type SiteSummary,
   serviceTickets,
 } from "@/lib/site-management-data"
+import { formatDual } from "@/lib/currency"
 
 const towerSkins = [
   "from-teal-500/30 via-cyan-400/15 to-white/5",
@@ -67,18 +67,36 @@ export function SiteCommandSimulation({
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
-                <p className="font-black text-foreground">{summary.restrictedAccess}</p>
-                <p className="text-muted-foreground">{t("kısıt")}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
-                <p className="font-black text-foreground">{summary.overdueTickets}</p>
-                <p className="text-muted-foreground">SLA</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card/70 px-3 py-2">
-                <p className="font-black text-foreground">{formatTryShort(summary.totalDebtTry)}</p>
-                <p className="text-muted-foreground">{t("borç")}</p>
-              </div>
+              <Link
+                href="/dashboard/compliance"
+                aria-label={t("Erişim riski")}
+                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
+                  <p className="font-black text-foreground">{summary.restrictedAccess}</p>
+                  <p className="text-muted-foreground">{t("kısıt")}</p>
+                </div>
+              </Link>
+              <Link
+                href="/dashboard/tickets"
+                aria-label={t("SLA dışı")}
+                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
+                  <p className="font-black text-foreground">{summary.overdueTickets}</p>
+                  <p className="text-muted-foreground">SLA</p>
+                </div>
+              </Link>
+              <Link
+                href="/dashboard/finance"
+                aria-label={t("Toplam borç")}
+                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
+                  <p className="font-black text-foreground">{formatDual(summary.totalDebtTry, { short: true })}</p>
+                  <p className="text-muted-foreground">{t("borç")}</p>
+                </div>
+              </Link>
             </div>
           </div>
 
@@ -135,7 +153,7 @@ export function SiteCommandSimulation({
             {
               icon: WalletCards,
               label: t("Tahsilat rotası"),
-              value: formatTryShort(summary.totalDebtTry),
+              value: formatDual(summary.totalDebtTry, { short: true }),
               text: t("90+ gün, aktif rezervasyon ve erişim kısıtı birlikte skorlanır."),
             },
             {

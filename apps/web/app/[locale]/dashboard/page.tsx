@@ -47,10 +47,12 @@ import { clientProfile } from "@/lib/client-context"
 import { useLiveDashboardSnapshot } from "@/hooks/use-live-dashboard-snapshot"
 import {
   dashboardHomeCopy,
+  localizeBackendTerm,
   resolveDashboardHomeLocale,
   type DashboardHomeCopy,
   type WorkloadKind,
 } from "@/lib/dashboard-home-copy"
+import { formatDual } from "@/lib/currency"
 import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import type {
   DashboardSnapshot,
@@ -61,7 +63,6 @@ import {
   bookings,
   cashFlow,
   type BlockOverview,
-  formatTryShort,
   getBlockOverview,
   getFlatStatusDistribution,
   getOccupancyTrend,
@@ -79,6 +80,7 @@ interface Kpi {
   label: string
   value: number
   suffix?: string
+  valueText?: string
   helper: string
   color: string
   href: string
@@ -444,15 +446,18 @@ function isFocusedRole(role: Role): role is FocusedRole {
 
 function GlobalOperationsScene({
   copy,
+  role,
   roleLabel,
   summary,
 }: {
   copy: DashboardHomeCopy
+  role: Role
   roleLabel: string
   summary: SiteSummary
 }) {
   const panels = [
     {
+      href: "/dashboard/listings",
       label: copy.globalScene.panels.liveUnits,
       value: summary.totalFlats,
       helper: copyText(copy.globalScene.panels.occupancy, {
@@ -461,6 +466,7 @@ function GlobalOperationsScene({
       icon: Building2,
     },
     {
+      href: "/dashboard/tickets",
       label: copy.globalScene.panels.openService,
       value: summary.openTickets,
       helper: copyText(copy.globalScene.panels.overdue, {
@@ -469,6 +475,7 @@ function GlobalOperationsScene({
       icon: TicketCheck,
     },
     {
+      href: "/dashboard/compliance",
       label: copy.globalScene.panels.accessRisk,
       value: summary.restrictedAccess,
       helper: copy.globalScene.panels.financeCheck,
@@ -515,41 +522,53 @@ function GlobalOperationsScene({
                 {copyText(copy.globalScene.description, { role: roleLabel })}
               </p>
             </div>
-            <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur sm:p-4">
-              <p className="text-xs font-black uppercase text-white/60">
-                {copy.globalScene.aiRisk}
-              </p>
-              <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
-              <p className="mt-1 text-xs text-white/65">
-                {copy.globalScene.aiRiskHelper}
-              </p>
-            </div>
+            <CommandLink
+              href="/dashboard/reports"
+              ariaLabel={copy.globalScene.aiRisk}
+              role={role}
+            >
+              <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur transition-colors hover:bg-white/[0.16] sm:p-4">
+                <p className="text-xs font-black uppercase text-white/60">
+                  {copy.globalScene.aiRisk}
+                </p>
+                <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
+                <p className="mt-1 text-xs text-white/65">
+                  {copy.globalScene.aiRiskHelper}
+                </p>
+              </div>
+            </CommandLink>
           </div>
 
           <div className="mt-auto grid grid-cols-3 gap-2 sm:gap-3">
             {panels.map((panel, index) => {
               const Icon = panel.icon
               return (
-                <motion.div
+                <CommandLink
                   key={panel.label}
-                  className="min-w-0 rounded-xl border border-white/12 bg-white/[0.08] p-3 backdrop-blur transition-colors hover:bg-white/[0.13] sm:p-4"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.12 + index * 0.07 }}
+                  href={panel.href}
+                  ariaLabel={panel.label}
+                  role={role}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase text-white/55">
-                        {panel.label}
-                      </p>
-                      <p className="mt-2 text-3xl font-black">
-                        <AnimatedCounter value={panel.value} />
-                      </p>
-                      <p className="mt-1 text-xs text-white/65">{panel.helper}</p>
+                  <motion.div
+                    className="min-h-full min-w-0 rounded-xl border border-white/12 bg-white/[0.08] p-3 backdrop-blur transition-colors hover:bg-white/[0.13] sm:p-4"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.12 + index * 0.07 }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-black uppercase text-white/55">
+                          {panel.label}
+                        </p>
+                        <p className="mt-2 text-3xl font-black">
+                          <AnimatedCounter value={panel.value} />
+                        </p>
+                        <p className="mt-1 text-xs text-white/65">{panel.helper}</p>
+                      </div>
+                      <Icon className="hidden h-5 w-5 shrink-0 text-emerald-200 sm:block" />
                     </div>
-                    <Icon className="hidden h-5 w-5 shrink-0 text-emerald-200 sm:block" />
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </CommandLink>
               )
             })}
           </div>
@@ -1046,26 +1065,26 @@ function OperationsDashboard({
   const tActivityMessage = useCallback((value: string) => {
     const localized = tRecord(value)
     if (localized !== value) return localized
-    if (dashboardLocale !== "tr") return value
 
-    return value
-      .replace(/^AI interest - what-is/i, "AI talep sinyali")
-      .replace(/^AI interest/i, "AI talep sinyali")
-      .replace(/\bwhats\b/i, "WhatsApp")
-      .replace(/\baccess update\b/i, "erişim güncelleme")
-      .replace(/\bCamera incident lookup request\b/i, "kamera olay arama talebi")
-      .replace(/\bDeposit hold\b/i, "depozito bekletme")
-      .replace(/\bcheckout\b/i, "çıkış")
-      .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
-      .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
-      .replace(/\bservice_ticket\b/gi, "servis talebi")
-      .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+    let text = value
+    if (dashboardLocale === "tr") {
+      text = text
+        .replace(/^AI interest - what-is/i, "AI talep sinyali")
+        .replace(/^AI interest/i, "AI talep sinyali")
+        .replace(/\bwhats\b/i, "WhatsApp")
+        .replace(/\baccess update\b/i, "erişim güncelleme")
+        .replace(/\bCamera incident lookup request\b/i, "kamera olay arama talebi")
+        .replace(/\bDeposit hold\b/i, "depozito bekletme")
+        .replace(/\bcheckout\b/i, "çıkış")
+    }
+    // Never let raw backend table names or status enums reach the UI (all locales).
+    return localizeBackendTerm(text, dashboardLocale)
   }, [dashboardLocale, tRecord])
   const tActivityType = useCallback(
     (value: string) =>
-      tActivityMessage(value.replaceAll("_", " ")).toLocaleLowerCase(
-        dashboardLocale === "tr" ? "tr-TR" : dashboardLocale
-      ),
+      tActivityMessage(value)
+        .replaceAll("_", " ")
+        .toLocaleLowerCase(dashboardLocale === "tr" ? "tr-TR" : dashboardLocale),
     [dashboardLocale, tActivityMessage]
   )
   const {
@@ -1138,7 +1157,7 @@ function OperationsDashboard({
       icon: CreditCard,
       label: copy.kpis.totalDebt,
       value: Math.round(summary.totalDebtTry / 1000),
-      suffix: "K ₺",
+      valueText: formatDual(summary.totalDebtTry, { short: true }),
       helper: copyText(copy.kpis.restricted, { value: summary.restrictedAccess }),
       color: "text-rose-600",
       href: "/dashboard/finance",
@@ -1231,10 +1250,15 @@ function OperationsDashboard({
         summary={summary}
       />
 
-      <GlobalOperationsScene copy={copy} roleLabel={roleLabel} summary={summary} />
+      <GlobalOperationsScene copy={copy} role={user.role} roleLabel={roleLabel} summary={summary} />
 
-      <div className="grid gap-3 lg:grid-cols-3">
-        {alerts.map((alert, index) => (
+      <section className="space-y-3">
+        <div>
+          <h2 className="text-sm font-bold text-card-foreground">{copy.alerts.title}</h2>
+          <p className="text-xs text-muted-foreground">{copy.alerts.subtitle}</p>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-3">
+          {alerts.map((alert, index) => (
           <CommandLink
             key={alert.text}
             href={alert.href}
@@ -1261,7 +1285,8 @@ function OperationsDashboard({
             )}
           </CommandLink>
         ))}
-      </div>
+        </div>
+      </section>
 
       <details data-testid="module-status-disclosure" className="group rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/[0.04]">
         <summary className="flex cursor-pointer list-none flex-col gap-3 outline-none transition focus-visible:ring-2 focus-visible:ring-primary sm:flex-row sm:items-start sm:justify-between [&::-webkit-details-marker]:hidden">
@@ -1356,7 +1381,11 @@ function OperationsDashboard({
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase text-muted-foreground">{kpi.label}</p>
                   <div className="mt-2 flex flex-wrap items-baseline gap-1">
-                    <AnimatedCounter value={kpi.value} className="text-3xl font-black text-card-foreground" />
+                    {kpi.valueText ? (
+                      <span className="text-2xl font-black text-card-foreground">{kpi.valueText}</span>
+                    ) : (
+                      <AnimatedCounter value={kpi.value} className="text-3xl font-black text-card-foreground" />
+                    )}
                     {kpi.suffix && <span className="text-xs font-semibold text-muted-foreground">{kpi.suffix}</span>}
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">{kpi.helper}</p>
@@ -1466,7 +1495,7 @@ function OperationsDashboard({
                   <span>{copy.charts.occupied}: {block.occupied}</span>
                   <span>{copy.charts.vacant}: {block.vacant}</span>
                   <span>{copy.charts.maintenance}: {block.maintenance}</span>
-                  <span>{copy.charts.debt}: {formatTryShort(block.debtTry)}</span>
+                  <span>{copy.charts.debt}: {formatDual(block.debtTry, { short: true })}</span>
                 </div>
               </div>
               </CommandLink>
@@ -1568,10 +1597,18 @@ function OperationsDashboard({
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{ticket.label}</p>
-                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>{ticket.slaHoursRemaining}h</StatusBadge>
+                  <StatusBadge variant={ticket.slaHoursRemaining < 0 ? "danger" : "warning"}>
+                    {ticket.slaHoursRemaining < 0
+                      ? copyText(copy.charts.slaOverdue, {
+                          value: Math.abs(ticket.slaHoursRemaining),
+                        })
+                      : copyText(copy.charts.slaRemaining, {
+                          value: ticket.slaHoursRemaining,
+                        })}
+                  </StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{tRecord(ticket.title)}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{tRecord(ticket.assignee)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{localizeBackendTerm(tRecord(ticket.assignee), dashboardLocale)}</p>
               </div>
               </CommandLink>
             ))}
@@ -1588,7 +1625,7 @@ function OperationsDashboard({
                   <StatusBadge variant="info">{booking.channel}</StatusBadge>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{booking.guestName}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{copy.charts.depositRisk}: {formatTryShort(booking.depositTry)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{copy.charts.depositRisk}: {formatDual(booking.depositTry, { short: true })}</p>
               </div>
               </CommandLink>
             ))}
@@ -1598,18 +1635,22 @@ function OperationsDashboard({
 
       <CommandLink href="/dashboard/finance" ariaLabel={copy.charts.financeSummaryAria} role={user.role}>
       <div className="rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
+        <div className="mb-4">
+          <h2 className="text-sm font-bold text-card-foreground">{copy.charts.financeSummaryTitle}</h2>
+          <p className="text-xs text-muted-foreground">{copy.charts.financeSummarySubtitle}</p>
+        </div>
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
             <p className="text-xs uppercase text-muted-foreground">{copy.charts.monthlyExpected}</p>
-            <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.monthlyExpectedTry)}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{formatDual(summary.monthlyExpectedTry, { short: true })}</p>
           </div>
           <div>
             <p className="text-xs uppercase text-muted-foreground">{copy.charts.juneCollection}</p>
-            <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(cashFlow.at(-1)?.collectedTry ?? 0)}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{formatDual(cashFlow.at(-1)?.collectedTry ?? 0, { short: true })}</p>
           </div>
           <div>
             <p className="text-xs uppercase text-muted-foreground">{copy.charts.depositRisk}</p>
-            <p className="mt-1 text-lg font-black text-foreground">{formatTryShort(summary.depositExposureTry)}</p>
+            <p className="mt-1 text-lg font-black text-foreground">{formatDual(summary.depositExposureTry, { short: true })}</p>
           </div>
         </div>
       </div>

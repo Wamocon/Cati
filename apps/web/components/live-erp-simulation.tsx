@@ -22,9 +22,10 @@ import { InfoTooltip } from "@/components/info-tooltip"
 import { StatusBadge } from "@/components/status-badge"
 import {
   type BlockOverview,
-  formatTryShort,
   type SiteSummary,
 } from "@/lib/site-management-data"
+import { formatDual } from "@/lib/currency"
+import { localizeBackendTerm } from "@/lib/dashboard-home-copy"
 import { localizeDashboardTextPart, resolveDashboardLocale } from "@/lib/operational-copy"
 import { cn } from "@/lib/utils"
 
@@ -73,13 +74,14 @@ const simulationCopy = {
     controlPlane: "kontrol düzlemi",
     infoLabel: "Canlı simülasyon bilgisi",
     infoText:
-      "Bu sahne dashboard snapshot ve faz-4 daire verilerinden beslenir. Üretimde Supabase verisini, yerel QA'da ise işaretli seed fallback verisini gösterir.",
+      "Bu sahne daire, finans, servis ve erişim verilerini tek canlı operasyon görünümünde birleştirir.",
     description:
       "Daireler, finans riski, açık servisler ve erişim riski aynı rol bazlı dashboard rotalarından akar.",
-    sessionSeed: "oturum verisi",
-    sourceLocal: "Yerel seed fallback",
-    sourceRealtime: "Supabase realtime",
-    sourceSnapshot: "Supabase snapshot",
+    live: "Canlı",
+    lastUpdated: "Son güncelleme {time}",
+    upToDate: "Güncel",
+    slaRemaining: "{value} sa SLA",
+    slaOverdue: "{value} sa gecikmede",
     units: "Daire",
     occupancy: "{value}% doluluk",
     openService: "Açık servis",
@@ -137,13 +139,14 @@ const simulationCopy = {
     controlPlane: "control plane",
     infoLabel: "Live simulation information",
     infoText:
-      "This scene is fed from the dashboard snapshot and phase-4 unit data. In production it reflects Supabase data; in local QA it is clearly marked as seed fallback.",
+      "This scene combines unit, finance, service and access data in one live operations view.",
     description:
       "Units, finance exposure, open services and access risk move through the same role-based dashboard routes.",
-    sessionSeed: "session seed",
-    sourceLocal: "Local seed fallback",
-    sourceRealtime: "Supabase realtime",
-    sourceSnapshot: "Supabase snapshot",
+    live: "Live",
+    lastUpdated: "Last update {time}",
+    upToDate: "Up to date",
+    slaRemaining: "{value}h SLA",
+    slaOverdue: "{value}h overdue",
     units: "Units",
     occupancy: "{value}% occupied",
     openService: "Open service",
@@ -201,13 +204,14 @@ const simulationCopy = {
     controlPlane: "Steuerungsebene",
     infoLabel: "Information zur Live-Simulation",
     infoText:
-      "Diese Szene nutzt Dashboard-Snapshot und Phase-4-Einheitsdaten. In Produktion zeigt sie Supabase-Daten; in lokaler QA ist Seed-Fallback klar markiert.",
+      "Diese Szene bündelt Einheiten-, Finanz-, Service- und Zugangsdaten in einer Live-Operationsansicht.",
     description:
       "Einheiten, Finanzrisiko, offene Services und Zugangsrisiko laufen über dieselben rollenbasierten Dashboard-Routen.",
-    sessionSeed: "Sitzungsdaten",
-    sourceLocal: "Lokaler Seed-Fallback",
-    sourceRealtime: "Supabase realtime",
-    sourceSnapshot: "Supabase snapshot",
+    live: "Aktuell",
+    lastUpdated: "Letzte Aktualisierung {time}",
+    upToDate: "Aktualisiert",
+    slaRemaining: "{value} Std SLA",
+    slaOverdue: "{value} Std überfällig",
     units: "Einheiten",
     occupancy: "{value}% belegt",
     openService: "Offener Service",
@@ -265,13 +269,14 @@ const simulationCopy = {
     controlPlane: "контур управления",
     infoLabel: "Информация о live-симуляции",
     infoText:
-      "Сцена питается dashboard snapshot и данными юнитов фазы 4. В production она отражает Supabase; в локальной QA помечается как seed fallback.",
+      "Сцена объединяет данные по юнитам, финансам, сервису и доступу в одном live-виде операций.",
     description:
       "Юниты, финансовый риск, открытый сервис и риск доступа проходят через одни и те же ролевые маршруты dashboard.",
-    sessionSeed: "данные сессии",
-    sourceLocal: "Локальный seed fallback",
-    sourceRealtime: "Supabase realtime",
-    sourceSnapshot: "Supabase snapshot",
+    live: "В реальном времени",
+    lastUpdated: "Обновлено {time}",
+    upToDate: "Актуально",
+    slaRemaining: "{value} ч SLA",
+    slaOverdue: "просрочено на {value} ч",
     units: "Юниты",
     occupancy: "{value}% занято",
     openService: "Открытый сервис",
@@ -337,11 +342,10 @@ function copyText(template: string, values: Record<string, string | number> = {}
   )
 }
 
-function formatGeneratedAt(value: string | undefined, locale: SimulationLocale) {
-  const copy = simulationCopy[locale]
-  if (!value) return copy.sessionSeed
+function formatGeneratedAt(value: string | undefined, locale: SimulationLocale): string | null {
+  if (!value) return null
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return copy.sessionSeed
+  if (Number.isNaN(date.getTime())) return null
   const dateLocale = locale === "tr" ? "tr-TR" : locale === "de" ? "de-DE" : locale === "ru" ? "ru-RU" : "en-US"
   return new Intl.DateTimeFormat(dateLocale, {
     hour: "2-digit",
@@ -350,36 +354,39 @@ function formatGeneratedAt(value: string | undefined, locale: SimulationLocale) 
   }).format(date)
 }
 
+// Present SLA as human "remaining" or "overdue" language. A negative figure is a
+// countdown that has passed zero, so it is shown as overdue with the absolute value.
+function formatSlaTag(hours: number, copy: (typeof simulationCopy)[SimulationLocale]) {
+  if (hours < 0) return copyText(copy.slaOverdue, { value: Math.abs(hours) })
+  return copyText(copy.slaRemaining, { value: hours })
+}
+
 function localizeStreamMessage(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
   const localized = localizeDashboardTextPart(value, locale)
   if (localized !== value) return localized
-  if (locale !== "tr") return value
 
-  return value
-    .replace(/^AI interest - what-is/i, "AI talep sinyali")
-    .replace(/^AI interest/i, "AI talep sinyali")
-    .replace(/\bwhats\b/i, "WhatsApp")
-    .replace(/\baccess update\b/i, "erişim güncelleme")
-    .replace(/\bCamera incident lookup request\b/i, "kamera olay inceleme talebi")
-    .replace(/\bDeposit hold\b/i, "depozito bekletme")
-    .replace(/\bcheckout\b/i, "çıkış")
-    .replace(/\bwaiting_approval\b/gi, "onay bekliyor")
-    .replace(/\bclient_action_requests\b/gi, "onay kuyruğu")
-    .replace(/\bservice_ticket\b/gi, "servis talebi")
-    .replace(/\bai_action_logs\b/gi, "AI aksiyon kaydı")
+  let text = value
+  if (locale === "tr") {
+    text = text
+      .replace(/^AI interest - what-is/i, "AI talep sinyali")
+      .replace(/^AI interest/i, "AI talep sinyali")
+      .replace(/\bwhats\b/i, "WhatsApp")
+      .replace(/\baccess update\b/i, "erişim güncelleme")
+      .replace(/\bCamera incident lookup request\b/i, "kamera olay inceleme talebi")
+      .replace(/\bDeposit hold\b/i, "depozito bekletme")
+      .replace(/\bcheckout\b/i, "çıkış")
+  }
+  // Scrub raw backend table names / status enums for every locale.
+  return localizeBackendTerm(text, locale)
 }
 
 function localizeTicketActor(value: string, locale: ReturnType<typeof resolveDashboardLocale>) {
   const localized = localizeDashboardTextPart(value, locale)
   if (localized !== value) return localized
 
-  if (locale !== "tr") return value
-  return value
-    .replace(/\bwaiting_approval\b/gi, "Onay bekliyor")
-    .replace(/\btriage\b/gi, "Ön inceleme")
-    .replace(/\bassigned\b/gi, "Atandı")
-    .replace(/\bin_progress\b/gi, "İşlemde")
-    .replace(/\bopen\b/gi, "Açık")
+  // Map status enums (waiting_approval, triage, assigned, in_progress, open) to
+  // human, localized labels for every locale instead of leaking raw values.
+  return localizeBackendTerm(value, locale)
 }
 
 function blockRisk(block: BlockOverview, totalDebtTry: number) {
@@ -397,7 +404,6 @@ export function LiveErpSimulation({
   realtimeState = "disabled",
   requestState = "idle",
   roleLabel,
-  source,
   summary,
 }: LiveErpSimulationProps) {
   const rawLocale = useLocale()
@@ -459,7 +465,7 @@ export function LiveErpSimulation({
       href: "/dashboard/tickets",
       id: `ticket-${ticket.id}`,
       message: `${ticket.label}: ${localizeStreamMessage(ticket.title, dashboardLocale)}`,
-      type: `${ticket.slaHoursRemaining}h SLA`,
+      type: formatSlaTag(ticket.slaHoursRemaining, copy),
       actor: localizeTicketActor(ticket.assignee, dashboardLocale),
     }))
 
@@ -493,18 +499,11 @@ export function LiveErpSimulation({
     return () => window.clearInterval(interval)
   }, [prefersReducedMotion, streamEvents.length])
 
-  const sourceLabel =
-    source === "supabase"
-      ? realtimeState === "connected"
-        ? copy.sourceRealtime
-        : copy.sourceSnapshot
-      : copy.sourceLocal
-  const sourceVariant =
-    source === "supabase" && realtimeState === "connected"
-      ? "success"
-      : source === "supabase"
-        ? "info"
-        : "warning"
+  // Neutral freshness indicator only: show a "Live" badge when the feed is
+  // connected and a plain last-updated timestamp. The UI never names the
+  // database/provider or a "seed" source.
+  const isLive = realtimeState === "connected"
+  const lastUpdatedTime = formatGeneratedAt(generatedAt, locale)
 
   return (
     <section
@@ -538,15 +537,17 @@ export function LiveErpSimulation({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <StatusBadge variant={sourceVariant}>{sourceLabel}</StatusBadge>
+              {isLive && <StatusBadge variant="success">{copy.live}</StatusBadge>}
               <StatusBadge variant={requestState === "error" ? "danger" : "neutral"}>
-                {formatGeneratedAt(generatedAt, locale)}
+                {lastUpdatedTime
+                  ? copyText(copy.lastUpdated, { time: lastUpdatedTime })
+                  : copy.upToDate}
               </StatusBadge>
             </div>
           </div>
 
           <div className="mt-5 grid grid-cols-2 gap-2">
-            {[
+            {([
               {
                 href: resolveMetricHref("/dashboard/listings", [
                   "/dashboard/documents",
@@ -580,7 +581,8 @@ export function LiveErpSimulation({
                 icon: CreditCard,
                 label: copy.debt,
                 value: Math.round(summary.totalDebtTry / 1000),
-                helper: copy.debtUnit,
+                helper: "",
+                valueText: formatDual(summary.totalDebtTry, { short: true }),
               },
               {
                 href: resolveMetricHref("/dashboard/compliance", [
@@ -595,7 +597,14 @@ export function LiveErpSimulation({
                 value: summary.restrictedAccess,
                 helper: copy.restricted,
               },
-            ].map((item) => (
+            ] as Array<{
+              href: string
+              icon: LucideIcon
+              label: string
+              value: number
+              helper: string
+              valueText?: string
+            }>).map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
@@ -609,10 +618,16 @@ export function LiveErpSimulation({
                   {item.label}
                 </p>
                 <div className="mt-1 flex items-baseline gap-1">
-                  <AnimatedCounter value={item.value} className="text-2xl font-black text-foreground" />
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    {item.helper}
-                  </span>
+                  {item.valueText ? (
+                    <span className="text-lg font-black text-foreground">{item.valueText}</span>
+                  ) : (
+                    <AnimatedCounter value={item.value} className="text-2xl font-black text-foreground" />
+                  )}
+                  {item.helper ? (
+                    <span className="text-[11px] font-semibold text-muted-foreground">
+                      {item.helper}
+                    </span>
+                  ) : null}
                 </div>
               </Link>
             ))}
@@ -777,7 +792,7 @@ export function LiveErpSimulation({
                     <p className="text-slate-500">{copy.blocked}</p>
                   </div>
                   <div className="rounded-xl bg-amber-50 p-3">
-                    <p className="font-black text-slate-950">{formatTryShort(selectedBlock.debtTry)}</p>
+                    <p className="font-black text-slate-950">{formatDual(selectedBlock.debtTry, { short: true })}</p>
                     <p className="text-slate-500">{copy.debt.toLowerCase()}</p>
                   </div>
                 </div>

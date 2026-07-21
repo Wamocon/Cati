@@ -68,9 +68,9 @@ export const dashboardHomeCopy = {
           { time: "17:00", label: "Kapanış", value: 78, kind: "booking" },
         ],
       },
-      rbacTitle: "Rol bağlantıları aktif",
+      rbacTitle: "Herkes yalnızca yetkisini görür",
       rbacDescription:
-        "Dashboard kartları, API ve AI yanıtları aynı RBAC matrisinden geçer.",
+        "Her rol yalnızca kendi görebileceği sayfaları, verileri ve asistan yanıtlarını görür.",
     },
     roleWorkspaces: {
       common: {
@@ -264,6 +264,8 @@ export const dashboardHomeCopy = {
       bookingHelper: "Giriş, çıkış, temizlik, depozito",
     },
     alerts: {
+      title: "Operasyon uyarıları",
+      subtitle: "Öncelikli müdahale gerektiren canlı sinyaller.",
       aiRisk:
         "{count} operasyon riski AI kuyruğunda: borç, SLA ve check-out birlikte takip ediliyor.",
       access:
@@ -309,6 +311,10 @@ export const dashboardHomeCopy = {
       juneCollection: "Haziran tahsilat",
       depositRisk: "Depozito riski",
       financeSummaryAria: "Finans özetini aç",
+      financeSummaryTitle: "Finans özeti",
+      financeSummarySubtitle: "Aylık aidat, tahsilat ve depozito riski tek bakışta.",
+      slaRemaining: "{value} sa",
+      slaOverdue: "{value} sa gecikmede",
     },
   },
   en: {
@@ -380,9 +386,9 @@ export const dashboardHomeCopy = {
           { time: "17:00", label: "Closeout", value: 78, kind: "booking" },
         ],
       },
-      rbacTitle: "Role links active",
+      rbacTitle: "Everyone sees only what their role allows",
       rbacDescription:
-        "Dashboard cards, API access and AI answers all pass through the same RBAC matrix.",
+        "Each role sees the pages, data and assistant answers permitted for them.",
     },
     roleWorkspaces: {
       common: {
@@ -576,6 +582,8 @@ export const dashboardHomeCopy = {
       bookingHelper: "Check-in, check-out, cleaning, deposit",
     },
     alerts: {
+      title: "Operational alerts",
+      subtitle: "Live signals that need priority attention.",
       aiRisk:
         "{count} operational risks are in the AI queue: debt, SLA and check-out are tracked together.",
       access:
@@ -621,6 +629,10 @@ export const dashboardHomeCopy = {
       juneCollection: "June collection",
       depositRisk: "Deposit risk",
       financeSummaryAria: "Open finance summary",
+      financeSummaryTitle: "Finance summary",
+      financeSummarySubtitle: "Monthly dues, collection and deposit risk at a glance.",
+      slaRemaining: "{value}h",
+      slaOverdue: "{value}h overdue",
     },
   },
   de: {
@@ -692,9 +704,9 @@ export const dashboardHomeCopy = {
           { time: "17:00", label: "Abschluss", value: 78, kind: "booking" },
         ],
       },
-      rbacTitle: "Rollenverknüpfungen aktiv",
+      rbacTitle: "Jeder sieht nur, was seine Rolle erlaubt",
       rbacDescription:
-        "Dashboard-Karten, API-Zugriff und KI-Antworten laufen über dieselbe RBAC-Matrix.",
+        "Jede Rolle sieht nur die Seiten, Daten und Assistentenantworten, die für sie freigegeben sind.",
     },
     roleWorkspaces: {
       common: {
@@ -888,6 +900,8 @@ export const dashboardHomeCopy = {
       bookingHelper: "Check-in, Check-out, Reinigung, Kaution",
     },
     alerts: {
+      title: "Betriebswarnungen",
+      subtitle: "Live-Signale mit Handlungsbedarf.",
       aiRisk:
         "{count} Operationsrisiken liegen in der KI-Warteschlange: Schulden, SLA und Check-out werden gemeinsam verfolgt.",
       access:
@@ -933,6 +947,10 @@ export const dashboardHomeCopy = {
       juneCollection: "Juni-Zahlungseingang",
       depositRisk: "Kautionsrisiko",
       financeSummaryAria: "Finanzübersicht öffnen",
+      financeSummaryTitle: "Finanzübersicht",
+      financeSummarySubtitle: "Monatliche Beiträge, Zahlungseingang und Kautionsrisiko auf einen Blick.",
+      slaRemaining: "{value} Std",
+      slaOverdue: "{value} Std überfällig",
     },
   },
   ru: {
@@ -1004,9 +1022,9 @@ export const dashboardHomeCopy = {
           { time: "17:00", label: "Закрытие", value: 78, kind: "booking" },
         ],
       },
-      rbacTitle: "Ролевые связи активны",
+      rbacTitle: "Каждый видит только то, что разрешено его роли",
       rbacDescription:
-        "Карточки панели, API-доступ и AI-ответы проходят через одну RBAC-матрицу.",
+        "Каждая роль видит только страницы, данные и ответы ассистента, разрешённые для неё.",
     },
     roleWorkspaces: {
       common: {
@@ -1200,6 +1218,8 @@ export const dashboardHomeCopy = {
       bookingHelper: "Check-in, check-out, уборка, депозит",
     },
     alerts: {
+      title: "Операционные предупреждения",
+      subtitle: "Живые сигналы, требующие приоритетного внимания.",
       aiRisk:
         "{count} операционных рисков в AI-очереди: долг, SLA и check-out отслеживаются вместе.",
       access:
@@ -1245,6 +1265,10 @@ export const dashboardHomeCopy = {
       juneCollection: "Сбор за июнь",
       depositRisk: "Риск депозита",
       financeSummaryAria: "Открыть финансовую сводку",
+      financeSummaryTitle: "Финансовая сводка",
+      financeSummarySubtitle: "Ежемесячные взносы, сбор и риск депозита с одного взгляда.",
+      slaRemaining: "{value} ч",
+      slaOverdue: "просрочено на {value} ч",
     },
   },
 } as const
@@ -1256,4 +1280,142 @@ export type WorkloadKind =
 
 export function resolveDashboardHomeLocale(locale: string): DashboardHomeLocale {
   return locale in dashboardHomeCopy ? (locale as DashboardHomeLocale) : "tr"
+}
+
+// Human, localized labels for raw backend table names and status enums that can
+// leak through live snapshot data. A raw snake_case identifier (e.g.
+// "client_action_requests", "waiting_approval") must never reach the screen in
+// any locale. Tokens containing an underscore are safe to replace anywhere;
+// bare single-word tokens are only replaced when they form the whole value, so
+// we never corrupt the same word inside a normal sentence.
+const backendTermLabels: Record<DashboardHomeLocale, Record<string, string>> = {
+  tr: {
+    client_action_requests: "onay kuyruğu",
+    service_tickets: "servis talebi",
+    service_ticket: "servis talebi",
+    service_orders: "servis siparişi",
+    service_order: "servis siparişi",
+    workforce_tasks: "saha görevi",
+    workforce_task: "saha görevi",
+    ai_action_logs: "AI aksiyon kaydı",
+    finance_ledger_entries: "finans kaydı",
+    payment_transactions: "ödeme kaydı",
+    access_events: "erişim kaydı",
+    import_batches: "veri aktarımı",
+    reservations: "rezervasyon",
+    documents: "belge",
+    units: "daire",
+    waiting_approval: "onay bekliyor",
+    in_progress: "işlemde",
+    triage: "ön inceleme",
+    assigned: "atandı",
+    open: "açık",
+  },
+  en: {
+    client_action_requests: "approval queue",
+    service_tickets: "service request",
+    service_ticket: "service request",
+    service_orders: "service order",
+    service_order: "service order",
+    workforce_tasks: "field task",
+    workforce_task: "field task",
+    ai_action_logs: "AI recommendation",
+    finance_ledger_entries: "finance record",
+    payment_transactions: "payment record",
+    access_events: "access record",
+    import_batches: "data import",
+    reservations: "reservation",
+    documents: "document",
+    units: "unit",
+    waiting_approval: "waiting approval",
+    in_progress: "in progress",
+    triage: "triage",
+    assigned: "assigned",
+    open: "open",
+  },
+  de: {
+    client_action_requests: "Freigabewarteschlange",
+    service_tickets: "Serviceanfrage",
+    service_ticket: "Serviceanfrage",
+    service_orders: "Serviceauftrag",
+    service_order: "Serviceauftrag",
+    workforce_tasks: "Feldaufgabe",
+    workforce_task: "Feldaufgabe",
+    ai_action_logs: "KI-Empfehlung",
+    finance_ledger_entries: "Finanzeintrag",
+    payment_transactions: "Zahlungseintrag",
+    access_events: "Zugangseintrag",
+    import_batches: "Datenimport",
+    reservations: "Reservierung",
+    documents: "Dokument",
+    units: "Einheit",
+    waiting_approval: "wartet auf Freigabe",
+    in_progress: "in Arbeit",
+    triage: "Ersteinschätzung",
+    assigned: "zugewiesen",
+    open: "offen",
+  },
+  ru: {
+    client_action_requests: "очередь согласований",
+    service_tickets: "сервисная заявка",
+    service_ticket: "сервисная заявка",
+    service_orders: "сервисный заказ",
+    service_order: "сервисный заказ",
+    workforce_tasks: "полевая задача",
+    workforce_task: "полевая задача",
+    ai_action_logs: "AI-рекомендация",
+    finance_ledger_entries: "финансовая запись",
+    payment_transactions: "запись об оплате",
+    access_events: "запись доступа",
+    import_batches: "импорт данных",
+    reservations: "бронирование",
+    documents: "документ",
+    units: "юнит",
+    waiting_approval: "ожидает согласования",
+    in_progress: "в работе",
+    triage: "первичная оценка",
+    assigned: "назначено",
+    open: "открыто",
+  },
+}
+
+const backendTermFallback: Record<DashboardHomeLocale, string> = {
+  tr: "operasyon kaydı",
+  en: "operations record",
+  de: "Betriebsvorgang",
+  ru: "операционная запись",
+}
+
+const rawBackendTokenPattern = /^[a-z][a-z0-9]*(_[a-z0-9]+)+$/
+
+/**
+ * Replace backend table names / status enums with human, localized labels so no
+ * raw snake_case identifier or table name reaches the UI in any locale. If the
+ * value is still an unrecognized raw identifier after mapping, a friendly
+ * localized fallback is returned instead.
+ */
+export function localizeBackendTerm(value: string, locale: string): string {
+  if (!value) return value
+  const resolved = resolveDashboardHomeLocale(locale)
+  const labels = backendTermLabels[resolved]
+
+  let result = value
+  // 1) Multi-word tokens (with underscores) are safe to swap anywhere.
+  for (const [token, label] of Object.entries(labels)) {
+    if (!token.includes("_")) continue
+    result = result.replace(new RegExp(`\\b${token}\\b`, "gi"), label)
+  }
+
+  // 2) Bare single-word tokens are only swapped when they are the whole value.
+  const bareKey = result.trim().toLowerCase()
+  if (!bareKey.includes("_") && labels[bareKey]) {
+    return labels[bareKey]
+  }
+
+  // 3) Anything still shaped like a raw snake_case identifier gets a friendly label.
+  if (rawBackendTokenPattern.test(result.trim())) {
+    return backendTermFallback[resolved]
+  }
+
+  return result
 }
