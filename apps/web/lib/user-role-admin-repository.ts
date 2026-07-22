@@ -47,6 +47,10 @@ export interface ManagedUser {
   isCurrentActor: boolean
   // false for the caller's own row and for the platform-provisioned admin tier.
   mutable: boolean
+  // ISO timestamp when the user was anonymized (KVKK/GDPR soft delete), else
+  // null. An anonymized row is a read-only "Removed" record: the UI suppresses
+  // every mutation control for it and the DB has already severed its roles.
+  anonymizedAt: string | null
 }
 
 export interface UserAdministration {
@@ -239,6 +243,7 @@ function managedUserFromJson(value: unknown, actorId: string): ManagedUser {
     roles,
     isCurrentActor: id === actorId,
     mutable: id !== actorId && primaryRole !== "admin",
+    anonymizedAt: asString(record.anonymizedAt).trim() || null,
   }
 }
 
@@ -249,7 +254,7 @@ async function getSupabaseAdministration(
   const [profilesResponse, assignmentsResponse] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, role, is_active")
+      .select("id, full_name, email, role, is_active, anonymized_at")
       .eq("company_id", profile.company_id as string)
       .order("full_name", { ascending: true }),
     supabase
@@ -292,6 +297,7 @@ async function getSupabaseAdministration(
         roles,
         isCurrentActor: id === profile.id,
         mutable: id !== profile.id && primaryRole !== "admin",
+        anonymizedAt: asString(member.anonymized_at).trim() || null,
       } satisfies ManagedUser,
     ]
   })
@@ -356,6 +362,18 @@ async function createSupabaseManagedUser(
     )
   if (assignmentError) throw mapSupabaseError(assignmentError)
 
+  // The signup trigger (handle_new_user) seeds a base ('tenant', is_primary=true)
+  // assignment for every new auth user. For a non-tenant user that leaves a stray
+  // 'tenant' role AND a second is_primary row alongside the chosen role. Reconcile
+  // the assignments to exactly [input.role]: drop every other role so the upsert
+  // above is the single, primary assignment (matching the returned roles list).
+  const { error: pruneError } = await service
+    .from("profile_role_assignments")
+    .delete()
+    .eq("profile_id", newId)
+    .neq("role", input.role)
+  if (pruneError) throw mapSupabaseError(pruneError)
+
   const { data: row, error: readError } = await service
     .from("profiles")
     .select("id, full_name, email, role, is_active")
@@ -373,6 +391,7 @@ async function createSupabaseManagedUser(
     roles: [input.role],
     isCurrentActor: false,
     mutable: true,
+    anonymizedAt: null,
   }
 }
 
@@ -402,7 +421,7 @@ async function readManagedUser(
   const [profileResponse, assignmentsResponse] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, role, is_active")
+      .select("id, full_name, email, role, is_active, anonymized_at")
       .eq("id", profileId)
       .maybeSingle(),
     supabase
@@ -441,6 +460,7 @@ async function readManagedUser(
     roles,
     isCurrentActor: id === profile.id,
     mutable: id !== profile.id && primaryRole !== "admin",
+    anonymizedAt: asString(record.anonymized_at).trim() || null,
   }
 }
 
@@ -457,6 +477,10 @@ interface LocalManagedUserFacts {
   roles: Role[]
   isActive: boolean
   created: boolean
+  // Set when the local user is anonymized so the QA panel exercises the same
+  // read-only "Removed" treatment as the Supabase path. Undefined/null = active
+  // record.
+  anonymizedAt?: string | null
 }
 
 interface LocalUserAdminState {
@@ -532,6 +556,7 @@ function normalizeLocalFacts(value: unknown): LocalManagedUserFacts | null {
     roles,
     isActive: record.isActive !== false,
     created: record.created === true,
+    anonymizedAt: asString(record.anonymizedAt).trim() || null,
   }
 }
 
@@ -626,6 +651,7 @@ function toManagedUser(
     roles: sortRolesByLevel(facts.roles),
     isCurrentActor: facts.id === actorId,
     mutable: facts.id !== actorId && primaryRole !== "admin",
+    anonymizedAt: facts.anonymizedAt ?? null,
   }
 }
 
@@ -815,10 +841,38 @@ export async function setManagedUserActive(
   active: boolean
 ): Promise<ManagedUser> {
   if (isRealOrganizationAdmin(profile)) {
-    return callSupabaseRpc(profile, "admin_set_user_active", {
+    // Require the service-role config UP FRONT (like anonymizeManagedUser).
+    // admin_set_user_active only flips profiles.is_active (which the migration-50
+    // RLS guard now reads to resolve authority), but it does NOT touch auth.users,
+    // so a suspended user's existing credentials could still refresh a session.
+    // Suspending must therefore also BAN the GoTrue login; restoring lifts it.
+    // Checking first avoids flipping is_active without the matching ban.
+    const service = createServiceRoleClient()
+    if (!service) {
+      throw new UserAdminError(
+        "USER_ADMIN_SERVICE_ROLE_REQUIRED",
+        "Changing a user's access requires the server service-role configuration.",
+        503
+      )
+    }
+
+    const result = await callSupabaseRpc(profile, "admin_set_user_active", {
       p_profile_id: profileId,
       p_active: active,
     })
+
+    // Ban on suspend / unban on restore. The RPC (already committed) is the
+    // source of truth; surfacing a ban failure as a retryable error lets the
+    // operator retry — admin_set_user_active is idempotent. This SDK version has
+    // no signOut-by-user-id (admin.signOut requires the user's own JWT), so an
+    // already-issued access token lapses at expiry while the migration-50 RLS
+    // guard + getUserProfile deny it immediately.
+    const { error: banError } = await service.auth.admin.updateUserById(profileId, {
+      ban_duration: active ? "none" : "876000h",
+    })
+    if (banError) throw mapSupabaseError(banError)
+
+    return result
   }
   if (!isAccessProfileEnabled()) {
     throw new UserAdminError(
@@ -1009,11 +1063,26 @@ export async function anonymizeManagedUser(
     })
     if (error) throw mapSupabaseError(error)
 
-    // Disable the auth login. The RPC (already committed) is the source of truth;
-    // surfacing a ban failure lets the operator retry (the RPC is replay-safe).
+    // Ban the login AND erase the identifying auth.users fields. The RPC scrubs
+    // profiles.* but leaves auth.users PII (email/phone/metadata) intact, so a
+    // retained auth row still holds the original identifiers. Supabase rejects a
+    // NULL email, so use a synthetic, non-identifying placeholder keyed on the
+    // (unique) profile id. The RPC (already committed) is the source of truth;
+    // surfacing a failure lets the operator retry (the RPC is replay-safe).
+    //
+    // Interaction: the mig-38 on_auth_user_email_updated trigger mirrors this
+    // placeholder onto profiles.email, overwriting the RPC's NULL. That is
+    // acceptable — the placeholder carries no PII, so the scrub's intent (remove
+    // identifying data) still holds; the UI suppresses email for removed rows.
+    // phone is typed as string by the SDK but GoTrue clears it when null is sent.
     const { error: banError } = await service.auth.admin.updateUserById(
       profileId,
-      { ban_duration: "876000h" }
+      {
+        email: `anonymized+${profileId}@removed.invalid`,
+        phone: null as unknown as string,
+        user_metadata: { full_name: "Removed user", language: "tr" },
+        ban_duration: "876000h",
+      }
     )
     if (banError) throw mapSupabaseError(banError)
 
@@ -1032,6 +1101,7 @@ export async function anonymizeManagedUser(
     override.isActive = false
     override.fullName = "Removed user"
     override.email = ""
+    override.anonymizedAt = new Date().toISOString()
     // Drop the extra business roles, keeping a single role so the row stays a
     // valid local override (mirrors the DB keeping profiles.role after the
     // assignments are deleted).

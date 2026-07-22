@@ -133,6 +133,16 @@ export async function getUserProfile(): Promise<UserProfile | null> {
       }
     }
 
+    // Enforce deactivation + anonymization at the app layer. A suspended
+    // (is_active = false) or anonymized (anonymized_at set) profile is treated as
+    // unauthenticated so proxy.ts and the dashboard route guard redirect to
+    // login, matching the migration-50 RLS guard that resolves such a profile to
+    // no role. `is_active === false` (not just falsy) keeps a legacy NULL row
+    // active; `anonymized_at != null` catches any set timestamp.
+    if (profile?.is_active === false || profile?.anonymized_at != null) {
+      return null
+    }
+
     const role = isValidRole(profile?.role) ? (profile.role as Role) : "tenant"
 
     // Read the user's own role assignments (RLS allows own rows). Fall back to

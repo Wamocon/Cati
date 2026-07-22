@@ -107,6 +107,7 @@ const copy = {
     inactive: "Pasif",
     you: "Siz",
     protected: "Korumali",
+    removedBadge: "Kaldirildi",
     empty: "Gosterilecek kullanici yok.",
     lastRole: "Bir kullanici en az bir role sahip olmalidir.",
     failed: "Islem tamamlanamadi. Yenileyip tekrar deneyin.",
@@ -155,6 +156,7 @@ const copy = {
     inactive: "Inactive",
     you: "You",
     protected: "Protected",
+    removedBadge: "Removed",
     empty: "No users to show.",
     lastRole: "A user must keep at least one role.",
     failed: "The action could not be completed. Refresh and try again.",
@@ -203,6 +205,7 @@ const copy = {
     inactive: "Inaktiv",
     you: "Sie",
     protected: "Geschutzt",
+    removedBadge: "Entfernt",
     empty: "Keine Benutzer vorhanden.",
     lastRole: "Ein Benutzer muss mindestens eine Rolle behalten.",
     failed: "Aktion nicht abgeschlossen. Aktualisieren und erneut versuchen.",
@@ -251,6 +254,7 @@ const copy = {
     inactive: "Неактивен",
     you: "Вы",
     protected: "Защищено",
+    removedBadge: "Удалён",
     empty: "Нет пользователей для отображения.",
     lastRole: "У пользователя должна остаться хотя бы одна роль.",
     failed: "Действие не выполнено. Обновите и повторите.",
@@ -571,6 +575,12 @@ export function UserAdministrationPanel() {
             ) : data && data.users.length > 0 ? (
               <ul className="grid gap-3">
                 {data.users.map((item) => {
+                  // Anonymized (KVKK/GDPR soft-deleted) rows are read-only "Removed"
+                  // records: the DB has severed their roles and disabled login, so
+                  // no mutation control is offered (this also removes the dead
+                  // "Restore access" affordance that could never bring roles back).
+                  const removed = item.anonymizedAt != null
+                  const canManage = item.mutable && !removed
                   const availableToAdd = ASSIGNABLE.filter((candidate) => !item.roles.includes(candidate))
                   const choice = addRoleChoice[item.id] ?? availableToAdd[0] ?? "manager"
                   const isBusy = busyId === item.id
@@ -581,16 +591,22 @@ export function UserAdministrationPanel() {
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="min-w-0 break-words text-sm font-black text-foreground">{item.fullName}</p>
                             {item.isCurrentActor && <StatusBadge variant="accent">{t.you}</StatusBadge>}
-                            {!item.mutable && !item.isCurrentActor && (
-                              <StatusBadge variant="neutral">{t.protected}</StatusBadge>
+                            {removed ? (
+                              <StatusBadge variant="neutral">{t.removedBadge}</StatusBadge>
+                            ) : (
+                              <>
+                                {!item.mutable && !item.isCurrentActor && (
+                                  <StatusBadge variant="neutral">{t.protected}</StatusBadge>
+                                )}
+                                <StatusBadge variant={item.isActive ? "success" : "danger"}>
+                                  {item.isActive ? t.active : t.inactive}
+                                </StatusBadge>
+                              </>
                             )}
-                            <StatusBadge variant={item.isActive ? "success" : "danger"}>
-                              {item.isActive ? t.active : t.inactive}
-                            </StatusBadge>
                           </div>
-                          {item.email && <p className="mt-1 min-w-0 break-words text-xs text-muted-foreground">{item.email}</p>}
+                          {!removed && item.email && <p className="mt-1 min-w-0 break-words text-xs text-muted-foreground">{item.email}</p>}
                         </div>
-                        {item.mutable && (
+                        {canManage && (
                           <div className="flex flex-wrap items-center gap-2">
                             <button
                               type="button"
@@ -639,7 +655,7 @@ export function UserAdministrationPanel() {
                               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs font-bold text-foreground"
                             >
                               {t.roleLabels[assigned]}
-                              {item.mutable && assigned !== "admin" && item.roles.length > 1 && (
+                              {canManage && assigned !== "admin" && item.roles.length > 1 && (
                                 <button
                                   type="button"
                                   aria-label={`${t.roleLabels[assigned]} -`}
@@ -656,7 +672,7 @@ export function UserAdministrationPanel() {
                       </div>
 
                       {/* Add role */}
-                      {item.mutable && availableToAdd.length > 0 && (
+                      {canManage && availableToAdd.length > 0 && (
                         <div className="mt-3 flex flex-wrap items-center gap-2">
                           <select
                             value={choice}
