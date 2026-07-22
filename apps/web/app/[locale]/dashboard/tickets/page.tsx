@@ -80,7 +80,7 @@ import {
   type ServiceStatus,
   type WorkforceTaskRecord,
 } from "@/lib/site-management-data"
-import { formatDual } from "@/lib/currency"
+import { formatDual, formatDualFromCents } from "@/lib/currency"
 
 type RequestState = "idle" | "loading" | "success" | "error"
 type WorkflowDecision = "approved" | "rejected"
@@ -699,6 +699,34 @@ function estimatedTicketCostTry(ticket: ServiceTicket) {
     low: 900,
   }
   return byPriority[ticket.priority] ?? 1500
+}
+
+// Persisted estimate (minor units) when the DB stored one; used to keep the amount
+// identical across viewers instead of a per-client render-time compute.
+function storedTicketCostCents(ticket: ServiceTicket) {
+  return typeof ticket.estimatedCostCents === "number" &&
+    Number.isFinite(ticket.estimatedCostCents) &&
+    ticket.estimatedCostCents > 0
+    ? ticket.estimatedCostCents
+    : null
+}
+
+// Dual-currency label for the estimate: prefer the persisted amount, otherwise fall
+// back to the deterministic compute (offline/QA and finance-redacted roles). The
+// helper and the DB default share the same tiers, so the number is consistent.
+function estimatedTicketCostLabel(ticket: ServiceTicket) {
+  const cents = storedTicketCostCents(ticket)
+  if (cents !== null) {
+    return formatDualFromCents(cents, ticket.estimatedCostCurrency ?? "TRY")
+  }
+  return formatDual(estimatedTicketCostTry(ticket))
+}
+
+// Numeric estimate for sorting: persisted major-unit amount when present, else the
+// deterministic compute.
+function estimatedTicketCostSortValue(ticket: ServiceTicket) {
+  const cents = storedTicketCostCents(ticket)
+  return cents !== null ? cents / 100 : estimatedTicketCostTry(ticket)
 }
 
 // Unit-type tokens that must never be shown as a ticket subject (the subject
@@ -2400,7 +2428,7 @@ export default function TicketsPage() {
                       </>
                     )}
                     {t("Tahmini maliyet")}:{" "}
-                    {formatDual(estimatedTicketCostTry(selectedTicket))}
+                    {estimatedTicketCostLabel(selectedTicket)}
                   </p>
                 )}
               </div>
@@ -3373,7 +3401,7 @@ export default function TicketsPage() {
                     <p className="text-sm font-bold text-foreground">
                       {maskFinance
                         ? serviceStatusLabel(ticket.status, locale)
-                        : `${t("Tahmini")} ${formatDual(estimatedTicketCostTry(ticket))}`}
+                        : `${t("Tahmini")} ${estimatedTicketCostLabel(ticket)}`}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       SLA {slaHoursLabel(ticket.slaHoursRemaining, locale)}
@@ -3614,9 +3642,9 @@ export default function TicketsPage() {
                       header: `${t("Tahmini")} ${t("Maliyet")}`,
                       sortable: true,
                       sortValue: (ticket: ServiceTicket) =>
-                        estimatedTicketCostTry(ticket),
+                        estimatedTicketCostSortValue(ticket),
                       render: (ticket: ServiceTicket) =>
-                        formatDual(estimatedTicketCostTry(ticket)),
+                        estimatedTicketCostLabel(ticket),
                     },
                   ]
                 : []),

@@ -94,6 +94,15 @@ export interface ServiceTicket {
   paymentVerified: boolean
   mediaCount: number
   estimatedCostTry: number
+  /**
+   * Persisted estimate in minor units (kuruş), stamped at creation by the
+   * `create_service_ticket_command` RPC. Present on the Supabase read path for
+   * finance-readable roles; absent offline/QA and for finance-redacted roles,
+   * where the UI falls back to the deterministic compute.
+   */
+  estimatedCostCents?: number
+  /** Currency of the persisted estimate (defaults to TRY). */
+  estimatedCostCurrency?: "TRY" | "EUR"
   /** Opaque optimistic-concurrency token returned by the ticket API. */
   version?: string
   workflowState?: string

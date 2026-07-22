@@ -3494,6 +3494,21 @@ function normalizeServiceTicketRows(
     const estimatedCostTry = Math.round(
       asNumber(record.estimated_cost_cents) / 100
     )
+    // Expose the persisted estimate (cents + currency) when the row carries one.
+    // read_service_ticket_queue_safe redacts estimated_cost_cents to NULL for
+    // roles without finance access, so this stays undefined for owner/tenant and
+    // the UI falls back to the deterministic compute (which mirrors this value).
+    const rawEstimatedCostCents = asNullableNumber(record.estimated_cost_cents)
+    const estimatedCostCents =
+      rawEstimatedCostCents !== null && rawEstimatedCostCents > 0
+        ? rawEstimatedCostCents
+        : undefined
+    const estimatedCostCurrency =
+      estimatedCostCents === undefined
+        ? undefined
+        : asNullableString(record.estimated_cost_currency) === "EUR"
+          ? ("EUR" as const)
+          : ("TRY" as const)
 
     const ticket: ServiceTicket = {
       id: ticketNo,
@@ -3524,6 +3539,8 @@ function normalizeServiceTicketRows(
         (media) => asString(media.verification_status, "pending") !== "rejected"
       ).length,
       estimatedCostTry,
+      estimatedCostCents,
+      estimatedCostCurrency,
       version: asString(
         record.workflow_version,
         asString(record.updated_at, "1")
@@ -3602,6 +3619,8 @@ export function serviceTicketApiViewForRole(
     if (!ownerDecisionPending) {
       delete result.requesterRole
       delete result.estimatedCostTry
+      delete result.estimatedCostCents
+      delete result.estimatedCostCurrency
     }
   }
   return result
@@ -5632,6 +5651,20 @@ function ticketMutationFromRpc(
   })
   const approvalStatus = ticketApprovalState(row.approval_status, rawStatus)
   const version = asString(row.workflow_version, fallback.version ?? "1")
+  // Surface the persisted estimate returned by the create/transition RPC (the raw
+  // service_tickets row is redacted per role, so this stays undefined when the
+  // caller cannot read finance).
+  const rawMutationCostCents = asNullableNumber(row.estimated_cost_cents)
+  const estimatedCostCents =
+    rawMutationCostCents !== null && rawMutationCostCents > 0
+      ? rawMutationCostCents
+      : undefined
+  const estimatedCostCurrency =
+    estimatedCostCents === undefined
+      ? undefined
+      : asNullableString(row.estimated_cost_currency) === "EUR"
+        ? ("EUR" as const)
+        : ("TRY" as const)
   const paymentWorkflowStatus = emergency
     ? "not_required"
     : derivePaymentState(
@@ -5662,6 +5695,8 @@ function ticketMutationFromRpc(
     estimatedCostTry: Math.round(
       asNumber(row.estimated_cost_cents, fallback.estimatedCostTry * 100) / 100
     ),
+    estimatedCostCents,
+    estimatedCostCurrency,
     version,
     workflowState,
     approvalStatus,
