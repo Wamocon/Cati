@@ -17,13 +17,22 @@
    2>&1`), or use `${PIPESTATUS[0]}`, and ALWAYS read the summary line in the file
    (`N passed / N failed`), never trust the reported exit code of a piped command.
 
-2. **Run the FULL Playwright suite in production-server mode, not dev.** In dev
-   mode the long run (~391 tests over ~17 min) exhausts the Next dev server's
-   memory and it dies mid-run → hundreds of `ERR_CONNECTION_REFUSED` that look like
-   failures but are an environment crash. Use `PLAYWRIGHT_SERVER_MODE=production`
-   (memory-stable `next start`; needs a build). Use dev only for targeted specs.
-   Nuance in this repo's `playwright.config.ts`: only the literal value
-   `"production"` triggers `next start`; `"start"` falls through to dev.
+2. **Run the e2e in DEV mode (the default) — production mode needs a specially-built
+   `.next` or ~62 tests fail uniformly.** `playwright.config.ts`'s webServer BLANKS
+   `NEXT_PUBLIC_SUPABASE_URL/ANON_KEY` at RUNTIME so the suite uses local-seed +
+   access profiles. That runtime blank only works in **dev** (`next dev` reads env
+   live). In **production** (`PLAYWRIGHT_SERVER_MODE=production` → `next start`),
+   `NEXT_PUBLIC_*` are INLINED AT BUILD TIME — so if you reuse a `.next` built from
+   the real `.env.local`, Supabase stays configured, `isAccessProfileEnabled()` is
+   false, the `/api/access-profile` endpoint 403s, and every role/dashboard/ticket
+   test fails at once (a symptom seen as "62 failed / 14 passed in 2.9 min" — an ENV
+   artifact, NOT regressions). Reliable options: (a) just use dev mode — it ran the
+   full 744-test suite to completion here (743 passed / 1 flaky), the earlier OOM
+   fear did not reproduce; or (b) if you truly need production mode, first build with
+   `NEXT_PUBLIC_SUPABASE_URL="" NEXT_PUBLIC_SUPABASE_ANON_KEY="" pnpm build`, then
+   `PLAYWRIGHT_SERVER_MODE=production`. NEVER trust a production run that reused a
+   `.next` built from `.env.local`. (Note: only the literal `"production"` triggers
+   `next start`; `"start"`/anything else = dev.)
 
 3. **Kill stray servers on the e2e port before running.** Agents/prior runs leave
    a `next start`/`next dev` on port 3100, and the next run aborts with
