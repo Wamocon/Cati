@@ -726,7 +726,7 @@ test.describe("Owner finance statement - user experience", () => {
     )
     await expect(
       page.getByTestId("owner-finance-refresh-policy")
-    ).toContainText("authorized statement API")
+    ).toContainText("read-only snapshot")
     expect(firstWindowRequests).toBe(1)
 
     const refresh = page.waitForResponse(
@@ -839,7 +839,7 @@ test.describe("Owner finance statement - user experience", () => {
       page.getByRole("heading", { name: "Mali durumum", level: 1 })
     ).toBeVisible()
     await expect(page.getByTestId("owner-finance-source")).toContainText(
-      "Yerel demo verisi"
+      "Örnek veriler"
     )
     const financeNavigation = page.locator(
       'aside a[href$="/dashboard/finance"]'
