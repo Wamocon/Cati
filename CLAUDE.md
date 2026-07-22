@@ -7,6 +7,8 @@
 
 Diese Datei MUSS bei jeder zukünftigen Bearbeitung dieses Repositories zuerst gelesen werden, bevor Code geändert wird. Sie beschreibt Architektur, Datenmodell, Konventionen und Automatisierung so detailliert, dass ein Agent ohne weitere Exploration produktiv arbeiten kann.
 
+> **Lies zuerst auch [`LESSONS-LEARNED.md`](LESSONS-LEARNED.md) (Repo-Wurzel)** und [`docs/PROJECT-STATUS-2026-07-22.md`](docs/PROJECT-STATUS-2026-07-22.md). LESSONS-LEARNED enthält konkrete, wiederkehrende Fehler und ihre korrekten Lösungen aus früheren Sessions (Test-Exit-Codes hinter `tail` verstecken, e2e im dev-Modus OOM, Supabase-Grant-Hardening, RBAC-Rollen-Kaskaden, Seed-Drift, Migrationen gegen echtes Postgres validieren). Sie sind absichtlich eingecheckt, damit jede Maschine/Session sie erbt; ergänze sie bei jedem neuen nicht-offensichtlichen Fehler.
+
 ---
 
 ## 0. Dokumenten-Hierarchie (was gilt bei Widersprüchen)
