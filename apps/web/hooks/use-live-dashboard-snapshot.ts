@@ -124,22 +124,31 @@ export function useLiveDashboardSnapshot({
   }, [includePhase4])
 
   useEffect(() => {
+    // `refresh` rejects on a failed fetch (e.g. a 403 from the dashboard API) so
+    // the explicit refresh button can surface an error. Background/auto refreshes
+    // must never leave that rejection unhandled — it would bubble up as an
+    // `unhandledRejection`. Swallow it here: the hook already flips requestState
+    // to "error" and callers transparently fall back to the seed snapshot.
+    const safeRefresh = () => {
+      void refresh().catch(() => {})
+    }
+
     const initialRefresh = window.setTimeout(() => {
-      void refresh()
+      safeRefresh()
     }, 0)
 
     const interval = window.setInterval(() => {
-      void refresh()
+      safeRefresh()
     }, refreshIntervalMs)
 
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
-        void refresh()
+        safeRefresh()
       }
     }
 
     const handleOperationalChange = () => {
-      void refresh()
+      safeRefresh()
     }
 
     document.addEventListener("visibilitychange", handleVisibility)
@@ -167,7 +176,7 @@ export function useLiveDashboardSnapshot({
         "postgres_changes",
         { event: "*", schema: "public", table },
         () => {
-          void refresh()
+          void refresh().catch(() => {})
         }
       )
     })

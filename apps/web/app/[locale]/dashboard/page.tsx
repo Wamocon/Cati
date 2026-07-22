@@ -580,6 +580,12 @@ function RoleFocusedDashboard({
   const cards = config.cards.filter((card) =>
     hasPermission(role, card.resource, "view")
   )
+  // Balance the shortcut row so a 5-card role (accountant) never leaves a lonely
+  // card in a fixed 4-up grid: 5-up on xl, 3-up on lg, 2-up on sm.
+  const cardGridClass =
+    cards.length === 5
+      ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+      : "grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
 
   return (
     <div className="space-y-6">
@@ -594,7 +600,7 @@ function RoleFocusedDashboard({
 
       <RoleFocusedLiveDashboard role={role} />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className={cardGridClass}>
         {cards.map((card) => {
           const label = dashboardT(`menu.${card.resource}`)
           return (
@@ -605,14 +611,14 @@ function RoleFocusedDashboard({
               role={role}
             >
               <Card3D glow={false}>
-                <div className="flex items-center gap-3">
+                <div className="flex min-h-10 items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <card.icon className="h-5 w-5" />
+                    <card.icon aria-hidden="true" className="h-5 w-5" />
                   </span>
-                  <span className="min-w-0 flex-1 text-sm font-black text-card-foreground">
+                  <span className="min-w-0 flex-1 text-sm font-black leading-tight text-card-foreground break-normal hyphens-none">
                     {label}
                   </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover/command:text-primary" />
+                  <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover/command:text-primary" />
                 </div>
               </Card3D>
             </CommandLink>
@@ -1318,6 +1324,11 @@ function OperationsDashboard({
                 formatValue={(value) => `%${value}`}
                 height={172}
               />
+              <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                {copyText(copy.charts.occupancyCaption, {
+                  value: summary.occupancyRate,
+                })}
+              </p>
             </Card3D>
           )}
         </CommandLink>
@@ -1496,9 +1507,13 @@ function OperationsDashboard({
                 role={user.role}
               >
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{booking.flatNumber}</p>
-                  <StatusBadge variant="info">{booking.channel}</StatusBadge>
+                  {/* Booking source is metadata, not an SLA status — render it as a
+                      subtle muted label so it never reads as a coloured status pill. */}
+                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    {booking.channel}
+                  </span>
                 </div>
                 <p className="mt-2 text-sm text-foreground">{booking.guestName}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{copy.charts.depositRisk}: {formatDual(booking.depositTry, { short: true })}</p>

@@ -1,6 +1,6 @@
 "use client"
 
-import { BadgeCheck, Languages, ShieldCheck, UserCog, Users, WalletCards } from "lucide-react"
+import { BadgeCheck, ShieldCheck, UserCog, Users, WalletCards } from "lucide-react"
 import { useLocale } from "next-intl"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
@@ -15,7 +15,6 @@ import {
   localizeDashboardTextPart,
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
-import { formatDual } from "@/lib/currency"
 import {
   getResidentSummary,
   getStaffSummary,
@@ -28,21 +27,16 @@ const usersCopy = {
   tr: {
     title: "Kullanıcılar & Roller",
     subtitle: "Malik, kiracı, misafir ve personel kayıtları; dil, görev yükü ve yetki kapsamı tek yönetim alanında izlenir.",
-    staff: "Personel",
-    residentRecords: "Sakin kaydı",
-    activeTasks: "Aktif görev",
-    financeApprovers: "Finans onaycı",
-    staffScopeTitle: "Personel operasyon kapsamı",
-    staffScopeBody: "Her ekip üyesinin rolü, saha yükü, onay limiti ve erişim kapsamı yönetim için görünürdür.",
-    permissionTitle: "Yetki prensibi",
-    permissionBody: "Kullanıcı sadece kendi görevi için gerekli modülleri görür. Finans, erişim ve kullanıcı yönetimi ayrı onay kapsamındadır.",
-    task: "Görev",
-    limit: "Limit",
-    scope: "Kapsam",
-    owner: "Malik",
-    tenant: "Kiracı",
-    guest: "Misafir",
-    risky: "Riskli",
+    kpi: {
+      staff: { label: "Personel", caption: "İç ekip hesabı" },
+      residents: { label: "Sakin kaydı", caption: "Malik, kiracı ve misafir" },
+      tasks: { label: "Açık personel görevi", caption: "Tüm personelde aktif saha görevi" },
+      financeApprovers: { label: "Finans onaycı", caption: "Finans onaylayabilen kullanıcı" },
+    },
+    rosterTitle: "Personel listesi",
+    rosterBody: "Her personelin rolü, ekibi, görev yükü, erişim kapsamı ve durumu tek sıralanabilir listede.",
+    rolesTitle: "Roller bir bakışta",
+    rolesBody: "Altı atanabilir rol ve her rolün finans onayı, erişim kısıtı, kullanıcı yönetimi ve dışa aktarım yetkisi.",
     yes: "Var",
     no: "Yok",
     headers: {
@@ -55,6 +49,7 @@ const usersCopy = {
       users: "Kullanıcı",
       finance: "Finans",
       access: "Erişim",
+      manage: "Kullanıcı yön.",
       export: "Dışa aktarım",
     },
     roles: { admin: "Yönetim", manager: "Sorumlu", accountant: "Muhasebe", staff: "Personel" },
@@ -65,21 +60,16 @@ const usersCopy = {
   en: {
     title: "Users & Roles",
     subtitle: "Owner, tenant, guest and staff records are managed with language, workload and permission scope in one administration view.",
-    staff: "Staff",
-    residentRecords: "Resident records",
-    activeTasks: "Active tasks",
-    financeApprovers: "Finance approvers",
-    staffScopeTitle: "Staff operating scope",
-    staffScopeBody: "Each team member's role, field load, approval limit and access scope are visible to management.",
-    permissionTitle: "Permission principle",
-    permissionBody: "Users only see the modules required for their work. Finance, access and user administration stay in separate approval scopes.",
-    task: "Tasks",
-    limit: "Limit",
-    scope: "Scope",
-    owner: "Owner",
-    tenant: "Tenant",
-    guest: "Guest",
-    risky: "Risk",
+    kpi: {
+      staff: { label: "Staff members", caption: "Internal team accounts" },
+      residents: { label: "Resident records", caption: "Owners, tenants and guests" },
+      tasks: { label: "Open staff tasks", caption: "Active field tasks across all staff" },
+      financeApprovers: { label: "Finance approvers", caption: "Users who can approve finance" },
+    },
+    rosterTitle: "Staff roster",
+    rosterBody: "Every staff member's role, team, workload, access scope and status in one sortable list.",
+    rolesTitle: "Roles at a glance",
+    rolesBody: "The six assignable roles and each role's finance approval, access restriction, user management and export rights.",
     yes: "Yes",
     no: "No",
     headers: {
@@ -92,6 +82,7 @@ const usersCopy = {
       users: "Users",
       finance: "Finance",
       access: "Access",
+      manage: "Manage users",
       export: "Export",
     },
     roles: { admin: "Administration", manager: "Manager", accountant: "Accounting", staff: "Staff" },
@@ -102,21 +93,16 @@ const usersCopy = {
   de: {
     title: "Benutzer & Rollen",
     subtitle: "Eigentümer-, Mieter-, Gäste- und Personaldaten werden mit Sprache, Arbeitslast und Berechtigungsumfang zentral verwaltet.",
-    staff: "Personal",
-    residentRecords: "Bewohnerdaten",
-    activeTasks: "Aktive Aufgaben",
-    financeApprovers: "Finanzfreigaben",
-    staffScopeTitle: "Operationsumfang des Personals",
-    staffScopeBody: "Rolle, Feldlast, Freigabelimit und Zugriffsbereich jedes Teammitglieds sind für das Management sichtbar.",
-    permissionTitle: "Berechtigungsprinzip",
-    permissionBody: "Benutzer sehen nur die Module, die für ihre Aufgabe nötig sind. Finanzen, Zugang und Benutzerverwaltung bleiben getrennte Freigabebereiche.",
-    task: "Aufgaben",
-    limit: "Limit",
-    scope: "Umfang",
-    owner: "Eigentümer",
-    tenant: "Mieter",
-    guest: "Gast",
-    risky: "Risiko",
+    kpi: {
+      staff: { label: "Mitarbeiter", caption: "Interne Teamkonten" },
+      residents: { label: "Bewohnerdaten", caption: "Eigentümer, Mieter und Gäste" },
+      tasks: { label: "Offene Mitarbeiteraufgaben", caption: "Aktive Feldaufgaben über alle Mitarbeiter" },
+      financeApprovers: { label: "Finanzfreigaben", caption: "Nutzer mit Finanzfreigabe" },
+    },
+    rosterTitle: "Mitarbeiterliste",
+    rosterBody: "Rolle, Team, Auslastung, Zugriffsbereich und Status jedes Mitarbeiters in einer sortierbaren Liste.",
+    rolesTitle: "Rollen auf einen Blick",
+    rolesBody: "Die sechs zuweisbaren Rollen und ihre Rechte für Finanzfreigabe, Zugriffssperre, Benutzerverwaltung und Export.",
     yes: "Ja",
     no: "Nein",
     headers: {
@@ -129,6 +115,7 @@ const usersCopy = {
       users: "Benutzer",
       finance: "Finanzen",
       access: "Zugang",
+      manage: "Benutzerverw.",
       export: "Export",
     },
     roles: { admin: "Administration", manager: "Manager", accountant: "Buchhaltung", staff: "Personal" },
@@ -139,21 +126,16 @@ const usersCopy = {
   ru: {
     title: "Пользователи и роли",
     subtitle: "Записи владельцев, арендаторов, гостей и сотрудников управляются вместе с языком, нагрузкой и областью доступа.",
-    staff: "Персонал",
-    residentRecords: "Записи резидентов",
-    activeTasks: "Активные задачи",
-    financeApprovers: "Финансовые согласующие",
-    staffScopeTitle: "Операционный охват персонала",
-    staffScopeBody: "Роль, полевая нагрузка, лимит одобрения и доступ каждого сотрудника видны управлению.",
-    permissionTitle: "Принцип доступа",
-    permissionBody: "Пользователь видит только нужные для своей работы модули. Финансы, доступ и управление пользователями остаются отдельными зонами одобрения.",
-    task: "Задачи",
-    limit: "Лимит",
-    scope: "Охват",
-    owner: "Владелец",
-    tenant: "Арендатор",
-    guest: "Гость",
-    risky: "Риск",
+    kpi: {
+      staff: { label: "Сотрудники", caption: "Внутренние учётные записи" },
+      residents: { label: "Записи резидентов", caption: "Владельцы, арендаторы и гости" },
+      tasks: { label: "Открытые задачи персонала", caption: "Активные полевые задачи по всем сотрудникам" },
+      financeApprovers: { label: "Финансовые согласующие", caption: "Пользователи с правом согласования финансов" },
+    },
+    rosterTitle: "Список персонала",
+    rosterBody: "Роль, команда, нагрузка, область доступа и статус каждого сотрудника в одном сортируемом списке.",
+    rolesTitle: "Роли кратко",
+    rolesBody: "Шесть назначаемых ролей и права каждой на согласование финансов, ограничение доступа, управление пользователями и экспорт.",
     yes: "Да",
     no: "Нет",
     headers: {
@@ -166,6 +148,7 @@ const usersCopy = {
       users: "Пользователи",
       finance: "Финансы",
       access: "Доступ",
+      manage: "Упр. польз.",
       export: "Экспорт",
     },
     roles: { admin: "Администрация", manager: "Менеджер", accountant: "Бухгалтерия", staff: "Персонал" },
@@ -218,141 +201,53 @@ export default function UsersPage() {
   const staffSummary = getStaffSummary()
   const residentSummary = getResidentSummary()
 
+  const kpiCards = [
+    { key: "staff", Icon: UserCog, tone: "text-primary", ...copy.kpi.staff, value: staffSummary.total },
+    { key: "residents", Icon: Users, tone: "text-teal-600", ...copy.kpi.residents, value: residentSummary.total },
+    { key: "tasks", Icon: BadgeCheck, tone: "text-amber-600", ...copy.kpi.tasks, value: staffSummary.activeTasks },
+    { key: "finance", Icon: WalletCards, tone: "text-rose-600", ...copy.kpi.financeApprovers, value: staffSummary.financeApprovers },
+  ] as const
+
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="space-y-8">
+      <header>
         <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {copy.subtitle}
         </p>
-      </div>
+      </header>
 
+      {/* Unambiguous KPI strip: each tile states exactly what it counts. */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <UserCog className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.staff}</p>
-              <AnimatedCounter value={staffSummary.total} className="text-2xl font-black" />
+        {kpiCards.map(({ key, Icon, tone, label, caption, value }) => (
+          <Card3D key={key} glow={false}>
+            <div className="flex items-start gap-3">
+              <Icon className={`h-8 w-8 shrink-0 ${tone}`} aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+                <AnimatedCounter value={value} className="text-2xl font-black" />
+                <p className="mt-1 text-xs leading-4 text-muted-foreground">{caption}</p>
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-teal-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.residentRecords}</p>
-              <AnimatedCounter value={residentSummary.total} className="text-2xl font-black" />
-            </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <BadgeCheck className="h-8 w-8 text-amber-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.activeTasks}</p>
-              <AnimatedCounter value={staffSummary.activeTasks} className="text-2xl font-black" />
-            </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <WalletCards className="h-8 w-8 text-rose-600" />
-            <div>
-              <p className="text-xs font-semibold uppercase text-muted-foreground">{copy.financeApprovers}</p>
-              <AnimatedCounter value={staffSummary.financeApprovers} className="text-2xl font-black" />
-            </div>
-          </div>
-        </Card3D>
+          </Card3D>
+        ))}
       </div>
 
+      {/* 1. Administration: create users, assign roles, deactivate access (admin only; self-hides otherwise). */}
       <UserAdministrationPanel />
 
-      <RoleGovernancePanel />
-
-      <RegistrationReviewPanel />
-
+      {/* 2. People directory: live staff, residents and role coverage. */}
       <PeopleDirectoryLive />
 
-      <TenantAccessLivePanel />
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card3D className="xl:col-span-2" glow={false}>
-          <div className="mb-4">
-            <h2 className="text-sm font-bold text-card-foreground">{copy.staffScopeTitle}</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {copy.staffScopeBody}
-            </p>
+      {/* Full, sortable staff roster backing the directory. */}
+      <section aria-labelledby="staff-roster-heading" className="space-y-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h2 id="staff-roster-heading" className="text-lg font-black text-foreground">{copy.rosterTitle}</h2>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {staffMembers.map((member) => (
-              <div key={member.id} className="rounded-xl border border-border bg-muted/30 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex flex-wrap gap-2">
-                      <StatusBadge variant={staffRoleVariant(member.role)}>{staffRoleLabel(member.role, copy)}</StatusBadge>
-                      <StatusBadge variant={statusVariant(member.status)}>{statusLabel(member.status, copy)}</StatusBadge>
-                    </div>
-                    <h3 className="mt-2 text-sm font-black text-foreground">{t(member.name)}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{t(member.team)} - {member.phone}</p>
-                  </div>
-                  <Languages className="h-5 w-5 text-primary" />
-                </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div className="rounded-lg bg-background/70 p-2">
-                    <p className="text-muted-foreground">{copy.task}</p>
-                    <p className="font-bold text-foreground">{member.activeTasks}</p>
-                  </div>
-                  <div className="rounded-lg bg-background/70 p-2">
-                    <p className="text-muted-foreground">{copy.limit}</p>
-                    <p className="font-bold text-foreground">{formatDual(member.approvalLimitTry)}</p>
-                  </div>
-                  <div className="rounded-lg bg-background/70 p-2">
-                    <p className="text-muted-foreground">{copy.scope}</p>
-                    <p className="font-bold text-foreground">{scopeLabel(member.accessScope, copy)}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card3D>
-
-        <div className="space-y-4">
-          <Card3D glow={false}>
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <h2 className="text-sm font-bold text-card-foreground">{copy.permissionTitle}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {copy.permissionBody}
-                </p>
-              </div>
-            </div>
-          </Card3D>
-          <Card3D glow={false}>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">{copy.owner}</p>
-                <p className="mt-1 text-xl font-black">{residentSummary.owners}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">{copy.tenant}</p>
-                <p className="mt-1 text-xl font-black">{residentSummary.tenants}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">{copy.guest}</p>
-                <p className="mt-1 text-xl font-black">{residentSummary.guests}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 p-3">
-                <p className="text-xs text-muted-foreground">{copy.risky}</p>
-                <p className="mt-1 text-xl font-black">{residentSummary.highRisk}</p>
-              </div>
-            </div>
-          </Card3D>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{copy.rosterBody}</p>
         </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-2">
         <DataTable
           data={staffMembers}
           searchValue={(member) => `${t(member.name)} ${t(member.team)} ${staffRoleLabel(member.role, copy)} ${member.phone}`}
@@ -366,7 +261,17 @@ export default function UsersPage() {
             { key: "status", header: copy.headers.status, render: (member) => <StatusBadge variant={statusVariant(member.status)}>{statusLabel(member.status, copy)}</StatusBadge> },
           ]}
         />
+      </section>
 
+      {/* 3. Single roles reference: one compact capability matrix for the six roles. */}
+      <section aria-labelledby="roles-reference-heading" className="space-y-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
+            <h2 id="roles-reference-heading" className="text-lg font-black text-foreground">{copy.rolesTitle}</h2>
+          </div>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{copy.rolesBody}</p>
+        </div>
         <DataTable
           data={roleCoverage}
           searchValue={(role) => roleCoverageLabel(role.role, copy)}
@@ -376,11 +281,19 @@ export default function UsersPage() {
             { key: "users", header: copy.headers.users, sortable: true, sortValue: (role) => role.users, render: (role) => role.users },
             { key: "finance", header: copy.headers.finance, render: (role) => booleanBadge(role.canApproveFinance, copy) },
             { key: "access", header: copy.headers.access, render: (role) => booleanBadge(role.canRestrictAccess, copy) },
-            { key: "manage", header: copy.headers.users, render: (role) => booleanBadge(role.canManageUsers, copy) },
+            { key: "manage", header: copy.headers.manage, render: (role) => booleanBadge(role.canManageUsers, copy) },
             { key: "export", header: copy.headers.export, render: (role) => booleanBadge(role.canExportData, copy) },
           ]}
         />
-      </div>
+      </section>
+
+      {/* Deep role governance and authority controls (admin/manager; self-hides otherwise). */}
+      <RoleGovernancePanel />
+
+      {/* 4. Registration review and time-boxed tenant access (self-hide by role). */}
+      <RegistrationReviewPanel />
+
+      <TenantAccessLivePanel />
     </div>
   )
 }

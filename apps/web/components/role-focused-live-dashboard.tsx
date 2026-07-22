@@ -529,6 +529,12 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
 
   const isLive = realtimeState === "connected"
   const isUpdating = requestState === "loading" || requestState === "refreshing"
+  // Keep the KPI row balanced: a 5-metric role (e.g. owner) would leave a lonely
+  // card on a fixed 4-up grid, so it goes 5-up on xl and 3-up on lg instead.
+  const metricGridClass =
+    snapshot.metrics.length === 5
+      ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+      : "grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
 
   return (
     <section
@@ -598,7 +604,7 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
       </div>
 
       <div className="p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className={metricGridClass}>
           {snapshot.metrics.map((metric) => {
             const Icon = metricIcons[metric.key]
             return (
@@ -609,9 +615,9 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Icon className="h-4 w-4" />
+                    <Icon aria-hidden="true" className="h-4 w-4" />
                   </span>
-                  <span className="text-xs font-bold text-muted-foreground transition group-hover:text-primary">↗</span>
+                  <span aria-hidden="true" className="text-xs font-bold text-muted-foreground transition group-hover:text-primary">↗</span>
                 </div>
                 <p className="mt-3 text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">
                   {text.metrics[metric.key]}

@@ -150,7 +150,7 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Malik Çalışma Alanı",
         description:
-          "Bu rol, doğrulanmış kendi dairelerine ait salt okunur bakiye, hesap özeti ve ödeme geçmişinin yanı sıra servis, rezervasyon, belge ve yönetim iletişimini görür. Diğer malik kayıtları ve şirket içi finans kontrolleri kapalıdır.",
+          "Doğrulanmış kendi dairelerinize ait salt okunur bakiye ve hesap özetini görün; servis talebi açın, rezervasyon ve belgeleri takip edin ve yönetim ekibiyle iletişim kurun. Yalnızca size ait kayıtlar gösterilir.",
         accessNotes: [
           "Sadece doğrulanmış kendi daireleri ve yetkili kayıtlar",
           "Diğer malik, personel, şirket raporları ve iç finans kontrolleri kapalı",
@@ -181,7 +181,7 @@ export const dashboardHomeCopy = {
       tenant: {
         title: "Kiracı Çalışma Alanı",
         description:
-          "Bu rol yalnızca kendi kullanım alanındaki servis, rezervasyon, belge ve iletişim işlemlerini görür. Daire matrisi, finans defteri, raporlar ve kullanıcı yönetimi kapalıdır.",
+          "Kullanımınızdaki daire için servis talebi açın, rezervasyon ve belgeleri takip edin ve yönetim ekibiyle iletişim kurun. Yalnızca size tanımlı kayıtlar gösterilir.",
         accessNotes: [
           "Sadece yetkili daire ve izin verilen işlemler",
           "Malik kayıtları, raporlar, finans defteri ve diğer daireler kapalı",
@@ -297,6 +297,8 @@ export const dashboardHomeCopy = {
       occupancyTitle: "Doluluk ve tahsilat sağlığı",
       occupancyDescription:
         "Doluluk oranı, gecikmiş borç ve servis baskısı birlikte okunur.",
+      occupancyCaption:
+        "Doluluk %{value} civarında sabit seyrediyor; düz çizgi bu istikrarı gösterir, veri eksikliğini değil.",
       occupancyMetric: "Doluluk",
       accessMetric: "Erişim kısıtı",
       slaMetric: "SLA dışı",
@@ -479,7 +481,7 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Owner Workspace",
         description:
-          "This role sees read-only balances, statements and payment history for its verified owned units, alongside service, reservations, documents and management communication. Other owners' records and internal finance controls are closed.",
+          "See read-only balances and statements for your verified units, raise service requests, follow reservations and documents, and message the management team. You only ever see records that belong to you.",
         accessNotes: [
           "Only verified owned units and authorized records",
           "Other owners, staff, company reports and internal finance controls are closed",
@@ -510,7 +512,7 @@ export const dashboardHomeCopy = {
       tenant: {
         title: "Tenant Workspace",
         description:
-          "This role only sees service, reservation, document and communication actions within its authorized usage scope. Unit matrix, finance ledger, reports and user administration are closed.",
+          "Raise service requests for your unit, follow reservations and documents, and message the management team. You only ever see the records assigned to you.",
         accessNotes: [
           "Only authorized unit and permitted actions",
           "Owner records, reports, finance ledger and other units are closed",
@@ -626,6 +628,8 @@ export const dashboardHomeCopy = {
       occupancyTitle: "Occupancy and collection health",
       occupancyDescription:
         "Occupancy rate, overdue debt and service pressure are read together.",
+      occupancyCaption:
+        "Occupancy holds steady around {value}%; the near-flat line reflects that stability, not missing data.",
       occupancyMetric: "Occupancy",
       accessMetric: "Access holds",
       slaMetric: "Outside SLA",
@@ -808,7 +812,7 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Eigentümer-Arbeitsbereich",
         description:
-          "Diese Rolle sieht schreibgeschützte Salden, Abrechnungen und Zahlungshistorien für verifizierte eigene Einheiten sowie Service, Reservierungen, Dokumente und Managementkommunikation. Daten anderer Eigentümer und interne Finanzkontrollen sind geschlossen.",
+          "Sehen Sie schreibgeschützte Salden und Abrechnungen für Ihre verifizierten Einheiten, stellen Sie Serviceanfragen, verfolgen Sie Reservierungen und Dokumente und kommunizieren Sie mit dem Managementteam. Sie sehen ausschließlich Ihre eigenen Datensätze.",
         accessNotes: [
           "Nur verifizierte eigene Einheiten und autorisierte Datensätze",
           "Andere Eigentümer, Personal, Unternehmensberichte und interne Finanzkontrollen sind geschlossen",
@@ -839,7 +843,7 @@ export const dashboardHomeCopy = {
       tenant: {
         title: "Mieter-Arbeitsbereich",
         description:
-          "Diese Rolle sieht nur Service-, Reservierungs-, Dokumenten- und Kommunikationsaktionen im autorisierten Nutzungsbereich. Wohnungsmatrix, Finanzbuch, Berichte und Benutzerverwaltung sind geschlossen.",
+          "Stellen Sie Serviceanfragen für Ihre Einheit, verfolgen Sie Reservierungen und Dokumente und kommunizieren Sie mit dem Managementteam. Sie sehen ausschließlich die Ihnen zugewiesenen Datensätze.",
         accessNotes: [
           "Nur autorisierte Einheit und erlaubte Aktionen",
           "Eigentümerdaten, Berichte, Finanzbuch und andere Einheiten sind geschlossen",
@@ -955,6 +959,8 @@ export const dashboardHomeCopy = {
       occupancyTitle: "Belegung und Zahlungsstatus",
       occupancyDescription:
         "Belegungsrate, überfällige Schulden und Servicedruck werden gemeinsam gelesen.",
+      occupancyCaption:
+        "Die Belegung bleibt stabil bei rund {value}%; die nahezu flache Linie zeigt diese Stabilität, keine fehlenden Daten.",
       occupancyMetric: "Belegung",
       accessMetric: "Zugangssperren",
       slaMetric: "Außerhalb SLA",
@@ -1137,7 +1143,7 @@ export const dashboardHomeCopy = {
       owner: {
         title: "Рабочее пространство владельца",
         description:
-          "Эта роль видит балансы, выписки и историю платежей только для подтверждённых собственных юнитов в режиме чтения, а также сервис, бронирования, документы и коммуникацию с управлением. Записи других владельцев и внутренние финансовые операции закрыты.",
+          "Смотрите балансы и выписки по вашим подтверждённым юнитам в режиме чтения, создавайте сервисные заявки, следите за бронированиями и документами и пишите команде управления. Вы видите только свои записи.",
         accessNotes: [
           "Только подтверждённые собственные юниты и авторизованные записи",
           "Другие владельцы, персонал, отчёты компании и внутренние финансовые операции закрыты",
@@ -1168,7 +1174,7 @@ export const dashboardHomeCopy = {
       tenant: {
         title: "Рабочее пространство арендатора",
         description:
-          "Эта роль видит только сервис, бронирования, документы и коммуникации в авторизованном объеме. Матрица юнитов, финансы, отчеты и управление пользователями закрыты.",
+          "Создавайте сервисные заявки по вашему юниту, следите за бронированиями и документами и пишите команде управления. Вы видите только назначенные вам записи.",
         accessNotes: [
           "Только авторизованный юнит и разрешенные действия",
           "Записи владельцев, отчеты, финансы и другие юниты закрыты",
@@ -1284,6 +1290,8 @@ export const dashboardHomeCopy = {
       occupancyTitle: "Загрузка и здоровье оплат",
       occupancyDescription:
         "Занятость, просроченный долг и сервисная нагрузка читаются вместе.",
+      occupancyCaption:
+        "Заполняемость стабильно держится около {value}%; почти ровная линия отражает эту стабильность, а не отсутствие данных.",
       occupancyMetric: "Занятость",
       accessMetric: "Ограничения доступа",
       slaMetric: "Вне SLA",
