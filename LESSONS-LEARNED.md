@@ -7,12 +7,15 @@
 
 ## Testing & gates
 
-1. **NEVER pipe a test/build/gate command through `tail`/`head`/`grep` when you
-   need its exit code.** The pipe's exit status is the LAST command's (`tail` = 0),
-   which masks a FAILING suite. This was hit twice — a red Playwright run looked
-   "green (exit 0)". Fix: run the command directly (or in `run_in_background`) and
-   read the output FILE for the summary; or use `${PIPESTATUS[0]}`. Only pipe for a
-   quick human-readable peek, never as the pass/fail signal.
+1. **NEVER pipe a test/build/gate command through `tail`/`head`/`grep`/`tee` when
+   you need its exit code.** The pipe's exit status is the LAST command's (`tail`/
+   `tee` = 0), which masks a FAILING suite. This was hit THREE times — including a
+   `... | tee file` in a `run_in_background` whose completion notification reported
+   "exit code 0" while the file itself ended in `ELIFECYCLE ... exit code 1` (3
+   real failures). The background-runner's exit code is the PIPE's, so `tee` fools
+   it too. Fix: run the command WITHOUT a pipe (redirect instead: `cmd > file
+   2>&1`), or use `${PIPESTATUS[0]}`, and ALWAYS read the summary line in the file
+   (`N passed / N failed`), never trust the reported exit code of a piped command.
 
 2. **Run the FULL Playwright suite in production-server mode, not dev.** In dev
    mode the long run (~391 tests over ~17 min) exhausts the Next dev server's
