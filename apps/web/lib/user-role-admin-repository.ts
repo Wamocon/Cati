@@ -22,13 +22,17 @@ import { createClient, createServiceRoleClient } from "@/lib/supabase/server"
 const ACCESS_PROFILE_ID = "00000000-0000-0000-0000-000000000000"
 
 // Roles an admin may create/assign through this subsystem. The 'admin' tier is
-// platform-provisioned and deliberately excluded (mirrors role governance).
+// platform-provisioned and deliberately excluded (mirrors role governance). The
+// child_* roles are excluded too: they require is_minor + a guardianship and are
+// never assigned through this plain control.
 export const assignableUserRoles: Role[] = [
   "manager",
   "accountant",
   "staff",
   "owner",
   "tenant",
+  "guest",
+  "service_provider",
 ]
 
 export type UserAdminSource = "supabase" | "local-qa"
@@ -57,6 +61,11 @@ export interface CreateManagedUserInput {
   email: string
   fullName: string
   role: Role
+}
+
+export interface UpdateManagedUserInput {
+  fullName?: string
+  language?: string
 }
 
 export class UserAdminError extends Error {
@@ -101,12 +110,10 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value : ""
 }
 
-function validateCreateInput(input: unknown): CreateManagedUserInput {
-  const record = asRecord(input)
-  const email = asString(record.email).trim().toLowerCase()
-  const fullName = asString(record.fullName).trim()
-  const role = record.role
+const SUPPORTED_LANGUAGES = ["tr", "en", "de", "ru"] as const
 
+function normalizeEmail(value: unknown): string {
+  const email = asString(value).trim().toLowerCase()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
     throw new UserAdminError(
       "USER_ADMIN_EMAIL_INVALID",
@@ -114,6 +121,11 @@ function validateCreateInput(input: unknown): CreateManagedUserInput {
       422
     )
   }
+  return email
+}
+
+function validateFullName(value: unknown): string {
+  const fullName = asString(value).trim()
   if (fullName.length < 2 || fullName.length > 120) {
     throw new UserAdminError(
       "USER_ADMIN_NAME_INVALID",
@@ -121,21 +133,38 @@ function validateCreateInput(input: unknown): CreateManagedUserInput {
       422
     )
   }
-  if (!isValidRole(role) || role === "admin") {
+  return fullName
+}
+
+function validateLanguage(value: unknown): string {
+  const language = asString(value).trim().toLowerCase()
+  if (!(SUPPORTED_LANGUAGES as readonly string[]).includes(language)) {
     throw new UserAdminError(
-      "USER_ADMIN_ROLE_INVALID",
-      "Choose one of the assignable roles (not the administrator tier).",
+      "USER_ADMIN_LANGUAGE_INVALID",
+      "Choose a supported language (tr, en, de, or ru).",
       422
     )
   }
-  return { email, fullName, role }
+  return language
 }
 
+function validateCreateInput(input: unknown): CreateManagedUserInput {
+  const record = asRecord(input)
+  return {
+    email: normalizeEmail(record.email),
+    fullName: validateFullName(record.fullName),
+    role: assertAssignableRole(record.role),
+  }
+}
+
+// Only the assignable business roles pass. This excludes the platform admin tier
+// AND the child_* roles (which require is_minor + a guardianship), keeping the
+// client guard consistent with the admin_assign_role DB allowlist.
 function assertAssignableRole(role: unknown): Role {
-  if (!isValidRole(role) || role === "admin") {
+  if (!isValidRole(role) || !assignableUserRoles.includes(role)) {
     throw new UserAdminError(
       "USER_ADMIN_ROLE_INVALID",
-      "This control may assign manager, accountant, staff, owner, or tenant roles only.",
+      "This control may assign manager, accountant, staff, owner, tenant, guest, or service_provider roles only.",
       422
     )
   }
@@ -151,7 +180,12 @@ function mapSupabaseError(error: unknown): UserAdminError {
   const code = asString(record.code)
   const message = asString(record.message) || "The user command failed."
 
-  if (code === "42501" || /platform-provisioned|only an organization|own access/i.test(message)) {
+  if (
+    code === "42501" ||
+    /platform-provisioned|only an organization|own access|cannot be removed here/i.test(
+      message
+    )
+  ) {
     return new UserAdminError("USER_ADMIN_FORBIDDEN", message, 403)
   }
   if (code === "P0002" || /not found|not assigned/i.test(message)) {
@@ -166,6 +200,15 @@ function mapSupabaseError(error: unknown): UserAdminError {
   }
   if (/at least one role/i.test(message)) {
     return new UserAdminError("USER_ADMIN_LAST_ROLE", message, 422)
+  }
+  if (/at least 10 characters|removal reason/i.test(message)) {
+    return new UserAdminError("USER_ADMIN_REASON_TOO_SHORT", message, 422)
+  }
+  if (
+    code === "22023" ||
+    /between 2 and 120|unsupported language|unsupported role/i.test(message)
+  ) {
+    return new UserAdminError("USER_ADMIN_VALIDATION", message, 422)
   }
   return new UserAdminError(
     "USER_ADMIN_UNAVAILABLE",
@@ -335,13 +378,70 @@ async function createSupabaseManagedUser(
 
 async function callSupabaseRpc(
   profile: UserProfile,
-  fn: "admin_assign_role" | "admin_revoke_role" | "admin_set_user_active",
+  fn:
+    | "admin_assign_role"
+    | "admin_revoke_role"
+    | "admin_set_user_active"
+    | "admin_update_managed_user",
   args: Record<string, unknown>
 ): Promise<ManagedUser> {
   const supabase = await createClient()
   const { data, error } = await supabase.rpc(fn, args)
   if (error) throw mapSupabaseError(error)
   return managedUserFromJson(data, profile.id)
+}
+
+// Read a single managed user through the caller's RLS-scoped session, used to
+// build the return payload after a service-role email change (managed_user_json
+// is revoked from authenticated, so it cannot be called from the anon client).
+async function readManagedUser(
+  profile: UserProfile,
+  profileId: string
+): Promise<ManagedUser> {
+  const supabase = await createClient()
+  const [profileResponse, assignmentsResponse] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, role, is_active")
+      .eq("id", profileId)
+      .maybeSingle(),
+    supabase
+      .from("profile_role_assignments")
+      .select("role")
+      .eq("profile_id", profileId),
+  ])
+
+  const firstError = profileResponse.error ?? assignmentsResponse.error
+  if (firstError) throw mapSupabaseError(firstError)
+  if (!profileResponse.data) {
+    throw new UserAdminError("USER_ADMIN_NOT_FOUND", "Target user not found.", 404)
+  }
+
+  const record = asRecord(profileResponse.data)
+  const assignedRoles = Array.isArray(assignmentsResponse.data)
+    ? (assignmentsResponse.data as unknown[])
+        .map((item) => asRecord(item).role)
+        .filter(isValidRole)
+    : []
+  const fallbackRole = isValidRole(record.role) ? record.role : "tenant"
+  const roles = sortRolesByLevel(
+    assignedRoles.length > 0 ? assignedRoles : [fallbackRole]
+  )
+  const primaryRole = primaryOf(roles)
+  const id = asString(record.id)
+  return {
+    id,
+    fullName:
+      asString(record.full_name).trim() ||
+      asString(record.email).trim() ||
+      "Unnamed user",
+    email: asString(record.email).trim() || null,
+    isActive: record.is_active !== false,
+    primaryRole,
+    roles,
+    isCurrentActor: id === profile.id,
+    mutable: id !== profile.id && primaryRole !== "admin",
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -731,6 +831,211 @@ export async function setManagedUserActive(
   return withLocalState(true, (state) => {
     const { override } = findLocalTarget(state, profileId, profile.id)
     override.isActive = active
+    return toManagedUser(override, profile.id)
+  })
+}
+
+export async function updateManagedUser(
+  profile: UserProfile,
+  profileId: string,
+  input: UpdateManagedUserInput
+): Promise<ManagedUser> {
+  const record = asRecord(input)
+  const hasName = record.fullName !== undefined && record.fullName !== null
+  const hasLanguage = record.language !== undefined && record.language !== null
+  const fullName = hasName ? validateFullName(record.fullName) : undefined
+  const language = hasLanguage ? validateLanguage(record.language) : undefined
+
+  if (fullName === undefined && language === undefined) {
+    throw new UserAdminError(
+      "USER_ADMIN_NOTHING_TO_UPDATE",
+      "Provide a name or language to update.",
+      422
+    )
+  }
+
+  if (isRealOrganizationAdmin(profile)) {
+    return callSupabaseRpc(profile, "admin_update_managed_user", {
+      p_profile_id: profileId,
+      p_full_name: fullName ?? null,
+      p_language: language ?? null,
+    })
+  }
+  if (!isAccessProfileEnabled()) {
+    throw new UserAdminError(
+      "USER_ADMIN_REAL_AUTH_REQUIRED",
+      "Profile edits require a real organization-admin session.",
+      403
+    )
+  }
+
+  return withLocalState(true, (state) => {
+    // language is not part of the ManagedUser projection, so only the name is
+    // reflected in the local-QA store; language is validated then accepted.
+    const { override } = findLocalTarget(state, profileId, profile.id)
+    if (fullName !== undefined) override.fullName = fullName
+    return toManagedUser(override, profile.id)
+  })
+}
+
+export async function updateManagedUserEmail(
+  profile: UserProfile,
+  profileId: string,
+  email: unknown
+): Promise<ManagedUser> {
+  const nextEmail = normalizeEmail(email)
+
+  if (isRealOrganizationAdmin(profile)) {
+    const service = createServiceRoleClient()
+    if (!service) {
+      throw new UserAdminError(
+        "USER_ADMIN_SERVICE_ROLE_REQUIRED",
+        "Changing a user's email requires the server service-role configuration.",
+        503
+      )
+    }
+
+    // Authorize + resolve the target through the caller's RLS-scoped session
+    // BEFORE using the all-powerful service-role client. Mirrors the DB
+    // assert_user_role_admin guards (same company, not self, not the admin tier).
+    const supabase = await createClient()
+    const { data: targetRow, error: readError } = await supabase
+      .from("profiles")
+      .select("id, company_id, role")
+      .eq("id", profileId)
+      .maybeSingle()
+    if (readError) throw mapSupabaseError(readError)
+    if (!targetRow) {
+      throw new UserAdminError("USER_ADMIN_NOT_FOUND", "Target user not found.", 404)
+    }
+    const target = asRecord(targetRow)
+    if (asString(target.id) === profile.id) {
+      throw new UserAdminError(
+        "USER_ADMIN_FORBIDDEN",
+        "Administrators cannot change their own access.",
+        403
+      )
+    }
+    if (target.role === "admin") {
+      throw new UserAdminError(
+        "USER_ADMIN_FORBIDDEN",
+        "The administrator tier is platform-provisioned and cannot be changed here.",
+        403
+      )
+    }
+    if (asString(target.company_id) !== asString(profile.company_id)) {
+      throw new UserAdminError(
+        "USER_ADMIN_FORBIDDEN",
+        "Only an organization administrator may manage users in their own company.",
+        403
+      )
+    }
+
+    // profileId === auth.users.id in this subsystem. email_confirm:true applies
+    // the new email directly (confirmed, no pending-confirmation staging), like
+    // createManagedUser. The mig-38 on_auth_user_email_updated trigger mirrors it
+    // to profiles.email; we also write profiles.email explicitly so the return
+    // payload is deterministic regardless of trigger timing.
+    const { error: authError } = await service.auth.admin.updateUserById(
+      profileId,
+      { email: nextEmail, email_confirm: true }
+    )
+    if (authError) throw mapSupabaseError(authError)
+
+    const { error: profileError } = await service
+      .from("profiles")
+      .update({ email: nextEmail })
+      .eq("id", profileId)
+    if (profileError) throw mapSupabaseError(profileError)
+
+    return readManagedUser(profile, profileId)
+  }
+  if (!isAccessProfileEnabled()) {
+    throw new UserAdminError(
+      "USER_ADMIN_REAL_AUTH_REQUIRED",
+      "Email changes require a real organization-admin session.",
+      403
+    )
+  }
+
+  return withLocalState(true, (state) => {
+    const { override } = findLocalTarget(state, profileId, profile.id)
+    const collision = materializeLocalUsers(state).some(
+      (user) => user.id !== profileId && user.email === nextEmail
+    )
+    if (collision) {
+      throw new UserAdminError(
+        "USER_ADMIN_CONFLICT",
+        "A user with that email already exists.",
+        409
+      )
+    }
+    override.email = nextEmail
+    return toManagedUser(override, profile.id)
+  })
+}
+
+export async function anonymizeManagedUser(
+  profile: UserProfile,
+  profileId: string,
+  reason: unknown
+): Promise<ManagedUser> {
+  const trimmedReason = asString(reason).trim()
+  if (trimmedReason.length < 10) {
+    throw new UserAdminError(
+      "USER_ADMIN_REASON_TOO_SHORT",
+      "Provide a removal reason of at least 10 characters.",
+      422
+    )
+  }
+
+  if (isRealOrganizationAdmin(profile)) {
+    // Require the service-role config UP FRONT: the RPC only scrubs profiles.*, it
+    // does NOT disable auth.users, so an un-bannable auth user could still log in
+    // with the old credentials. Checking first avoids anonymizing without banning.
+    const service = createServiceRoleClient()
+    if (!service) {
+      throw new UserAdminError(
+        "USER_ADMIN_SERVICE_ROLE_REQUIRED",
+        "Removing a user requires the server service-role configuration.",
+        503
+      )
+    }
+
+    const supabase = await createClient()
+    const { data, error } = await supabase.rpc("admin_anonymize_user", {
+      p_profile_id: profileId,
+      p_reason: trimmedReason,
+    })
+    if (error) throw mapSupabaseError(error)
+
+    // Disable the auth login. The RPC (already committed) is the source of truth;
+    // surfacing a ban failure lets the operator retry (the RPC is replay-safe).
+    const { error: banError } = await service.auth.admin.updateUserById(
+      profileId,
+      { ban_duration: "876000h" }
+    )
+    if (banError) throw mapSupabaseError(banError)
+
+    return managedUserFromJson(data, profile.id)
+  }
+  if (!isAccessProfileEnabled()) {
+    throw new UserAdminError(
+      "USER_ADMIN_REAL_AUTH_REQUIRED",
+      "Removing users requires a real organization-admin session.",
+      403
+    )
+  }
+
+  return withLocalState(true, (state) => {
+    const { override } = findLocalTarget(state, profileId, profile.id)
+    override.isActive = false
+    override.fullName = "Removed user"
+    override.email = ""
+    // Drop the extra business roles, keeping a single role so the row stays a
+    // valid local override (mirrors the DB keeping profiles.role after the
+    // assignments are deleted).
+    override.roles = [primaryOf(override.roles)]
     return toManagedUser(override, profile.id)
   })
 }
