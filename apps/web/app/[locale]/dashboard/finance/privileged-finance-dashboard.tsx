@@ -332,12 +332,12 @@ function FinanceTabs({
 
   return (
     <div>
-      <div className="overflow-x-auto overscroll-x-contain">
+      <div>
         <div
           role="tablist"
           aria-label={ariaLabel}
           aria-orientation="horizontal"
-          className="flex min-w-max gap-1 border-b border-border"
+          className="flex flex-wrap gap-1 border-b border-border"
         >
           {items.map((item, index) => {
             const selected = item.id === activeId
