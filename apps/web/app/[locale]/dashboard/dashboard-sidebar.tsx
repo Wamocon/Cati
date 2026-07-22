@@ -33,6 +33,7 @@ import { CatiLogoMark } from "@/components/cati-logo"
 import { useUser } from "@/components/user-provider"
 import {
   hasAnyRolePermission,
+  isAdmin,
   roleDefinitions,
   type Resource,
 } from "@/lib/rbac"
@@ -74,6 +75,17 @@ const menu: MenuItem[] = dashboardRoutes.map((item) => ({
   ...item,
   icon: iconsByResource[item.resource],
 }))
+
+// The admin Control Center is a single admin-only hub link. It is intentionally
+// NOT a Resource (adding one cascades through every Record<Resource,…> map + SQL,
+// see LESSONS-LEARNED #12); its label lives inline and its visibility is gated on
+// isAdmin(user.role) below, mirroring how other admin-only UI self-restricts.
+const adminControlCenterLabel: Record<"tr" | "en" | "de" | "ru", string> = {
+  tr: "Kontrol Merkezi",
+  en: "Control Center",
+  de: "Kontrollzentrum",
+  ru: "Центр управления",
+}
 
 const dialogFocusableSelector =
   'a[href], button:not([disabled]), select:not([disabled]), input:not([disabled])'
@@ -131,6 +143,11 @@ export function DashboardSidebar() {
   const filteredMenu = menu.filter((item) =>
     hasAnyRolePermission(user.roles, item.resource, "view")
   )
+  // Single admin-only hub entry (no new Resource). Gated purely on the primary
+  // role being admin, consistent with the panel it links to.
+  const showAdminControlCenter = isAdmin(user.role)
+  const adminControlCenterActive =
+    pathname === "/dashboard/admin" || pathname.startsWith("/dashboard/admin/")
   const mobileMenuId = "dashboard-mobile-sidebar"
   const mobileMenuTitleId = "dashboard-mobile-sidebar-title"
   const closeMobileMenu = useCallback(() => setMobileOpen(false), [])
@@ -244,6 +261,22 @@ export function DashboardSidebar() {
             </Link>
           )
         })}
+
+        {showAdminControlCenter && (
+          <Link
+            href="/dashboard/admin"
+            onClick={mobile ? closeMobileMenu : undefined}
+            className={cn(
+              "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all",
+              adminControlCenterActive
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/[0.18]"
+                : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            )}
+          >
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            {adminControlCenterLabel[locale]}
+          </Link>
+        )}
       </nav>
     </div>
   )
