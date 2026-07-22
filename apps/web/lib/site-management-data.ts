@@ -3331,7 +3331,7 @@ export const importFindings: ImportFinding[] = [
     severity: "info",
     area: "Scan-only legal documents",
     affectedRows: newLevelPremiumDataset.documents.filter((document) => document.status === "scan_review").length,
-    message: "İmar, tapu ve yetki belgelerinin bir kısmı tarama/PDF görseli olarak geldi; OCR veya insan doğrulaması gerekir.",
+    message: "Some zoning, title deed and permit documents arrived as scans or PDF images and need manual verification.",
     recommendedAction: "Cloud Storage yüklemesinden sonra belge tiplerini ve resmi geçerlilik tarihlerini manuel onaydan geçirin.",
   },
 ]

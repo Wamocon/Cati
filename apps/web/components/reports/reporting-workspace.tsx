@@ -35,6 +35,78 @@ import type {
 
 const reportingApi = "/api/site-management/reports"
 
+// Plain, business-facing copy kept inline so the fallback/empty state never
+// leaks internal jargon (Supabase, access profiles, use-case codes, storage
+// thresholds). Overrides the corresponding keys from lib/reporting-copy.ts.
+type ReportsLocale = "tr" | "en" | "de" | "ru"
+type ReportsInlineCopy = {
+  kicker: string
+  intro: string
+  internalEvidence: string
+  providerReady: string
+  providerBoundary: string
+  unavailable: string
+  unavailableTitle: string
+  realAuthUnavailable: string
+  companyUnavailable: string
+  unavailableNote: string
+}
+
+function resolveReportsLocale(value: string): ReportsLocale {
+  return value === "en" || value === "de" || value === "ru" ? value : "tr"
+}
+
+const reportsInlineCopy: Record<ReportsLocale, ReportsInlineCopy> = {
+  tr: {
+    kicker: "Operasyon raporları",
+    intro: "Yetkili verilerinizden raporlar oluşturun; her özet paylaşılmadan önce insan incelemesinden geçer.",
+    internalEvidence: "İstekler, dosyalar ve inceleme geçmişi güvenli biçimde saklanır.",
+    providerReady: "Yakında",
+    providerBoundary: "Büyük toplu aktarımlar ve harici depolama ileriki bir sürümde sunulacaktır.",
+    unavailable: "Henüz kullanılamıyor",
+    unavailableTitle: "Raporlar bu önizlemede henüz kullanılamıyor.",
+    realAuthUnavailable: "Rapor oluşturma ve geçmiş, hesabınız tümüyle hazır olduğunda burada görünür.",
+    companyUnavailable: "Bu hesap, rapor erişimi olan bir kuruluşa henüz bağlı değil.",
+    unavailableNote: "Çalışma alanınız hazır olduğunda yetkili raporlarınız burada otomatik olarak yüklenir.",
+  },
+  en: {
+    kicker: "Operations reports",
+    intro: "Create reports from your authorized data and keep every summary under human review before it is shared.",
+    internalEvidence: "Requests, files and their review history are stored securely.",
+    providerReady: "Coming soon",
+    providerBoundary: "Large bulk exports and external storage will be available in a later release.",
+    unavailable: "Not available yet",
+    unavailableTitle: "Reports aren't available in this preview yet.",
+    realAuthUnavailable: "Report generation and history will appear here once your account is fully set up.",
+    companyUnavailable: "This account isn't linked to an organization with report access yet.",
+    unavailableNote: "Once your workspace is ready, your authorized reports load here automatically.",
+  },
+  de: {
+    kicker: "Betriebsberichte",
+    intro: "Erstellen Sie Berichte aus Ihren autorisierten Daten – jede Zusammenfassung wird vor der Weitergabe von einem Menschen geprüft.",
+    internalEvidence: "Anfragen, Dateien und ihre Prüfhistorie werden sicher gespeichert.",
+    providerReady: "Bald verfügbar",
+    providerBoundary: "Große Massenexporte und externer Speicher folgen in einer späteren Version.",
+    unavailable: "Noch nicht verfügbar",
+    unavailableTitle: "Berichte sind in dieser Vorschau noch nicht verfügbar.",
+    realAuthUnavailable: "Berichtserstellung und Verlauf erscheinen hier, sobald Ihr Konto vollständig eingerichtet ist.",
+    companyUnavailable: "Dieses Konto ist noch keiner Organisation mit Berichtszugriff zugeordnet.",
+    unavailableNote: "Sobald Ihr Arbeitsbereich bereit ist, werden Ihre autorisierten Berichte hier automatisch geladen.",
+  },
+  ru: {
+    kicker: "Операционные отчёты",
+    intro: "Создавайте отчёты из ваших разрешённых данных: каждая сводка проходит проверку человеком перед публикацией.",
+    internalEvidence: "Запросы, файлы и история их проверки хранятся надёжно.",
+    providerReady: "Скоро",
+    providerBoundary: "Большой массовый экспорт и внешнее хранилище появятся в следующем выпуске.",
+    unavailable: "Пока недоступно",
+    unavailableTitle: "Отчёты пока недоступны в этом предпросмотре.",
+    realAuthUnavailable: "Создание отчётов и история появятся здесь после полной настройки вашей учётной записи.",
+    companyUnavailable: "Эта учётная запись пока не связана с организацией, имеющей доступ к отчётам.",
+    unavailableNote: "Как только рабочее пространство будет готово, ваши разрешённые отчёты загрузятся здесь автоматически.",
+  },
+}
+
 function commandKey(purpose: string) {
   const value = typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -104,28 +176,28 @@ async function apiMessage(response: Response, fallback: string) {
   }
 }
 
-function providerCards(copy: ReportingCopy, workspace: ReportingData | null) {
+function providerCards(copy: ReportingCopy, ic: ReportsInlineCopy, workspace: ReportingData | null) {
   const live = workspace?.source === "supabase-live"
   return [
     {
       key: "internal",
       icon: Database,
       label: live ? copy.internalLive : copy.internalUnavailable,
-      detail: copy.internalEvidence,
+      detail: ic.internalEvidence,
       live,
     },
     {
       key: "bulk",
       icon: FileSpreadsheet,
-      label: `${copy.bulkExport} · ${copy.providerReady}`,
-      detail: copy.providerBoundary,
+      label: `${copy.bulkExport} · ${ic.providerReady}`,
+      detail: ic.providerBoundary,
       live: false,
     },
     {
       key: "storage",
       icon: HardDrive,
-      label: `${copy.externalStorage} · ${copy.providerReady}`,
-      detail: copy.providerBoundary,
+      label: `${copy.externalStorage} · ${ic.providerReady}`,
+      detail: ic.providerBoundary,
       live: false,
     },
   ]
@@ -154,6 +226,7 @@ function filterSummary(request: ReportRequestRecord, copy: ReportingCopy) {
 export function ReportingWorkspace() {
   const locale = useLocale()
   const copy = getReportingCopy(locale)
+  const ic = reportsInlineCopy[resolveReportsLocale(locale)]
   const [workspace, setWorkspace] = useState<ReportingData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -291,7 +364,7 @@ export function ReportingWorkspace() {
     }
   }
 
-  const cards = providerCards(copy, workspace)
+  const cards = providerCards(copy, ic, workspace)
 
   return (
     <section className="relative min-w-0 space-y-6 overflow-x-hidden pb-10" aria-busy={loading || refreshing}>
@@ -303,13 +376,13 @@ export function ReportingWorkspace() {
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary">
                 <Archive className="h-4 w-4" />
-                {copy.kicker}
+                {ic.kicker}
               </div>
               <h1 className="mt-3 text-3xl font-black tracking-[-0.035em] text-foreground sm:text-4xl">
                 {copy.title}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                {copy.intro}
+                {ic.intro}
               </p>
             </div>
             <button
@@ -347,10 +420,6 @@ export function ReportingWorkspace() {
               <Clock3 className="h-3.5 w-3.5" />
               {copy.lastUpdated}: {dateLabel(workspace?.generatedAt ?? null, locale)}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {copy.maxRows}: {new Intl.NumberFormat(locale).format(workspace?.maxInternalRows ?? 50_000)}
-            </span>
           </div>
         </div>
       </header>
@@ -379,18 +448,17 @@ export function ReportingWorkspace() {
         </div>
       ) : workspace?.source !== "supabase-live" ? (
         <section data-testid="reporting-unavailable" className="relative overflow-hidden rounded-[2rem] border border-amber-500/30 bg-amber-500/[0.055] p-6 sm:p-8">
-          <div className="absolute right-4 top-4 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-amber-700/50 dark:text-amber-300/50">NO DEMO DATA</div>
           <div className="flex max-w-3xl items-start gap-4">
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-amber-500/20 bg-background text-amber-600 dark:text-amber-300">
               <AlertTriangle className="h-5 w-5" />
             </span>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">{copy.unavailable}</p>
-              <h2 className="mt-2 text-xl font-black text-foreground">{copy.unavailableTitle}</h2>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-700 dark:text-amber-300">{ic.unavailable}</p>
+              <h2 className="mt-2 text-xl font-black text-foreground">{ic.unavailableTitle}</h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                {workspace?.unavailableReason === "company_scope_required" ? copy.companyUnavailable : copy.realAuthUnavailable}
+                {workspace?.unavailableReason === "company_scope_required" ? ic.companyUnavailable : ic.realAuthUnavailable}
               </p>
-              <p className="mt-3 text-sm font-semibold leading-6 text-foreground">{copy.unavailableNote}</p>
+              <p className="mt-3 text-sm font-semibold leading-6 text-foreground">{ic.unavailableNote}</p>
             </div>
           </div>
         </section>

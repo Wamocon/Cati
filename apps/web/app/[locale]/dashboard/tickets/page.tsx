@@ -742,6 +742,130 @@ function ticketShortRef(id: string) {
   return `#${tail.slice(-6).toUpperCase()}`
 }
 
+// Localized dispatch-state labels so the request detail never surfaces a raw
+// enum such as "on_site" to end users.
+const ticketDispatchStateCopy = {
+  tr: {
+    not_required: "Gerekmiyor",
+    pending: "Beklemede",
+    assigned: "Atandı",
+    acknowledged: "Alındı",
+    en_route: "Yolda",
+    on_site: "Sahada",
+    completed: "Tamamlandı",
+    failed: "Başarısız",
+  },
+  en: {
+    not_required: "Not required",
+    pending: "Pending",
+    assigned: "Assigned",
+    acknowledged: "Acknowledged",
+    en_route: "On the way",
+    on_site: "On site",
+    completed: "Completed",
+    failed: "Failed",
+  },
+  de: {
+    not_required: "Nicht erforderlich",
+    pending: "Ausstehend",
+    assigned: "Zugewiesen",
+    acknowledged: "Bestätigt",
+    en_route: "Unterwegs",
+    on_site: "Vor Ort",
+    completed: "Abgeschlossen",
+    failed: "Fehlgeschlagen",
+  },
+  ru: {
+    not_required: "Не требуется",
+    pending: "Ожидание",
+    assigned: "Назначено",
+    acknowledged: "Принято",
+    en_route: "В пути",
+    on_site: "На месте",
+    completed: "Завершено",
+    failed: "Не удалось",
+  },
+} as const
+
+function dispatchStateLabel(
+  state: string,
+  locale: keyof typeof ticketDispatchStateCopy
+) {
+  const table = ticketDispatchStateCopy[locale]
+  return (table as Record<string, string>)[state] ?? table.pending
+}
+
+// Human "assigned to" label. Avoids the operational-copy mapping where the
+// Turkish "Sorumlu" resolves to "Owner" in English and mislabels the assignee.
+const assignedToCopy = {
+  tr: "Atanan",
+  en: "Assigned to",
+  de: "Zugewiesen an",
+  ru: "Назначено",
+} as const
+
+// Header for the workflow action-note field (kept inline in 4 locales so it never
+// passes through the lossy substring localizer that previously garbled it).
+const transitionNoteHeadingCopy = {
+  tr: "İşlem notu veya neden",
+  en: "Action note or reason",
+  de: "Aktionsnotiz oder Grund",
+  ru: "Примечание или причина",
+} as const
+
+// Plain-business service-record notes (no product/vendor names).
+const serviceRecordNotesCopy = {
+  tr: {
+    record:
+      "Servis talepleri, SLA görevleri ve kanıtlar tek bir güvenli kayıtta birlikte tutulur.",
+    context:
+      "Sakin ve iletişim bilgileri her talebe bağlı kalır; ekip her zaman tam bağlama sahip olur.",
+  },
+  en: {
+    record:
+      "Service requests, SLA tasks and evidence are kept together in one secure record.",
+    context:
+      "Resident and contact details stay linked to each request so the team always has the full context.",
+  },
+  de: {
+    record:
+      "Serviceanfragen, SLA-Aufgaben und Nachweise werden zusammen in einem sicheren Datensatz gehalten.",
+    context:
+      "Bewohner- und Kontaktdaten bleiben mit jeder Anfrage verknüpft, sodass das Team stets den vollen Kontext hat.",
+  },
+  ru: {
+    record:
+      "Сервисные заявки, задачи SLA и доказательства хранятся вместе в одной защищённой записи.",
+    context:
+      "Данные о жильцах и контактах остаются привязанными к каждой заявке, чтобы у команды всегда был полный контекст.",
+  },
+} as const
+
+// Client-facing framing for the requests register (a resident's own requests,
+// not the full operations queue).
+const clientRegisterCopy = {
+  tr: {
+    title: "Talepleriniz",
+    description:
+      "Size ait tüm servis taleplerini arayın; durumu ve son güncellemeleri görün.",
+  },
+  en: {
+    title: "Your requests",
+    description:
+      "Search all of your service requests and see their status and latest updates.",
+  },
+  de: {
+    title: "Ihre Anfragen",
+    description:
+      "Durchsuchen Sie alle Ihre Serviceanfragen und sehen Sie Status und letzte Aktualisierungen.",
+  },
+  ru: {
+    title: "Ваши заявки",
+    description:
+      "Ищите все свои сервисные заявки и смотрите их статус и последние обновления.",
+  },
+} as const
+
 export default function TicketsPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
@@ -1154,8 +1278,6 @@ export default function TicketsPage() {
     .slice(0, 5)
   const visibleQueue =
     priorityQueue.length > 0 ? priorityQueue : visibleTickets.slice(0, 5)
-  const sourceLabel =
-    queueData?.source === "supabase" ? "Supabase live" : t("Yerel veri")
   const ticketStatusData = [
     {
       label: "open",
@@ -1619,20 +1741,10 @@ export default function TicketsPage() {
             <h1 className="text-2xl font-black text-foreground">
               {t("Servis Talepleri")}
             </h1>
-            <StatusBadge
-              variant={queueData?.source === "supabase" ? "success" : "warning"}
-            >
-              {sourceLabel}
-            </StatusBadge>
           </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {pageIntro}
           </p>
-          {queueData?.warning && (
-            <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-300">
-              {queueData.warning}
-            </p>
-          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -1700,106 +1812,120 @@ export default function TicketsPage() {
             </div>
           </div>
         </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <Clock3 className="h-8 w-8 text-rose-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("SLA dışı")}
-              </p>
-              <AnimatedCounter
-                value={overdue}
-                className="text-2xl font-black"
-              />
+        {!clientView && (
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <Clock3 className="h-8 w-8 text-rose-600" />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("SLA dışı")}
+                </p>
+                <AnimatedCounter
+                  value={overdue}
+                  className="text-2xl font-black"
+                />
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <CreditCard className="h-8 w-8 text-amber-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {clientView ? t("Onay bekleyen") : t("Borç blokeli")}
-              </p>
-              <AnimatedCounter
-                value={blocked}
-                className="text-2xl font-black"
-              />
+          </Card3D>
+        )}
+        {!clientView && !fieldView && (
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-8 w-8 text-amber-600" />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Borç blokeli")}
+                </p>
+                <AnimatedCounter
+                  value={blocked}
+                  className="text-2xl font-black"
+                />
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <Camera className="h-8 w-8 text-sky-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Medya kanıtı")}
-              </p>
-              <AnimatedCounter value={media} className="text-2xl font-black" />
+          </Card3D>
+        )}
+        {!clientView && (
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <Camera className="h-8 w-8 text-sky-600" />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Medya kanıtı")}
+                </p>
+                <AnimatedCounter value={media} className="text-2xl font-black" />
+              </div>
             </div>
-          </div>
-        </Card3D>
+          </Card3D>
+        )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <PackageCheck className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Katalog")}
-              </p>
-              <AnimatedCounter
-                value={visibleCatalog.length}
-                className="text-2xl font-black"
-              />
+      {!clientView && (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {!fieldView && (
+            <Card3D glow={false}>
+              <div className="flex items-center gap-3">
+                <PackageCheck className="h-8 w-8 text-primary" />
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">
+                    {t("Katalog")}
+                  </p>
+                  <AnimatedCounter
+                    value={visibleCatalog.length}
+                    className="text-2xl font-black"
+                  />
+                </div>
+              </div>
+            </Card3D>
+          )}
+          {!fieldView && (
+            <Card3D glow={false}>
+              <div className="flex items-center gap-3">
+                <ClipboardCheck className="h-8 w-8 text-emerald-600" />
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">
+                    {t("Siparis")}
+                  </p>
+                  <AnimatedCounter
+                    value={visibleOrders.length}
+                    className="text-2xl font-black"
+                  />
+                </div>
+              </div>
+            </Card3D>
+          )}
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <ListChecks className="h-8 w-8 text-sky-600" />
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Saha gorevi")}
+                </p>
+                <AnimatedCounter
+                  value={visibleTasks.length}
+                  className="text-2xl font-black"
+                />
+              </div>
             </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <ClipboardCheck className="h-8 w-8 text-emerald-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Siparis")}
-              </p>
-              <AnimatedCounter
-                value={visibleOrders.length}
-                className="text-2xl font-black"
-              />
-            </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <ListChecks className="h-8 w-8 text-sky-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Saha gorevi")}
-              </p>
-              <AnimatedCounter
-                value={visibleTasks.length}
-                className="text-2xl font-black"
-              />
-            </div>
-          </div>
-        </Card3D>
-        <Card3D glow={false}>
-          <div className="flex items-center gap-3">
-            <UserCheck className="h-8 w-8 text-amber-600" />
-            <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">
-                {t("Hazirlik")}
-              </p>
-              <AnimatedCounter
-                value={averageReadiness}
-                suffix="%"
-                className="text-2xl font-black"
-              />
-            </div>
-          </div>
-        </Card3D>
-      </div>
+          </Card3D>
+          {!fieldView && (
+            <Card3D glow={false}>
+              <div className="flex items-center gap-3">
+                <UserCheck className="h-8 w-8 text-amber-600" />
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase">
+                    {t("Hazirlik")}
+                  </p>
+                  <AnimatedCounter
+                    value={averageReadiness}
+                    suffix="%"
+                    className="text-2xl font-black"
+                  />
+                </div>
+              </div>
+            </Card3D>
+          )}
+        </div>
+      )}
 
       {user.role === "owner" && ownerApprovalTickets.length > 0 && (
         <DashboardSection
@@ -2224,7 +2350,7 @@ export default function TicketsPage() {
                   <StatusBadge
                     variant={selectedSnapshot?.emergency ? "danger" : "info"}
                   >
-                    {selectedSnapshot?.severity ?? "P3"}
+                    {servicePriorityLabel(selectedTicket.priority, locale)}
                   </StatusBadge>
                   <StatusBadge variant="neutral">
                     {selectedSnapshot
@@ -2255,8 +2381,12 @@ export default function TicketsPage() {
                   )}
                 </div>
                 <p className="mt-2 text-xs font-semibold text-muted-foreground">
-                  {t("Sorumlu")}: {t(selectedTicket.assignee)} · {t("Sevk")}:{" "}
-                  {t(selectedSnapshot?.dispatchState ?? "pending")}
+                  {assignedToCopy[locale]}: {t(selectedTicket.assignee)} ·{" "}
+                  {t("Sevk")}:{" "}
+                  {dispatchStateLabel(
+                    selectedSnapshot?.dispatchState ?? "pending",
+                    locale
+                  )}
                 </p>
                 {(!maskFinance || selectedNeedsOwnerDecision) && (
                   <p className="mt-2 text-xs font-semibold text-foreground">
@@ -2468,7 +2598,7 @@ export default function TicketsPage() {
 
                 {selectedAllowedTransitions.length > 0 && (
                   <label className="block text-xs font-black text-muted-foreground uppercase">
-                    {t("Islem notu veya neden")}
+                    {transitionNoteHeadingCopy[locale]}
                     <textarea
                       value={selectedTransitionReason}
                       onChange={(event) =>
@@ -2768,6 +2898,7 @@ export default function TicketsPage() {
         </DashboardSection>
       )}
 
+      {!clientView && !fieldView && (
       <div className="grid gap-6 xl:grid-cols-3">
         <DashboardSection
           className="xl:col-span-2"
@@ -3019,7 +3150,9 @@ export default function TicketsPage() {
           </div>
         </Card3D>
       </div>
+      )}
 
+      {!clientView && (
       <DashboardSection
         title={t("Saha gorevleri, SLA ve medya kaniti")}
         description={t(
@@ -3127,8 +3260,10 @@ export default function TicketsPage() {
           ))}
         </div>
       </DashboardSection>
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className={clientView ? "space-y-4" : "grid gap-6 lg:grid-cols-3"}>
+        {!clientView && (
         <DashboardSection
           className="lg:col-span-2"
           title={
@@ -3214,6 +3349,7 @@ export default function TicketsPage() {
             ))}
           </div>
         </DashboardSection>
+        )}
 
         <div className="space-y-4">
           <Card3D glow={false}>
@@ -3266,11 +3402,11 @@ export default function TicketsPage() {
                     <>
                       <li className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                        <span>{t(queueData.strategy.systemOfRecord)}</span>
+                        <span>{serviceRecordNotesCopy[locale].record}</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                        <span>{t(queueData.strategy.crmRole)}</span>
+                        <span>{serviceRecordNotesCopy[locale].context}</span>
                       </li>
                     </>
                   )}
@@ -3282,13 +3418,25 @@ export default function TicketsPage() {
       </div>
 
       <DashboardSection
-        title={t("Tam servis talebi kaydı")}
-        description={t(
-          "Dashboard önizlemesini genişletmek yerine tüm servis taleplerini arayın, sıralayın ve sayfalayın."
-        )}
-        info={t(
-          "Bu tam operasyon kuyruğudur. Günlük iş kolay taransın diye üstteki kartlar sınırlı tutulur."
-        )}
+        title={
+          clientView
+            ? clientRegisterCopy[locale].title
+            : t("Tam servis talebi kaydı")
+        }
+        description={
+          clientView
+            ? clientRegisterCopy[locale].description
+            : t(
+                "Dashboard önizlemesini genişletmek yerine tüm servis taleplerini arayın, sıralayın ve sayfalayın."
+              )
+        }
+        info={
+          clientView
+            ? undefined
+            : t(
+                "Bu tam operasyon kuyruğudur. Günlük iş kolay taransın diye üstteki kartlar sınırlı tutulur."
+              )
+        }
         actionHref="#tickets-top"
         actionLabel={t("Üst")}
       >
@@ -3361,7 +3509,7 @@ export default function TicketsPage() {
                 ? [
                     {
                       key: "assignee",
-                      header: t("Sorumlu"),
+                      header: assignedToCopy[locale],
                       render: (ticket: ServiceTicket) => t(ticket.assignee),
                     },
                   ]
@@ -3442,7 +3590,7 @@ export default function TicketsPage() {
         </div>
       </DashboardSection>
 
-      {visibleTasks.length > 0 && (
+      {!clientView && visibleTasks.length > 0 && (
       <DashboardSection
         title={t("Tam saha görev kaydı")}
         description={t(
@@ -3483,7 +3631,7 @@ export default function TicketsPage() {
               },
               {
                 key: "assignee",
-                header: t("Sorumlu"),
+                header: assignedToCopy[locale],
                 sortable: true,
                 render: (task) => t(task.assignee),
               },

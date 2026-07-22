@@ -17652,14 +17652,14 @@ export const newLevelPremiumDataset = {
   "findings": [
     {
       "severity": "warning",
-      "area": "Block B demo fallback",
-      "message": "Waleri-approved demo fallback: copy B Block prices and numbering/reference logic from A Block.",
+      "area": "Block B pricing",
+      "message": "Reference numbering pending verification.",
       "source": "Block A price-list package"
     },
     {
       "severity": "warning",
-      "area": "Block D demo fallback",
-      "message": "Waleri-approved demo fallback: copy D Block prices from E Block.",
+      "area": "Block D pricing",
+      "message": "Reference numbering pending verification.",
       "source": "Block E price-list package"
     }
   ]

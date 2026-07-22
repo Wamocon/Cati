@@ -24,6 +24,7 @@ import {
   localizeOperationalValue,
   resolveDashboardLocale,
   unitMatrixCopy,
+  type DashboardLocale,
 } from "@/lib/unit-matrix-copy"
 import type {
   Phase4SiteData,
@@ -72,6 +73,7 @@ const liveMetaCopy = {
     matrix: "Live block / floor matrix",
     matrixHint: "Every visible square comes from the same API result as the table below.",
     selected: "Selected unit",
+    priceEmpty: "—",
   },
   tr: {
     sourceLive: "Canlı",
@@ -90,6 +92,7 @@ const liveMetaCopy = {
     matrix: "Canlı blok / kat matrisi",
     matrixHint: "Görünen her kutu aşağıdaki tabloyla aynı API sonucundan gelir.",
     selected: "Seçili daire",
+    priceEmpty: "—",
   },
   de: {
     sourceLive: "Live",
@@ -108,6 +111,7 @@ const liveMetaCopy = {
     matrix: "Live-Block-/Etagenmatrix",
     matrixHint: "Jedes sichtbare Feld stammt aus demselben API-Ergebnis wie die Tabelle darunter.",
     selected: "Ausgewählte Einheit",
+    priceEmpty: "—",
   },
   ru: {
     sourceLive: "Live",
@@ -126,8 +130,38 @@ const liveMetaCopy = {
     matrix: "Live-матрица блоков и этажей",
     matrixHint: "Каждая ячейка получена из того же ответа API, что и таблица ниже.",
     selected: "Выбранный объект",
+    priceEmpty: "—",
   },
 } as const
+
+// Local-seed import findings carry stable ids. Render calm, fully localized
+// text for the known ones so no internal wording or single-language string
+// reaches end users; unknown (live) findings fall back to their own values.
+const findingCopy: Record<
+  DashboardLocale,
+  Record<string, { area: string; message: string }>
+> = {
+  en: {
+    "FND-NLP-01": { area: "Block B pricing", message: "Reference numbering pending verification." },
+    "FND-NLP-02": { area: "Block D pricing", message: "Reference numbering pending verification." },
+    "FND-NLP-DOC": { area: "Legal documents", message: "Some zoning, title deed and permit documents arrived as scans or PDF images and need manual verification." },
+  },
+  tr: {
+    "FND-NLP-01": { area: "B Blok fiyatlandırma", message: "Referans numaralandırma doğrulama bekliyor." },
+    "FND-NLP-02": { area: "D Blok fiyatlandırma", message: "Referans numaralandırma doğrulama bekliyor." },
+    "FND-NLP-DOC": { area: "Yasal belgeler", message: "İmar, tapu ve yetki belgelerinin bir kısmı tarama veya PDF görseli olarak geldi; elle doğrulama gerekiyor." },
+  },
+  de: {
+    "FND-NLP-01": { area: "Preisliste Block B", message: "Referenznummerierung wird noch geprüft." },
+    "FND-NLP-02": { area: "Preisliste Block D", message: "Referenznummerierung wird noch geprüft." },
+    "FND-NLP-DOC": { area: "Rechtsdokumente", message: "Einige Bau-, Grundbuch- und Genehmigungsdokumente liegen nur als Scan oder PDF-Bild vor und müssen manuell geprüft werden." },
+  },
+  ru: {
+    "FND-NLP-01": { area: "Цены блока B", message: "Ссылочная нумерация ожидает проверки." },
+    "FND-NLP-02": { area: "Цены блока D", message: "Ссылочная нумерация ожидает проверки." },
+    "FND-NLP-DOC": { area: "Юридические документы", message: "Часть документов по планировке, кадастру и разрешениям поступила в виде сканов или PDF-изображений и требует ручной проверки." },
+  },
+}
 
 function cleanPriceSource(raw: string | null): string | null {
   if (!raw) return null
@@ -617,6 +651,7 @@ export function Phase4LiveOperations() {
       </section>
 
       <div className="grid gap-4 pt-4 xl:grid-cols-[1.3fr_0.7fr]">
+        <div className="min-w-0 overflow-x-auto">
         <DataTable
           data={visibleUnits}
           pageSize={20}
@@ -656,7 +691,7 @@ export function Phase4LiveOperations() {
                     <p className="font-bold">
                       {unit.listPriceEurCents !== null
                         ? formatDualFromCents(unit.listPriceEurCents, "EUR")
-                        : "-"}
+                        : metaCopy.priceEmpty}
                     </p>
                     {priceSourceLabel ? (
                       <p className="max-w-[170px] truncate text-xs text-muted-foreground" title={priceSourceLabel}>
@@ -695,6 +730,7 @@ export function Phase4LiveOperations() {
             { key: "tickets", header: copy.live.tableHeaders[8], sortable: true, sortValue: (unit) => unit.openTicketCount, render: (unit) => `${unit.openTicketCount} ${copy.table.open}` },
           ]}
         />
+        </div>
 
         <div className="min-w-0 space-y-3">
           <div className="rounded-lg border border-border/70 bg-muted/30 p-3">
@@ -703,19 +739,24 @@ export function Phase4LiveOperations() {
               <h3 className="text-sm font-black text-foreground">{copy.live.findingsTitle}</h3>
             </div>
             <div className="mt-3 space-y-2">
-              {(data?.importFindings ?? []).slice(0, 4).map((finding) => (
-                <div key={finding.id} className="min-w-0 rounded-lg border border-border/60 bg-background/70 p-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 break-words text-xs font-bold text-foreground">{finding.area}</p>
-                    <StatusBadge variant={badgeVariant(finding.severity)}>
-                      {finding.severity}
-                    </StatusBadge>
+              {(data?.importFindings ?? []).slice(0, 4).map((finding) => {
+                const localizedFinding = findingCopy[locale]?.[finding.id]
+                const findingArea = localizedFinding?.area ?? finding.area
+                const findingMessage = localizedFinding?.message ?? finding.message
+                return (
+                  <div key={finding.id} className="min-w-0 rounded-lg border border-border/60 bg-background/70 p-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="min-w-0 break-words text-xs font-bold text-foreground">{findingArea}</p>
+                      <StatusBadge variant={badgeVariant(finding.severity)}>
+                        {finding.severity}
+                      </StatusBadge>
+                    </div>
+                    <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
+                        {finding.affectedRows} {copy.common.rows}: {findingMessage}
+                    </p>
                   </div>
-                  <p className="mt-1 break-words text-xs leading-5 text-muted-foreground">
-                      {finding.affectedRows} {copy.common.rows}: {finding.message}
-                  </p>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 

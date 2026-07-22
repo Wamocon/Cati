@@ -30,6 +30,15 @@ type FetchMode = "initial" | "background" | "page"
 const POLL_RECOVERY_MS = 30_000
 const DUE_STATUSES = new Set(["open", "partially_paid", "overdue"])
 
+// Calm, business-only copy for the sample/demo state, kept inline so the view
+// shows at most a quiet "sample data" note (no polling internals, no "demo").
+const ownerSampleCopy = {
+  tr: { label: "Örnek veriler", note: "Bu görünümde örnek veriler gösteriliyor." },
+  en: { label: "Sample data", note: "This view shows sample data." },
+  de: { label: "Beispieldaten", note: "Diese Ansicht zeigt Beispieldaten." },
+  ru: { label: "Пример данных", note: "Здесь показаны примерные данные." },
+} as const
+
 // Owner-facing balances show in both Lira and Euro via the shared helper.
 // Mixed-currency or unknown aggregates fall back to the mixed label. Stored
 // amounts are integer minor units (kuruş/cents).
@@ -297,9 +306,9 @@ export function OwnerFinanceStatement() {
     ? formatDate(data.generatedAt, intlLocale, true)
     : null
   const sourceLabel =
-    data?.source === "supabase" ? t("liveSource") : t("demoSource")
+    data?.source === "supabase" ? t("liveSource") : ownerSampleCopy[locale].label
   const sourceNote =
-    data?.source === "supabase" ? t("sourceNoteLive") : t("sourceNoteDemo")
+    data?.source === "supabase" ? t("sourceNoteLive") : ownerSampleCopy[locale].note
 
   if (requestState === "loading" && !data) {
     return (
@@ -436,7 +445,7 @@ export function OwnerFinanceStatement() {
           data-testid="owner-finance-refresh-policy"
           className="relative mt-4 border-t border-border/60 pt-4 text-xs leading-5 text-muted-foreground"
         >
-          {sourceNote} {t("pollRecovery")}
+          {sourceNote}
         </p>
         <span className="sr-only" aria-live="polite">
           {refreshing ? t("refreshing") : ""}
