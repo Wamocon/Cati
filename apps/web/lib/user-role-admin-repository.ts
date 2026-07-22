@@ -1074,13 +1074,30 @@ export async function anonymizeManagedUser(
     // placeholder onto profiles.email, overwriting the RPC's NULL. That is
     // acceptable — the placeholder carries no PII, so the scrub's intent (remove
     // identifying data) still holds; the UI suppresses email for removed rows.
+    // email_confirm:true applies the placeholder immediately (like
+    // updateManagedUserEmail) instead of staging it in email_change, which on a
+    // secure-email-change GoTrue config would leave the original PII email behind.
+    // user_metadata is a SHALLOW merge, so null every known PII key (not just
+    // overwrite full_name) to clear anything a self-signup may have stored.
     // phone is typed as string by the SDK but GoTrue clears it when null is sent.
     const { error: banError } = await service.auth.admin.updateUserById(
       profileId,
       {
         email: `anonymized+${profileId}@removed.invalid`,
+        email_confirm: true,
         phone: null as unknown as string,
-        user_metadata: { full_name: "Removed user", language: "tr" },
+        user_metadata: {
+          full_name: "Removed user",
+          language: "tr",
+          name: null,
+          given_name: null,
+          family_name: null,
+          email: null,
+          phone: null,
+          avatar_url: null,
+          picture: null,
+          source: null,
+        },
         ban_duration: "876000h",
       }
     )
