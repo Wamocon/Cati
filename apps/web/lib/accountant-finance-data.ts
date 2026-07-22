@@ -5,6 +5,8 @@
 // a few existing offsets). Amounts are integer minor units (kurus/cents) and
 // intentionally mix Turkish Lira and Euro. Blocks follow the A-G site layout.
 
+import type { VendorSubmissionStatus } from "@/lib/vendor-invoice-data"
+
 export const ACCOUNTANT_FINANCE_BLOCKS = [
   "A",
   "B",
@@ -223,4 +225,88 @@ export const bankStatementsSeed: BankStatementSeed[] = [
       { id: "bl-zb5-2", bookedAt: "2026-05-22", description: "Aidat tahsilati - Blok D", amountCents: 7_900_000, direction: "credit" },
     ],
   },
+]
+
+// --------------------------------------------------------------------------
+// Phase-7 (accountant sync): the money the new guest / vendor / child roles
+// move, folded back into the accountant view. These local-seed fixtures back the
+// wallet-credit, activity-booking and vendor-submission cards fully offline, the
+// same way the fixtures above back the invoice / credit / bank sections.
+// --------------------------------------------------------------------------
+
+/** Business role of a wallet owner (the full role set, wider than the credit
+ * subjects above, so guests and supervised child accounts are represented). */
+export type WalletOwnerRole =
+  | "guest"
+  | "service_provider"
+  | "owner"
+  | "tenant"
+  | "child_owner"
+  | "child_tenant"
+  | "child_guest"
+  | "unknown"
+
+export interface WalletRoleCreditSeed {
+  role: WalletOwnerRole
+  balanceCents: number
+  currency: FinanceCurrency
+  walletCount: number
+}
+
+// Outstanding user-wallet credit grouped by the owner's role. Guests and service
+// providers hold the most; supervised child accounts hold a guardian-funded float.
+export const walletCreditByRoleSeed: WalletRoleCreditSeed[] = [
+  { role: "guest", balanceCents: 1_850_000, currency: "TRY", walletCount: 9 },
+  { role: "service_provider", balanceCents: 1_240_000, currency: "TRY", walletCount: 4 },
+  { role: "service_provider", balanceCents: 46_000, currency: "EUR", walletCount: 1 },
+  { role: "owner", balanceCents: 980_000, currency: "TRY", walletCount: 6 },
+  { role: "tenant", balanceCents: 615_000, currency: "TRY", walletCount: 5 },
+  { role: "child_owner", balanceCents: 172_000, currency: "TRY", walletCount: 3 },
+  { role: "child_tenant", balanceCents: 84_000, currency: "TRY", walletCount: 2 },
+  { role: "child_guest", balanceCents: 30_000, currency: "TRY", walletCount: 1 },
+]
+
+export interface WalletCurrencyAmountSeed {
+  currency: FinanceCurrency
+  amountCents: number
+  count: number
+}
+
+// Gross wallet top-ups recorded so far this period, per currency.
+export const walletTopUpsThisPeriodSeed: WalletCurrencyAmountSeed[] = [
+  { currency: "TRY", amountCents: 3_120_000, count: 14 },
+  { currency: "EUR", amountCents: 52_000, count: 2 },
+]
+
+export interface ActivitySpendCurrencySeed {
+  currency: FinanceCurrency
+  amountCents: number
+  bookingCount: number
+}
+
+// Wallet-funded activity / extra-service bookings (spa, cabana, kids club ...).
+export const activityBookingSpendSeed: ActivitySpendCurrencySeed[] = [
+  { currency: "TRY", amountCents: 2_465_000, bookingCount: 11 },
+  { currency: "EUR", amountCents: 18_000, bookingCount: 1 },
+]
+
+export interface VendorSubmissionSeed {
+  id: string
+  invoiceNo: string
+  providerName: string
+  submissionStatus: VendorSubmissionStatus
+  accountingStatus: InvoiceStatus
+  totalCents: number
+  currency: FinanceCurrency
+  issuedAt: string
+}
+
+// Vendor-issued invoices sitting in the submission lifecycle. `submitted` and
+// `in_review` are awaiting an accounting decision; `approved` is cleared. The
+// accountant-owned `accountingStatus` (open/...) stays separate from these.
+export const vendorSubmittedInvoicesSeed: VendorSubmissionSeed[] = [
+  { id: "vsi-3001", invoiceNo: "SPV-3001", providerName: "Akdeniz Teknik Servis", submissionStatus: "submitted", accountingStatus: "open", totalCents: 1_152_000, currency: "TRY", issuedAt: "2026-07-19" },
+  { id: "vsi-3002", invoiceNo: "SPV-3002", providerName: "Mavi Havuz ve Bakim", submissionStatus: "submitted", accountingStatus: "open", totalCents: 384_000, currency: "TRY", issuedAt: "2026-07-20" },
+  { id: "vsi-3003", invoiceNo: "SPV-3003", providerName: "Anadolu Asansor Servis", submissionStatus: "in_review", accountingStatus: "open", totalCents: 96_000, currency: "EUR", issuedAt: "2026-07-18" },
+  { id: "vsi-3004", invoiceNo: "SPV-3004", providerName: "Gunes Elektrik ve Enerji", submissionStatus: "approved", accountingStatus: "partially_offset", totalCents: 2_040_000, currency: "TRY", issuedAt: "2026-07-15" },
 ]

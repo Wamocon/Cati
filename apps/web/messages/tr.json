@@ -1,5 +1,45 @@
 {
   "accountantFinance": {
+    "moneyMovement": {
+      "title": "Roller arası para hareketi",
+      "subtitle": "Misafir, sağlayıcı ve vasi yönetimindeki hesapların cüzdan bakiyesi, etkinlik rezervasyonları ve sağlayıcı faturaları bu muhasebe görünümüne bağlanır.",
+      "unknownRole": "Atanmamış rol",
+      "wallet": {
+        "title": "Role göre cüzdan bakiyesi",
+        "subtitle": "Sahibinin rolüne göre gruplanan açık kullanıcı cüzdan bakiyesi.",
+        "empty": "Henüz açık cüzdan bakiyesi yok.",
+        "totalLabel": "Toplam kullanıcı bakiyesi",
+        "topUpsLabel": "Bu dönem yüklemeler",
+        "topUpsCount": "{count} yükleme işlemi",
+        "col": {
+          "role": "Rol",
+          "wallets": "Cüzdan",
+          "credit": "Bakiye"
+        }
+      },
+      "activity": {
+        "title": "Etkinlik rezervasyonları",
+        "subtitle": "Bu dönem cüzdandan finanse edilen ek hizmet rezervasyonları.",
+        "countLabel": "Rezervasyon",
+        "spendLabel": "Rezervasyon gideri",
+        "empty": "Henüz etkinlik rezervasyonu yok."
+      },
+      "vendor": {
+        "title": "İncelenecek sağlayıcı faturaları",
+        "subtitle": "Muhasebe kararından önce, gönderim sürecindeki sağlayıcı faturaları.",
+        "empty": "İncelenmeyi bekleyen sağlayıcı faturası yok.",
+        "awaitingLabel": "Bekleyen toplam",
+        "awaitingCount": "{count} inceleme bekliyor",
+        "approvedLabel": "Onaylanan"
+      },
+      "submission": {
+        "submitted": "Gönderildi",
+        "in_review": "İncelemede",
+        "approved": "Onaylandı",
+        "declined": "Reddedildi",
+        "draft": "Taslak"
+      }
+    },
     "title": "Muhasebe ve Sağlayıcı Finansı",
     "subtitle": "Sağlayıcı faturaları, sağlayıcılardan ve tüm rollerden alacak bakiyeleri, blok ve rol bazında maliyet dökümleri ve banka ekstreleri tek muhasebe görünümünde.",
     "readOnlyBadge": "Yalnızca inceleme",

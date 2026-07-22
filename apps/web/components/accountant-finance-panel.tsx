@@ -7,10 +7,12 @@ import {
   ArrowLeftRight,
   Banknote,
   Building2,
+  CalendarCheck,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
   Coins,
+  FileCheck2,
   Landmark,
   Layers,
   ReceiptText,
@@ -25,7 +27,9 @@ import {
   toIntlLocale,
 } from "@/lib/operational-copy"
 import { formatDualFromCents } from "@/lib/currency"
+import { roles as ROLE_KEYS } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
+import type { VendorSubmissionStatus } from "@/lib/vendor-invoice-data"
 import type {
   AccountantFinanceCreditBalance,
   AccountantFinanceInvoice,
@@ -42,6 +46,16 @@ function statusVariant(status: AccountantFinanceInvoice["status"]) {
   return "info" as const
 }
 
+// Tone for the vendor submission lifecycle pill. StatusBadge pairs each tone with
+// a distinct icon shape, so the state survives greyscale (WCAG 1.4.1).
+function submissionVariant(status: VendorSubmissionStatus) {
+  if (status === "approved") return "success" as const
+  if (status === "in_review") return "warning" as const
+  if (status === "declined") return "danger" as const
+  if (status === "submitted") return "info" as const
+  return "neutral" as const
+}
+
 function safeApiError(value: unknown, fallback: string) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return fallback
   const record = value as Record<string, unknown>
@@ -52,8 +66,18 @@ function safeApiError(value: unknown, fallback: string) {
 
 export function AccountantFinancePanel() {
   const t = useTranslations("accountantFinance")
+  const tRoles = useTranslations("roles")
   const locale = resolveDashboardLocale(useLocale())
   const intlLocale = toIntlLocale(locale)
+
+  // Localized label for a wallet owner's role. The wallet-owner set is wider than
+  // the accountant credit-subject set (it includes guests and supervised child
+  // accounts), so this reads from the shared `roles` namespace, with a safe
+  // fallback for any role the aggregate could not attribute.
+  const walletRoleLabel = (role: string) =>
+    (ROLE_KEYS as readonly string[]).includes(role)
+      ? tRoles(role)
+      : t("moneyMovement.unknownRole")
 
   const [data, setData] = useState<AccountantFinanceOverview | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
@@ -233,6 +257,7 @@ export function AccountantFinancePanel() {
   const dual = (cents: number, currency: "TRY" | "EUR") =>
     formatDualFromCents(cents, currency)
   const dualTry = (cents: number) => formatDualFromCents(cents, "TRY")
+  const mm = overview.moneyMovement
 
   // Inline, locale-resolved captions so a zero-value tile reads as an
   // intentional empty state and the bare bank-statement count is never
@@ -617,6 +642,201 @@ export function AccountantFinancePanel() {
           </div>
         </section>
       </div>
+
+      {/* Phase 7: the money the new guest / vendor / child roles move (wallet
+          credit + top-ups, activity-booking spend, vendor-submitted invoices),
+          connected back into the accountant view so nothing is siloed. */}
+      <section aria-labelledby="acf-money-heading" className="mt-6">
+        <div className="flex items-center gap-2">
+          <ArrowLeftRight className="h-4 w-4 text-primary" aria-hidden="true" />
+          <h3 id="acf-money-heading" className="text-sm font-black text-foreground">
+            {t("moneyMovement.title")}
+          </h3>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("moneyMovement.subtitle")}
+        </p>
+
+        <div className="mt-3 grid gap-4 xl:grid-cols-3">
+          {/* Wallet credit outstanding, grouped by the owner's role. */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4">
+            <div className="flex items-center gap-2">
+              <WalletCards className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h4 className="text-sm font-black text-foreground">
+                {t("moneyMovement.wallet.title")}
+              </h4>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("moneyMovement.wallet.subtitle")}
+            </p>
+            {mm.walletCredit.byRole.length === 0 ? (
+              <p className="mt-3 rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                {t("moneyMovement.wallet.empty")}
+              </p>
+            ) : (
+              <div className="mt-3 overflow-x-auto rounded-lg border border-border/60">
+                <table className="w-full min-w-[18rem] border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60 bg-muted/40 text-left text-[11px] uppercase text-muted-foreground">
+                      <th className="px-2.5 py-1.5 font-bold">
+                        {t("moneyMovement.wallet.col.role")}
+                      </th>
+                      <th className="px-2.5 py-1.5 text-right font-bold">
+                        {t("moneyMovement.wallet.col.wallets")}
+                      </th>
+                      <th className="px-2.5 py-1.5 text-right font-bold">
+                        {t("moneyMovement.wallet.col.credit")}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {mm.walletCredit.byRole.map((row) => (
+                      <tr key={row.role} className="border-b border-border/50 last:border-0">
+                        <td className="px-2.5 py-1.5 font-semibold text-foreground">
+                          {walletRoleLabel(row.role)}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-right text-muted-foreground">
+                          {row.walletCount}
+                        </td>
+                        <td className="px-2.5 py-1.5 text-right font-semibold text-foreground">
+                          {dualTry(row.creditTryCents)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <dl className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.wallet.totalLabel")}
+                </dt>
+                <dd className="mt-0.5 text-sm font-black leading-tight break-words text-foreground">
+                  {dualTry(mm.walletCredit.totalUserCreditTryCents)}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.wallet.topUpsLabel")}
+                </dt>
+                <dd className="mt-0.5 text-sm font-black leading-tight break-words text-foreground">
+                  {dualTry(mm.walletCredit.topUpsTryCents)}
+                </dd>
+                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+                  {t("moneyMovement.wallet.topUpsCount", {
+                    count: mm.walletCredit.topUpCount,
+                  })}
+                </p>
+              </div>
+            </dl>
+          </div>
+
+          {/* Wallet-funded activity / extra-service bookings. */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4">
+            <div className="flex items-center gap-2">
+              <CalendarCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h4 className="text-sm font-black text-foreground">
+                {t("moneyMovement.activity.title")}
+              </h4>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("moneyMovement.activity.subtitle")}
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <p className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.activity.countLabel")}
+                </p>
+                <p className="mt-0.5 text-2xl font-black leading-tight text-foreground">
+                  {mm.activitySpend.bookingCount}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <p className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.activity.spendLabel")}
+                </p>
+                <p className="mt-0.5 text-sm font-black leading-tight break-words text-foreground">
+                  {dualTry(mm.activitySpend.totalSpendTryCents)}
+                </p>
+              </div>
+            </div>
+            {mm.activitySpend.bookingCount === 0 &&
+              mm.activitySpend.totalSpendTryCents === 0 && (
+                <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+                  {t("moneyMovement.activity.empty")}
+                </p>
+              )}
+          </div>
+
+          {/* Vendor-issued invoices awaiting an accounting decision. */}
+          <div className="rounded-xl border border-border/70 bg-muted/15 p-4">
+            <div className="flex items-center gap-2">
+              <FileCheck2 className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h4 className="text-sm font-black text-foreground">
+                {t("moneyMovement.vendor.title")}
+              </h4>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {t("moneyMovement.vendor.subtitle")}
+            </p>
+            {mm.vendorSubmissions.invoices.length === 0 ? (
+              <p className="mt-3 rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                {t("moneyMovement.vendor.empty")}
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {mm.vendorSubmissions.invoices.map((invoice) => (
+                  <li
+                    key={invoice.id}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/60 p-2.5"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {invoice.invoiceNo}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {invoice.providerName ?? "-"}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      <StatusBadge variant={submissionVariant(invoice.submissionStatus)}>
+                        {t(`moneyMovement.submission.${invoice.submissionStatus}`)}
+                      </StatusBadge>
+                      <span className="text-xs font-semibold text-foreground">
+                        {dual(invoice.totalCents, invoice.currency)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <dl className="mt-3 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.vendor.awaitingLabel")}
+                </dt>
+                <dd className="mt-0.5 text-sm font-black leading-tight break-words text-foreground">
+                  {dualTry(mm.vendorSubmissions.awaitingTotalTryCents)}
+                </dd>
+                <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+                  {t("moneyMovement.vendor.awaitingCount", {
+                    count: mm.vendorSubmissions.awaitingCount,
+                  })}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-background/60 p-2.5">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">
+                  {t("moneyMovement.vendor.approvedLabel")}
+                </dt>
+                <dd className="mt-0.5 text-2xl font-black leading-tight text-foreground">
+                  {mm.vendorSubmissions.approvedCount}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
 
       {/* Requirement 2: credit balances from service providers. */}
       <section aria-labelledby="acf-provider-heading" className="mt-6">

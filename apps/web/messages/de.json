@@ -1,5 +1,45 @@
 {
   "accountantFinance": {
+    "moneyMovement": {
+      "title": "Rollenübergreifende Geldbewegung",
+      "subtitle": "Wallet-Guthaben, Aktivitätsbuchungen und eingereichte Anbieterrechnungen aus Gast-, Anbieter- und betreuten Konten, verbunden mit dieser Buchhaltungsansicht.",
+      "unknownRole": "Nicht zugeordnete Rolle",
+      "wallet": {
+        "title": "Wallet-Guthaben nach Rolle",
+        "subtitle": "Offenes Nutzer-Wallet-Guthaben, gruppiert nach der Rolle des Inhabers.",
+        "empty": "Noch kein offenes Wallet-Guthaben.",
+        "totalLabel": "Gesamtes Nutzerguthaben",
+        "topUpsLabel": "Aufladungen dieser Periode",
+        "topUpsCount": "{count} Aufladungen",
+        "col": {
+          "role": "Rolle",
+          "wallets": "Wallets",
+          "credit": "Guthaben"
+        }
+      },
+      "activity": {
+        "title": "Aktivitätsbuchungen",
+        "subtitle": "Wallet-finanzierte Zusatzleistungsbuchungen dieser Periode.",
+        "countLabel": "Buchungen",
+        "spendLabel": "Buchungsausgaben",
+        "empty": "Noch keine Aktivitätsbuchungen erfasst."
+      },
+      "vendor": {
+        "title": "Anbieterrechnungen zur Prüfung",
+        "subtitle": "Von Anbietern eingereichte Rechnungen im Einreichungsprozess, vor einer Buchhaltungsentscheidung.",
+        "empty": "Keine eingereichten Anbieterrechnungen zur Prüfung.",
+        "awaitingLabel": "Ausstehende Summe",
+        "awaitingCount": "{count} zur Prüfung ausstehend",
+        "approvedLabel": "Genehmigt"
+      },
+      "submission": {
+        "submitted": "Eingereicht",
+        "in_review": "In Prüfung",
+        "approved": "Genehmigt",
+        "declined": "Abgelehnt",
+        "draft": "Entwurf"
+      }
+    },
     "title": "Buchhaltung und Dienstleisterfinanzen",
     "subtitle": "Dienstleisterrechnungen, Guthaben von Dienstleistern und allen Rollen, Kostenaufschlüsselungen nach Block und Rolle sowie Kontoauszüge in einer Buchhaltungsansicht.",
     "readOnlyBadge": "Nur Ansicht",

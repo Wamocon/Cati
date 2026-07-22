@@ -1,5 +1,45 @@
 {
   "accountantFinance": {
+    "moneyMovement": {
+      "title": "Cross-role money movement",
+      "subtitle": "Wallet credit, activity bookings and vendor-submitted invoices from the guest, provider and supervised accounts, connected into this accounting view.",
+      "unknownRole": "Unassigned role",
+      "wallet": {
+        "title": "Wallet credit by role",
+        "subtitle": "Outstanding user-wallet credit grouped by the owner role.",
+        "empty": "No wallet credit is outstanding yet.",
+        "totalLabel": "Total user credit",
+        "topUpsLabel": "Top-ups this period",
+        "topUpsCount": "{count} top-up transactions",
+        "col": {
+          "role": "Role",
+          "wallets": "Wallets",
+          "credit": "Credit"
+        }
+      },
+      "activity": {
+        "title": "Activity bookings",
+        "subtitle": "Wallet-funded extra-service bookings booked this period.",
+        "countLabel": "Bookings",
+        "spendLabel": "Booked spend",
+        "empty": "No activity bookings recorded yet."
+      },
+      "vendor": {
+        "title": "Vendor invoices awaiting review",
+        "subtitle": "Provider-submitted invoices in the submission lifecycle, before an accounting decision.",
+        "empty": "No vendor-submitted invoices are awaiting review.",
+        "awaitingLabel": "Awaiting total",
+        "awaitingCount": "{count} awaiting review",
+        "approvedLabel": "Approved"
+      },
+      "submission": {
+        "submitted": "Submitted",
+        "in_review": "In review",
+        "approved": "Approved",
+        "declined": "Declined",
+        "draft": "Draft"
+      }
+    },
     "title": "Accounting and Provider Finance",
     "subtitle": "Provider invoices, credit balances from providers and every role, block and role cost breakdowns, and bank statements in one accounting view.",
     "readOnlyBadge": "Review only",

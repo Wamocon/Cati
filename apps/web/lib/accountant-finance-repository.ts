@@ -20,15 +20,20 @@ import { EUR_TRY_RATE } from "@/lib/currency"
 import {
   ACCOUNTANT_FINANCE_BLOCKS,
   CREDIT_SUBJECT_ORDER,
+  activityBookingSpendSeed,
   bankStatementsSeed,
   costEntriesSeed,
   creditBalancesSeed,
   invoiceCreditOffsetsSeed,
   serviceProviderInvoicesSeed,
+  vendorSubmittedInvoicesSeed,
+  walletCreditByRoleSeed,
+  walletTopUpsThisPeriodSeed,
   type CreditSubjectType,
   type FinanceCurrency,
   type InvoiceStatus,
 } from "@/lib/accountant-finance-data"
+import type { VendorSubmissionStatus } from "@/lib/vendor-invoice-data"
 
 export const ACCOUNTANT_FINANCE_CONTRACT_VERSION = "accountant-finance.v1" as const
 export const LOCAL_ACCESS_PROFILE_ID = "00000000-0000-0000-0000-000000000000"
@@ -116,6 +121,65 @@ export interface AccountantFinanceTotals {
   bankStatementCount: number
 }
 
+// --------------------------------------------------------------------------
+// Phase-7 (accountant sync): the money the new guest / vendor / child roles move
+// (wallet credit + top-ups, activity-booking spend, vendor-submitted invoices),
+// folded back into the accountant view so "everything is connected". All figures
+// are TRY-normalized minor units for aggregation (individual currencies are kept
+// where they still matter), consistent with byBlock / byRole above.
+// --------------------------------------------------------------------------
+
+export interface AccountantWalletRoleRow {
+  /** Business role of the wallet owner (guest, service_provider, child_*, ...). */
+  role: string
+  creditTryCents: number
+  walletCount: number
+}
+
+export interface AccountantWalletCredit {
+  /** Outstanding user-wallet credit grouped by the owner's role. */
+  byRole: AccountantWalletRoleRow[]
+  totalUserCreditTryCents: number
+  userWalletCount: number
+  /** Gross top-ups posted this period. */
+  topUpsTryCents: number
+  topUpCount: number
+  periodStart: string | null
+}
+
+export interface AccountantActivitySpend {
+  totalSpendTryCents: number
+  bookingCount: number
+}
+
+export interface AccountantVendorInvoice {
+  id: string
+  invoiceNo: string
+  providerName: string | null
+  /** Vendor-owned lifecycle (submitted / in_review / approved / ...). */
+  submissionStatus: VendorSubmissionStatus
+  /** Accountant-owned offset lifecycle; read-only here. */
+  accountingStatus: InvoiceStatus
+  totalCents: number
+  currency: FinanceCurrency
+  issuedAt: string | null
+}
+
+export interface AccountantVendorSubmissions {
+  /** Vendor-issued invoices in the submission lifecycle (awaiting + approved). */
+  invoices: AccountantVendorInvoice[]
+  /** submitted + in_review, i.e. awaiting an accounting decision. */
+  awaitingCount: number
+  approvedCount: number
+  awaitingTotalTryCents: number
+}
+
+export interface AccountantMoneyMovement {
+  walletCredit: AccountantWalletCredit
+  activitySpend: AccountantActivitySpend
+  vendorSubmissions: AccountantVendorSubmissions
+}
+
 export interface AccountantFinanceOverview {
   contractVersion: typeof ACCOUNTANT_FINANCE_CONTRACT_VERSION
   source: AccountantFinanceSource
@@ -130,6 +194,8 @@ export interface AccountantFinanceOverview {
   bankStatements: AccountantFinanceBankStatement[]
   offsets: AccountantFinanceOffset[]
   totals: AccountantFinanceTotals
+  /** Phase-7: wallet / activity / vendor money the new roles move. */
+  moneyMovement: AccountantMoneyMovement
   warning?: string
 }
 
@@ -210,11 +276,133 @@ function deriveInvoiceStatus(
   return "open"
 }
 
+// --------------------------------------------------------------------------
+// Phase-7 money-movement helpers (wallet / activity / vendor).
+// --------------------------------------------------------------------------
+
+function normalizeSubmissionStatus(value: unknown): VendorSubmissionStatus {
+  return value === "submitted" ||
+    value === "in_review" ||
+    value === "approved" ||
+    value === "declined"
+    ? value
+    : "draft"
+}
+
+function isAwaitingSubmission(status: VendorSubmissionStatus) {
+  return status === "submitted" || status === "in_review"
+}
+
+function buildVendorSubmissions(
+  invoices: AccountantVendorInvoice[]
+): AccountantVendorSubmissions {
+  const awaiting = invoices.filter((invoice) =>
+    isAwaitingSubmission(invoice.submissionStatus)
+  )
+  return {
+    invoices,
+    awaitingCount: awaiting.length,
+    approvedCount: invoices.filter(
+      (invoice) => invoice.submissionStatus === "approved"
+    ).length,
+    awaitingTotalTryCents: awaiting.reduce(
+      (sum, invoice) => sum + toTryCents(invoice.totalCents, invoice.currency),
+      0
+    ),
+  }
+}
+
+function emptyMoneyMovement(): AccountantMoneyMovement {
+  return {
+    walletCredit: {
+      byRole: [],
+      totalUserCreditTryCents: 0,
+      userWalletCount: 0,
+      topUpsTryCents: 0,
+      topUpCount: 0,
+      periodStart: null,
+    },
+    activitySpend: { totalSpendTryCents: 0, bookingCount: 0 },
+    vendorSubmissions: {
+      invoices: [],
+      awaitingCount: 0,
+      approvedCount: 0,
+      awaitingTotalTryCents: 0,
+    },
+  }
+}
+
+function buildLocalMoneyMovement(): AccountantMoneyMovement {
+  const roleTotals = new Map<
+    string,
+    { creditTryCents: number; walletCount: number }
+  >()
+  for (const seed of walletCreditByRoleSeed) {
+    const current = roleTotals.get(seed.role) ?? {
+      creditTryCents: 0,
+      walletCount: 0,
+    }
+    current.creditTryCents += toTryCents(seed.balanceCents, seed.currency)
+    current.walletCount += seed.walletCount
+    roleTotals.set(seed.role, current)
+  }
+  const byRole: AccountantWalletRoleRow[] = Array.from(roleTotals.entries())
+    .map(([role, value]) => ({ role, ...value }))
+    .sort((left, right) => right.creditTryCents - left.creditTryCents)
+
+  const vendorInvoices: AccountantVendorInvoice[] =
+    vendorSubmittedInvoicesSeed.map((seed) => ({
+      id: seed.id,
+      invoiceNo: seed.invoiceNo,
+      providerName: seed.providerName,
+      submissionStatus: seed.submissionStatus,
+      accountingStatus: seed.accountingStatus,
+      totalCents: seed.totalCents,
+      currency: seed.currency,
+      issuedAt: seed.issuedAt,
+    }))
+
+  return {
+    walletCredit: {
+      byRole,
+      totalUserCreditTryCents: walletCreditByRoleSeed.reduce(
+        (sum, seed) => sum + toTryCents(seed.balanceCents, seed.currency),
+        0
+      ),
+      userWalletCount: walletCreditByRoleSeed.reduce(
+        (sum, seed) => sum + seed.walletCount,
+        0
+      ),
+      topUpsTryCents: walletTopUpsThisPeriodSeed.reduce(
+        (sum, seed) => sum + toTryCents(seed.amountCents, seed.currency),
+        0
+      ),
+      topUpCount: walletTopUpsThisPeriodSeed.reduce(
+        (sum, seed) => sum + seed.count,
+        0
+      ),
+      periodStart: null,
+    },
+    activitySpend: {
+      totalSpendTryCents: activityBookingSpendSeed.reduce(
+        (sum, seed) => sum + toTryCents(seed.amountCents, seed.currency),
+        0
+      ),
+      bookingCount: activityBookingSpendSeed.reduce(
+        (sum, seed) => sum + seed.bookingCount,
+        0
+      ),
+    },
+    vendorSubmissions: buildVendorSubmissions(vendorInvoices),
+  }
+}
+
 function deriveOverview(
   raw: RawFinanceState,
   options: {
     source: AccountantFinanceSource
     capabilities: { canOffset: boolean; readOnly: boolean }
+    moneyMovement: AccountantMoneyMovement
     warning?: string
   }
 ): AccountantFinanceOverview {
@@ -302,6 +490,7 @@ function deriveOverview(
     bankStatements: raw.bankStatements,
     offsets: raw.offsets,
     totals,
+    moneyMovement: options.moneyMovement,
     warning: options.warning,
   }
 }
@@ -561,6 +750,7 @@ function localOverview(
         canOffset: canWrite(profile.role),
         readOnly: profile.role === "manager",
       },
+      moneyMovement: buildLocalMoneyMovement(),
       warning,
     })
   )
@@ -767,6 +957,148 @@ async function loadFromSupabase(
   return { invoices, creditBalances, costEntries, bankStatements, offsets }
 }
 
+// --------------------------------------------------------------------------
+// Phase-7 money movement (Supabase path). Best-effort: each piece degrades to an
+// empty structure on error so the core accounting overview is never broken by a
+// missing table / RPC in an older environment. The `source` stays "supabase".
+// --------------------------------------------------------------------------
+
+function mapWalletCreditFromRpc(data: unknown): AccountantWalletCredit {
+  const record = asRecord(data)
+
+  const roleTotals = new Map<
+    string,
+    { creditTryCents: number; walletCount: number }
+  >()
+  const byRoleRaw = Array.isArray(record.byRole) ? record.byRole : []
+  for (const row of byRoleRaw) {
+    const item = asRecord(row)
+    const role = str(item.role, "unknown") || "unknown"
+    const currency = normalizeCurrency(item.currency)
+    const current = roleTotals.get(role) ?? { creditTryCents: 0, walletCount: 0 }
+    current.creditTryCents += toTryCents(num(item.balanceCents), currency)
+    current.walletCount += num(item.walletCount)
+    roleTotals.set(role, current)
+  }
+  const byRole: AccountantWalletRoleRow[] = Array.from(roleTotals.entries())
+    .map(([role, value]) => ({ role, ...value }))
+    .sort((left, right) => right.creditTryCents - left.creditTryCents)
+
+  let totalUserCreditTryCents = 0
+  let userWalletCount = 0
+  const totalsRaw = Array.isArray(record.totalsByCurrency)
+    ? record.totalsByCurrency
+    : []
+  for (const row of totalsRaw) {
+    const item = asRecord(row)
+    totalUserCreditTryCents += toTryCents(
+      num(item.balanceCents),
+      normalizeCurrency(item.currency)
+    )
+    userWalletCount += num(item.walletCount)
+  }
+
+  let topUpsTryCents = 0
+  let topUpCount = 0
+  const topUpsRaw = Array.isArray(record.topUpsByCurrency)
+    ? record.topUpsByCurrency
+    : []
+  for (const row of topUpsRaw) {
+    const item = asRecord(row)
+    topUpsTryCents += toTryCents(
+      num(item.amountCents),
+      normalizeCurrency(item.currency)
+    )
+    topUpCount += num(item.count)
+  }
+
+  return {
+    byRole,
+    totalUserCreditTryCents,
+    userWalletCount,
+    topUpsTryCents,
+    topUpCount,
+    periodStart: nullableStr(record.periodStart),
+  }
+}
+
+async function loadMoneyMovementFromSupabase(
+  supabase: SupabaseClient
+): Promise<AccountantMoneyMovement> {
+  const movement = emptyMoneyMovement()
+
+  // Wallet money summary via the SECURITY DEFINER aggregation helper (mig 47).
+  // The profiles RLS blocks grouping wallet balances by owner role client-side,
+  // so this grouping must be done server-side.
+  try {
+    const walletResponse = await supabase.rpc("accountant_wallet_money_summary", {})
+    if (!walletResponse.error && walletResponse.data) {
+      movement.walletCredit = mapWalletCreditFromRpc(walletResponse.data)
+    }
+  } catch {
+    // Best-effort: keep the empty wallet-credit summary.
+  }
+
+  // Activity bookings (RLS grants same-company admin/manager/accountant SELECT).
+  try {
+    const bookingResponse = await supabase
+      .from("activity_bookings")
+      .select("amount_cents, currency, status")
+      .neq("status", "cancelled")
+      .limit(2000)
+    if (!bookingResponse.error) {
+      const rows = bookingResponse.data ?? []
+      movement.activitySpend = {
+        totalSpendTryCents: rows.reduce((sum, row) => {
+          const record = asRecord(row)
+          return (
+            sum +
+            toTryCents(num(record.amount_cents), normalizeCurrency(record.currency))
+          )
+        }, 0),
+        bookingCount: rows.length,
+      }
+    }
+  } catch {
+    // Best-effort.
+  }
+
+  // Vendor-submitted invoices (RLS grants same-company accountant SELECT).
+  try {
+    const vendorResponse = await supabase
+      .from("service_provider_invoices")
+      .select(
+        "id, invoice_no, submission_status, status, total_cents, amount_cents, currency, issued_at, vendors:vendor_id(name)"
+      )
+      .in("submission_status", ["submitted", "in_review", "approved"])
+      .order("issued_at", { ascending: false })
+      .limit(50)
+    if (!vendorResponse.error) {
+      const invoices: AccountantVendorInvoice[] = (
+        vendorResponse.data ?? []
+      ).map((row) => {
+        const record = asRecord(row)
+        const totalCents = num(record.total_cents) || num(record.amount_cents)
+        return {
+          id: str(record.id),
+          invoiceNo: str(record.invoice_no),
+          providerName: nullableStr(related(record.vendors).name),
+          submissionStatus: normalizeSubmissionStatus(record.submission_status),
+          accountingStatus: normalizeInvoiceStatus(record.status),
+          totalCents,
+          currency: normalizeCurrency(record.currency),
+          issuedAt: nullableStr(record.issued_at),
+        }
+      })
+      movement.vendorSubmissions = buildVendorSubmissions(invoices)
+    }
+  } catch {
+    // Best-effort.
+  }
+
+  return movement
+}
+
 function normalizeOffsetResult(
   value: unknown,
   fallbackSource: AccountantFinanceSource
@@ -861,12 +1193,14 @@ export async function getAccountantFinanceOverview(
   try {
     const supabase = await createClient()
     const raw = await loadFromSupabase(supabase, boundedLimit)
+    const moneyMovement = await loadMoneyMovementFromSupabase(supabase)
     return deriveOverview(raw, {
       source: "supabase",
       capabilities: {
         canOffset: canWrite(profile.role),
         readOnly: profile.role === "manager",
       },
+      moneyMovement,
     })
   } catch (error) {
     if (canUseLocalSeedFallback()) {
