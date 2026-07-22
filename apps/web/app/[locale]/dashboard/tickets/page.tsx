@@ -3262,6 +3262,41 @@ export default function TicketsPage() {
       </DashboardSection>
       )}
 
+      {/* Residents (owner/tenant) do not see the internal field-task board above,
+          but must still be able to view the management-approved proof for work
+          completed on their own requests. Render only the read-only proof panel
+          per in-scope task, without SLA/readiness/assignee/route clutter. */}
+      {clientView && visibleTasks.length > 0 && (
+        <DashboardSection title={t("Kanıt ve yanıt")}>
+          <div className="grid gap-3 lg:grid-cols-2">
+            {visibleTasks.slice(0, 6).map((task) => (
+              <div
+                key={task.id}
+                className="rounded-xl border border-border bg-muted/25 p-4"
+              >
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">
+                    {t(task.title)}
+                  </h3>
+                  {task.flatNumber && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {task.flatNumber}
+                    </p>
+                  )}
+                </div>
+                {queueData && (
+                  <ServiceProofPanel
+                    ticketId={task.ticketId}
+                    workforceTaskId={task.id}
+                    role={user.role}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </DashboardSection>
+      )}
+
       <div className={clientView ? "space-y-4" : "grid gap-6 lg:grid-cols-3"}>
         {!clientView && (
         <DashboardSection

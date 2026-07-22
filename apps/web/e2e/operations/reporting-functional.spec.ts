@@ -100,7 +100,7 @@ test.describe("UC16 persistent report workspace", () => {
 
     await expect(page.getByRole("heading", { level: 1, name: "Persistent report archive" })).toBeVisible()
     await expect(page.getByTestId("reporting-unavailable")).toBeVisible()
-    await expect(page.getByText("NO DEMO DATA", { exact: true })).toBeVisible()
+    await expect(page.getByText("Reports aren't available in this preview yet.", { exact: true })).toBeVisible()
     await expect(page.getByTestId("report-request-row")).toHaveCount(0)
     await expect(page.getByTestId("report-artifact-row")).toHaveCount(0)
   })
@@ -111,7 +111,7 @@ test.describe("UC16 persistent report workspace", () => {
     await page.goto("/en/dashboard/reports")
 
     await expect(page.getByText("Internal archive live", { exact: true })).toBeVisible()
-    await expect(page.getByText(/Bulk export · Provider-ready/)).toBeVisible()
+    await expect(page.getByText(/Bulk export · Coming soon/)).toBeVisible()
     await page.getByLabel("Report type").selectOption("unit_inventory")
     await page.getByRole("checkbox", { name: /New Level Premium/ }).check()
     await page.getByLabel("From").fill("2026-07-01")

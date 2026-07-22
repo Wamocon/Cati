@@ -746,9 +746,12 @@ test.describe("UC18 booking and handover static business contracts", () => {
       expect(tabs).toContain(label)
     }
     expect(booking).toContain("Rezervasyon ve tesis kullanımı")
-    expect(booking).toContain("Kalıcı rezervasyon hizmeti şu anda hazır değil.")
+    expect(booking).toContain("Çevrimiçi rezervasyon şu anda kullanılamıyor.")
+    expect(booking).toContain(
+      "Lütfen rezervasyon için site yönetim ofisiyle iletişime geçin."
+    )
     expect(booking).not.toMatch(
-      /Persistent booking|repository fallback|Repository fallback/i
+      /Persistent booking|repository fallback|Repository fallback|Supabase|migration/i
     )
     expect(handover).toContain("Kalıcı teslim hizmeti hazır değil")
     expect(sharing).toContain("Kalıcı takvim hizmeti hazır değil")
