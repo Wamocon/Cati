@@ -23,6 +23,9 @@ import {
   ShieldCheck,
   LayoutDashboard,
   MessageSquareText,
+  Wallet,
+  Sparkles,
+  ReceiptText,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { Link, usePathname } from "@/app/navigation"
@@ -61,6 +64,10 @@ const iconsByResource: Record<Resource, React.ElementType> = {
   users: UserCog,
   settings: Settings,
   communications: MessageSquareText,
+  wallet: Wallet,
+  activities: Sparkles,
+  guardianship: Users,
+  vendor_invoices: ReceiptText,
 }
 
 const menu: MenuItem[] = dashboardRoutes.map((item) => ({

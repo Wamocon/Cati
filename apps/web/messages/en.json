@@ -383,13 +383,23 @@
     "staff": "Staff",
     "owner": "Owner",
     "tenant": "Tenant",
+    "guest": "Guest",
+    "service_provider": "Service Provider",
+    "child_owner": "Owner (Sub-account)",
+    "child_tenant": "Tenant (Sub-account)",
+    "child_guest": "Guest (Sub-account)",
     "descriptions": {
       "admin": "Organization administrator for the assigned company only. Manages that company's users, settings, finance, access and audit; has no cross-organization or platform control. Platform super-admin is a separate protected break-glass identity.",
       "manager": "Responsible site manager. Supervises services, tasks, staff, reservations, communication and daily risks.",
       "accountant": "Accounting role. Manages fees, payments, collections, deposits, refunds and finance reports.",
       "staff": "Operational staff role. Accepts assigned jobs, completes tasks and uploads photo/video reports.",
       "owner": "Owner role. Sees own-unit services, reservations, authorized documents and management communication.",
-      "tenant": "Tenant role. Sees authorized-unit services, reservations, chat, notifications and documents."
+      "tenant": "Tenant role. Sees authorized-unit services, reservations, chat, notifications and documents.",
+      "guest": "Guest role. Browses permitted listings and activities, sees a personal wallet, and follows shared reports, calendar, documents and communication. Read-only outside the wallet.",
+      "service_provider": "Vendor role. Sees and updates assigned service tickets and prepares vendor invoices, plus the guest-level activity, wallet, calendar and document surface.",
+      "child_owner": "Guardian-supervised owner sub-account. Sees a limited activity, read-only wallet, reports and calendar surface within the guardian's delegated scope.",
+      "child_tenant": "Guardian-supervised tenant sub-account. Sees a limited activity, read-only wallet, reports and calendar surface within the guardian's delegated scope.",
+      "child_guest": "Guardian-supervised guest sub-account. Sees a limited activity, read-only wallet, reports and calendar surface within the guardian's delegated scope."
     }
   },
   "login": {

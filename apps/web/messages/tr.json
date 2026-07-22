@@ -383,13 +383,23 @@
     "staff": "Personel",
     "owner": "Malik",
     "tenant": "Kiracı",
+    "guest": "Misafir",
+    "service_provider": "Hizmet Sağlayıcı",
+    "child_owner": "Malik (Alt Hesap)",
+    "child_tenant": "Kiracı (Alt Hesap)",
+    "child_guest": "Misafir (Alt Hesap)",
     "descriptions": {
       "admin": "Yalnızca atandığı şirket için organizasyon yöneticisi. O şirketin kullanıcı, ayar, finans, erişim ve audit süreçlerini yönetir; kuruluşlar arası veya platform genelinde yetkisi yoktur. Platform süper yöneticisi ayrı, korumalı bir break-glass kimliğidir.",
       "manager": "Saha ve operasyon sorumlusu. Servis, görev, personel, rezervasyon, iletişim ve günlük riskleri takip eder.",
       "accountant": "Muhasebe ve finans rolü. Aidat, ödeme, tahsilat, depozito, iade ve finans raporlarını yönetir.",
       "staff": "Saha personeli rolü. Atanan işleri kabul eder, işi kapatır ve fotoğraf/video raporu ekler.",
       "owner": "Malik rolü. Kendi dairesine bağlı servis, rezervasyon, belge ve yönetim iletişimini görür.",
-      "tenant": "Kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, sohbet, bildirim ve belgeleri görür."
+      "tenant": "Kiracı rolü. Yetkili olduğu daire için servis, rezervasyon, sohbet, bildirim ve belgeleri görür.",
+      "guest": "Misafir rolü. Yetkili ilanları ve etkinlikleri görüntüler, kişisel cüzdanını görür ve paylaşılan rapor, takvim, belge ve iletişimi takip eder. Cüzdan dışında salt okunurdur.",
+      "service_provider": "Hizmet sağlayıcı (tedarikçi) rolü. Atanan servis taleplerini görür ve günceller, tedarikçi faturalarını hazırlar; ayrıca misafir düzeyi etkinlik, cüzdan, takvim ve belge yüzeyine erişir.",
+      "child_owner": "Vasi denetimindeki malik alt hesabı. Vasinin yetkilendirdiği kapsamda sınırlı etkinlik, salt okunur cüzdan, rapor ve takvim görür.",
+      "child_tenant": "Vasi denetimindeki kiracı alt hesabı. Vasinin yetkilendirdiği kapsamda sınırlı etkinlik, salt okunur cüzdan, rapor ve takvim görür.",
+      "child_guest": "Vasi denetimindeki misafir alt hesabı. Vasinin yetkilendirdiği kapsamda sınırlı etkinlik, salt okunur cüzdan, rapor ve takvim görür."
     }
   },
   "login": {

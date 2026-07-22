@@ -59,6 +59,11 @@ async function getAccessProfile(): Promise<UserProfile> {
     staff: "Teknik - Ahmet",
     owner: "Demo Malik",
     tenant: "Demo Kiracı",
+    guest: "Demo Misafir",
+    service_provider: "Demo Hizmet Sağlayıcı",
+    child_owner: "Demo Malik (Alt Hesap)",
+    child_tenant: "Demo Kiracı (Alt Hesap)",
+    child_guest: "Demo Misafir (Alt Hesap)",
   }
 
   return {

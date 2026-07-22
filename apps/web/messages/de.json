@@ -388,13 +388,23 @@
     "staff": "Mitarbeiter",
     "owner": "Eigentümer",
     "tenant": "Mieter",
+    "guest": "Gast",
+    "service_provider": "Dienstleister",
+    "child_owner": "Eigentümer (Unterkonto)",
+    "child_tenant": "Mieter (Unterkonto)",
+    "child_guest": "Gast (Unterkonto)",
     "descriptions": {
       "admin": "Organisationsadministrator ausschließlich für das zugewiesene Unternehmen. Verwaltet dessen Nutzer, Einstellungen, Finanzen, Zugriffe und Audit; keine organisationsübergreifende oder Plattformkontrolle. Der Plattform-Superadmin ist eine separate, geschützte Break-Glass-Identität.",
       "manager": "Verantwortliche Betriebsrolle. Überwacht Services, Aufgaben, Personal, Reservierungen, Kommunikation und Tagesrisiken.",
       "accountant": "Buchhaltungsrolle. Verwaltet Gebühren, Zahlungen, Inkasso, Kautionen, Rückerstattungen und Finanzberichte.",
       "staff": "Mitarbeiterrolle. Nimmt zugewiesene Aufträge an, erledigt Aufgaben und ergänzt Foto-/Videoberichte.",
       "owner": "Eigentümerrolle. Sieht Services, Reservierungen, berechtigte Dokumente und Verwaltungskommunikation zur eigenen Wohnung.",
-      "tenant": "Mieterrolle. Sieht Services, Reservierungen, Chat, Benachrichtigungen und Dokumente zur berechtigten Wohnung."
+      "tenant": "Mieterrolle. Sieht Services, Reservierungen, Chat, Benachrichtigungen und Dokumente zur berechtigten Wohnung.",
+      "guest": "Gastrolle. Durchsucht freigegebene Angebote und Aktivitäten, sieht eine persönliche Wallet und folgt geteilten Berichten, Kalender, Dokumenten und Kommunikation. Außerhalb der Wallet nur lesend.",
+      "service_provider": "Dienstleisterrolle. Sieht und aktualisiert zugewiesene Servicetickets und erstellt Lieferantenrechnungen, zusätzlich zur Gast-Ebene für Aktivitäten, Wallet, Kalender und Dokumente.",
+      "child_owner": "Vom Vormund betreutes Eigentümer-Unterkonto. Sieht eine begrenzte Aktivitäts-, schreibgeschützte Wallet-, Berichts- und Kalenderansicht im delegierten Bereich des Vormunds.",
+      "child_tenant": "Vom Vormund betreutes Mieter-Unterkonto. Sieht eine begrenzte Aktivitäts-, schreibgeschützte Wallet-, Berichts- und Kalenderansicht im delegierten Bereich des Vormunds.",
+      "child_guest": "Vom Vormund betreutes Gast-Unterkonto. Sieht eine begrenzte Aktivitäts-, schreibgeschützte Wallet-, Berichts- und Kalenderansicht im delegierten Bereich des Vormunds."
     }
   },
   "login": {

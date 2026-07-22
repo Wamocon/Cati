@@ -200,6 +200,11 @@ function roleScope(profile: UserProfile) {
     staff: "exact_assignments",
     owner: "verified_owner_units",
     tenant: "invited_tenant_units",
+    guest: "guest_access",
+    service_provider: "vendor_assignments",
+    child_owner: "managed_minor",
+    child_tenant: "managed_minor",
+    child_guest: "managed_minor",
   }
   return scopes[profile.role]
 }

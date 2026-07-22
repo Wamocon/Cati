@@ -78,6 +78,46 @@ const expectedActors = {
     officeId: "office-qa",
     boundaryId: null,
   },
+  guest: {
+    authority: "guest_visitor",
+    view: "self",
+    scopeKind: "guest_access",
+    companyId: "company-qa",
+    officeId: "office-qa",
+    boundaryId: null,
+  },
+  service_provider: {
+    authority: "service_vendor",
+    view: "self",
+    scopeKind: "vendor",
+    companyId: "company-qa",
+    officeId: "office-qa",
+    boundaryId: null,
+  },
+  child_owner: {
+    authority: "managed_dependent",
+    view: "self",
+    scopeKind: "managed_minor",
+    companyId: "company-qa",
+    officeId: "office-qa",
+    boundaryId: null,
+  },
+  child_tenant: {
+    authority: "managed_dependent",
+    view: "self",
+    scopeKind: "managed_minor",
+    companyId: "company-qa",
+    officeId: "office-qa",
+    boundaryId: null,
+  },
+  child_guest: {
+    authority: "managed_dependent",
+    view: "self",
+    scopeKind: "managed_minor",
+    companyId: "company-qa",
+    officeId: "office-qa",
+    boundaryId: null,
+  },
 } as const satisfies Record<
   Role,
   {
@@ -128,7 +168,7 @@ function policyBody(name: string) {
 }
 
 test.describe("role governance release contract", () => {
-  test("the switchable business-role set is exactly the six documented roles", () => {
+  test("the switchable business-role set matches the documented eleven roles", () => {
     expect(roles).toEqual([
       "admin",
       "manager",
@@ -136,6 +176,11 @@ test.describe("role governance release contract", () => {
       "staff",
       "owner",
       "tenant",
+      "guest",
+      "service_provider",
+      "child_owner",
+      "child_tenant",
+      "child_guest",
     ])
     expect(roleDefinitions.map((definition) => definition.key)).toEqual(roles)
     expect(Object.keys(roleGovernanceRegistry)).toEqual(roles)

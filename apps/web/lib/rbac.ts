@@ -10,6 +10,13 @@ export const roles = [
   "staff",
   "owner",
   "tenant",
+  // Additive Phase-1 roles (guest / vendor / guardianship). These sit BELOW the
+  // existing six in authority and never widen any existing role's permissions.
+  "guest",
+  "service_provider",
+  "child_owner",
+  "child_tenant",
+  "child_guest",
 ] as const
 
 export type Role = (typeof roles)[number]
@@ -28,6 +35,12 @@ export const resources = [
   "users",
   "settings",
   "communications",
+  // Additive Phase-1 resources. Backing pages/tables land in later phases; these
+  // are declared now so the new roles have a coherent permission surface.
+  "wallet",
+  "activities",
+  "guardianship",
+  "vendor_invoices",
 ] as const
 
 export type Resource = (typeof resources)[number]
@@ -55,7 +68,16 @@ export interface RoleDefinition {
   labelKey: string
   descriptionKey: string
   level: number
-  scope: "company" | "site" | "finance" | "field" | "owned_unit" | "rented_unit"
+  scope:
+    | "company"
+    | "site"
+    | "finance"
+    | "field"
+    | "owned_unit"
+    | "rented_unit"
+    | "guest_access"
+    | "vendor"
+    | "managed_minor"
   responsibilities: string[]
   constraints: string[]
 }
@@ -153,6 +175,83 @@ export const roleDefinitions: RoleDefinition[] = [
     constraints: [
       "Access is restricted by the owner agreement and debt status",
       "Cannot view owner records, reports, finance ledgers, or other units",
+    ],
+  },
+  {
+    key: "guest",
+    labelKey: "roles.guest",
+    descriptionKey: "roles.descriptions.guest",
+    level: 15,
+    scope: "guest_access",
+    responsibilities: [
+      "Browse permitted listings and community activities",
+      "View own wallet balance and top up / add funds",
+      "Follow reports, calendar, documents, and communications shared with guests",
+    ],
+    constraints: [
+      "Read-only outside the wallet; cannot manage any operational record",
+      "Cannot view finance ledgers, other users, tickets, or platform settings",
+    ],
+  },
+  {
+    key: "service_provider",
+    labelKey: "roles.service_provider",
+    descriptionKey: "roles.descriptions.service_provider",
+    level: 25,
+    scope: "vendor",
+    responsibilities: [
+      "See and update service tickets assigned to the vendor",
+      "Prepare and submit vendor invoices for completed work",
+      "Access the guest-level activity, wallet, calendar, and document surface",
+    ],
+    constraints: [
+      "Scoped to assigned work and own vendor invoices only",
+      "Cannot view the finance ledger, user administration, or platform settings",
+    ],
+  },
+  {
+    key: "child_owner",
+    labelKey: "roles.child_owner",
+    descriptionKey: "roles.descriptions.child_owner",
+    level: 7,
+    scope: "managed_minor",
+    responsibilities: [
+      "View a guardian-supervised subset of the owner experience",
+      "Log activities and view a read-only wallet, reports, and calendar",
+    ],
+    constraints: [
+      "Every action stays within the guardian's delegated scope",
+      "No finance, documents, tickets, users, or settings access",
+    ],
+  },
+  {
+    key: "child_tenant",
+    labelKey: "roles.child_tenant",
+    descriptionKey: "roles.descriptions.child_tenant",
+    level: 6,
+    scope: "managed_minor",
+    responsibilities: [
+      "View a guardian-supervised subset of the tenant experience",
+      "Log activities and view a read-only wallet, reports, and calendar",
+    ],
+    constraints: [
+      "Every action stays within the guardian's delegated scope",
+      "No finance, documents, tickets, users, or settings access",
+    ],
+  },
+  {
+    key: "child_guest",
+    labelKey: "roles.child_guest",
+    descriptionKey: "roles.descriptions.child_guest",
+    level: 5,
+    scope: "managed_minor",
+    responsibilities: [
+      "View a guardian-supervised subset of the guest experience",
+      "Log activities and view a read-only wallet, reports, and calendar",
+    ],
+    constraints: [
+      "Every action stays within the guardian's delegated scope",
+      "No finance, documents, tickets, users, or settings access",
     ],
   },
 ]
@@ -278,6 +377,61 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("documents", "create"),
     permission("communications", "view"),
     permission("communications", "create"),
+  ],
+  // --- Additive Phase-1 roles (guardianship / vendor / guest). ---
+  // Deliberately narrow. Backing pages for wallet/activities/vendor_invoices land
+  // in later phases; the permissions are declared now so gating is consistent.
+  guest: [
+    ...view("dashboard"),
+    ...view("listings"),
+    ...view("activities"),
+    permission("wallet", "view"),
+    permission("wallet", "create"),
+    ...view("reports"),
+    ...view("communications"),
+    ...view("calendar"),
+    ...view("documents"),
+  ],
+  service_provider: [
+    // Guest surface ...
+    ...view("dashboard"),
+    ...view("listings"),
+    ...view("activities"),
+    permission("wallet", "view"),
+    permission("wallet", "create"),
+    ...view("reports"),
+    ...view("communications"),
+    ...view("calendar"),
+    ...view("documents"),
+    // ... plus assigned service work and vendor invoicing.
+    permission("tickets", "view"),
+    permission("tickets", "update"),
+    permission("vendor_invoices", "view"),
+    permission("vendor_invoices", "create"),
+  ],
+  child_owner: [
+    ...view("dashboard"),
+    permission("activities", "view"),
+    permission("activities", "create"),
+    permission("wallet", "view"),
+    ...view("reports"),
+    ...view("calendar"),
+  ],
+  child_tenant: [
+    ...view("dashboard"),
+    permission("activities", "view"),
+    permission("activities", "create"),
+    permission("wallet", "view"),
+    ...view("reports"),
+    ...view("calendar"),
+  ],
+  child_guest: [
+    ...view("dashboard"),
+    permission("activities", "view"),
+    permission("activities", "create"),
+    permission("wallet", "view"),
+    ...view("reports"),
+    ...view("calendar"),
   ],
 }
 

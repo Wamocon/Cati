@@ -45,7 +45,7 @@ const copy = {
     empty: "Gosterilecek kullanici yok.",
     lastRole: "Bir kullanici en az bir role sahip olmalidir.",
     failed: "Islem tamamlanamadi. Yenileyip tekrar deneyin.",
-    roleLabels: { admin: "Yonetici", manager: "Sorumlu", accountant: "Muhasebe", staff: "Personel", owner: "Malik", tenant: "Kiraci" },
+    roleLabels: { admin: "Yonetici", manager: "Sorumlu", accountant: "Muhasebe", staff: "Personel", owner: "Malik", tenant: "Kiraci", guest: "Misafir", service_provider: "Hizmet Saglayici", child_owner: "Malik (Alt Hesap)", child_tenant: "Kiraci (Alt Hesap)", child_guest: "Misafir (Alt Hesap)" },
   },
   en: {
     eyebrow: "USER & ROLE ADMINISTRATION",
@@ -71,7 +71,7 @@ const copy = {
     empty: "No users to show.",
     lastRole: "A user must keep at least one role.",
     failed: "The action could not be completed. Refresh and try again.",
-    roleLabels: { admin: "Administrator", manager: "Manager", accountant: "Accountant", staff: "Staff", owner: "Owner", tenant: "Tenant" },
+    roleLabels: { admin: "Administrator", manager: "Manager", accountant: "Accountant", staff: "Staff", owner: "Owner", tenant: "Tenant", guest: "Guest", service_provider: "Service Provider", child_owner: "Owner (Sub-account)", child_tenant: "Tenant (Sub-account)", child_guest: "Guest (Sub-account)" },
   },
   de: {
     eyebrow: "BENUTZER- UND ROLLENVERWALTUNG",
@@ -97,7 +97,7 @@ const copy = {
     empty: "Keine Benutzer vorhanden.",
     lastRole: "Ein Benutzer muss mindestens eine Rolle behalten.",
     failed: "Aktion nicht abgeschlossen. Aktualisieren und erneut versuchen.",
-    roleLabels: { admin: "Administrator", manager: "Manager", accountant: "Buchhaltung", staff: "Personal", owner: "Eigentumer", tenant: "Mieter" },
+    roleLabels: { admin: "Administrator", manager: "Manager", accountant: "Buchhaltung", staff: "Personal", owner: "Eigentumer", tenant: "Mieter", guest: "Gast", service_provider: "Dienstleister", child_owner: "Eigentumer (Unterkonto)", child_tenant: "Mieter (Unterkonto)", child_guest: "Gast (Unterkonto)" },
   },
   ru: {
     eyebrow: "УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ И РОЛЯМИ",
@@ -123,7 +123,7 @@ const copy = {
     empty: "Нет пользователей для отображения.",
     lastRole: "У пользователя должна остаться хотя бы одна роль.",
     failed: "Действие не выполнено. Обновите и повторите.",
-    roleLabels: { admin: "Администратор", manager: "Менеджер", accountant: "Бухгалтер", staff: "Персонал", owner: "Собственник", tenant: "Арендатор" },
+    roleLabels: { admin: "Администратор", manager: "Менеджер", accountant: "Бухгалтер", staff: "Персонал", owner: "Собственник", tenant: "Арендатор", guest: "Гость", service_provider: "Поставщик услуг", child_owner: "Собственник (субаккаунт)", child_tenant: "Арендатор (субаккаунт)", child_guest: "Гость (субаккаунт)" },
   },
 } as const
 

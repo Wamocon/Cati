@@ -26,6 +26,11 @@ export const governanceAuthorities = [
   "field_operator",
   "unit_owner",
   "unit_tenant",
+  // Additive Phase-1 authorities (guest / vendor / guardianship). Each is a
+  // non-cross-org, non-platform authority sitting below the internal roles.
+  "guest_visitor",
+  "service_vendor",
+  "managed_dependent",
 ] as const
 export type GovernanceAuthority = (typeof governanceAuthorities)[number]
 
@@ -38,6 +43,10 @@ export const governanceScopeKinds = [
   "owned_unit",
   "rented_unit",
   "public_intake",
+  // Additive Phase-1 scopes (guest / vendor / guardianship).
+  "guest_access",
+  "vendor",
+  "managed_minor",
 ] as const
 export type GovernanceScopeKind = (typeof governanceScopeKinds)[number]
 
@@ -95,6 +104,28 @@ export const roleGovernanceRegistry: Record<
   staff: createRoleGovernance("staff", "field_operator", "site"),
   owner: createRoleGovernance("owner", "unit_owner", "owned_unit"),
   tenant: createRoleGovernance("tenant", "unit_tenant", "rented_unit"),
+  // Additive Phase-1 roles. Non-cross-org, non-platform, below the internal set.
+  guest: createRoleGovernance("guest", "guest_visitor", "guest_access"),
+  service_provider: createRoleGovernance(
+    "service_provider",
+    "service_vendor",
+    "vendor"
+  ),
+  child_owner: createRoleGovernance(
+    "child_owner",
+    "managed_dependent",
+    "managed_minor"
+  ),
+  child_tenant: createRoleGovernance(
+    "child_tenant",
+    "managed_dependent",
+    "managed_minor"
+  ),
+  child_guest: createRoleGovernance(
+    "child_guest",
+    "managed_dependent",
+    "managed_minor"
+  ),
 }
 
 // Personas are intentionally separate from the six persisted business roles.

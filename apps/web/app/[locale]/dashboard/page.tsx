@@ -18,12 +18,14 @@ import {
   LockKeyhole,
   MessageSquareText,
   Network,
+  ReceiptText,
   Route,
   ShieldCheck,
   Sparkles,
   TicketCheck,
   TrendingUp,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react"
 import { useUser } from "@/components/user-provider"
@@ -49,6 +51,7 @@ import {
   localizeBackendTerm,
   resolveDashboardHomeLocale,
   type DashboardHomeCopy,
+  type DashboardHomeLocale,
   type WorkloadKind,
 } from "@/lib/dashboard-home-copy"
 import { formatDual } from "@/lib/currency"
@@ -86,6 +89,18 @@ interface Kpi {
 }
 
 type FocusedRole = "accountant" | "staff" | "owner" | "tenant"
+// Additive Phase-1 roles. They render a lean, self-contained foundation
+// dashboard (below) instead of the admin OperationsDashboard. They are kept
+// separate from FocusedRole on purpose: FocusedRole is wired to the live,
+// role-scoped snapshot API + the `as const` roleWorkspaces copy, both of which
+// only model the original four business roles. Their bespoke dashboards land in
+// later phases; until then this guarantees they never see the admin surface.
+type LeanFocusedRole =
+  | "guest"
+  | "service_provider"
+  | "child_owner"
+  | "child_tenant"
+  | "child_guest"
 type RoleWorkspaceCardKey = "calendar" | "communications" | "documents" | "finance" | "reports" | "tickets"
 
 function copyText(
@@ -403,6 +418,10 @@ const simulationActionIcons = {
   users: Users,
   settings: Network,
   communications: MessageSquareText,
+  wallet: Wallet,
+  activities: Sparkles,
+  guardianship: Users,
+  vendor_invoices: ReceiptText,
 } satisfies Record<Resource, LucideIcon>
 
 const simulationActionResourceOrder: Resource[] = [
@@ -441,6 +460,133 @@ function buildSimulationQuickActions(
 
 function isFocusedRole(role: Role): role is FocusedRole {
   return role === "accountant" || role === "staff" || role === "owner" || role === "tenant"
+}
+
+function isLeanFocusedRole(role: Role): role is LeanFocusedRole {
+  return (
+    role === "guest" ||
+    role === "service_provider" ||
+    role === "child_owner" ||
+    role === "child_tenant" ||
+    role === "child_guest"
+  )
+}
+
+const foundationRoleCopy: Record<
+  DashboardHomeLocale,
+  { eyebrow: string; description: string; shortcuts: string; note: string; empty: string }
+> = {
+  tr: {
+    eyebrow: "Çalışma alanınız",
+    description:
+      "Bu rol için özel panel sonraki aşamada geliyor. Şimdilik yalnızca yetkili olduğunuz modüllere erişebilirsiniz.",
+    shortcuts: "Yetkili modüller",
+    note: "Yalnızca rolünüze açık sayfalar gösterilir; diğer tüm modüller kapalıdır.",
+    empty: "Bu rol için henüz açık bir modül sayfası yok.",
+  },
+  en: {
+    eyebrow: "Your workspace",
+    description:
+      "A dedicated dashboard for this role arrives in a later phase. For now you can reach only the modules your role is authorized for.",
+    shortcuts: "Authorized modules",
+    note: "Only pages your role can open are shown; every other module stays closed.",
+    empty: "No module page is open for this role yet.",
+  },
+  de: {
+    eyebrow: "Ihr Arbeitsbereich",
+    description:
+      "Ein eigenes Dashboard für diese Rolle folgt in einer späteren Phase. Vorerst erreichen Sie nur die für Ihre Rolle freigegebenen Module.",
+    shortcuts: "Freigegebene Module",
+    note: "Es werden nur Seiten angezeigt, die Ihre Rolle öffnen darf; alle anderen Module bleiben geschlossen.",
+    empty: "Für diese Rolle ist noch keine Modulseite geöffnet.",
+  },
+  ru: {
+    eyebrow: "Ваше рабочее пространство",
+    description:
+      "Отдельная панель для этой роли появится на следующем этапе. Пока вам доступны только разрешённые для роли модули.",
+    shortcuts: "Разрешённые модули",
+    note: "Показаны только страницы, которые может открыть ваша роль; все остальные модули закрыты.",
+    empty: "Для этой роли пока нет открытой страницы модуля.",
+  },
+}
+
+// Lean, self-contained dashboard for the additive Phase-1 roles. It is a pure
+// RBAC-gated shortcut grid (no live snapshot fetch, no admin operations surface)
+// so these roles get a safe, role-scoped landing until their bespoke dashboards
+// are built. Shortcuts are the exact same RBAC-filtered navigation the sidebar
+// uses, drawn from dashboardRoutes.
+function FoundationRoleDashboard({
+  locale,
+  role,
+  roleLabel,
+}: {
+  locale: DashboardHomeLocale
+  role: LeanFocusedRole
+  roleLabel: string
+}) {
+  const dashboardT = useTranslations("dashboard")
+  const text = foundationRoleCopy[locale]
+  const cards = dashboardRoutes.filter(
+    (route) =>
+      route.href !== "/dashboard" && hasPermission(role, route.resource, "view")
+  )
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-primary">
+          {text.eyebrow}
+        </p>
+        <h1 className="mt-1 text-2xl font-black text-foreground md:text-3xl">
+          {roleLabel}
+        </h1>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
+          {text.description}
+        </p>
+      </div>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold text-card-foreground">{text.shortcuts}</h2>
+        {cards.length ? (
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {cards.map((card) => {
+              const label = dashboardT(`menu.${card.resource}`)
+              const Icon = simulationActionIcons[card.resource]
+              return (
+                <CommandLink
+                  key={card.href}
+                  href={card.href}
+                  ariaLabel={label}
+                  role={role}
+                >
+                  <Card3D glow={false}>
+                    <div className="flex min-h-10 items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Icon aria-hidden="true" className="h-5 w-5" />
+                      </span>
+                      <span className="min-w-0 flex-1 text-sm font-black leading-tight text-card-foreground break-normal hyphens-none">
+                        {label}
+                      </span>
+                      <ChevronRight
+                        aria-hidden="true"
+                        className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover/command:text-primary"
+                      />
+                    </div>
+                  </Card3D>
+                </CommandLink>
+              )
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{text.empty}</p>
+        )}
+      </section>
+
+      <p className="rounded-xl border border-border bg-muted/30 p-3 text-xs leading-5 text-muted-foreground">
+        {text.note}
+      </p>
+    </div>
+  )
 }
 
 function GlobalOperationsScene({ copy }: { copy: DashboardHomeCopy }) {
@@ -891,6 +1037,18 @@ export default function DashboardHomePage() {
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
     return <RoleFocusedDashboard copy={copy} role={user.role} />
+  }
+
+  // Additive Phase-1 roles get a lean, role-scoped landing instead of the admin
+  // operations surface. Safe default until their bespoke dashboards are built.
+  if (isLeanFocusedRole(user.role)) {
+    return (
+      <FoundationRoleDashboard
+        locale={locale}
+        role={user.role}
+        roleLabel={roleLabel}
+      />
+    )
   }
 
   return (

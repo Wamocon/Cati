@@ -120,6 +120,14 @@ export const ticketRoleTransitionMatrix: Record<Role, readonly TicketCommand[]> 
   ],
   owner: ["reopen", "cancel", "approve_owner_request", "reject_owner_request"],
   tenant: ["reopen", "cancel"],
+  // Additive Phase-1 roles have no ticket state-machine transitions yet. The
+  // service_provider dispatch surface is defined in a later phase; keeping these
+  // empty preserves the existing roles' transition behavior exactly.
+  guest: [],
+  service_provider: [],
+  child_owner: [],
+  child_tenant: [],
+  child_guest: [],
 }
 
 export type TicketWorkflowErrorCode =

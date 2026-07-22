@@ -107,6 +107,46 @@ const aiRoleProfiles: Record<Role, AiRoleProfile> = {
     deniedFocus: ["Malik kayıtları", "başka sakinler", "finans defteri", "tüm portföy"],
     operatingRule: "Kiracı kapsamı dışındaki kayıtları reddeder ve uygun modüle yönlendirir.",
   },
+  guest: {
+    role: "guest",
+    label: "Misafir",
+    scope: "Yetkili ilanlar, etkinlikler, cüzdan, takvim, belge ve iletişim görünümü.",
+    allowedFocus: ["Yetkili ilanlar", "etkinlikler", "cüzdan bakiyesi", "takvim", "paylaşılan belge"],
+    deniedFocus: ["Finans defteri", "tüm daire matrisi", "servis kuyruğu", "kullanıcı yönetimi"],
+    operatingRule: "Yalnızca misafire açık modüller hakkında yönlendirir; finans tutarı veya iç kayıt göstermez.",
+  },
+  service_provider: {
+    role: "service_provider",
+    label: "Hizmet Sağlayıcı",
+    scope: "Atanan servis işleri, tedarikçi faturaları ve misafir düzeyi etkinlik/cüzdan görünümü.",
+    allowedFocus: ["Atanan servis işleri", "tedarikçi faturası", "takvim", "yetkili belge"],
+    deniedFocus: ["Finans defteri", "tüm daire matrisi", "kullanıcı yönetimi", "platform ayarları"],
+    operatingRule: "Yalnızca atanan işleri ve kendi faturalarını ele alır; şirket finans defterini göstermez.",
+  },
+  child_owner: {
+    role: "child_owner",
+    label: "Yönetilen Malik Hesabı",
+    scope: "Vasi denetimindeki etkinlik, cüzdan (salt okunur), takvim ve rapor görünümü.",
+    allowedFocus: ["Etkinlikler", "cüzdan bakiyesi (salt okunur)", "takvim"],
+    deniedFocus: ["Finans defteri", "belge", "servis", "kullanıcı yönetimi"],
+    operatingRule: "Vasi tarafından yetkilendirilen dar kapsamda kalır; hassas veri veya tutar göstermez.",
+  },
+  child_tenant: {
+    role: "child_tenant",
+    label: "Yönetilen Kiracı Hesabı",
+    scope: "Vasi denetimindeki etkinlik, cüzdan (salt okunur), takvim ve rapor görünümü.",
+    allowedFocus: ["Etkinlikler", "cüzdan bakiyesi (salt okunur)", "takvim"],
+    deniedFocus: ["Finans defteri", "belge", "servis", "kullanıcı yönetimi"],
+    operatingRule: "Vasi tarafından yetkilendirilen dar kapsamda kalır; hassas veri veya tutar göstermez.",
+  },
+  child_guest: {
+    role: "child_guest",
+    label: "Yönetilen Misafir Hesabı",
+    scope: "Vasi denetimindeki etkinlik, cüzdan (salt okunur), takvim ve rapor görünümü.",
+    allowedFocus: ["Etkinlikler", "cüzdan bakiyesi (salt okunur)", "takvim"],
+    deniedFocus: ["Finans defteri", "belge", "servis", "kullanıcı yönetimi"],
+    operatingRule: "Vasi tarafından yetkilendirilen dar kapsamda kalır; hassas veri veya tutar göstermez.",
+  },
 }
 
 const aiIntentMatchers: Array<{ resource: Resource; patterns: string[] }> = [
@@ -238,6 +278,10 @@ function denialForRole(resource: Resource, role: Role, language: AiLanguage = "t
     settings: { tr: "platform ayarları", en: "platform settings", de: "Plattformeinstellungen", ru: "настроек платформы" },
     tickets: { tr: "servis talebi", en: "service tickets", de: "Servicetickets", ru: "сервисных заявок" },
     users: { tr: "kullanıcı ve rol yönetimi", en: "user and role management", de: "Benutzer- und Rollenverwaltung", ru: "пользователей и ролей" },
+    wallet: { tr: "cüzdan", en: "wallet", de: "Wallet", ru: "кошелька" },
+    activities: { tr: "etkinlikler", en: "activities", de: "Aktivitäten", ru: "активностей" },
+    guardianship: { tr: "vasilik", en: "guardianship", de: "Vormundschaft", ru: "опекунства" },
+    vendor_invoices: { tr: "tedarikçi faturaları", en: "vendor invoices", de: "Lieferantenrechnungen", ru: "счетов поставщиков" },
   }
 
   if (language === "en") {
@@ -266,6 +310,10 @@ function denialForRole(resource: Resource, role: Role, language: AiLanguage = "t
     settings: "platform ayarları",
     tickets: "servis talebi",
     users: "kullanıcı ve rol yönetimi",
+    wallet: "cüzdan",
+    activities: "etkinlikler",
+    guardianship: "vasilik",
+    vendor_invoices: "tedarikçi faturaları",
   }
 
   return `Bu istek ${trLabels[resource]} yetkisi gerektirir. Aktif rolünüz (${role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.`
@@ -347,6 +395,29 @@ function generateStaffPortalResponse(resource?: Resource) {
   return "Personel çalışma alanında atanan servis, rezervasyon, belge kanıtı ve ekip iletişimi görünür. Finans defteri, daire matrisi, raporlar, kullanıcılar ve ayarlar kapalıdır."
 }
 
+// Additive Phase-1 roles (guest / vendor / supervised child accounts). They must
+// never fall through to the manager/admin/accountant summary branches, which read
+// company debt/finance figures. This keeps their assistant scope safe by default.
+const LIMITED_PORTAL_ROLES: ReadonlySet<Role> = new Set<Role>([
+  "guest",
+  "service_provider",
+  "child_owner",
+  "child_tenant",
+  "child_guest",
+])
+
+function isLimitedPortalRole(role: Role): boolean {
+  return LIMITED_PORTAL_ROLES.has(role)
+}
+
+function generateLimitedPortalResponse(role: Role, resource?: Resource) {
+  const label = getAiRoleProfile(role).label
+  if (role === "service_provider" && resource === "tickets") {
+    return `${label} rolünde yalnızca size atanan servis işlerini görüntüleyip güncelleyebilir ve ilgili tedarikçi faturalarını hazırlayabilirsiniz. Şirket finans defteri, tüm daire matrisi ve kullanıcı yönetimi kapalıdır.`
+  }
+  return `${label} çalışma alanında yalnızca size açık modüller (etkinlikler, cüzdan, takvim, belge ve iletişim) ve kendi yetki kapsamınızdaki kayıtlar görünür. Şirket finans defteri, raporlanan borç tutarları, tüm daire matrisi ve kullanıcı yönetimi bu rolde kapalıdır.`
+}
+
 function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclude<AiLanguage, "tr">, resource?: Resource) {
   const lower = prompt.toLocaleLowerCase("tr-TR")
   const summary = getSummary()
@@ -393,6 +464,8 @@ function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclu
       integration: "Integration recommendation: keep Supabase live, keep payment/bank/SMS/email/access/camera providers in demo/provider-ready mode until client contracts, API keys and legal approval are confirmed.",
       image: "Image workflow: AI can summarize service photos, checkout proof and document scan quality, but it must not decide damage deductions, identity approval or camera-based access actions.",
       report: "Report draft flow: AI can create a short owner/manager narrative from approved metrics, then a human reviews it before sending.",
+      limited:
+        "In this workspace you can only reach the modules opened for your role (activities, wallet, calendar, documents and communication) and records inside your own scope. Company finance ledgers, reported debt figures, the full unit matrix and user management stay hidden.",
       default: `I can help with operations in ${languageNames.en}: units, tickets, finance summaries, bookings, communications, integrations and reports, limited by your role (${role}).`,
     },
     de: {
@@ -418,6 +491,8 @@ function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclu
       integration: "Integrationsempfehlung: Supabase live lassen; Zahlung, Bank, SMS, E-Mail, Zugang und Kameras im Demo-/Provider-ready-Modus lassen, bis Verträge, API-Keys und rechtliche Freigabe bestätigt sind.",
       image: "Bildworkflow: AI kann Servicefotos, Check-out-Nachweise und Scanqualität zusammenfassen, aber keine Schadenabzüge, Identitätsfreigaben oder kamerabasierten Zugangsaktionen entscheiden.",
       report: "Berichtsentwurf: AI erstellt kurze Owner-/Manager-Texte aus geprüften Metriken; ein Mensch prüft vor Versand.",
+      limited:
+        "In diesem Arbeitsbereich erreichen Sie nur die für Ihre Rolle freigegebenen Module (Aktivitäten, Wallet, Kalender, Dokumente und Kommunikation) sowie Datensätze in Ihrem eigenen Bereich. Firmenfinanzbücher, gemeldete Schuldenbeträge, die vollständige Wohnungsmatrix und die Benutzerverwaltung bleiben verborgen.",
       default: `Ich kann auf Deutsch bei Betrieb, Tickets, Finanzen, Buchungen, Kommunikation, Integrationen und Berichten helfen, begrenzt durch Ihre Rolle (${role}).`,
     },
     ru: {
@@ -443,12 +518,15 @@ function generateLocalizedAiResponse(prompt: string, role: Role, language: Exclu
       integration: "Рекомендация по интеграциям: Supabase оставить live; платежи, банк, SMS, email, доступ и камеры держать в demo/provider-ready до контрактов, API-ключей и юридического одобрения.",
       image: "Workflow изображений: AI может резюмировать сервисные фото, доказательства выезда и качество сканов, но не решает удержания депозита, верификацию личности или доступ по камере.",
       report: "Черновик отчета: AI готовит короткий текст для собственника/менеджера на основе утвержденных метрик; человек проверяет перед отправкой.",
+      limited:
+        "В этом рабочем пространстве вам доступны только открытые для вашей роли модули (активности, кошелёк, календарь, документы и коммуникации) и записи в рамках вашей области. Финансовые журналы компании, суммы задолженности, полная матрица юнитов и управление пользователями скрыты.",
       default: `Я могу отвечать по-русски по операциям, заявкам, финансам, бронированиям, коммуникациям, интеграциям и отчетам в рамках вашей роли (${role}).`,
     },
   }[language]
 
   if (role === "owner" || role === "tenant") return copy.resident
   if (role === "staff") return copy.staff
+  if (isLimitedPortalRole(role)) return copy.limited
   if (lower.includes("phase") || lower.includes("faz") || lower.includes("roadmap") || lower.includes("next")) return copy.phase
   if (role === "manager" && (lower.includes("summary") || lower.includes("operations") || lower.includes("plan") || lower.includes("heute"))) return copy.managerSummary
   if (role === "accountant" && (lower.includes("finance") || lower.includes("collection") || lower.includes("payment") || lower.includes("zahlung"))) return copy.accountantSummary
@@ -599,6 +677,26 @@ export function getAiSuggestions(role: Role, language: AiLanguage = "tr"): AiSug
       suggestion("my-reservation", language),
       suggestion("my-service", language),
     ],
+    guest: [
+      suggestion("my-flat", language),
+      suggestion("my-reservation", language),
+    ],
+    service_provider: [
+      suggestion("my-service", language),
+      suggestion("route", language),
+    ],
+    child_owner: [
+      suggestion("my-flat", language),
+      suggestion("my-reservation", language),
+    ],
+    child_tenant: [
+      suggestion("my-flat", language),
+      suggestion("my-reservation", language),
+    ],
+    child_guest: [
+      suggestion("my-flat", language),
+      suggestion("my-reservation", language),
+    ],
   }
 
   return [...common, ...roleSpecific[role]]
@@ -622,6 +720,10 @@ export function generateAiResponse(prompt: string, role: Role, language: AiLangu
 
   if (role === "staff") {
     return generateStaffPortalResponse(accessDecision.resource)
+  }
+
+  if (isLimitedPortalRole(role)) {
+    return generateLimitedPortalResponse(role, accessDecision.resource)
   }
 
   const summary = getSummary()

@@ -115,6 +115,9 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
       field_operator: "Saha operatörü",
       unit_owner: "Bağımsız bölüm maliki",
       unit_tenant: "Yetkili kiracı",
+      guest_visitor: "Misafir",
+      service_vendor: "Hizmet sağlayıcı (tedarikçi)",
+      managed_dependent: "Yönetilen (çocuk) hesap",
     },
     scope: {
       protected_platform: "Korumalı platform",
@@ -125,6 +128,9 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
       owned_unit: "Sahip olunan bağımsız bölüm",
       rented_unit: "Kiralanan bağımsız bölüm",
       public_intake: "Kimliksiz kamu girişi",
+      guest_access: "Misafir erişimi",
+      vendor: "Tedarikçi kapsamı",
+      managed_minor: "Vasi denetimli hesap",
     },
     actions: { view: "Görüntüle", create: "Oluştur", update: "Güncelle", delete: "Sil", manage: "Yönet", export: "Dışa aktar", approve: "Onayla", assign: "Ata" },
     controls: {
@@ -189,6 +195,9 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
       field_operator: "Field operator",
       unit_owner: "Unit owner",
       unit_tenant: "Authorized tenant",
+      guest_visitor: "Guest",
+      service_vendor: "Service provider (vendor)",
+      managed_dependent: "Managed (child) account",
     },
     scope: {
       protected_platform: "Protected platform",
@@ -199,6 +208,9 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
       owned_unit: "Owned unit",
       rented_unit: "Rented unit",
       public_intake: "Unauthenticated public intake",
+      guest_access: "Guest access",
+      vendor: "Vendor scope",
+      managed_minor: "Guardian-supervised account",
     },
     actions: { view: "View", create: "Create", update: "Update", delete: "Delete", manage: "Manage", export: "Export", approve: "Approve", assign: "Assign" },
     controls: {
@@ -251,8 +263,8 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
     assignablePersona: "Zuweisbare Geschäftsrolle",
     readOnlyFootnote: "Rollendefinitionen bleiben verifiziert und schreibgeschützt. Organisationsadmins ändern Rolle, Büro und Standort berechtigter Mitglieder über den separaten auditierten Befehl; Plattformrechte und sensible Aktionen bleiben geschützt.",
     status: { available: "Verfügbar", approval_required: "Freigabe erforderlich", provider_blocked: "Provider ausstehend", unavailable: "Nicht verfügbar" },
-    authority: { organization_administrator: "Organisationsadministrator", property_manager: "Property Manager", finance_controller: "Finanzverantwortlicher", field_operator: "Feldmitarbeiter", unit_owner: "Wohnungseigentümer", unit_tenant: "Berechtigter Mieter" },
-    scope: { protected_platform: "Geschützte Plattform", organization: "Zugewiesene Organisation", site: "Zugewiesener Standort", finance: "Organisationsfinanzen", assignment: "Nur zugewiesene Arbeiten", owned_unit: "Eigene Einheit", rented_unit: "Gemietete Einheit", public_intake: "Nicht authentifizierte Erfassung" },
+    authority: { organization_administrator: "Organisationsadministrator", property_manager: "Property Manager", finance_controller: "Finanzverantwortlicher", field_operator: "Feldmitarbeiter", unit_owner: "Wohnungseigentümer", unit_tenant: "Berechtigter Mieter", guest_visitor: "Gast", service_vendor: "Dienstleister", managed_dependent: "Betreutes (Kind-)Konto" },
+    scope: { protected_platform: "Geschützte Plattform", organization: "Zugewiesene Organisation", site: "Zugewiesener Standort", finance: "Organisationsfinanzen", assignment: "Nur zugewiesene Arbeiten", owned_unit: "Eigene Einheit", rented_unit: "Gemietete Einheit", public_intake: "Nicht authentifizierte Erfassung", guest_access: "Gastzugang", vendor: "Dienstleisterbereich", managed_minor: "Vom Vormund betreutes Konto" },
     actions: { view: "Ansehen", create: "Erstellen", update: "Aktualisieren", delete: "Löschen", manage: "Verwalten", export: "Exportieren", approve: "Freigeben", assign: "Zuweisen" },
     controls: {
       permission_visibility: { title: "Berechtigungstransparenz", detail: "Wirksame Rollen-, Modul- und Aktionsrechte werden über eine authentifizierte kanonische API gelesen." },
@@ -304,8 +316,8 @@ const governanceCopy: Record<SupportedLocale, GovernanceCopy> = {
     assignablePersona: "Назначаемая бизнес-роль",
     readOnlyFootnote: "Определения ролей остаются проверенными и доступны только для чтения. Администратор меняет роль, офис и объекты допустимых участников отдельной аудируемой командой; платформенные и чувствительные права остаются защищёнными.",
     status: { available: "Доступно", approval_required: "Нужно согласование", provider_blocked: "Ожидается провайдер", unavailable: "Недоступно" },
-    authority: { organization_administrator: "Администратор организации", property_manager: "Property manager", finance_controller: "Финансовый контролер", field_operator: "Полевой сотрудник", unit_owner: "Собственник помещения", unit_tenant: "Авторизованный арендатор" },
-    scope: { protected_platform: "Защищенная платформа", organization: "Назначенная организация", site: "Назначенный объект", finance: "Финансы организации", assignment: "Только назначенная работа", owned_unit: "Собственное помещение", rented_unit: "Арендуемое помещение", public_intake: "Неавторизованный публичный вход" },
+    authority: { organization_administrator: "Администратор организации", property_manager: "Property manager", finance_controller: "Финансовый контролер", field_operator: "Полевой сотрудник", unit_owner: "Собственник помещения", unit_tenant: "Авторизованный арендатор", guest_visitor: "Гость", service_vendor: "Поставщик услуг", managed_dependent: "Управляемый (детский) аккаунт" },
+    scope: { protected_platform: "Защищенная платформа", organization: "Назначенная организация", site: "Назначенный объект", finance: "Финансы организации", assignment: "Только назначенная работа", owned_unit: "Собственное помещение", rented_unit: "Арендуемое помещение", public_intake: "Неавторизованный публичный вход", guest_access: "Гостевой доступ", vendor: "Область поставщика", managed_minor: "Аккаунт под опекой" },
     actions: { view: "Просмотр", create: "Создание", update: "Изменение", delete: "Удаление", manage: "Управление", export: "Экспорт", approve: "Согласование", assign: "Назначение" },
     controls: {
       permission_visibility: { title: "Прозрачность разрешений", detail: "Действующие роли, модули и действия читаются через авторизованный канонический API." },
