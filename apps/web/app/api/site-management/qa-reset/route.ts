@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { isAccessProfileEnabled } from "@/lib/auth"
 import { resetLocalQaStateForTesting } from "@/lib/site-management-repository"
 import { resetManualPaymentStateForTesting } from "@/lib/manual-payment-repository"
+import { resetWalletStateForTesting } from "@/lib/wallet-repository"
+import { resetActivitiesStateForTesting } from "@/lib/activities-repository"
 
 export const dynamic = "force-dynamic"
 
@@ -14,6 +16,8 @@ export async function POST() {
   }
   resetLocalQaStateForTesting()
   resetManualPaymentStateForTesting()
+  resetWalletStateForTesting()
+  resetActivitiesStateForTesting()
   return NextResponse.json(
     { ok: true },
     { headers: { "Cache-Control": "no-store" } }

@@ -357,6 +357,8 @@
       "documents": "Documents",
       "reports": "Reports",
       "communications": "Communication",
+      "wallet": "Wallet",
+      "activities": "Activities",
       "users": "Users & Roles",
       "settings": "Settings"
     },

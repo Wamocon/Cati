@@ -41,6 +41,7 @@ import { SiteCommandSimulation } from "@/components/site-command-simulation"
 import { DashboardRefreshButton } from "@/components/dashboard-refresh-button"
 import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
 import { RoleFocusedLiveDashboard } from "@/components/role-focused-live-dashboard"
+import { GuestHomeDashboard } from "@/components/guest/guest-home-dashboard"
 import { LiveErpSimulation, type SimulationQuickAction } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
@@ -1037,6 +1038,13 @@ export default function DashboardHomePage() {
 
   if (isFocusedRole(user.role) && roleWorkspaceConfig[user.role]) {
     return <RoleFocusedDashboard copy={copy} role={user.role} />
+  }
+
+  // Guests get a welcoming, activity-and-wallet-first home (Phase 4). The other
+  // additive Phase-1 roles keep the lean foundation landing until their bespoke
+  // dashboards land in later phases.
+  if (user.role === "guest") {
+    return <GuestHomeDashboard role={user.role} roleLabel={roleLabel} />
   }
 
   // Additive Phase-1 roles get a lean, role-scoped landing instead of the admin
