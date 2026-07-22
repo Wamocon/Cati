@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react"
 import {
   ArrowRight,
+  Building2,
   ChevronDown,
   CircleDollarSign,
   ClipboardCheck,
   History,
   ShieldCheck,
+  Sparkles,
   Users,
   Wrench,
   type LucideIcon,
@@ -15,6 +17,7 @@ import {
 import { Link } from "@/app/navigation"
 import { AdminApprovalsInbox } from "@/components/admin-approvals-inbox"
 import { UserAdministrationPanel } from "@/components/user-administration-panel"
+import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 
 type LocaleKey = "tr" | "en" | "de" | "ru"
@@ -47,19 +50,32 @@ const copy = {
       money: {
         title: "Para",
         desc: "Aidat, ödeme, tahsilat ve iade denetimi.",
-        body: "Canlı finans denetimi yakında bu bölüme gelecek.",
+        outstanding: "Açık bakiye",
+        overdue: "Gecikmiş",
+        collected: "Bu ay tahsilat",
+        openItems: "açık kalem",
+        overdueItems: "gecikmiş kalem",
         cta: "Finansı aç",
       },
       property: {
         title: "Mülk ve servisler",
-        desc: "Bakım talepleri, saha işleri ve etkinlikler.",
-        body: "Mülk ve servis denetimi yakında bu bölümde toplanacak.",
-        cta: "Servisleri aç",
+        desc: "Daireler, saha işleri ve etkinlikler.",
+        units: "Daireler",
+        occupied: "dolu",
+        vacant: "boş",
+        blocks: "blok",
+        floors: "kat",
+        serviceJobs: "Açık servis işleri",
+        overdue: "gecikmiş",
+        activities: "Etkinlikler",
+        openUnits: "Daireleri aç",
+        openServices: "Servisleri aç",
+        openActivities: "Etkinlikleri aç",
       },
       audit: {
         title: "Etkinlik ve denetim",
         desc: "Son yönetici işlemleri.",
-        body: "Yakında son yönetici işlemlerini burada göreceksiniz.",
+        body: "Şu anda görüntülenecek son yönetici işlemi yok.",
       },
     },
   },
@@ -84,19 +100,32 @@ const copy = {
       money: {
         title: "Money",
         desc: "Dues, payments, collections and refund oversight.",
-        body: "Live financial oversight is coming to this section soon.",
+        outstanding: "Outstanding",
+        overdue: "Overdue",
+        collected: "Collected this month",
+        openItems: "open items",
+        overdueItems: "overdue items",
         cta: "Open finance",
       },
       property: {
         title: "Property & services",
-        desc: "Maintenance requests, field work and activities.",
-        body: "Property and service oversight will be gathered in this section soon.",
-        cta: "Open services",
+        desc: "Units, field work and activities.",
+        units: "Units",
+        occupied: "occupied",
+        vacant: "vacant",
+        blocks: "blocks",
+        floors: "floors",
+        serviceJobs: "Open service jobs",
+        overdue: "overdue",
+        activities: "Activities",
+        openUnits: "Open units",
+        openServices: "Open services",
+        openActivities: "Open activities",
       },
       audit: {
         title: "Activity & audit",
         desc: "Recent administrator actions.",
-        body: "Soon you'll see recent administrator actions here.",
+        body: "There are no recent administrator actions to show right now.",
       },
     },
   },
@@ -121,19 +150,32 @@ const copy = {
       money: {
         title: "Finanzen",
         desc: "Beiträge, Zahlungen, Einzüge und Erstattungsaufsicht.",
-        body: "Die Live-Finanzaufsicht kommt bald in diesen Bereich.",
+        outstanding: "Offener Saldo",
+        overdue: "Überfällig",
+        collected: "Diesen Monat eingezogen",
+        openItems: "offene Posten",
+        overdueItems: "überfällige Posten",
         cta: "Finanzen öffnen",
       },
       property: {
         title: "Objekt & Services",
-        desc: "Wartungsanfragen, Feldarbeit und Aktivitäten.",
-        body: "Die Objekt- und Serviceaufsicht wird bald in diesem Bereich gebündelt.",
-        cta: "Services öffnen",
+        desc: "Einheiten, Feldarbeit und Aktivitäten.",
+        units: "Einheiten",
+        occupied: "belegt",
+        vacant: "frei",
+        blocks: "Blöcke",
+        floors: "Etagen",
+        serviceJobs: "Offene Serviceaufträge",
+        overdue: "überfällig",
+        activities: "Aktivitäten",
+        openUnits: "Einheiten öffnen",
+        openServices: "Services öffnen",
+        openActivities: "Aktivitäten öffnen",
       },
       audit: {
         title: "Aktivität & Prüfung",
         desc: "Letzte Administratoraktionen.",
-        body: "Bald sehen Sie hier die letzten Administratoraktionen.",
+        body: "Derzeit gibt es keine aktuellen Administratoraktionen anzuzeigen.",
       },
     },
   },
@@ -158,29 +200,137 @@ const copy = {
       money: {
         title: "Финансы",
         desc: "Взносы, платежи, сборы и контроль возвратов.",
-        body: "Живой финансовый контроль скоро появится в этом разделе.",
+        outstanding: "Открытый баланс",
+        overdue: "Просрочено",
+        collected: "Собрано за месяц",
+        openItems: "открытых позиций",
+        overdueItems: "просроченных позиций",
         cta: "Открыть финансы",
       },
       property: {
         title: "Объекты и услуги",
-        desc: "Заявки на обслуживание, полевые работы и мероприятия.",
-        body: "Контроль объектов и услуг скоро будет собран в этом разделе.",
-        cta: "Открыть услуги",
+        desc: "Помещения, полевые работы и мероприятия.",
+        units: "Помещения",
+        occupied: "занято",
+        vacant: "свободно",
+        blocks: "блоков",
+        floors: "этажей",
+        serviceJobs: "Открытые сервисные работы",
+        overdue: "просрочено",
+        activities: "Мероприятия",
+        openUnits: "Открыть помещения",
+        openServices: "Открыть услуги",
+        openActivities: "Открыть мероприятия",
       },
       audit: {
         title: "Активность и аудит",
         desc: "Последние действия администратора.",
-        body: "Скоро вы увидите здесь последние действия администратора.",
+        body: "Сейчас нет недавних действий администратора для показа.",
       },
     },
   },
 } as const
+
+type LoadState = "loading" | "ready" | "error"
 
 // Shape of the fields we read from GET /api/site-management/users. We intentionally
 // type only what the tile needs so the hub stays decoupled from the full contract.
 interface UsersEndpointResponse {
   summary?: { staffTotal?: number; residentTotal?: number }
   administration?: { available?: boolean; users?: unknown[] }
+}
+
+// GET /api/site-management/finance — summary is a full-dataset aggregate (it is not
+// affected by the row limit), so a minimal limit keeps the payload small while the
+// figures stay honest.
+interface FinanceEndpointResponse {
+  summary?: {
+    currency?: string
+    openLedgerCents?: number
+    overdueLedgerCents?: number
+    paidThisMonthCents?: number
+    openEntries?: number
+    overdueEntries?: number
+  }
+}
+
+// GET /api/site-management/phase4 — likewise the summary counts are aggregates.
+interface Phase4EndpointResponse {
+  summary?: {
+    totalUnits?: number
+    occupiedUnits?: number
+    vacantUnits?: number
+    blockCount?: number
+    floorCount?: number
+  }
+}
+
+// GET /api/site-management/dashboard — the aggregate snapshot. openTickets /
+// overdueTickets here are true counts (unlike the ticket-queue summary, which is
+// computed over a limited page), so this is the honest source for the service total.
+interface DashboardEndpointResponse {
+  summary?: { openTickets?: number; overdueTickets?: number }
+  recentActions?: unknown[]
+}
+
+// GET /api/site-management/activities — the catalog array length is the count of
+// bookable extra services available.
+interface ActivitiesEndpointResponse {
+  catalog?: unknown[]
+}
+
+// A recent administrator action reduced to plain business language. We deliberately
+// read only human-readable fields (a message/title, an actor label, a timestamp) and
+// never the raw action type, entity table, id or status — no schema text leaks here.
+interface AuditItem {
+  text: string
+  actor: string | null
+  /** Raw ISO timestamp; formatted relatively at render so locale changes need no refetch. */
+  when: string | null
+}
+
+function firstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim()
+  }
+  return null
+}
+
+// Map the snapshot's recent-action rows (which differ between the live and seed
+// shapes) onto a safe, plain-language projection. Rows without a human-readable
+// description are skipped rather than rendered as raw internals.
+function describeActions(rows: unknown[], limit = 5): AuditItem[] {
+  const items: AuditItem[] = []
+  for (const raw of rows) {
+    if (!raw || typeof raw !== "object") continue
+    const row = raw as Record<string, unknown>
+    const text = firstString(row.message, row.title)
+    if (!text) continue
+    items.push({
+      text,
+      actor: firstString(row.actor),
+      when: firstString(row.created_at, row.createdAt, row.occurredAt),
+    })
+    if (items.length >= limit) break
+  }
+  return items
+}
+
+function formatRelativeTime(iso: string, locale: LocaleKey): string | null {
+  const timestamp = Date.parse(iso)
+  if (!Number.isFinite(timestamp)) return null
+  const diffMs = timestamp - Date.now()
+  const abs = Math.abs(diffMs)
+  const minute = 60_000
+  const hour = 3_600_000
+  const day = 86_400_000
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
+  if (abs < hour) return rtf.format(Math.round(diffMs / minute), "minute")
+  if (abs < day) return rtf.format(Math.round(diffMs / hour), "hour")
+  if (abs < 30 * day) return rtf.format(Math.round(diffMs / day), "day")
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(
+    timestamp
+  )
 }
 
 // Real count of people, never fabricated. When the live administration snapshot is
@@ -210,6 +360,68 @@ function TileIcon({ Icon }: { Icon: LucideIcon }) {
     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
       <Icon className="h-5 w-5" aria-hidden="true" />
     </span>
+  )
+}
+
+// A number that is honest about its state: an unobtrusive ellipsis while loading, an
+// em dash when the figure is genuinely unavailable, never a fabricated zero.
+function displayCount(
+  state: LoadState,
+  value: number | null | undefined,
+  locale: LocaleKey
+): string {
+  if (state === "loading") return "…"
+  if (state !== "ready" || typeof value !== "number") return "—"
+  return value.toLocaleString(locale)
+}
+
+function displayMoney(
+  state: LoadState,
+  cents: number | null | undefined,
+  currency: string | undefined
+): string {
+  if (state === "loading") return "…"
+  if (state !== "ready" || typeof cents !== "number") return "—"
+  return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
+}
+
+// A deep-link styled as a secondary button, used to open the full workspace for a
+// section. Shared by the money and property blocks.
+function WorkspaceLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
+    >
+      {label}
+      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+    </Link>
+  )
+}
+
+// A compact figure card. `value` is pre-formatted (money or count); `caption` is an
+// optional plain-language sub-line and is omitted rather than shown as a bare dash.
+function Stat({
+  label,
+  value,
+  caption,
+}: {
+  label: string
+  value: string
+  caption?: string | null
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-muted/30 p-4">
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 break-words text-lg font-black leading-tight text-foreground tabular-nums">
+        {value}
+      </div>
+      {caption ? (
+        <div className="mt-0.5 text-xs leading-4 text-muted-foreground">{caption}</div>
+      ) : null}
+    </div>
   )
 }
 
@@ -275,41 +487,37 @@ function CollapsibleSection({
   )
 }
 
-// A placeholder section: an honest one-line note plus a deep-link to where the
-// work lives today. No invented metrics — the live surface arrives in a later phase.
-function PlaceholderBody({
-  body,
-  cta,
-  href,
-}: {
-  body: string
-  cta: string
-  href: string
-}) {
-  return (
-    <div className="space-y-4">
-      <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{body}</p>
-      <Link
-        href={href}
-        className="inline-flex h-10 items-center gap-2 rounded-lg border border-border px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary motion-reduce:transition-none"
-      >
-        {cta}
-        <ArrowRight className="h-4 w-4" aria-hidden="true" />
-      </Link>
-    </div>
-  )
-}
-
 export function AdminControlCenter({ locale }: { locale: string }) {
-  const c = copy[localeKey(locale)]
+  const lk = localeKey(locale)
+  const c = copy[lk]
+
   const [peopleCount, setPeopleCount] = useState<number | null>(null)
-  const [peopleState, setPeopleState] = useState<"loading" | "ready" | "error">(
-    "loading"
-  )
+  const [peopleState, setPeopleState] = useState<LoadState>("loading")
   const [approvalsCount, setApprovalsCount] = useState<number | null>(null)
-  const [approvalsState, setApprovalsState] = useState<
-    "loading" | "ready" | "error"
-  >("loading")
+  const [approvalsState, setApprovalsState] = useState<LoadState>("loading")
+
+  // Phase 5: live summaries for the money, property and audit sections. Each area
+  // tracks its own state so one unavailable feed never blanks the others.
+  const [finance, setFinance] = useState<{
+    state: LoadState
+    summary: FinanceEndpointResponse["summary"] | null
+  }>({ state: "loading", summary: null })
+  const [property, setProperty] = useState<{
+    state: LoadState
+    summary: Phase4EndpointResponse["summary"] | null
+  }>({ state: "loading", summary: null })
+  const [service, setService] = useState<{
+    state: LoadState
+    summary: DashboardEndpointResponse["summary"] | null
+  }>({ state: "loading", summary: null })
+  const [activities, setActivities] = useState<{
+    state: LoadState
+    count: number | null
+  }>({ state: "loading", count: null })
+  const [audit, setAudit] = useState<{ state: LoadState; items: AuditItem[] }>({
+    state: "loading",
+    items: [],
+  })
 
   useEffect(() => {
     let cancelled = false
@@ -355,39 +563,102 @@ export function AdminControlCenter({ locale }: { locale: string }) {
     }
   }, [])
 
-  const peopleDisplay =
-    peopleState === "loading"
-      ? "…"
-      : peopleCount === null
-        ? "—"
-        : peopleCount.toLocaleString(localeKey(locale))
+  // Phase 5 summaries fetched together so the hub fills in one pass, not in cascade.
+  // Each response is validated independently; a missing feed degrades to "—".
+  useEffect(() => {
+    let cancelled = false
+    async function load<T>(url: string): Promise<T | null> {
+      try {
+        const response = await fetch(url, { cache: "no-store" })
+        if (!response.ok) return null
+        return (await response.json()) as T
+      } catch {
+        return null
+      }
+    }
+    void (async () => {
+      const [fin, ph4, dash, act] = await Promise.all([
+        load<FinanceEndpointResponse>("/api/site-management/finance?limit=1"),
+        load<Phase4EndpointResponse>("/api/site-management/phase4?limit=1"),
+        load<DashboardEndpointResponse>("/api/site-management/dashboard"),
+        load<ActivitiesEndpointResponse>("/api/site-management/activities"),
+      ])
+      if (cancelled) return
+      setFinance(
+        fin?.summary
+          ? { state: "ready", summary: fin.summary }
+          : { state: "error", summary: null }
+      )
+      setProperty(
+        ph4?.summary
+          ? { state: "ready", summary: ph4.summary }
+          : { state: "error", summary: null }
+      )
+      setService(
+        dash?.summary
+          ? { state: "ready", summary: dash.summary }
+          : { state: "error", summary: null }
+      )
+      setAudit(
+        dash && Array.isArray(dash.recentActions)
+          ? { state: "ready", items: describeActions(dash.recentActions) }
+          : { state: "error", items: [] }
+      )
+      setActivities(
+        act && Array.isArray(act.catalog)
+          ? { state: "ready", count: act.catalog.length }
+          : { state: "error", count: null }
+      )
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
-  const approvalsDisplay =
-    approvalsState === "loading"
-      ? "…"
-      : approvalsCount === null
-        ? "—"
-        : approvalsCount.toLocaleString(localeKey(locale))
+  const peopleDisplay = displayCount(peopleState, peopleCount, lk)
+  const approvalsDisplay = displayCount(approvalsState, approvalsCount, lk)
+  const moneyTileDisplay = displayCount(finance.state, finance.summary?.openEntries, lk)
+  const serviceTileDisplay = displayCount(
+    service.state,
+    service.summary?.openTickets,
+    lk
+  )
 
-  const navTiles = [
-    {
-      key: "money",
-      Icon: CircleDollarSign,
-      href: "/dashboard/finance",
-      ...c.tiles.money,
-    },
-    {
-      key: "service",
-      Icon: Wrench,
-      href: "/dashboard/tickets",
-      ...c.tiles.service,
-    },
-  ] as const
+  const fin = finance.summary
+  const ph4 = property.summary
+  const financeReady = finance.state === "ready"
+  const propertyReady = property.state === "ready"
+  const serviceReady = service.state === "ready"
+
+  const openItemsCaption =
+    financeReady && typeof fin?.openEntries === "number"
+      ? `${fin.openEntries.toLocaleString(lk)} ${c.sections.money.openItems}`
+      : null
+  const overdueItemsCaption =
+    financeReady && typeof fin?.overdueEntries === "number"
+      ? `${fin.overdueEntries.toLocaleString(lk)} ${c.sections.money.overdueItems}`
+      : null
+  const unitsCaption =
+    propertyReady &&
+    typeof ph4?.occupiedUnits === "number" &&
+    typeof ph4?.vacantUnits === "number"
+      ? `${ph4.occupiedUnits.toLocaleString(lk)} ${c.sections.property.occupied} · ${ph4.vacantUnits.toLocaleString(lk)} ${c.sections.property.vacant}`
+      : null
+  const structureCaption =
+    propertyReady &&
+    typeof ph4?.blockCount === "number" &&
+    typeof ph4?.floorCount === "number"
+      ? `${ph4.blockCount.toLocaleString(lk)} ${c.sections.property.blocks} · ${ph4.floorCount.toLocaleString(lk)} ${c.sections.property.floors}`
+      : null
+  const serviceOverdueCaption =
+    serviceReady && typeof service.summary?.overdueTickets === "number"
+      ? `${service.summary.overdueTickets.toLocaleString(lk)} ${c.sections.property.overdue}`
+      : null
 
   return (
     <div className="space-y-6">
-      {/* At-a-glance overview. The People tile is real data; the others are honest
-          deep-links to where each area lives today (no fabricated counts). */}
+      {/* At-a-glance overview. Every tile shows a real, aggregate figure (or an honest
+          "—"); People and Approvals jump in-page, Money and Services deep-link out. */}
       <section aria-labelledby="admin-overview-heading">
         <h2 id="admin-overview-heading" className="sr-only">
           {c.overview}
@@ -425,23 +696,37 @@ export function AdminControlCenter({ locale }: { locale: string }) {
             </span>
           </a>
 
-          {navTiles.map(({ key, Icon, href, label, desc }) => (
-            <Link key={key} href={href} className={tileClass}>
-              <TileIcon Icon={Icon} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {label}
-                </span>
-                <span className="mt-0.5 flex items-center gap-1 text-sm font-bold text-primary">
-                  {c.open}
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <span className="mt-1 block text-xs leading-4 text-muted-foreground">
-                  {desc}
-                </span>
+          {/* Money — open finance items awaiting collection (aggregate count). */}
+          <Link href="/dashboard/finance" className={tileClass}>
+            <TileIcon Icon={CircleDollarSign} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {c.tiles.money.label}
               </span>
-            </Link>
-          ))}
+              <span className="mt-0.5 block text-2xl font-black leading-tight text-foreground">
+                {moneyTileDisplay}
+              </span>
+              <span className="mt-1 block text-xs leading-4 text-muted-foreground">
+                {c.tiles.money.desc}
+              </span>
+            </span>
+          </Link>
+
+          {/* Service jobs — open ticket count from the aggregate snapshot. */}
+          <Link href="/dashboard/tickets" className={tileClass}>
+            <TileIcon Icon={Wrench} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {c.tiles.service.label}
+              </span>
+              <span className="mt-0.5 block text-2xl font-black leading-tight text-foreground">
+                {serviceTileDisplay}
+              </span>
+              <span className="mt-1 block text-xs leading-4 text-muted-foreground">
+                {c.tiles.service.desc}
+              </span>
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -470,45 +755,152 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         <AdminApprovalsInbox />
       </CollapsibleSection>
 
-      {/* 3. Money — Phase 5 adds live oversight. */}
+      {/* 3. Money — Phase 5 live oversight: outstanding, overdue and collected-this-
+          month figures in dual currency, with a deep-link into finance. */}
       <CollapsibleSection
         id="admin-money"
         Icon={CircleDollarSign}
         title={c.sections.money.title}
         description={c.sections.money.desc}
       >
-        <PlaceholderBody
-          body={c.sections.money.body}
-          cta={c.sections.money.cta}
-          href="/dashboard/finance"
-        />
+        <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Stat
+              label={c.sections.money.outstanding}
+              value={displayMoney(
+                finance.state,
+                fin?.openLedgerCents,
+                fin?.currency
+              )}
+              caption={openItemsCaption}
+            />
+            <Stat
+              label={c.sections.money.overdue}
+              value={displayMoney(
+                finance.state,
+                fin?.overdueLedgerCents,
+                fin?.currency
+              )}
+              caption={overdueItemsCaption}
+            />
+            <Stat
+              label={c.sections.money.collected}
+              value={displayMoney(
+                finance.state,
+                fin?.paidThisMonthCents,
+                fin?.currency
+              )}
+            />
+          </div>
+          <WorkspaceLink href="/dashboard/finance" label={c.sections.money.cta} />
+        </div>
       </CollapsibleSection>
 
-      {/* 4. Property & services — Phase 5. */}
+      {/* 4. Property & services — Phase 5: unit, service-job and activity counts,
+          each opening its own workspace. */}
       <CollapsibleSection
         id="admin-property"
         Icon={Wrench}
         title={c.sections.property.title}
         description={c.sections.property.desc}
       >
-        <PlaceholderBody
-          body={c.sections.property.body}
-          cta={c.sections.property.cta}
-          href="/dashboard/tickets"
-        />
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Building2 className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              {c.sections.property.units}
+            </div>
+            <div className="text-2xl font-black leading-none text-foreground tabular-nums">
+              {displayCount(property.state, ph4?.totalUnits, lk)}
+            </div>
+            <div className="min-h-8 space-y-0.5 text-xs leading-4 text-muted-foreground">
+              {unitsCaption ? <div>{unitsCaption}</div> : null}
+              {structureCaption ? <div>{structureCaption}</div> : null}
+            </div>
+            <WorkspaceLink
+              href="/dashboard/listings"
+              label={c.sections.property.openUnits}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Wrench className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              {c.sections.property.serviceJobs}
+            </div>
+            <div className="text-2xl font-black leading-none text-foreground tabular-nums">
+              {displayCount(service.state, service.summary?.openTickets, lk)}
+            </div>
+            <div className="min-h-8 text-xs leading-4 text-muted-foreground">
+              {serviceOverdueCaption ?? ""}
+            </div>
+            <WorkspaceLink
+              href="/dashboard/tickets"
+              label={c.sections.property.openServices}
+            />
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/30 p-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+              {c.sections.property.activities}
+            </div>
+            <div className="text-2xl font-black leading-none text-foreground tabular-nums">
+              {displayCount(activities.state, activities.count, lk)}
+            </div>
+            <div className="min-h-8" aria-hidden="true" />
+            <WorkspaceLink
+              href="/dashboard/activities"
+              label={c.sections.property.openActivities}
+            />
+          </div>
+        </div>
       </CollapsibleSection>
 
-      {/* 5. Activity & audit — Phase 5 surfaces recent admin actions here. */}
+      {/* 5. Activity & audit — Phase 5 surfaces the most recent admin/system actions
+          in plain language. No raw action types, tables, ids or statuses are shown. */}
       <CollapsibleSection
         id="admin-audit"
         Icon={History}
         title={c.sections.audit.title}
         description={c.sections.audit.desc}
       >
-        <p className="flex max-w-2xl items-start gap-2 text-sm leading-6 text-muted-foreground">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-          {c.sections.audit.body}
-        </p>
+        {audit.state === "ready" && audit.items.length > 0 ? (
+          <ul className="space-y-3">
+            {audit.items.map((item, index) => {
+              const when = item.when ? formatRelativeTime(item.when, lk) : null
+              return (
+                <li
+                  key={index}
+                  className="flex items-start gap-3 border-b border-border pb-3 last:border-0 last:pb-0"
+                >
+                  <ShieldCheck
+                    className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words text-sm leading-5 text-foreground">
+                      {item.text}
+                    </p>
+                    {item.actor || when ? (
+                      <p className="mt-0.5 text-xs leading-4 text-muted-foreground">
+                        {[item.actor, when].filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <p className="flex max-w-2xl items-start gap-2 text-sm leading-6 text-muted-foreground">
+            <ShieldCheck
+              className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+              aria-hidden="true"
+            />
+            {audit.state === "loading" ? "…" : c.sections.audit.body}
+          </p>
+        )}
       </CollapsibleSection>
     </div>
   )
