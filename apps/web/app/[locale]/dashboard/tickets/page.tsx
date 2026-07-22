@@ -1969,7 +1969,7 @@ export default function TicketsPage() {
                 key={ticket.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3"
               >
-                <div className="min-w-0 flex-1 p-2">
+                <div className="min-w-0 flex-1 p-2 break-words">
                   <span className="block text-sm font-black text-foreground">
                     {ticket.title} · {ticket.flatNumber}
                   </span>
@@ -3363,7 +3363,7 @@ export default function TicketsPage() {
                 className="rounded-xl border border-border bg-muted/30 p-4"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusBadge variant={priorityVariant(ticket.priority)}>
                         {servicePriorityLabel(ticket.priority, locale)}
@@ -3389,15 +3389,15 @@ export default function TicketsPage() {
                           </StatusBadge>
                         )}
                     </div>
-                    <h3 className="mt-2 text-sm font-bold text-foreground">
+                    <h3 className="mt-2 text-sm font-bold break-words text-foreground">
                       {ticketSubjectLabel(ticket)}
                     </h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
+                    <p className="mt-1 text-xs break-words text-muted-foreground">
                       {ticket.flatNumber} - {t(ticket.category)}
                       {!clientView && ` - ${t(ticket.assignee)}`}
                     </p>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="shrink-0 text-left sm:text-right">
                     <p className="text-sm font-bold text-foreground">
                       {maskFinance
                         ? serviceStatusLabel(ticket.status, locale)
