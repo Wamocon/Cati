@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useLocale } from "next-intl"
 import {
@@ -949,6 +949,8 @@ export function DashboardCommandRibbon() {
   const [draftQuery, setDraftQuery] = useState(urlQuery)
   const [draftScope, setDraftScope] = useState<CommandScope | "all">(urlScope)
   const [draftAttentionOnly, setDraftAttentionOnly] = useState(urlAttentionOnly)
+  const [searchInput, setSearchInput] = useState(urlQuery)
+  const lastPushedQuery = useRef(urlQuery)
 
   const replaceFilterParams = useCallback(
     (next: { query: string; scope: CommandScope | "all"; attentionOnly: boolean }) => {
@@ -978,6 +980,26 @@ export function DashboardCommandRibbon() {
     },
     [pathname, router, searchParams]
   )
+
+  // Debounced: push the live search field into the URL query so the command index
+  // re-filters without thrashing on every keystroke (no layout shift while typing).
+  useEffect(() => {
+    if (searchInput.trim() === urlQuery) return
+    const timer = setTimeout(() => {
+      lastPushedQuery.current = searchInput.trim()
+      replaceFilterParams({ query: searchInput, scope, attentionOnly })
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [searchInput, urlQuery, scope, attentionOnly, replaceFilterParams])
+
+  // Reflect external query changes (dialog apply, reset, clear) back into the field,
+  // but never clobber the value the user is actively typing (tracked via lastPushedQuery).
+  useEffect(() => {
+    if (urlQuery !== lastPushedQuery.current) {
+      setSearchInput(urlQuery)
+      lastPushedQuery.current = urlQuery
+    }
+  }, [urlQuery])
 
   const index = useMemo(() => buildCommandIndex(user.role), [user.role])
   const scopeCounts = useMemo(() => {
@@ -1025,14 +1047,10 @@ export function DashboardCommandRibbon() {
   const previewResults = draftFiltered.slice(0, 6)
   const activeCount = index.filter((item) => item.priority !== "normal").length
   const hasAppliedFilters = Boolean(normalizedQuery || attentionOnly || scope !== "all")
-  const appliedSummary = [
-    scope !== "all" ? copy.scopes[scope] : null,
-    attentionOnly ? copy.attention : null,
-    query.trim() ? `"${query.trim()}"` : null,
-  ].filter(Boolean)
+  const advancedFilterCount = (scope !== "all" ? 1 : 0) + (attentionOnly ? 1 : 0)
 
   function openFilters() {
-    setDraftQuery(query)
+    setDraftQuery(searchInput)
     setDraftScope(scope)
     setDraftAttentionOnly(attentionOnly)
     setFiltersOpen(true)
@@ -1040,6 +1058,8 @@ export function DashboardCommandRibbon() {
 
   function applyFilters() {
     const nextQuery = draftQuery.trim()
+    lastPushedQuery.current = nextQuery
+    setSearchInput(nextQuery)
     replaceFilterParams({
       attentionOnly: draftAttentionOnly,
       query: nextQuery,
@@ -1055,6 +1075,8 @@ export function DashboardCommandRibbon() {
   }
 
   function clearAppliedFilters() {
+    lastPushedQuery.current = ""
+    setSearchInput("")
     replaceFilterParams({ attentionOnly: false, query: "", scope: "all" })
   }
 
@@ -1062,51 +1084,77 @@ export function DashboardCommandRibbon() {
     <>
       <section
         aria-label={copy.aria}
-        className="mb-6 rounded-xl border border-border/70 bg-card/84 p-3 shadow-sm backdrop-blur"
+        data-testid="dashboard-command-ribbon"
+        className="mb-6 rounded-2xl border border-border/70 bg-card/84 p-2 shadow-sm backdrop-blur sm:p-2.5"
       >
-        <div className="grid gap-3">
+        <div role="search" aria-label={copy.aria} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="relative flex min-w-0 flex-1 items-center sm:max-w-xl">
+            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <label htmlFor="dashboard-command-search" className="sr-only">
+              {copy.searchText}
+            </label>
+            <input
+              id="dashboard-command-search"
+              type="text"
+              inputMode="search"
+              autoComplete="off"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={copy.searchPlaceholder}
+              aria-label={copy.searchText}
+              suppressHydrationWarning
+              data-testid="dashboard-command-search"
+              className="min-h-10 w-full min-w-0 rounded-full border border-border/70 bg-background/80 pl-9 pr-9 text-sm font-semibold text-foreground outline-none transition placeholder:font-normal placeholder:text-muted-foreground hover:border-primary/30 focus-visible:border-primary/50 focus-visible:ring-2 focus-visible:ring-primary/45"
+            />
+            {searchInput ? (
+              <button
+                type="button"
+                aria-label={copy.clearSearch}
+                data-testid="dashboard-command-clear-search"
+                onClick={() => setSearchInput("")}
+                className="absolute right-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ) : null}
+          </div>
+
           <button
             type="button"
             onClick={openFilters}
-            className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg border border-border/70 bg-background/80 px-3 py-2 text-left transition hover:border-primary/35 hover:bg-primary/[0.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
+            data-testid="dashboard-command-filters"
+            aria-haspopup="dialog"
+            aria-expanded={filtersOpen}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-border/70 bg-background/80 px-4 text-sm font-bold text-foreground transition hover:border-primary/35 hover:bg-primary/4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
           >
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold text-foreground">
-                {hasAppliedFilters ? appliedSummary.join(" / ") : copy.searchTitle}
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+            {copy.filters}
+            {advancedFilterCount > 0 ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-black text-primary-foreground">
+                {advancedFilterCount}
               </span>
-              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                {hasAppliedFilters
-                  ? formatRibbonText(copy.matchedHint, { count: filtered.length })
-                  : copy.searchHint}
-              </span>
-            </span>
-            <SlidersHorizontal className="h-4 w-4 shrink-0 text-primary" />
+            ) : null}
           </button>
         </div>
 
-        {hasAppliedFilters ? (
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/60 pt-3">
+        {scope !== "all" || attentionOnly ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs font-black uppercase text-muted-foreground">{copy.applied}</span>
             {scope !== "all" ? (
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
                 {copy.scopes[scope]}
               </span>
             ) : null}
             {attentionOnly ? (
-              <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-300">
                 {copy.attention}
-              </span>
-            ) : null}
-            {query.trim() ? (
-              <span className="max-w-full truncate rounded-full bg-muted px-3 py-1 text-xs font-bold text-foreground">
-                {query.trim()}
               </span>
             ) : null}
             <button
               type="button"
               onClick={clearAppliedFilters}
-              className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs font-bold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              data-testid="dashboard-command-clear"
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs font-bold text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/45"
             >
               <X className="h-3.5 w-3.5" />
               {copy.clear}

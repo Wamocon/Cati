@@ -1,16 +1,29 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react"
 import {
   AlertTriangle,
+  Archive,
+  CheckCheck,
   CheckCircle2,
+  Circle,
+  CircleDot,
+  Clock,
   FileText,
+  Inbox,
   LoaderCircle,
   MessageSquarePlus,
   MessageSquareText,
+  MinusCircle,
   RefreshCcw,
+  Send,
+  Sparkles,
+  Unplug,
   UsersRound,
+  Wifi,
   X,
+  XCircle,
+  type LucideIcon,
 } from "lucide-react"
 import { useLocale } from "next-intl"
 import { getCommunicationsCopy } from "@/lib/communications-copy"
@@ -82,6 +95,94 @@ function requestKey() {
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`
   return `communication-ui:${random}`
+}
+
+// Status semantics are conveyed by BOTH tone and an icon so no state relies on
+// color alone (accessibility) and no "not ready" state is styled as positive.
+type Tone = "positive" | "warning" | "danger" | "neutral" | "info"
+type StatusView = { tone: Tone; icon: LucideIcon }
+
+const toneClass: Record<Tone, string> = {
+  positive: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  warning: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  danger: "border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-300",
+  neutral: "border-border bg-muted text-muted-foreground",
+  info: "border-primary/25 bg-primary/10 text-primary",
+}
+
+function StatusPill({
+  tone,
+  icon: Icon,
+  children,
+  className = "",
+}: {
+  tone: Tone
+  icon: LucideIcon
+  children: ReactNode
+  className?: string
+}) {
+  // The label is a direct text child (the icon is a text-less SVG sibling) so the
+  // pill has exactly one element whose text content is the status string — this
+  // keeps exact getByText() matches unambiguous.
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${toneClass[tone]} ${className}`}
+    >
+      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      {children}
+    </span>
+  )
+}
+
+function threadStatusView(status: string): StatusView {
+  switch (status) {
+    case "resolved":
+      return { tone: "positive", icon: CheckCircle2 }
+    case "closed":
+      return { tone: "neutral", icon: CheckCircle2 }
+    case "archived":
+      return { tone: "neutral", icon: Archive }
+    case "pending":
+      return { tone: "warning", icon: Clock }
+    case "snoozed":
+      return { tone: "neutral", icon: Clock }
+    default:
+      return { tone: "info", icon: CircleDot }
+  }
+}
+
+function deliveryStateView(state: string): StatusView {
+  switch (state) {
+    case "delivered":
+      return { tone: "positive", icon: CheckCircle2 }
+    case "read":
+      return { tone: "positive", icon: CheckCheck }
+    case "sent":
+      return { tone: "info", icon: Send }
+    case "queued":
+      return { tone: "neutral", icon: Clock }
+    case "retrying":
+      return { tone: "warning", icon: RefreshCcw }
+    case "bounced":
+    case "dead_letter":
+      return { tone: "danger", icon: AlertTriangle }
+    case "failed":
+      return { tone: "danger", icon: XCircle }
+    default:
+      return { tone: "neutral", icon: Circle }
+  }
+}
+
+function templateStatusView(status: string): StatusView {
+  switch (status) {
+    case "active":
+    case "published":
+      return { tone: "positive", icon: CheckCircle2 }
+    case "disabled":
+      return { tone: "warning", icon: MinusCircle }
+    default:
+      return { tone: "neutral", icon: Circle }
+  }
 }
 
 export function CommunicationsCenter() {
@@ -210,6 +311,9 @@ export function CommunicationsCenter() {
   const canCreateThread = Boolean(
     workspace?.mutationAvailable && createRoleScopes.has(workspace.roleScope)
   )
+  // Staff-style senders (management scopes) get message quick-replies; owners and
+  // tenants keep a clean reply box without operational reminder templates.
+  const canUseSenderTemplates = Boolean(workspace && createRoleScopes.has(workspace.roleScope))
   const availableUnits = useMemo(
     () => workspace?.targets.units.filter((unit) => unit.siteId === threadDraft.siteId) ?? [],
     [threadDraft.siteId, workspace?.targets.units]
@@ -251,6 +355,27 @@ export function CommunicationsCenter() {
     selectedParticipants.length === threadDraft.participantProfileIds.length
   )
 
+  // Group eligible recipients by role to drive the one-click "quick pick" chips.
+  const roleCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const participant of eligibleParticipants) {
+      counts.set(participant.role, (counts.get(participant.role) ?? 0) + 1)
+    }
+    return Array.from(counts.entries())
+  }, [eligibleParticipants])
+
+  const availableScopes = new Set(scopeOptions.map((option) => option.value))
+  const composerTemplates = [
+    { key: "payment", label: copy.templatePaymentReminder, scope: "finance" },
+    { key: "service", label: copy.templateServiceUpdate, scope: "operational" },
+    { key: "document", label: copy.templateDocumentRequest, scope: "resident" },
+  ].filter((template) => availableScopes.has(template.scope))
+  const replyTemplates = [
+    { key: "payment", label: copy.templatePaymentReminder, body: copy.replyPaymentReminder },
+    { key: "service", label: copy.templateServiceUpdate, body: copy.replyServiceUpdate },
+    { key: "document", label: copy.templateDocumentRequest, body: copy.replyDocumentRequest },
+  ]
+
   // Reduce new-thread friction: when exactly one participant is eligible for the
   // current site/unit/category, pre-select them (once per scope) so the admin can
   // send immediately. A manual de-select is respected for that same scope.
@@ -285,6 +410,15 @@ export function CommunicationsCenter() {
     setTab("threads")
   }
 
+  function applyComposerTemplate(template: { label: string; scope: string }) {
+    setThreadDraft((current) => ({
+      ...current,
+      subject: template.label,
+      scopeKind: template.scope,
+      participantProfileIds: [],
+    }))
+  }
+
   function toggleParticipant(profileId: string) {
     const participant = eligibleParticipants.find((item) => item.profileId === profileId)
     if (!participant) return
@@ -302,6 +436,32 @@ export function CommunicationsCenter() {
           )
         : current.participantProfileIds
       return { ...current, participantProfileIds: [...withoutOtherStaff, profileId] }
+    })
+  }
+
+  // One-click add/remove of every eligible recipient of a role. Only one staff
+  // member can be on a thread, so the staff chip resolves to a single person.
+  function toggleRole(role: string) {
+    const inRole = eligibleParticipants.filter((participant) => participant.role === role)
+    const ids = (role === "staff" ? inRole.slice(0, 1) : inRole).map((participant) => participant.profileId)
+    if (ids.length === 0) return
+    setThreadDraft((current) => {
+      const allSelected = ids.every((id) => current.participantProfileIds.includes(id))
+      if (allSelected) {
+        return {
+          ...current,
+          participantProfileIds: current.participantProfileIds.filter((id) => !ids.includes(id)),
+        }
+      }
+      const base = role === "staff"
+        ? current.participantProfileIds.filter(
+            (id) => eligibleParticipants.find((participant) => participant.profileId === id)?.role !== "staff"
+          )
+        : current.participantProfileIds
+      return {
+        ...current,
+        participantProfileIds: Array.from(new Set([...base, ...ids])),
+      }
     })
   }
 
@@ -452,13 +612,13 @@ export function CommunicationsCenter() {
             </button>
           </div>
         </div>
-        <div className="mt-5 flex flex-wrap gap-2" aria-label="Provider status">
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
-            {workspace?.providerBoundary.portal === "live" ? copy.portalLive : copy.portalUnavailable}
-          </span>
-          <span className="rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-bold text-amber-700 dark:text-amber-300">
-            {copy.externalNotConnected}
-          </span>
+        <div className="mt-5 flex flex-wrap items-center gap-2" aria-label="Provider status">
+          {workspace?.providerBoundary.portal === "live" ? (
+            <StatusPill tone="positive" icon={Wifi}>{copy.portalLive}</StatusPill>
+          ) : (
+            <StatusPill tone="neutral" icon={Clock}>{copy.portalUnavailable}</StatusPill>
+          )}
+          <StatusPill tone="warning" icon={Unplug}>{copy.externalNotConnected}</StatusPill>
         </div>
       </header>
 
@@ -551,105 +711,133 @@ export function CommunicationsCenter() {
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <form onSubmit={submitThread} className="space-y-6 p-5 sm:p-6">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="space-y-2 text-sm font-black text-foreground">
-                    <span>{copy.site}</span>
-                    <select
-                      value={threadDraft.siteId}
-                      onChange={(event) => setThreadDraft((current) => ({
-                        ...current,
-                        siteId: event.target.value,
-                        unitId: "",
-                        participantProfileIds: [],
-                      }))}
-                      required
-                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">{copy.selectSite}</option>
-                      {workspace?.targets.sites.map((site) => (
-                        <option key={site.id} value={site.id}>{site.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="space-y-2 text-sm font-black text-foreground">
-                    <span>{copy.unitOptional}</span>
-                    <select
-                      value={threadDraft.unitId}
-                      onChange={(event) => setThreadDraft((current) => ({
-                        ...current,
-                        unitId: event.target.value,
-                        participantProfileIds: [],
-                      }))}
-                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="">{copy.siteWide}</option>
-                      {availableUnits.map((unit) => (
-                        <option key={unit.id} value={unit.id}>{unit.label}</option>
-                      ))}
-                    </select>
-                  </label>
+              <form onSubmit={submitThread} className="space-y-7 p-5 sm:p-6">
+                {composerTemplates.length ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted-foreground">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                      {copy.quickStartLabel}
+                    </span>
+                    {composerTemplates.map((template) => {
+                      const active = threadDraft.subject === template.label && threadDraft.scopeKind === template.scope
+                      return (
+                        <button
+                          key={template.key}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => applyComposerTemplate(template)}
+                          className={`inline-flex min-h-9 items-center rounded-full border px-3 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+                        >
+                          {template.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : null}
+
+                <div className="space-y-3">
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{copy.groupLocation}</p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="space-y-2 text-sm font-black text-foreground">
+                      <span>{copy.site}</span>
+                      <select
+                        value={threadDraft.siteId}
+                        onChange={(event) => setThreadDraft((current) => ({
+                          ...current,
+                          siteId: event.target.value,
+                          unitId: "",
+                          participantProfileIds: [],
+                        }))}
+                        required
+                        className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">{copy.selectSite}</option>
+                        {workspace?.targets.sites.map((site) => (
+                          <option key={site.id} value={site.id}>{site.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-2 text-sm font-black text-foreground">
+                      <span>{copy.unitOptional}</span>
+                      <select
+                        value={threadDraft.unitId}
+                        onChange={(event) => setThreadDraft((current) => ({
+                          ...current,
+                          unitId: event.target.value,
+                          participantProfileIds: [],
+                        }))}
+                        className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="">{copy.siteWide}</option>
+                        {availableUnits.map((unit) => (
+                          <option key={unit.id} value={unit.id}>{unit.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                 </div>
 
-                <label className="block space-y-2 text-sm font-black text-foreground">
-                  <span>{copy.subject}</span>
-                  <input
-                    value={threadDraft.subject}
-                    onChange={(event) => setThreadDraft((current) => ({ ...current, subject: event.target.value }))}
-                    placeholder={copy.subjectPlaceholder}
-                    minLength={1}
-                    maxLength={240}
-                    required
-                    className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
-                  />
-                </label>
-
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <label className="space-y-2 text-sm font-black text-foreground">
-                    <span>{copy.scope}</span>
-                    <select
-                      value={threadDraft.scopeKind}
-                      onChange={(event) => setThreadDraft((current) => ({
-                        ...current,
-                        scopeKind: event.target.value,
-                        participantProfileIds: [],
-                      }))}
-                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      {scopeOptions.map((scope) => (
-                        <option key={scope.value} value={scope.value}>{scope.label}</option>
-                      ))}
-                    </select>
+                <div className="space-y-3">
+                  <p className="text-xs font-black uppercase tracking-wide text-muted-foreground">{copy.groupDetails}</p>
+                  <label className="block space-y-2 text-sm font-black text-foreground">
+                    <span>{copy.subject}</span>
+                    <input
+                      value={threadDraft.subject}
+                      onChange={(event) => setThreadDraft((current) => ({ ...current, subject: event.target.value }))}
+                      placeholder={copy.subjectPlaceholder}
+                      minLength={1}
+                      maxLength={240}
+                      required
+                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary"
+                    />
                   </label>
-                  <label className="space-y-2 text-sm font-black text-foreground">
-                    <span>{copy.priority}</span>
-                    <select
-                      value={threadDraft.priority}
-                      onChange={(event) => setThreadDraft((current) => ({ ...current, priority: event.target.value }))}
-                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="low">{copy.priorityLow}</option>
-                      <option value="medium">{copy.priorityMedium}</option>
-                      <option value="high">{copy.priorityHigh}</option>
-                      <option value="urgent">{copy.priorityUrgent}</option>
-                    </select>
-                  </label>
-                  <label className="space-y-2 text-sm font-black text-foreground">
-                    <span>{copy.conversationLanguage}</span>
-                    <select
-                      value={threadDraft.locale}
-                      onChange={(event) => setThreadDraft((current) => ({
-                        ...current,
-                        locale: communicationLocale(event.target.value),
-                      }))}
-                      className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="tr">Türkçe</option>
-                      <option value="en">English</option>
-                      <option value="de">Deutsch</option>
-                      <option value="ru">Русский</option>
-                    </select>
-                  </label>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <label className="space-y-2 text-sm font-black text-foreground">
+                      <span>{copy.scope}</span>
+                      <select
+                        value={threadDraft.scopeKind}
+                        onChange={(event) => setThreadDraft((current) => ({
+                          ...current,
+                          scopeKind: event.target.value,
+                          participantProfileIds: [],
+                        }))}
+                        className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        {scopeOptions.map((scope) => (
+                          <option key={scope.value} value={scope.value}>{scope.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="space-y-2 text-sm font-black text-foreground">
+                      <span>{copy.priority}</span>
+                      <select
+                        value={threadDraft.priority}
+                        onChange={(event) => setThreadDraft((current) => ({ ...current, priority: event.target.value }))}
+                        className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="low">{copy.priorityLow}</option>
+                        <option value="medium">{copy.priorityMedium}</option>
+                        <option value="high">{copy.priorityHigh}</option>
+                        <option value="urgent">{copy.priorityUrgent}</option>
+                      </select>
+                    </label>
+                    <label className="space-y-2 text-sm font-black text-foreground">
+                      <span>{copy.conversationLanguage}</span>
+                      <select
+                        value={threadDraft.locale}
+                        onChange={(event) => setThreadDraft((current) => ({
+                          ...current,
+                          locale: communicationLocale(event.target.value),
+                        }))}
+                        className="min-h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="tr">Türkçe</option>
+                        <option value="en">English</option>
+                        <option value="de">Deutsch</option>
+                        <option value="ru">Русский</option>
+                      </select>
+                    </label>
+                  </div>
                 </div>
 
                 <fieldset className="space-y-3" aria-describedby="participant-guidance">
@@ -658,6 +846,58 @@ export function CommunicationsCenter() {
                     {copy.participants}
                   </legend>
                   <p id="participant-guidance" className="text-xs leading-5 text-muted-foreground">{copy.participantsHint}</p>
+
+                  <div className="rounded-2xl border border-border bg-muted/20 p-3">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{copy.whoReceivesTitle}</p>
+                    {selectedParticipants.length ? (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {selectedParticipants.map((participant) => (
+                          <span
+                            key={participant.profileId}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 py-1 pl-3 pr-1 text-xs font-bold text-primary"
+                          >
+                            <span className="max-w-40 truncate">{participant.displayLabel}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleParticipant(participant.profileId)}
+                              aria-label={`${copy.remove}: ${participant.displayLabel}`}
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-1.5 text-xs text-muted-foreground">{copy.whoReceivesEmpty}</p>
+                    )}
+                  </div>
+
+                  {roleCounts.length > 1 ? (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[11px] font-black uppercase tracking-wide text-muted-foreground">{copy.quickPickLabel}</span>
+                      {roleCounts.map(([role, count]) => {
+                        const ids = (role === "staff"
+                          ? eligibleParticipants.filter((participant) => participant.role === role).slice(0, 1)
+                          : eligibleParticipants.filter((participant) => participant.role === role)
+                        ).map((participant) => participant.profileId)
+                        const active = ids.length > 0 && ids.every((id) => threadDraft.participantProfileIds.includes(id))
+                        return (
+                          <button
+                            key={role}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => toggleRole(role)}
+                            className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${active ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-foreground hover:border-primary/50"}`}
+                          >
+                            {active ? <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> : <UsersRound className="h-3.5 w-3.5" aria-hidden="true" />}
+                            {localizedStatus(role, locale)} · {count}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+
                   {eligibleParticipants.length ? (
                     <div className="grid max-h-64 gap-2 overflow-y-auto rounded-2xl border border-border bg-muted/20 p-2 sm:grid-cols-2">
                       {eligibleParticipants.map((participant) => {
@@ -717,22 +957,43 @@ export function CommunicationsCenter() {
             <section role="tabpanel" className="grid min-w-0 gap-4 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.7fr)]">
               <div className="min-w-0 rounded-3xl border border-border bg-card p-3">
                 <div className="space-y-2">
-                  {workspace?.threads.length ? workspace.threads.map((thread) => (
-                    <button
-                      key={thread.id}
-                      type="button"
-                      onClick={() => void selectThread(thread.id)}
-                      aria-pressed={selectedThreadId === thread.id}
-                      className={`w-full min-w-0 rounded-2xl border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selectedThreadId === thread.id ? "border-primary bg-primary/5" : "border-transparent bg-muted/40 hover:border-border"}`}
-                    >
-                      <span className="block truncate text-sm font-black text-foreground">{thread.subject}</span>
-                      <span className="mt-1 block truncate text-xs text-muted-foreground">{thread.lastMessagePreview ?? thread.unitLabel ?? "-"}</span>
-                      <span className="mt-2 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                        <span>{localizedStatus(thread.status, locale)}</span>
-                        {thread.unreadCount > 0 && <span className="text-primary">{thread.unreadCount} {copy.unread}</span>}
+                  {workspace?.threads.length ? workspace.threads.map((thread) => {
+                    const statusView = threadStatusView(thread.status)
+                    const isUrgent = thread.priority === "urgent"
+                    const isHigh = thread.priority === "high"
+                    return (
+                      <button
+                        key={thread.id}
+                        type="button"
+                        onClick={() => void selectThread(thread.id)}
+                        aria-pressed={selectedThreadId === thread.id}
+                        className={`w-full min-w-0 rounded-2xl border p-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selectedThreadId === thread.id ? "border-primary bg-primary/5" : "border-transparent bg-muted/40 hover:border-border"}`}
+                      >
+                        <span className="block truncate text-sm font-black text-foreground">{thread.subject}</span>
+                        <span className="mt-1 block truncate text-xs text-muted-foreground">{thread.lastMessagePreview ?? thread.unitLabel ?? "-"}</span>
+                        <span className="mt-2.5 flex flex-wrap items-center gap-2">
+                          <StatusPill tone={statusView.tone} icon={statusView.icon}>{localizedStatus(thread.status, locale)}</StatusPill>
+                          {isUrgent || isHigh ? (
+                            <StatusPill tone={isUrgent ? "danger" : "warning"} icon={AlertTriangle}>
+                              {isUrgent ? copy.priorityUrgent : copy.priorityHigh}
+                            </StatusPill>
+                          ) : null}
+                          {thread.unreadCount > 0 ? (
+                            <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-1 text-[11px] font-black text-primary-foreground">
+                              {thread.unreadCount} {copy.unread}
+                            </span>
+                          ) : null}
+                        </span>
+                      </button>
+                    )
+                  }) : (
+                    <div className="flex flex-col items-center gap-2 p-6 text-center">
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                        <Inbox className="h-5 w-5" aria-hidden="true" />
                       </span>
-                    </button>
-                  )) : <p className="p-4 text-sm text-muted-foreground">{copy.noThreads}</p>}
+                      <p className="text-sm text-muted-foreground">{copy.noThreads}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -768,6 +1029,24 @@ export function CommunicationsCenter() {
                     </div>
                     {selected.thread.canReply && (
                       <form onSubmit={submitReply} className="space-y-3 border-t border-border pt-4">
+                        {canUseSenderTemplates ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-muted-foreground">
+                              <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+                              {copy.quickRepliesLabel}
+                            </span>
+                            {replyTemplates.map((template) => (
+                              <button
+                                key={template.key}
+                                type="button"
+                                onClick={() => setReply(template.body)}
+                                className="inline-flex min-h-9 items-center rounded-full border border-border bg-background px-3 text-xs font-bold text-foreground transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                              >
+                                {template.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                         <label htmlFor="communication-reply" className="text-sm font-black text-foreground">{copy.message}</label>
                         <textarea
                           id="communication-reply"
@@ -824,37 +1103,58 @@ export function CommunicationsCenter() {
             <section role="tabpanel" className="space-y-3 rounded-3xl border border-border bg-card p-4 sm:p-6">
               {workspace?.deliveries.length ? workspace.deliveries.map((delivery) => {
                 const outbox = workspace.outbox.find((item) => item.deliveryId === delivery.id)
+                const stateView = deliveryStateView(delivery.state)
                 return (
                   <article key={delivery.id} className="min-w-0 rounded-2xl border border-border bg-muted/30 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-foreground">{delivery.recipientLabel}</p>
-                        <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{delivery.channel} · {localizedStatus(delivery.state, locale)}</p>
+                        <p className="mt-1 text-xs uppercase tracking-wide text-muted-foreground">{delivery.channel}</p>
                       </div>
-                      {outbox?.status === "dead_letter" && (
-                        <span className="rounded-full bg-red-500/10 px-3 py-1 text-xs font-black text-red-700 dark:text-red-300">{copy.deadLetter}</span>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusPill tone={stateView.tone} icon={stateView.icon}>{localizedStatus(delivery.state, locale)}</StatusPill>
+                        {outbox?.status === "dead_letter" && (
+                          <StatusPill tone="danger" icon={AlertTriangle}>{copy.deadLetter}</StatusPill>
+                        )}
+                      </div>
                     </div>
                     {delivery.lastError && <p className="mt-3 break-words text-sm font-bold text-destructive">{delivery.lastError}</p>}
                     {delivery.nextRetryAt && <p className="mt-2 text-xs text-muted-foreground">{dateLabel(delivery.nextRetryAt, locale)}</p>}
                   </article>
                 )
-              }) : <p className="text-sm text-muted-foreground">{copy.noDeliveries}</p>}
+              }) : (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                    <Send className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <p className="text-sm text-muted-foreground">{copy.noDeliveries}</p>
+                </div>
+              )}
             </section>
           )}
 
           {tab === "templates" && (
             <section role="tabpanel" className="grid gap-3 md:grid-cols-2">
-              {workspace?.templates.length ? workspace.templates.map((template) => (
-                <article key={template.id} className="min-w-0 rounded-3xl border border-border bg-card p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h2 className="min-w-0 truncate font-black text-foreground">{template.name}</h2>
-                    <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold uppercase text-muted-foreground">{localizedStatus(template.status, locale)}</span>
-                  </div>
-                  <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{template.channel} · {template.purpose}</p>
-                  <p className="mt-4 text-xs font-bold text-foreground">{copy.variants}: {template.variants.map((variant) => variant.locale.toUpperCase()).join(", ")}</p>
-                </article>
-              )) : <p className="text-sm text-muted-foreground">{copy.noTemplates}</p>}
+              {workspace?.templates.length ? workspace.templates.map((template) => {
+                const statusView = templateStatusView(template.status)
+                return (
+                  <article key={template.id} className="min-w-0 rounded-3xl border border-border bg-card p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <h2 className="min-w-0 truncate font-black text-foreground">{template.name}</h2>
+                      <StatusPill tone={statusView.tone} icon={statusView.icon}>{localizedStatus(template.status, locale)}</StatusPill>
+                    </div>
+                    <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">{template.channel} · {template.purpose}</p>
+                    <p className="mt-4 text-xs font-bold text-foreground">{copy.variants}: {template.variants.map((variant) => variant.locale.toUpperCase()).join(", ")}</p>
+                  </article>
+                )
+              }) : (
+                <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-card py-8 text-center md:col-span-2">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                    <FileText className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <p className="text-sm text-muted-foreground">{copy.noTemplates}</p>
+                </div>
+              )}
             </section>
           )}
         </>

@@ -57,6 +57,20 @@ export interface CommunicationsCopy {
   creatingThread: string
   threadCreateError: string
   threadCreateSuccess: string
+  groupLocation: string
+  groupDetails: string
+  whoReceivesTitle: string
+  whoReceivesEmpty: string
+  remove: string
+  quickPickLabel: string
+  quickStartLabel: string
+  templatePaymentReminder: string
+  templateServiceUpdate: string
+  templateDocumentRequest: string
+  quickRepliesLabel: string
+  replyPaymentReminder: string
+  replyServiceUpdate: string
+  replyDocumentRequest: string
 }
 
 const copy: Record<CommunicationLocale, CommunicationsCopy> = {
@@ -117,6 +131,20 @@ const copy: Record<CommunicationLocale, CommunicationsCopy> = {
     creatingThread: "Görüşme oluşturuluyor…",
     threadCreateError: "Görüşme oluşturulamadı. Kapsamı ve katılımcıları kontrol edip yeniden deneyin.",
     threadCreateSuccess: "Portal görüşmesi oluşturuldu.",
+    groupLocation: "Tesis ve bölüm",
+    groupDetails: "Mesaj ayrıntıları",
+    whoReceivesTitle: "Bu mesajı kimler görecek",
+    whoReceivesEmpty: "Henüz kimse yok. Aşağıdan en az bir alıcı seçin.",
+    remove: "Kaldır",
+    quickPickLabel: "Role göre hızlı seçim",
+    quickStartLabel: "Hızlı başlangıç",
+    templatePaymentReminder: "Ödeme hatırlatması",
+    templateServiceUpdate: "Hizmet güncellemesi",
+    templateDocumentRequest: "Belge talebi",
+    quickRepliesLabel: "Hızlı yanıtlar",
+    replyPaymentReminder: "Bağımsız bölümünüzdeki açık bakiyeyle ilgili dostça bir hatırlatmadır. Sorunuz olursa bize yazabilirsiniz.",
+    replyServiceUpdate: "Bağımsız bölümünüzdeki hizmet talebiyle ilgili kısa bir güncelleme. Sonraki adımlarda sizi bilgilendireceğiz.",
+    replyDocumentRequest: "Uygun olduğunuzda aşağıdaki belgeyi paylaşabilir misiniz? Yardımınız için teşekkürler.",
   },
   en: {
     title: "Communication center",
@@ -175,6 +203,20 @@ const copy: Record<CommunicationLocale, CommunicationsCopy> = {
     creatingThread: "Creating thread…",
     threadCreateError: "The thread could not be created. Check its scope and participants, then try again.",
     threadCreateSuccess: "Portal thread created.",
+    groupLocation: "Site & unit",
+    groupDetails: "Message details",
+    whoReceivesTitle: "Who will receive this",
+    whoReceivesEmpty: "No one yet. Pick at least one recipient below.",
+    remove: "Remove",
+    quickPickLabel: "Quick pick by role",
+    quickStartLabel: "Quick start",
+    templatePaymentReminder: "Payment reminder",
+    templateServiceUpdate: "Service update",
+    templateDocumentRequest: "Document request",
+    quickRepliesLabel: "Quick replies",
+    replyPaymentReminder: "This is a friendly reminder about an open balance on your unit. Please reach out if you have any questions.",
+    replyServiceUpdate: "Here is a quick update on the service request for your unit. We will keep you informed about the next steps.",
+    replyDocumentRequest: "Could you please share the following document when convenient? Thank you for your help.",
   },
   de: {
     title: "Kommunikationszentrale",
@@ -233,6 +275,20 @@ const copy: Record<CommunicationLocale, CommunicationsCopy> = {
     creatingThread: "Gespräch wird erstellt…",
     threadCreateError: "Das Gespräch konnte nicht erstellt werden. Prüfen Sie Bereich und Teilnehmer und versuchen Sie es erneut.",
     threadCreateSuccess: "Portalgespräch erstellt.",
+    groupLocation: "Anlage & Einheit",
+    groupDetails: "Nachrichtendetails",
+    whoReceivesTitle: "Wer dies erhält",
+    whoReceivesEmpty: "Noch niemand. Wählen Sie unten mindestens einen Empfänger.",
+    remove: "Entfernen",
+    quickPickLabel: "Schnellauswahl nach Rolle",
+    quickStartLabel: "Schnellstart",
+    templatePaymentReminder: "Zahlungserinnerung",
+    templateServiceUpdate: "Service-Update",
+    templateDocumentRequest: "Dokumentanfrage",
+    quickRepliesLabel: "Schnellantworten",
+    replyPaymentReminder: "Dies ist eine freundliche Erinnerung an einen offenen Betrag für Ihre Einheit. Bei Fragen können Sie uns gern schreiben.",
+    replyServiceUpdate: "Hier ist ein kurzes Update zur Serviceanfrage für Ihre Einheit. Wir halten Sie über die nächsten Schritte auf dem Laufenden.",
+    replyDocumentRequest: "Könnten Sie bei Gelegenheit das folgende Dokument bereitstellen? Vielen Dank für Ihre Hilfe.",
   },
   ru: {
     title: "Центр коммуникаций",
@@ -291,6 +347,20 @@ const copy: Record<CommunicationLocale, CommunicationsCopy> = {
     creatingThread: "Диалог создаётся…",
     threadCreateError: "Не удалось создать диалог. Проверьте область и участников и повторите попытку.",
     threadCreateSuccess: "Диалог портала создан.",
+    groupLocation: "Объект и помещение",
+    groupDetails: "Детали сообщения",
+    whoReceivesTitle: "Кто это получит",
+    whoReceivesEmpty: "Пока никто. Выберите хотя бы одного получателя ниже.",
+    remove: "Убрать",
+    quickPickLabel: "Быстрый выбор по роли",
+    quickStartLabel: "Быстрый старт",
+    templatePaymentReminder: "Напоминание об оплате",
+    templateServiceUpdate: "Обновление по услуге",
+    templateDocumentRequest: "Запрос документа",
+    quickRepliesLabel: "Быстрые ответы",
+    replyPaymentReminder: "Это дружеское напоминание об открытой задолженности по вашему помещению. Если есть вопросы, напишите нам.",
+    replyServiceUpdate: "Небольшое обновление по заявке на обслуживание вашего помещения. Мы сообщим вам о следующих шагах.",
+    replyDocumentRequest: "Не могли бы вы прислать следующий документ, когда будет удобно? Спасибо за помощь.",
   },
 }
 

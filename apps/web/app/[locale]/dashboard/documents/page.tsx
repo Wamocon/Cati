@@ -270,20 +270,26 @@ function DocumentUploadPanel({
                 maxLength={80}
               />
             </label>
-            <label className="text-xs font-semibold text-muted-foreground">
-              {t("Saklama sınıfı")}
-              <select
-                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
-                name="retentionClass"
-                defaultValue={role === "staff" ? "service" : "general"}
-              >
-                {retentionOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {t(option.label)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {isClientRole(role) ? (
+              // Owner/tenant uploads never ask for data-governance jargon; the
+              // retention class is defaulted server-side (see document-storage).
+              <input type="hidden" name="retentionClass" value="general" />
+            ) : (
+              <label className="text-xs font-semibold text-muted-foreground">
+                {t("Saklama sınıfı")}
+                <select
+                  className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
+                  name="retentionClass"
+                  defaultValue={role === "staff" ? "service" : "general"}
+                >
+                  {retentionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {t(option.label)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         </div>
 
@@ -528,9 +534,9 @@ export default function DocumentsPage() {
       ? t("Saha operasyonu için yalnızca görev dosyaları, servis kanıtları ve gerekli onay kayıtları gösterilir.")
       : {
           tr: `${clientProfile.clientName} satış ve after-sales süreci için TAPU, kimlik, sözleşme, ödeme, depozito, servis, uyum ve proje belgelerini güvenli, denetlenebilir ve işlem bağlantılı yönetin.`,
-          en: `Manage TAPU, identity, contract, payment, deposit, service, compliance and project documents for ${clientProfile.clientName} sales and after-sales in a secure audited workflow.`,
-          de: `Verwalten Sie TAPU-, Identitäts-, Vertrags-, Zahlungs-, Kautions-, Service-, Compliance- und Projektdokumente für Vertrieb und After-Sales von ${clientProfile.clientName} in einem sicheren, auditierbaren Ablauf.`,
-          ru: `Управляйте TAPU, документами личности, договорами, оплатами, депозитами, сервисом, соответствием и проектными файлами для продаж и after-sales ${clientProfile.clientName} в защищенном аудируемом процессе.`,
+          en: `Manage title deeds, identity, contract, payment, deposit, service, compliance and project documents for ${clientProfile.clientName} sales and after-sales in a secure audited workflow.`,
+          de: `Verwalten Sie Eigentumsurkunden, Identitäts-, Vertrags-, Zahlungs-, Kautions-, Service-, Compliance- und Projektdokumente für Vertrieb und After-Sales von ${clientProfile.clientName} in einem sicheren, auditierbaren Ablauf.`,
+          ru: `Управляйте свидетельствами о собственности, документами личности, договорами, оплатами, депозитами, сервисом, соответствием и проектными файлами для продаж и after-sales ${clientProfile.clientName} в защищенном аудируемом процессе.`,
         }[locale]
 
   return (
@@ -658,9 +664,8 @@ export default function DocumentsPage() {
             {
               key: "actions",
               header: t("Action"),
-              sticky: "right",
-              headerClassName: "text-center",
-              cellClassName: "text-center",
+              headerClassName: "text-right",
+              cellClassName: "text-right",
               render: (packet) => (
                 <DashboardActionMenu
                   compact
@@ -702,8 +707,13 @@ export default function DocumentsPage() {
                 <StatusBadge variant={documentVariant(document.status)}>
                   {documentLabel(document.status, t)}
                 </StatusBadge>
-                <h2 className="mt-2 text-sm font-bold text-card-foreground">{document.category}</h2>
-                <p className="mt-1 text-xs text-muted-foreground">{document.retentionRule}</p>
+                <h2 className="mt-2 line-clamp-2 text-sm font-bold text-card-foreground">
+                  {t(document.name)}
+                </h2>
+                <p className="mt-1 text-xs font-medium text-muted-foreground">{document.category}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground/80">
+                  {document.retentionRule}
+                </p>
               </div>
             </div>
           </Card3D>
@@ -815,9 +825,8 @@ export default function DocumentsPage() {
           {
             key: "actions",
             header: t("İşlem"),
-            sticky: "right",
-            headerClassName: "text-center",
-            cellClassName: "text-center",
+            headerClassName: "text-right",
+            cellClassName: "text-right",
             render: (document) => (
               <DocumentFileActions document={document} role={user.role} t={t} />
             ),

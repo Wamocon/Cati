@@ -147,7 +147,9 @@ test.describe("Language access", () => {
     await expectNoTurkishLeakage(page)
 
     await page.goto("/ru/dashboard/documents")
-    await expect(page.getByRole("heading", { name: "TAPU и хранилище документов" })).toBeVisible()
+    await expect(
+      page.getByRole("heading", { name: "Свидетельства о собственности и документы" })
+    ).toBeVisible()
     await expectNoTurkishLeakage(page)
 
     await page.goto("/en/dashboard/communications")

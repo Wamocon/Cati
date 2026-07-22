@@ -1,12 +1,19 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import {
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
+} from "react"
 import { useLocale } from "next-intl"
 import {
   ArrowUpRight,
   Banknote,
   BarChart3,
   CalendarClock,
+  Coins,
   CreditCard,
   Euro,
   LockKeyhole,
@@ -264,6 +271,126 @@ function MonthlyCashFlowGraph({
   )
 }
 
+interface FinanceTabDef {
+  id: string
+  label: string
+  icon: typeof WalletCards
+  content: ReactNode
+}
+
+// Accessible, keyboard-aware tab strip (WAI-ARIA tabs pattern). Panels stay
+// mounted and only toggle the `hidden` attribute, so switching tabs never
+// refetches data and every section anchor id stays reachable in the DOM.
+function FinanceTabs({
+  items,
+  activeId,
+  onSelect,
+  ariaLabel,
+}: {
+  items: FinanceTabDef[]
+  activeId: string
+  onSelect: (id: string) => void
+  ariaLabel: string
+}) {
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+
+  const focusTabAt = (index: number) => {
+    const count = items.length
+    if (count === 0) return
+    const normalized = ((index % count) + count) % count
+    onSelect(items[normalized].id)
+    tabRefs.current[normalized]?.focus()
+  }
+
+  const handleKeyDown = (
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) => {
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        event.preventDefault()
+        focusTabAt(index + 1)
+        break
+      case "ArrowLeft":
+      case "ArrowUp":
+        event.preventDefault()
+        focusTabAt(index - 1)
+        break
+      case "Home":
+        event.preventDefault()
+        focusTabAt(0)
+        break
+      case "End":
+        event.preventDefault()
+        focusTabAt(items.length - 1)
+        break
+      default:
+        break
+    }
+  }
+
+  return (
+    <div>
+      <div className="overflow-x-auto overscroll-x-contain">
+        <div
+          role="tablist"
+          aria-label={ariaLabel}
+          aria-orientation="horizontal"
+          className="flex min-w-max gap-1 border-b border-border"
+        >
+          {items.map((item, index) => {
+            const selected = item.id === activeId
+            const Icon = item.icon
+            return (
+              <button
+                key={item.id}
+                ref={(node) => {
+                  tabRefs.current[index] = node
+                }}
+                type="button"
+                role="tab"
+                id={`${item.id}-tab`}
+                aria-selected={selected}
+                aria-controls={`${item.id}-panel`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => onSelect(item.id)}
+                onKeyDown={(event) => handleKeyDown(event, index)}
+                className={cn(
+                  "inline-flex min-h-11 items-center gap-2 whitespace-nowrap border-b-2 px-3.5 py-2.5 text-sm font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                  selected
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                {item.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+      {items.map((item) => (
+        <div
+          key={item.id}
+          role="tabpanel"
+          id={`${item.id}-panel`}
+          aria-labelledby={`${item.id}-tab`}
+          hidden={item.id !== activeId}
+          className="pt-6"
+        >
+          {item.content}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const TAB_LEDGER = "finance-tab-ledger"
+const TAB_ACCOUNTS = "finance-tab-accounts"
+const TAB_PROVIDERS = "finance-tab-providers"
+const TAB_RESTRICTIONS = "finance-tab-restrictions"
+
 export function PrivilegedFinanceDashboard() {
   const locale = resolveDashboardLocale(useLocale())
   const t = (value: string) => localizeDashboardTextPart(value, locale)
@@ -286,6 +413,108 @@ export function PrivilegedFinanceDashboard() {
     (account) => account.paymentStatus === "overdue"
   ).length
   const planSummary = getPaymentPlanSummary()
+
+  // Tabbed navigation state. All panels render eagerly (only `hidden` toggles),
+  // so a KPI drill-in just selects the owning tab and then smooth-scrolls to the
+  // section anchor, which is always present in the DOM. The double rAF waits for
+  // React to commit the tab switch (panel un-hidden) before scrolling.
+  const [activeTab, setActiveTab] = useState<string>(TAB_LEDGER)
+
+  const goToSection = (anchorId: string, tabId?: string) => {
+    if (tabId) setActiveTab(tabId)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document
+          .getElementById(anchorId)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" })
+      })
+    })
+  }
+
+  // Inline, locale-resolved copy for tab labels and empty/ambiguous-state
+  // captions. Mirrors the existing `pageIntro` pattern so all four locales are
+  // covered without editing the shared translation tables.
+  const c = {
+    tabsAria: {
+      tr: "Finans bölümleri",
+      en: "Finance sections",
+      de: "Finanzbereiche",
+      ru: "Финансовые разделы",
+    }[locale],
+    tabLedger: {
+      tr: "Defter & tahsilat",
+      en: "Ledger & collection",
+      de: "Buch & Inkasso",
+      ru: "Реестр и сборы",
+    }[locale],
+    tabAccounts: {
+      tr: "Borç hesapları",
+      en: "Debt accounts",
+      de: "Schuldkonten",
+      ru: "Счета задолженности",
+    }[locale],
+    tabProviders: {
+      tr: "Sağlayıcı & alacaklar",
+      en: "Providers & credits",
+      de: "Anbieter & Guthaben",
+      ru: "Поставщики и кредиты",
+    }[locale],
+    tabRestrictions: {
+      tr: "Kısıt & kontrol",
+      en: "Restrictions & controls",
+      de: "Sperren & Kontrollen",
+      ru: "Ограничения и контроль",
+    }[locale],
+    legalHint: {
+      tr: "90+ gün gecikmede, yasal takipteki hesap sayısı",
+      en: "Accounts 90+ days overdue in legal follow-up",
+      de: "Konten 90+ Tage überfällig in rechtlicher Verfolgung",
+      ru: "Счета с просрочкой 90+ дней на юридическом сопровождении",
+    }[locale],
+    overdueHint: {
+      tr: "Vadesi geçmiş açık bakiyeli hesap sayısı",
+      en: "Accounts with past-due open balances",
+      de: "Konten mit überfälligen offenen Salden",
+      ru: "Счета с просроченными открытыми остатками",
+    }[locale],
+    noLegal: {
+      tr: "Yasal takipte hesap yok",
+      en: "No accounts in legal follow-up",
+      de: "Keine Konten in rechtlicher Verfolgung",
+      ru: "Нет счетов на юридическом сопровождении",
+    }[locale],
+    noOverdue: {
+      tr: "Gecikmiş hesap yok",
+      en: "No overdue accounts",
+      de: "Keine überfälligen Konten",
+      ru: "Нет просроченных счетов",
+    }[locale],
+    planHint: {
+      tr: "Takip edilen aktif satış planı",
+      en: "Active sales plans tracked",
+      de: "Aktive erfasste Verkaufspläne",
+      ru: "Отслеживаемых активных планов продаж",
+    }[locale],
+    dueWarnHint: {
+      tr: "Vadesi yaklaşan + geciken plan sayısı",
+      en: "Plans due soon plus overdue",
+      de: "Bald fällige plus überfällige Pläne",
+      ru: "Планы с близким сроком и просроченные",
+    }[locale],
+    planEmpty: {
+      tr: "Henüz takip edilen satış ödeme planı yok",
+      en: "No sales payment plans tracked yet",
+      de: "Noch keine Verkaufszahlungspläne erfasst",
+      ru: "Планы оплаты продаж пока не отслеживаются",
+    }[locale],
+    accountsEmpty: {
+      tr: "Açık borcu olan daire yok",
+      en: "No flats carry an outstanding balance",
+      de: "Keine Wohnungen mit offener Schuld",
+      ru: "Нет квартир с непогашенной задолженностью",
+    }[locale],
+  }
+
   // Shared styling so each KPI tile reads as an interactive drill-in link.
   const kpiLinkClass =
     "group/command block rounded-xl outline-none transition-transform duration-200 ease-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -296,165 +525,8 @@ export function PrivilegedFinanceDashboard() {
     ru: `${clientProfile.clientName} управляет платежами продаж, взносами, старением долга, депозитами, проверкой оплат, арендным доходом и решениями по доступу в одном финансовом потоке.`,
   }[locale]
 
-  return (
+  const ledgerPanel = (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-black text-foreground">
-          {t("Finans, Satış & Aidat")}
-        </h1>
-        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-          {pageIntro}
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <a href="#finance-accounts" className={kpiLinkClass} aria-label={t("Toplam borç")}>
-          <Card3D glow={false}>
-            <div className="flex items-center gap-3">
-              <WalletCards className="h-8 w-8 shrink-0 text-rose-600" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                  {t("Toplam borç")}
-                </p>
-                <p className="text-xl font-black leading-tight break-words">
-                  {formatDualShort(summary.totalDebtTry)}
-                </p>
-              </div>
-            </div>
-          </Card3D>
-        </a>
-        <a href="#finance-ledger" className={kpiLinkClass} aria-label={t("Aylık aidat")}>
-          <Card3D glow={false}>
-            <div className="flex items-center gap-3">
-              <ReceiptText className="h-8 w-8 shrink-0 text-teal-600" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                  {t("Aylık aidat")}
-                </p>
-                <p className="text-xl font-black leading-tight break-words">
-                  {formatDualShort(summary.monthlyExpectedTry)}
-                </p>
-              </div>
-            </div>
-          </Card3D>
-        </a>
-        <a href="#finance-cashflow" className={kpiLinkClass} aria-label={collectionCardLabel}>
-          <Card3D glow={false}>
-            <div className="flex items-center gap-3">
-              <Banknote className="h-8 w-8 shrink-0 text-sky-600" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                  {collectionCardLabel}
-                </p>
-                <p className="text-xl font-black leading-tight break-words">
-                  {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
-                </p>
-              </div>
-            </div>
-          </Card3D>
-        </a>
-        <a
-          href="#finance-restrictions"
-          className={kpiLinkClass}
-          aria-label={t("Kısıtlı erişim")}
-        >
-          <Card3D glow={false}>
-            <div className="flex items-center gap-3">
-              <LockKeyhole className="h-8 w-8 shrink-0 text-amber-600" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">
-                  {t("Kısıtlı erişim")}
-                </p>
-                <AnimatedCounter
-                  value={summary.restrictedAccess}
-                  className="text-2xl font-black"
-                />
-              </div>
-            </div>
-          </Card3D>
-        </a>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-3">
-        <Card3D
-          id="finance-cashflow"
-          className="scroll-mt-24 xl:col-span-2"
-          glow={false}
-        >
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-card-foreground">
-                {t("Aylık nakit akışı")}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {t(
-                  "Tahsilat, açık borç ve servis gideri birlikte takip edilir."
-                )}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge variant="success">
-                {t("Tahsilat")}{" "}
-                {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
-              </StatusBadge>
-              <a
-                href="#finance-accounts"
-                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-black text-foreground transition hover:bg-muted"
-              >
-                {t("Kayıtları aç")}
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-          <MonthlyCashFlowGraph locale={locale} />
-        </Card3D>
-
-        <Card3D glow={false}>
-          <h2 className="text-sm font-bold text-card-foreground">
-            {t("Borç yaşlandırma")}
-          </h2>
-          <p className="mt-1 mb-4 text-xs text-muted-foreground">
-            {t("Önceliklendirme 90+ gün ve erişim kısıtından başlar.")}
-          </p>
-          <div className="space-y-3">
-            {debtAging.map((bucket) => (
-              <div key={bucket.label}>
-                <div className="mb-1 flex items-center justify-between text-xs">
-                  <span className="font-semibold text-foreground">
-                    {bucket.label} {t("gün")}
-                  </span>
-                  <span className="text-muted-foreground">
-                    {bucket.value > 0
-                      ? formatDualShort(bucket.value)
-                      : t("Açık kalem yok")}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-primary"
-                    style={{
-                      width: `${Math.min(100, Math.round((bucket.value / Math.max(summary.totalDebtTry, 1)) * 100 * 3))}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">
-                {t("Yasal takip")}
-              </p>
-              <p className="mt-1 text-xl font-black">{legalAccounts}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs text-muted-foreground">{t("Gecikmiş")}</p>
-              <p className="mt-1 text-xl font-black">{overdueAccounts}</p>
-            </div>
-          </div>
-        </Card3D>
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-3">
         <Card3D glow={false}>
           <div className="flex items-start gap-3">
@@ -509,14 +581,6 @@ export function PrivilegedFinanceDashboard() {
 
       <ManualPaymentConsole />
 
-      <div id="accountant-finance" className="scroll-mt-24">
-        <AccountantFinancePanel />
-      </div>
-
-      <div id="finance-restrictions" className="scroll-mt-24">
-        <PaymentRestrictionControl />
-      </div>
-
       <Card3D glow={false}>
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -544,6 +608,9 @@ export function PrivilegedFinanceDashboard() {
             <p className="mt-1 text-2xl font-black text-foreground">
               {planSummary.total}
             </p>
+            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+              {planSummary.total === 0 ? c.planEmpty : c.planHint}
+            </p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase">
@@ -559,6 +626,9 @@ export function PrivilegedFinanceDashboard() {
             </p>
             <p className="mt-1 text-2xl font-black text-foreground">
               {planSummary.dueSoon + planSummary.overdue}
+            </p>
+            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+              {c.dueWarnHint}
             </p>
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -627,18 +697,26 @@ export function PrivilegedFinanceDashboard() {
           ]}
         />
       </Card3D>
+    </div>
+  )
 
-      <Card3D id="finance-accounts" className="scroll-mt-24" glow={false}>
-        <div className="mb-4">
-          <h2 className="text-sm font-bold text-card-foreground">
-            {t("Daire bazlı borç hesapları")}
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t(
-              "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir."
-            )}
-          </p>
-        </div>
+  const accountsPanel = (
+    <Card3D id="finance-accounts" className="scroll-mt-24" glow={false}>
+      <div className="mb-4">
+        <h2 className="text-sm font-bold text-card-foreground">
+          {t("Daire bazlı borç hesapları")}
+        </h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t(
+            "En yüksek borçlu daireler; bakiye, yaşlandırma, ödeme durumu ve erişim kısıtı tek tabloda listelenir."
+          )}
+        </p>
+      </div>
+      {accounts.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          {c.accountsEmpty}
+        </p>
+      ) : (
         <DataTable
           data={accounts}
           searchValue={(account) =>
@@ -698,7 +776,252 @@ export function PrivilegedFinanceDashboard() {
             },
           ]}
         />
-      </Card3D>
+      )}
+    </Card3D>
+  )
+
+  const providersPanel = (
+    <div id="accountant-finance" className="scroll-mt-24">
+      <AccountantFinancePanel />
+    </div>
+  )
+
+  const restrictionsPanel = (
+    <div id="finance-restrictions" className="scroll-mt-24">
+      <PaymentRestrictionControl />
+    </div>
+  )
+
+  const tabs: FinanceTabDef[] = [
+    {
+      id: TAB_LEDGER,
+      label: c.tabLedger,
+      icon: ReceiptText,
+      content: ledgerPanel,
+    },
+    {
+      id: TAB_ACCOUNTS,
+      label: c.tabAccounts,
+      icon: WalletCards,
+      content: accountsPanel,
+    },
+    {
+      id: TAB_PROVIDERS,
+      label: c.tabProviders,
+      icon: Coins,
+      content: providersPanel,
+    },
+    {
+      id: TAB_RESTRICTIONS,
+      label: c.tabRestrictions,
+      icon: LockKeyhole,
+      content: restrictionsPanel,
+    },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-foreground">
+          {t("Finans, Satış & Aidat")}
+        </h1>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+          {pageIntro}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <a
+          href="#finance-accounts"
+          onClick={(event) => {
+            event.preventDefault()
+            goToSection("finance-accounts", TAB_ACCOUNTS)
+          }}
+          className={kpiLinkClass}
+          aria-label={t("Toplam borç")}
+        >
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <WalletCards className="h-8 w-8 shrink-0 text-rose-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Toplam borç")}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(summary.totalDebtTry)}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        </a>
+        <a
+          href="#finance-ledger"
+          onClick={(event) => {
+            event.preventDefault()
+            goToSection("finance-ledger", TAB_LEDGER)
+          }}
+          className={kpiLinkClass}
+          aria-label={t("Aylık aidat")}
+        >
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <ReceiptText className="h-8 w-8 shrink-0 text-teal-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Aylık aidat")}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(summary.monthlyExpectedTry)}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        </a>
+        <a
+          href="#finance-cashflow"
+          onClick={(event) => {
+            event.preventDefault()
+            goToSection("finance-cashflow")
+          }}
+          className={kpiLinkClass}
+          aria-label={collectionCardLabel}
+        >
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <Banknote className="h-8 w-8 shrink-0 text-sky-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {collectionCardLabel}
+                </p>
+                <p className="text-xl font-black leading-tight break-words">
+                  {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        </a>
+        <a
+          href="#finance-restrictions"
+          onClick={(event) => {
+            event.preventDefault()
+            goToSection("finance-restrictions", TAB_RESTRICTIONS)
+          }}
+          className={kpiLinkClass}
+          aria-label={t("Kısıtlı erişim")}
+        >
+          <Card3D glow={false}>
+            <div className="flex items-center gap-3">
+              <LockKeyhole className="h-8 w-8 shrink-0 text-amber-600" />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-foreground uppercase">
+                  {t("Kısıtlı erişim")}
+                </p>
+                <AnimatedCounter
+                  value={summary.restrictedAccess}
+                  className="text-2xl font-black"
+                />
+              </div>
+            </div>
+          </Card3D>
+        </a>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card3D
+          id="finance-cashflow"
+          className="scroll-mt-24 xl:col-span-2"
+          glow={false}
+        >
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-bold text-card-foreground">
+                {t("Aylık nakit akışı")}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Tahsilat, açık borç ve servis gideri birlikte takip edilir."
+                )}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge variant="success">
+                {t("Tahsilat")}{" "}
+                {formatDualShort(latestCashFlow?.collectedTry ?? 0)}
+              </StatusBadge>
+              <a
+                href="#finance-accounts"
+                onClick={(event) => {
+                  event.preventDefault()
+                  goToSection("finance-accounts", TAB_ACCOUNTS)
+                }}
+                className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1 text-xs font-black text-foreground transition hover:bg-muted"
+              >
+                {t("Kayıtları aç")}
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+          <MonthlyCashFlowGraph locale={locale} />
+        </Card3D>
+
+        <Card3D glow={false}>
+          <h2 className="text-sm font-bold text-card-foreground">
+            {t("Borç yaşlandırma")}
+          </h2>
+          <p className="mt-1 mb-4 text-xs text-muted-foreground">
+            {t("Önceliklendirme 90+ gün ve erişim kısıtından başlar.")}
+          </p>
+          <div className="space-y-3">
+            {debtAging.map((bucket) => (
+              <div key={bucket.label}>
+                <div className="mb-1 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-foreground">
+                    {bucket.label} {t("gün")}
+                  </span>
+                  <span className="text-muted-foreground">
+                    {bucket.value > 0
+                      ? formatDualShort(bucket.value)
+                      : t("Açık kalem yok")}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary"
+                    style={{
+                      width: `${Math.min(100, Math.round((bucket.value / Math.max(summary.totalDebtTry, 1)) * 100 * 3))}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">
+                {t("Yasal takip")}
+              </p>
+              <p className="mt-1 text-xl font-black">{legalAccounts}</p>
+              <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                {legalAccounts === 0 ? c.noLegal : c.legalHint}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs text-muted-foreground">{t("Gecikmiş")}</p>
+              <p className="mt-1 text-xl font-black">{overdueAccounts}</p>
+              <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                {overdueAccounts === 0 ? c.noOverdue : c.overdueHint}
+              </p>
+            </div>
+          </div>
+        </Card3D>
+      </div>
+
+      <FinanceTabs
+        items={tabs}
+        activeId={activeTab}
+        onSelect={setActiveTab}
+        ariaLabel={c.tabsAria}
+      />
     </div>
   )
 }

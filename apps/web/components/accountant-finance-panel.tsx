@@ -234,30 +234,81 @@ export function AccountantFinancePanel() {
     formatDualFromCents(cents, currency)
   const dualTry = (cents: number) => formatDualFromCents(cents, "TRY")
 
-  const kpis: Array<{ key: string; label: string; value: string; icon: typeof WalletCards }> = [
+  // Inline, locale-resolved captions so a zero-value tile reads as an
+  // intentional empty state and the bare bank-statement count is never
+  // ambiguous. Covers all four locales without touching the shared messages.
+  const emptyCopy = {
+    open: {
+      tr: "Açık sağlayıcı faturası yok",
+      en: "No open provider invoices",
+      de: "Keine offenen Anbieterrechnungen",
+      ru: "Нет открытых счетов поставщиков",
+    }[locale],
+    credit: {
+      tr: "Bekleyen alacak bakiyesi yok",
+      en: "No credit balances outstanding",
+      de: "Keine offenen Guthaben",
+      ru: "Нет непогашенных кредитовых остатков",
+    }[locale],
+    cost: {
+      tr: "Kaydedilen maliyet yok",
+      en: "No costs recorded",
+      de: "Keine Kosten erfasst",
+      ru: "Затраты не записаны",
+    }[locale],
+    bankLabel: {
+      tr: "mutabakata hazır banka ekstresi",
+      en: "bank statements on file",
+      de: "Bankauszüge vorhanden",
+      ru: "банковских выписок в наличии",
+    }[locale],
+    bankEmpty: {
+      tr: "Yüklenen banka ekstresi yok",
+      en: "No bank statements loaded",
+      de: "Keine Bankauszüge geladen",
+      ru: "Банковские выписки не загружены",
+    }[locale],
+  }
+
+  const kpis: Array<{
+    key: string
+    label: string
+    value: string
+    icon: typeof WalletCards
+    caption?: string
+  }> = [
     {
       key: "open",
       label: t("kpi.openInvoices"),
       value: dualTry(overview.totals.openInvoicesTryCents),
       icon: ReceiptText,
+      caption:
+        overview.totals.openInvoicesTryCents === 0 ? emptyCopy.open : undefined,
     },
     {
       key: "credit",
       label: t("kpi.creditTotal"),
       value: dualTry(overview.totals.creditTryCents),
       icon: Coins,
+      caption:
+        overview.totals.creditTryCents === 0 ? emptyCopy.credit : undefined,
     },
     {
       key: "cost",
       label: t("kpi.costTotal"),
       value: dualTry(overview.totals.costTryCents),
       icon: WalletCards,
+      caption: overview.totals.costTryCents === 0 ? emptyCopy.cost : undefined,
     },
     {
       key: "bank",
       label: t("kpi.bankStatements"),
       value: String(overview.totals.bankStatementCount),
       icon: Landmark,
+      caption:
+        overview.totals.bankStatementCount === 0
+          ? emptyCopy.bankEmpty
+          : emptyCopy.bankLabel,
     },
   ]
 
@@ -311,6 +362,11 @@ export function AccountantFinancePanel() {
               <p className="mt-1 text-lg font-black leading-tight break-words text-foreground">
                 {kpi.value}
               </p>
+              {kpi.caption && (
+                <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                  {kpi.caption}
+                </p>
+              )}
             </div>
           )
         })}

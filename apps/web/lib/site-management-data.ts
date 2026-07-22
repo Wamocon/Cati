@@ -2009,11 +2009,41 @@ function documentCategoryForSource(category: string): DocumentVaultRecord["categ
   return "Uyum"
 }
 
+// Human-friendly site reference shown in the unit column for development-wide
+// documents (price lists, floor plans, legal files) that are not tied to a
+// single flat. Replaces the raw internal "NLP-AVS" import code.
+const SITE_DOCUMENT_LABEL = "New Level Premium"
+
+// Turns raw import filenames into clean, readable document titles:
+// strips leading "N) " / "N. " ordinals, repairs a Cyrillic "С" in "BLOCK",
+// drops duplicated trailing "(1)" copy markers, fixes the "BEHÇELİ" source
+// typo, normalises "545ADA1" and "1.BODRUM" spacing, and de-duplicates the two
+// meaningless "LOCATION" / "LOCATION 1" artifacts into distinct titles.
+function cleanDocumentTitle(rawTitle: string, category: string, path: string): string {
+  if (category === "location") {
+    const isImage = /\.(png|jpe?g|webp|gif)$/i.test(path)
+    return isImage ? "Konum haritası" : "Konum planı"
+  }
+
+  const cleaned = rawTitle
+    .replace(/^\s*\d+\s*[).:\-]\s*/, "")
+    .replace(/BLOСK/g, "BLOCK")
+    .replace(/(?:\s*\(\d+\))+\s*$/g, "")
+    .replace(/BEHÇELİ/g, "BAHÇELİ")
+    .replace(/(\d+)ADA(\d+)/g, "$1 ADA $2")
+    .replace(/(\d)\.(\p{L})/gu, "$1. $2")
+    .replace(/(\S)\(/g, "$1 (")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  return cleaned || rawTitle
+}
+
 export const documentVault: DocumentVaultRecord[] = newLevelPremiumDataset.documents.slice(0, 18).map((document, index) => ({
   id: `DOC-NLP-${String(index + 1).padStart(3, "0")}`,
-  flatNumber: document.category === "price_list" ? `${document.title.charAt(0)}-pricing` : "NLP-AVS",
+  flatNumber: document.category === "price_list" ? `${document.title.charAt(0)}-pricing` : SITE_DOCUMENT_LABEL,
   ownerName: "Ataberk Estate",
-  name: document.title,
+  name: cleanDocumentTitle(document.title, document.category, document.path),
   category: documentCategoryForSource(document.category),
   status: document.status === "active" ? "verified" : "pending",
   size: "Kaynak dosya",
