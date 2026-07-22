@@ -20,6 +20,16 @@ export const dashboardHomeCopy = {
       refreshError: "Veri yenilenemedi. Lütfen tekrar deneyin.",
       portfolioSource: "Portföy kaynağı",
     },
+    scope: {
+      admin: {
+        badge: "Organizasyon geneli",
+        line: "Tüm şirket portföyü, sahalar ve modüller için yönetim görünümü.",
+      },
+      manager: {
+        badge: "Saha sorumluluğu",
+        line: "Sorumlu olduğunuz sahalar için operasyon görünümü.",
+      },
+    },
     erpWorld: {
       units: "daire",
       openService: "açık servis",
@@ -27,7 +37,7 @@ export const dashboardHomeCopy = {
     },
     globalScene: {
       eyebrow: "Operasyon merkezi",
-      title: "Daire, servis, finans ve rezervasyon aynı kontrol düzleminde",
+      title: "Daire, servis, finans ve rezervasyon tek operasyon görünümünde",
       description:
         "Aktif rol: {role}. Bu görünüm yönetim ve sorumlu rolü için portföy ölçeğinde risk, iş yükü ve tahsilat sinyallerini birleştirir.",
       aiRisk: "AI risk",
@@ -48,6 +58,7 @@ export const dashboardHomeCopy = {
         scaleLow: "Sakin",
         scaleHigh: "Yoğun",
         loadUnit: "yük",
+        caption: "Skor 0-100 arası öncelik yükü; yüksek çubuk daha yoğun saat demektir.",
         peakLabel: "Pik saat",
         peakText:
           "15:00 en yoğun pencere: erişim onayı, servis SLA ve check-out kontrolü aynı anda takip edilmeli.",
@@ -338,6 +349,16 @@ export const dashboardHomeCopy = {
       refreshError: "Data could not be refreshed. Please try again.",
       portfolioSource: "Portfolio source",
     },
+    scope: {
+      admin: {
+        badge: "Organization-wide",
+        line: "Management view across the whole company portfolio, sites and modules.",
+      },
+      manager: {
+        badge: "Site responsibility",
+        line: "Operations view scoped to the sites you are responsible for.",
+      },
+    },
     erpWorld: {
       units: "units",
       openService: "open service",
@@ -345,7 +366,7 @@ export const dashboardHomeCopy = {
     },
     globalScene: {
       eyebrow: "Operations center",
-      title: "Units, service, finance and reservations in one control layer",
+      title: "Units, service, finance and reservations in one operations overview",
       description:
         "Active role: {role}. This view combines portfolio-scale risk, workload and collection signals for administration and responsible managers.",
       aiRisk: "AI risk",
@@ -366,6 +387,7 @@ export const dashboardHomeCopy = {
         scaleLow: "Calm",
         scaleHigh: "Peak",
         loadUnit: "load",
+        caption: "Score is a 0-100 priority load; taller bars mean busier hours.",
         peakLabel: "Peak window",
         peakText:
           "15:00 is the busiest window: access approvals, service SLA and check-out checks need coordinated follow-up.",
@@ -656,6 +678,16 @@ export const dashboardHomeCopy = {
       refreshError: "Daten konnten nicht aktualisiert werden. Bitte erneut versuchen.",
       portfolioSource: "Portfolioquelle",
     },
+    scope: {
+      admin: {
+        badge: "Organisationsweit",
+        line: "Managementansicht für das gesamte Unternehmensportfolio, Standorte und Module.",
+      },
+      manager: {
+        badge: "Standortverantwortung",
+        line: "Operationsansicht für die von Ihnen verantworteten Standorte.",
+      },
+    },
     erpWorld: {
       units: "Einheiten",
       openService: "offene Services",
@@ -663,7 +695,7 @@ export const dashboardHomeCopy = {
     },
     globalScene: {
       eyebrow: "Operationszentrum",
-      title: "Einheiten, Service, Finanzen und Reservierungen in einer Steuerungsebene",
+      title: "Einheiten, Service, Finanzen und Reservierungen in einer Operationsübersicht",
       description:
         "Aktive Rolle: {role}. Diese Ansicht bündelt Risiko-, Arbeitslast- und Zahlungssignale auf Portfolioebene für Administration und verantwortliche Manager.",
       aiRisk: "KI-Risiko",
@@ -684,6 +716,7 @@ export const dashboardHomeCopy = {
         scaleLow: "Ruhig",
         scaleHigh: "Spitze",
         loadUnit: "Last",
+        caption: "Der Wert ist eine Prioritätslast von 0-100; höhere Balken bedeuten geschäftigere Stunden.",
         peakLabel: "Spitzenfenster",
         peakText:
           "15:00 ist das stärkste Fenster: Zugangsgenehmigungen, Service-SLA und Check-out-Prüfungen müssen koordiniert verfolgt werden.",
@@ -974,6 +1007,16 @@ export const dashboardHomeCopy = {
       refreshError: "Не удалось обновить данные. Попробуйте еще раз.",
       portfolioSource: "Источник портфеля",
     },
+    scope: {
+      admin: {
+        badge: "По всей организации",
+        line: "Управленческий вид по всему портфелю компании, объектам и модулям.",
+      },
+      manager: {
+        badge: "Ответственность за объекты",
+        line: "Операционный вид по объектам, за которые вы отвечаете.",
+      },
+    },
     erpWorld: {
       units: "юнитов",
       openService: "открытый сервис",
@@ -981,7 +1024,7 @@ export const dashboardHomeCopy = {
     },
     globalScene: {
       eyebrow: "Операционный центр",
-      title: "Юниты, сервис, финансы и бронирования в одном контуре контроля",
+      title: "Юниты, сервис, финансы и бронирования в одном операционном обзоре",
       description:
         "Активная роль: {role}. Этот вид объединяет риски, нагрузку и сигналы по оплатам на уровне портфеля для администрации и ответственных менеджеров.",
       aiRisk: "AI-риск",
@@ -1002,6 +1045,7 @@ export const dashboardHomeCopy = {
         scaleLow: "Спокойно",
         scaleHigh: "Пик",
         loadUnit: "нагрузка",
+        caption: "Значение - это приоритетная нагрузка 0-100; более высокие столбцы означают более загруженные часы.",
         peakLabel: "Пиковое окно",
         peakText:
           "15:00 - самая загруженная зона: подтверждения доступа, SLA сервиса и check-out контроль требуют координации.",

@@ -1,7 +1,6 @@
 "use client"
 
 import { useCallback, useMemo, useState } from "react"
-import Image from "next/image"
 import { motion } from "framer-motion"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -444,223 +443,118 @@ function isFocusedRole(role: Role): role is FocusedRole {
   return role === "accountant" || role === "staff" || role === "owner" || role === "tenant"
 }
 
-function GlobalOperationsScene({
-  copy,
-  role,
-  roleLabel,
-  summary,
-}: {
-  copy: DashboardHomeCopy
-  role: Role
-  roleLabel: string
-  summary: SiteSummary
-}) {
-  const panels = [
-    {
-      href: "/dashboard/listings",
-      label: copy.globalScene.panels.liveUnits,
-      value: summary.totalFlats,
-      helper: copyText(copy.globalScene.panels.occupancy, {
-        value: summary.occupancyRate,
-      }),
-      icon: Building2,
-    },
-    {
-      href: "/dashboard/tickets",
-      label: copy.globalScene.panels.openService,
-      value: summary.openTickets,
-      helper: copyText(copy.globalScene.panels.overdue, {
-        value: summary.overdueTickets,
-      }),
-      icon: TicketCheck,
-    },
-    {
-      href: "/dashboard/compliance",
-      label: copy.globalScene.panels.accessRisk,
-      value: summary.restrictedAccess,
-      helper: copy.globalScene.panels.financeCheck,
-      icon: LockKeyhole,
-    },
-  ]
+function GlobalOperationsScene({ copy }: { copy: DashboardHomeCopy }) {
+  const workload = copy.globalScene.workload
 
   return (
-    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(340px,0.6fr)]">
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-slate-950 text-white shadow-2xl shadow-primary/[0.14]">
-        <Image
-          src="/new-level-premium/site-progress-2026.jpg"
-          alt="New Level Premium live site progress"
-          fill
-          priority
-          sizes="(min-width: 1280px) 60vw, 100vw"
-          className="object-cover opacity-48"
-        />
-        <div className="absolute inset-0 opacity-50 [background-image:linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] [background-size:52px_52px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(3,16,14,.94),rgba(13,78,74,.82)_48%,rgba(28,25,23,.82)),radial-gradient(circle_at_75%_25%,rgba(251,191,36,.16),transparent_30%)]" />
-        <motion.div
-          aria-hidden="true"
-          className="absolute left-[12%] top-[18%] h-44 w-44 rounded-[2rem] border border-white/12 bg-white/[0.045]"
-          animate={{ rotate: [0, 3, 0], y: [0, -7, 0] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          aria-hidden="true"
-          className="absolute right-[14%] top-[16%] h-32 w-56 rounded-2xl border border-emerald-200/15 bg-emerald-200/[0.06]"
-          animate={{ x: [0, 10, 0] }}
-          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <div className="absolute inset-x-8 bottom-8 hidden h-px bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent sm:block" />
-        <div className="relative z-10 flex min-h-[380px] flex-col gap-7 p-5 sm:min-h-[400px] sm:p-6 xl:min-h-[380px]">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100/70">
-                {copy.globalScene.eyebrow}
-              </p>
-              <h2 className="mt-4 max-w-2xl text-3xl font-black leading-tight sm:text-4xl 2xl:text-5xl">
-                {copy.globalScene.title}
-              </h2>
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">
-                {copyText(copy.globalScene.description, { role: roleLabel })}
-              </p>
-            </div>
-            <CommandLink
-              href="/dashboard/reports"
-              ariaLabel={copy.globalScene.aiRisk}
-              role={role}
-            >
-              <div className="rounded-xl border border-white/15 bg-white/10 p-3 text-right backdrop-blur transition-colors hover:bg-white/[0.16] sm:p-4">
-                <p className="text-xs font-black uppercase text-white/60">
-                  {copy.globalScene.aiRisk}
-                </p>
-                <p className="mt-2 text-4xl font-black">{summary.aiRiskCount}</p>
-                <p className="mt-1 text-xs text-white/65">
-                  {copy.globalScene.aiRiskHelper}
-                </p>
-              </div>
-            </CommandLink>
+    <section className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.5fr)]">
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-xl shadow-black/[0.04]">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-black uppercase text-muted-foreground">
+              {workload.eyebrow}
+            </p>
+            <h2 className="mt-1 text-lg font-black text-card-foreground">
+              {workload.title}
+            </h2>
           </div>
-
-          <div className="mt-auto grid grid-cols-3 gap-2 sm:gap-3">
-            {panels.map((panel, index) => {
-              const Icon = panel.icon
-              return (
-                <CommandLink
-                  key={panel.label}
-                  href={panel.href}
-                  ariaLabel={panel.label}
-                  role={role}
+          <TrendingUp className="h-5 w-5 text-primary" />
+        </div>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">
+          {workload.description}
+        </p>
+        <div className="mt-4 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+          <span>{workload.scaleLow}</span>
+          <span>{workload.scaleHigh}</span>
+        </div>
+        <div className="mt-3 flex gap-2">
+          <div
+            aria-hidden="true"
+            className="flex h-36 w-7 shrink-0 flex-col justify-between pb-2 text-right text-[9px] font-bold text-muted-foreground/80"
+          >
+            <span className="leading-none">100</span>
+            <span className="leading-none">50</span>
+            <span className="leading-none">0</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="relative flex h-36 items-end gap-2 border-b border-border/80 pb-2">
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 border-t border-dashed border-border/50"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-border/50"
+              />
+              {workload.bars.map((bar, index) => (
+                <motion.div
+                  key={`${bar.time}-${bar.kind}`}
+                  className="group relative z-10 flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + index * 0.04 }}
+                  title={`${bar.time} ${bar.label}: ${bar.value} / 100 ${workload.loadUnit}`}
                 >
-                  <motion.div
-                    className="min-h-full min-w-0 rounded-xl border border-white/12 bg-white/[0.08] p-3 backdrop-blur transition-colors hover:bg-white/[0.13] sm:p-4"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.12 + index * 0.07 }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-black uppercase text-white/55">
-                          {panel.label}
-                        </p>
-                        <p className="mt-2 text-3xl font-black">
-                          <AnimatedCounter value={panel.value} />
-                        </p>
-                        <p className="mt-1 text-xs text-white/65">{panel.helper}</p>
-                      </div>
-                      <Icon className="hidden h-5 w-5 shrink-0 text-emerald-200 sm:block" />
-                    </div>
-                  </motion.div>
-                </CommandLink>
-              )
-            })}
+                  <span className="text-[10px] font-black text-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                    {bar.value}
+                  </span>
+                  <span
+                    className={cn(
+                      "w-full rounded-t-lg shadow-lg transition-opacity hover:opacity-100",
+                      workloadKindClassNames[bar.kind]
+                    )}
+                    style={{ height: `${Math.max(bar.value, 6)}%` }}
+                  />
+                </motion.div>
+              ))}
+            </div>
+            <div className="mt-1 flex gap-2 text-[9px] font-bold text-muted-foreground">
+              {workload.bars.map((bar) => (
+                <span key={bar.time} className="min-w-0 flex-1 text-center">
+                  {bar.time}
+                </span>
+              ))}
+            </div>
           </div>
+        </div>
+        <p className="mt-3 text-[11px] leading-4 text-muted-foreground">
+          {workload.caption}
+        </p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {Object.entries(workload.legend).map(([kind, label]) => (
+            <div key={kind} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+              <span
+                className={cn(
+                  "h-2.5 w-2.5 rounded-full",
+                  workloadLegendClassNames[kind as WorkloadKind]
+                )}
+              />
+              <span>{label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 rounded-xl border border-border bg-muted/35 p-3">
+          <p className="text-xs font-black uppercase text-card-foreground">
+            {workload.peakLabel}
+          </p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            {workload.peakText}
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xl shadow-black/[0.04]">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-black uppercase text-muted-foreground">
-                {copy.globalScene.workload.eyebrow}
-              </p>
-              <h2 className="mt-1 text-lg font-black text-card-foreground">
-                {copy.globalScene.workload.title}
-              </h2>
-            </div>
-            <TrendingUp className="h-5 w-5 text-primary" />
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-xl shadow-black/[0.04]">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Network className="h-5 w-5" />
           </div>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {copy.globalScene.workload.description}
-          </p>
-          <div className="mt-4 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
-            <span>{copy.globalScene.workload.scaleLow}</span>
-            <span>{copy.globalScene.workload.scaleHigh}</span>
-          </div>
-          <div className="mt-2 flex h-36 items-end gap-2 border-b border-border/80 pb-2">
-            {copy.globalScene.workload.bars.map((bar, index) => (
-              <motion.div
-                key={`${bar.time}-${bar.kind}`}
-                className="group flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + index * 0.04 }}
-                title={`${bar.time} ${bar.label}: ${bar.value}% ${copy.globalScene.workload.loadUnit}`}
-              >
-                <span className="opacity-0 text-[10px] font-black text-foreground transition-opacity group-hover:opacity-100">
-                  {bar.value}%
-                </span>
-                <span
-                  className={cn(
-                    "w-full rounded-t-lg shadow-lg transition-opacity hover:opacity-100",
-                    workloadKindClassNames[bar.kind]
-                  )}
-                  style={{ height: `${Math.max(bar.value, 18)}%` }}
-                />
-              </motion.div>
-            ))}
-          </div>
-          <div className="mt-2 grid grid-cols-4 gap-1 text-[10px] font-bold text-muted-foreground">
-            {copy.globalScene.workload.bars
-              .filter((_, index) => index % 2 === 0)
-              .map((bar) => (
-                <span key={bar.time}>{bar.time}</span>
-              ))}
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {Object.entries(copy.globalScene.workload.legend).map(([kind, label]) => (
-              <div key={kind} className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 rounded-full",
-                    workloadLegendClassNames[kind as WorkloadKind]
-                  )}
-                />
-                <span>{label}</span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 rounded-xl border border-border bg-muted/35 p-3">
-            <p className="text-xs font-black uppercase text-card-foreground">
-              {copy.globalScene.workload.peakLabel}
+          <div>
+            <p className="text-sm font-black text-card-foreground">
+              {copy.globalScene.rbacTitle}
             </p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {copy.globalScene.workload.peakText}
+            <p className="text-xs leading-5 text-muted-foreground">
+              {copy.globalScene.rbacDescription}
             </p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xl shadow-black/[0.04]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Network className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-black text-card-foreground">
-                {copy.globalScene.rbacTitle}
-              </p>
-              <p className="text-xs leading-5 text-muted-foreground">
-                {copy.globalScene.rbacDescription}
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -1067,8 +961,12 @@ function OperationsDashboard({
     [fallbackBlocks, phase4]
   )
   const statusDistribution = useMemo(
-    () => mapLiveDistribution(phase4, fallbackStatusDistribution),
-    [fallbackStatusDistribution, phase4]
+    () =>
+      mapLiveDistribution(phase4, fallbackStatusDistribution).map((slice) => ({
+        ...slice,
+        label: tRecord(slice.label),
+      })),
+    [fallbackStatusDistribution, phase4, tRecord]
   )
   const criticalTickets = useMemo(
     () =>
@@ -1163,6 +1061,13 @@ function OperationsDashboard({
     },
   ]
 
+  // Manager and admin share the same operations surface, but their remit differs:
+  // admin owns the whole organization (company scope), a manager owns the sites
+  // they are responsible for (site scope). Surface that distinction in the header
+  // so the two roles no longer read as byte-identical.
+  const isManager = user.role === "manager"
+  const scopeCopy = isManager ? copy.scope.manager : copy.scope.admin
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -1176,6 +1081,17 @@ function OperationsDashboard({
               units: summary.totalFlats,
             })}
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.08em] text-primary">
+              {isManager ? (
+                <Building2 className="h-3.5 w-3.5" />
+              ) : (
+                <Network className="h-3.5 w-3.5" />
+              )}
+              {scopeCopy.badge}
+            </span>
+            <span className="text-xs text-muted-foreground">{scopeCopy.line}</span>
+          </div>
           {requestState === "error" && (
             <p className="mt-3 text-xs font-semibold text-rose-600">
               {copy.hero.refreshError}
@@ -1210,7 +1126,7 @@ function OperationsDashboard({
         summary={summary}
       />
 
-      <GlobalOperationsScene copy={copy} role={user.role} roleLabel={roleLabel} summary={summary} />
+      <GlobalOperationsScene copy={copy} />
 
       <section className="space-y-3">
         <div>

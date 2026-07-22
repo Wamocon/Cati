@@ -69,9 +69,9 @@ interface LiveErpSimulationProps {
 
 const simulationCopy = {
   tr: {
-    aria: "Canlı ERP operasyon simülasyonu",
-    eyebrow: "Canlı operasyon simülasyonu",
-    controlPlane: "kontrol düzlemi",
+    aria: "Canlı ERP operasyonları",
+    eyebrow: "Canlı operasyon",
+    controlPlane: "operasyon görünümü",
     infoLabel: "Canlı simülasyon bilgisi",
     infoText:
       "Bu sahne daire, finans, servis ve erişim verilerini tek canlı operasyon görünümünde birleştirir.",
@@ -97,7 +97,7 @@ const simulationCopy = {
     selectedBlock: "Seçili blok",
     occupied: "dolu",
     blocked: "blokeli",
-    eventRail: "Canlı olay akışı",
+    eventRail: "Canlı aktivite",
     empty: "İlk canlı aksiyondan sonra olay akışı burada görünür.",
     actions: {
       listings: "Daire matrisini aç",
@@ -134,9 +134,9 @@ const simulationCopy = {
     },
   },
   en: {
-    aria: "Live ERP operations simulation",
-    eyebrow: "Live operation simulation",
-    controlPlane: "control plane",
+    aria: "Live ERP operations",
+    eyebrow: "Live operations",
+    controlPlane: "operations overview",
     infoLabel: "Live simulation information",
     infoText:
       "This scene combines unit, finance, service and access data in one live operations view.",
@@ -162,7 +162,7 @@ const simulationCopy = {
     selectedBlock: "Selected block",
     occupied: "occupied",
     blocked: "blocked",
-    eventRail: "Realtime event rail",
+    eventRail: "Live activity",
     empty: "Event stream appears here after the first live action.",
     actions: {
       listings: "Open unit matrix",
@@ -199,9 +199,9 @@ const simulationCopy = {
     },
   },
   de: {
-    aria: "Live-ERP-Operationssimulation",
-    eyebrow: "Live-Operationssimulation",
-    controlPlane: "Steuerungsebene",
+    aria: "Live-ERP-Operationen",
+    eyebrow: "Live-Betrieb",
+    controlPlane: "Operationsübersicht",
     infoLabel: "Information zur Live-Simulation",
     infoText:
       "Diese Szene bündelt Einheiten-, Finanz-, Service- und Zugangsdaten in einer Live-Operationsansicht.",
@@ -227,7 +227,7 @@ const simulationCopy = {
     selectedBlock: "Ausgewählter Block",
     occupied: "belegt",
     blocked: "blockiert",
-    eventRail: "Realtime-Ereignisstrom",
+    eventRail: "Live-Aktivität",
     empty: "Der Ereignisstrom erscheint nach der ersten Live-Aktion.",
     actions: {
       listings: "Einheitenmatrix öffnen",
@@ -264,9 +264,9 @@ const simulationCopy = {
     },
   },
   ru: {
-    aria: "Live ERP операционная симуляция",
-    eyebrow: "Live-симуляция операций",
-    controlPlane: "контур управления",
+    aria: "Live ERP операции",
+    eyebrow: "Живые операции",
+    controlPlane: "обзор операций",
     infoLabel: "Информация о live-симуляции",
     infoText:
       "Сцена объединяет данные по юнитам, финансам, сервису и доступу в одном live-виде операций.",
@@ -292,7 +292,7 @@ const simulationCopy = {
     selectedBlock: "Выбранный блок",
     occupied: "занято",
     blocked: "заблокировано",
-    eventRail: "Realtime лента событий",
+    eventRail: "Живая активность",
     empty: "Лента событий появится после первого live-действия.",
     actions: {
       listings: "Открыть матрицу юнитов",
@@ -778,22 +778,22 @@ export function LiveErpSimulation({
                     {copy.risk} {blockRisk(selectedBlock, summary.totalDebtTry)}%
                   </StatusBadge>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                  <div className="rounded-xl bg-slate-100 p-3">
-                    <p className="font-black text-slate-950">{selectedBlock.total}</p>
-                    <p className="text-slate-500">{copy.units.toLowerCase()}</p>
+                <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                  <div className="min-w-0 rounded-xl bg-slate-100 p-3">
+                    <p className="whitespace-nowrap font-black text-slate-950">{selectedBlock.total}</p>
+                    <p className="whitespace-nowrap text-slate-500">{copy.units.toLowerCase()}</p>
                   </div>
-                  <div className="rounded-xl bg-teal-50 p-3">
-                    <p className="font-black text-slate-950">{selectedBlock.occupied}</p>
-                    <p className="text-slate-500">{copy.occupied}</p>
+                  <div className="min-w-0 rounded-xl bg-teal-50 p-3">
+                    <p className="whitespace-nowrap font-black text-slate-950">{selectedBlock.occupied}</p>
+                    <p className="whitespace-nowrap text-slate-500">{copy.occupied}</p>
                   </div>
-                  <div className="rounded-xl bg-rose-50 p-3">
-                    <p className="font-black text-slate-950">{selectedBlock.blocked}</p>
-                    <p className="text-slate-500">{copy.blocked}</p>
+                  <div className="min-w-0 rounded-xl bg-rose-50 p-3">
+                    <p className="whitespace-nowrap font-black text-slate-950">{selectedBlock.blocked}</p>
+                    <p className="whitespace-nowrap text-slate-500">{copy.blocked}</p>
                   </div>
-                  <div className="rounded-xl bg-amber-50 p-3">
-                    <p className="font-black text-slate-950">{formatDual(selectedBlock.debtTry, { short: true })}</p>
-                    <p className="text-slate-500">{copy.debt.toLowerCase()}</p>
+                  <div className="min-w-0 rounded-xl bg-amber-50 p-3">
+                    <p className="whitespace-nowrap font-black text-slate-950">{formatDual(selectedBlock.debtTry, { short: true })}</p>
+                    <p className="whitespace-nowrap text-slate-500">{copy.debt.toLowerCase()}</p>
                   </div>
                 </div>
               </div>

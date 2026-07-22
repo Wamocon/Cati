@@ -144,11 +144,16 @@ function localUnits(role: "owner" | "tenant") {
 }
 
 async function localAccountantSnapshot(): Promise<RoleDashboardSnapshot> {
-  const accounts = getDebtAccounts()
-  const overdue = accounts.filter(
-    (account) =>
-      account.paymentStatus === "overdue" || account.paymentStatus === "legal"
+  // "Open" is every unit that still carries an outstanding balance (dues not
+  // yet settled); "overdue" is the genuinely past-due subset (overdue + legal
+  // aging). getDebtAccounts() only returns the top ~32 debtors — which are all
+  // already overdue/legal — so it must NOT double as the "open" population, or
+  // the open and overdue tiles collapse into the same figure.
+  const openAccounts = flats.filter((flat) => flat.balanceTry > 0)
+  const overdueAccounts = openAccounts.filter(
+    (flat) => flat.paymentStatus === "overdue" || flat.paymentStatus === "legal"
   )
+  const priorityAccounts = getDebtAccounts()
 
   return {
     contractVersion: ROLE_DASHBOARD_CONTRACT_VERSION,
@@ -160,8 +165,8 @@ async function localAccountantSnapshot(): Promise<RoleDashboardSnapshot> {
     metrics: [
       {
         key: "openBalance",
-        value: accounts.reduce(
-          (sum, account) => sum + account.balanceTry * 100,
+        value: openAccounts.reduce(
+          (sum, flat) => sum + flat.balanceTry * 100,
           0
         ),
         format: "currency",
@@ -170,8 +175,8 @@ async function localAccountantSnapshot(): Promise<RoleDashboardSnapshot> {
       },
       {
         key: "overdueBalance",
-        value: overdue.reduce(
-          (sum, account) => sum + account.balanceTry * 100,
+        value: overdueAccounts.reduce(
+          (sum, flat) => sum + flat.balanceTry * 100,
           0
         ),
         format: "currency",
@@ -180,19 +185,19 @@ async function localAccountantSnapshot(): Promise<RoleDashboardSnapshot> {
       },
       {
         key: "openEntries",
-        value: accounts.length,
+        value: openAccounts.length,
         format: "count",
         href: "/dashboard/finance",
       },
       {
         key: "overdueEntries",
-        value: overdue.length,
+        value: overdueAccounts.length,
         format: "count",
         href: "/dashboard/reports",
       },
     ],
     units: [],
-    priorityItems: accounts.slice(0, 8).map((account) => ({
+    priorityItems: priorityAccounts.slice(0, 8).map((account) => ({
       id: `qa-finance-${account.flatId}`,
       kind: "finance",
       title: account.flatNumber,

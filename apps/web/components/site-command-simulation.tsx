@@ -56,48 +56,14 @@ export function SiteCommandSimulation({
       <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px),linear-gradient(90deg,color-mix(in_srgb,var(--border)_70%,transparent)_1px,transparent_1px)] [background-size:36px_36px]" />
       <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-stretch">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
-                {t("Operasyon risk haritası")}
-              </p>
-              <h2 className="mt-3 text-lg font-black text-foreground md:text-xl">{t("Blok, borç, servis ve erişim risk haritası")}</h2>
-              <p className="mt-1 max-w-2xl text-xs text-muted-foreground md:text-sm">
-                {t("8 blok ve 769 daire; borç, servis, erişim ve SLA riskleri tek operasyon görünümünde okunur.")}
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              <Link
-                href="/dashboard/compliance"
-                aria-label={t("Erişim riski")}
-                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
-                  <p className="font-black text-foreground">{summary.restrictedAccess}</p>
-                  <p className="text-muted-foreground">{t("kısıt")}</p>
-                </div>
-              </Link>
-              <Link
-                href="/dashboard/tickets"
-                aria-label={t("SLA dışı")}
-                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
-                  <p className="font-black text-foreground">{summary.overdueTickets}</p>
-                  <p className="text-muted-foreground">SLA</p>
-                </div>
-              </Link>
-              <Link
-                href="/dashboard/finance"
-                aria-label={t("Toplam borç")}
-                className="block rounded-xl outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                <div className="rounded-xl border border-border bg-card/70 px-3 py-2 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
-                  <p className="font-black text-foreground">{formatDual(summary.totalDebtTry, { short: true })}</p>
-                  <p className="text-muted-foreground">{t("borç")}</p>
-                </div>
-              </Link>
-            </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+              {t("Operasyon risk haritası")}
+            </p>
+            <h2 className="mt-3 text-lg font-black text-foreground md:text-xl">{t("Blok, borç, servis ve erişim risk haritası")}</h2>
+            <p className="mt-1 max-w-2xl text-xs text-muted-foreground md:text-sm">
+              {t("8 blok ve 769 daire; borç, servis, erişim ve SLA riskleri tek operasyon görünümünde okunur.")}
+            </p>
           </div>
 
           <Link

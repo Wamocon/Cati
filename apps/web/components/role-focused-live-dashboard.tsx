@@ -20,6 +20,7 @@ import {
 import { Link } from "@/app/navigation"
 import { StatusBadge } from "@/components/status-badge"
 import { formatDualFromCents } from "@/lib/currency"
+import { localizeDashboardText } from "@/lib/operational-copy"
 import type {
   FocusedDashboardRole,
   RoleDashboardItem,
@@ -361,6 +362,29 @@ function readableStatus(value: string, locale: DashboardLocale) {
   return translated[locale][value] ?? value.replaceAll("_", " ")
 }
 
+const residentStatusOverrides: Record<DashboardLocale, Record<string, string>> = {
+  en: { blocked: "On hold" },
+  tr: { blocked: "Beklemede" },
+  de: { blocked: "Pausiert" },
+  ru: { blocked: "На удержании" },
+}
+
+// Owners and tenants only ever see their own unit; a raw "Blocked" reads as
+// alarming and unclear, so soften it to "on hold" wording while every other
+// occupancy status keeps its normal translation.
+function residentUnitStatus(status: string, locale: DashboardLocale) {
+  return residentStatusOverrides[locale][status] ?? readableStatus(status, locale)
+}
+
+// Priority-item titles and context are Turkish seed values (ticket subjects,
+// service/document categories, suggested finance actions). Resolve them through
+// the operational-copy dictionary first, then the status translator, then raw.
+function localizeItemText(value: string, locale: DashboardLocale) {
+  const fromDictionary = localizeDashboardText(value, locale)
+  if (fromDictionary && fromDictionary !== value) return fromDictionary
+  return readableStatus(value, locale)
+}
+
 function statusVariant(status: string) {
   if (/urgent|overdue|error|rejected|blocked/i.test(status)) return "danger" as const
   if (/pending|review|waiting|scheduled/i.test(status)) return "warning" as const
@@ -613,7 +637,7 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
                     <Building2 className="h-3.5 w-3.5 text-primary" />
                     {unit.unitNo}
                     <span className="font-medium text-muted-foreground">
-                      {readableStatus(unit.occupancyStatus, locale)}
+                      {residentUnitStatus(unit.occupancyStatus, locale)}
                     </span>
                   </span>
                 ))}
@@ -645,7 +669,8 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-start justify-between gap-2">
                         <span className="min-w-0 break-words text-sm font-bold text-foreground">
-                          {item.unitNo ? `${item.unitNo} · ` : ""}{item.title}
+                          {item.unitNo && item.unitNo !== item.title ? `${item.unitNo} · ` : ""}
+                          {localizeItemText(item.title, locale)}
                         </span>
                         <StatusBadge variant={statusVariant(item.status)}>
                           {readableStatus(item.status, locale)}
@@ -653,7 +678,7 @@ export function RoleFocusedLiveDashboard({ role }: { role: FocusedDashboardRole 
                       </span>
                       {item.context ? (
                         <span className="mt-1 block break-words text-xs leading-5 text-muted-foreground">
-                          {readableStatus(item.context, locale)}
+                          {localizeItemText(item.context, locale)}
                         </span>
                       ) : null}
                     </span>
