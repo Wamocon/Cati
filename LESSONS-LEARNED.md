@@ -45,6 +45,15 @@
    correct text. Distinguish drift (update the test) from a real regression (fix the
    code) — read the failure, don't blanket-update tests to pass.
 
+6a. **Never run a file-editing agent while a DEV-mode e2e is running.** The Next dev
+   server hot-reloads on every file save, which recompiles mid-test and makes
+   timing-sensitive tests (idempotency / exactly-once / AI-approval, especially on
+   mobile-chrome) intermittently fail — a contaminated signal, not a real
+   regression. Either sequence them (edit, THEN test) or run e2e in
+   `PLAYWRIGHT_SERVER_MODE=production` (`next start` serves a frozen build and
+   ignores file changes). The authoritative flake check is always a production-mode
+   run with no concurrent edits.
+
 ## Supabase / Postgres / security (this is where real bugs hid)
 
 7. **Supabase default privileges GRANT DML + function EXECUTE to `authenticated`.**
