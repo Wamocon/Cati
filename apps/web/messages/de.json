@@ -885,7 +885,7 @@
     "readOnlyBadge": "Nur Manager-Ansicht",
     "subtitle": "Erfassen Sie eine als eingegangen gemeldete Zahlung für die genaue Einheit und das Eigentümerkonto. Die Buchung landet in einem ausgeglichenen Verrechnungskonto und bleibt bis zur separaten Bankprüfung unabgestimmt.",
     "liveTruth": "Live-Datenbankeintrag; keine Bestätigung durch Bank oder Kartenanbieter.",
-    "demoTruth": "Persistenter lokaler QA-Eintrag; keine externe Bank oder Zahlungsanbindung.",
+    "demoTruth": "Manueller Eintrag; die automatische Bank-/Zahlungsanbieter-Anbindung ist noch nicht verbunden.",
     "refreshing": "Wird aktualisiert",
     "refresh": "Aktualisieren",
     "postedCount": "Aktive manuelle Eingänge",

@@ -32,7 +32,10 @@ export default async function DashboardLayout({
         <DashboardSidebar />
         <div className="min-w-0 flex-1">
           <DashboardTopbar />
-          <main id="main" className="min-w-0 overflow-x-hidden p-4 pb-28 md:p-6 md:pb-10 lg:p-8 lg:pb-12">
+          {/* pb-* keeps a clear gap below the last row so the fixed AI-assistant FAB
+              (bottom-right, reaches ~80px in from each edge at sm+) never rests on
+              interactive content when the page is scrolled to the bottom. */}
+          <main id="main" className="min-w-0 overflow-x-hidden p-4 pb-28 md:p-6 md:pb-24 lg:p-8 lg:pb-24">
             <DashboardCommandRibbon />
             <DashboardRouteGuard>{children}</DashboardRouteGuard>
           </main>

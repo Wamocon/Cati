@@ -160,7 +160,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     ageKids: "Çocuklar için",
     status: { booked: "Rezerve", cancelled: "İptal", completed: "Tamamlandı" },
     categories: {
-      wellness: "Wellness",
+      wellness: "Sağlık",
       leisure: "Keyif",
       transport: "Ulaşım",
       sports: "Spor",

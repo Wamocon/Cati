@@ -880,7 +880,7 @@
     "readOnlyBadge": "Manager view only",
     "subtitle": "Record a payment reported as received against the exact unit and owner account. The entry is posted to a balanced clearing journal and stays unreconciled until a separate bank review confirms it.",
     "liveTruth": "Live database record; this is not bank or card-provider confirmation.",
-    "demoTruth": "Persistent local QA record; no external bank or payment provider is connected.",
+    "demoTruth": "Manual record; automated bank/payment-provider integration is not connected yet.",
     "refreshing": "Refreshing",
     "refresh": "Refresh",
     "postedCount": "Active manual receipts",

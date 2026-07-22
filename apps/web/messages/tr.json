@@ -880,7 +880,7 @@
     "readOnlyBadge": "Yönetici salt okunur görünümü",
     "subtitle": "Alındığı bildirilen ödemeyi doğru daire ve malik hesabına kaydedin. Kayıt dengeli bir geçici hesaba işlenir ve ayrı banka kontrolü tamamlanana kadar mutabakatsız kalır.",
     "liveTruth": "Canlı veritabanı kaydıdır; banka veya kart sağlayıcısı onayı değildir.",
-    "demoTruth": "Kalıcı yerel QA kaydıdır; harici banka veya ödeme sağlayıcısı bağlı değildir.",
+    "demoTruth": "Manuel kayıttır; otomatik banka/ödeme sağlayıcısı entegrasyonu henüz bağlı değildir.",
     "refreshing": "Yenileniyor",
     "refresh": "Yenile",
     "postedCount": "Aktif manuel tahsilat",

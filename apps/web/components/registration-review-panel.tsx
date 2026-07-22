@@ -28,7 +28,7 @@ const copy = {
   en: {
     title: "Registration review",
     intro: "A live queue from public request to scoped activation. Managers recommend; administrators alone grant or reject access.",
-    live: "Live database",
+    live: "Live data",
     refresh: "Refresh",
     search: "Search name, reference or unit",
     all: "All",
@@ -65,7 +65,7 @@ const copy = {
   tr: {
     title: "Kayıt inceleme",
     intro: "Genel talepten kapsamlı aktivasyona canlı kuyruk. Sorumlu önerir; erişimi yalnızca yönetici onaylar veya reddeder.",
-    live: "Canlı veritabanı",
+    live: "Canlı veriler",
     refresh: "Yenile",
     search: "Ad, referans veya daire ara",
     all: "Tümü",
@@ -102,7 +102,7 @@ const copy = {
   de: {
     title: "Registrierungsprüfung",
     intro: "Live-Warteschlange von der öffentlichen Anfrage bis zur begrenzten Aktivierung. Manager empfehlen; nur Admins geben Zugang frei.",
-    live: "Live-Datenbank",
+    live: "Live-Daten",
     refresh: "Aktualisieren",
     search: "Name, Referenz oder Einheit suchen",
     all: "Alle",
@@ -139,7 +139,7 @@ const copy = {
   ru: {
     title: "Проверка регистраций",
     intro: "Живая очередь от публичной заявки до ограниченной активации. Менеджер рекомендует; доступ выдаёт только администратор.",
-    live: "Живая база данных",
+    live: "Данные в реальном времени",
     refresh: "Обновить",
     search: "Поиск по имени, номеру или квартире",
     all: "Все",

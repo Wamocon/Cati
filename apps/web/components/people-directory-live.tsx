@@ -73,6 +73,20 @@ function staffRoleLabel(role: string) {
   return "Personel"
 }
 
+// Resident-connection status shown on the "Sakin bağlantıları" cards. Returns a
+// Turkish business label (kept enum-driven); the wrapping localizer then renders
+// the label in the active locale. Only the DISPLAY is localized, not the enum.
+function residentStatusLabel(status: string) {
+  if (status === "active") return "Aktif"
+  if (status === "inactive") return "Pasif"
+  if (status === "blocked") return "Bloke"
+  if (status === "restricted") return "Kısıtlı"
+  if (status === "suspended") return "Askıda"
+  if (status === "pending") return "Bekliyor"
+  if (status === "verified") return "Doğrulandı"
+  return status || "Bilinmiyor"
+}
+
 function staffLine(member: PeopleDirectoryStaffMember, t: (value: string) => string) {
   return [t(member.team), member.phone ?? t("telefon yok"), member.language.toUpperCase()].join(" / ")
 }
@@ -305,7 +319,7 @@ export function PeopleDirectoryLive() {
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <StatusBadge variant={statusVariant(resident.status)}>
-                  {t(resident.status)}
+                  {t(residentStatusLabel(resident.status))}
                 </StatusBadge>
                 <span className="font-bold text-muted-foreground">{t("Risk")} {resident.riskScore}</span>
               </div>

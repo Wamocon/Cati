@@ -273,6 +273,8 @@ function readableStatus(value: string, locale: DashboardLocale) {
       evidence_needed: "Evidence needed",
       manager_review: "Manager review",
       finance_ready: "Finance ready",
+      waiting_payment: "Awaiting payment",
+      waiting_approval: "Awaiting approval",
     },
     tr: {
       active: "Aktif",
@@ -301,6 +303,8 @@ function readableStatus(value: string, locale: DashboardLocale) {
       evidence_needed: "Kanıt gerekli",
       manager_review: "Yönetici incelemesi",
       finance_ready: "Finansa hazır",
+      waiting_payment: "Ödeme bekliyor",
+      waiting_approval: "Onay bekliyor",
     },
     de: {
       active: "Aktiv",
@@ -329,6 +333,8 @@ function readableStatus(value: string, locale: DashboardLocale) {
       evidence_needed: "Nachweis nötig",
       manager_review: "Managerprüfung",
       finance_ready: "Finanzbereit",
+      waiting_payment: "Zahlung ausstehend",
+      waiting_approval: "Genehmigung ausstehend",
     },
     ru: {
       active: "Активно",
@@ -357,6 +363,8 @@ function readableStatus(value: string, locale: DashboardLocale) {
       evidence_needed: "Нужны доказательства",
       manager_review: "Проверка менеджера",
       finance_ready: "Готово для финансов",
+      waiting_payment: "Ожидает оплаты",
+      waiting_approval: "Ожидает одобрения",
     },
   }
   return translated[locale][value] ?? value.replaceAll("_", " ")

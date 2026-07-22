@@ -48,7 +48,6 @@ import {
   derivePaymentState,
   isTicketCommand,
   primaryStateFromPersistedStatus,
-  ticketCommandLabels,
   ticketPrimaryStateLabels,
   ticketSeverityForPriority,
   type TicketApprovalState,
@@ -435,17 +434,17 @@ const workflowDisplayCopy = {
 
 const ticketHistoryCopy = {
   tr: {
-    title: "Talep gecmisi",
+    title: "Talep geçmişi",
     description:
-      "Talebinizin yonetim ve saha ekibiyle ilerleyisini burada takip edin.",
-    empty: "Talep alindi. Yeni bir gelisme oldugunda burada gorunecek.",
-    created: "Talep alindi",
+      "Talebinizin yönetim ve saha ekibiyle ilerleyişini burada takip edin.",
+    empty: "Talep alındı. Yeni bir gelişme olduğunda burada görünecek.",
+    created: "Talep alındı",
     assigned: "Sorumlu ekip belirlendi",
-    approval: "Malik karari kaydedildi",
-    details: "Talep bilgileri guncellendi",
-    workflow: "Talep bir sonraki asamaya ilerledi",
-    status: "Talep durumu guncellendi",
-    updated: "Talep guncellendi",
+    approval: "Malik kararı kaydedildi",
+    details: "Talep bilgileri güncellendi",
+    workflow: "Talep bir sonraki aşamaya ilerledi",
+    status: "Talep durumu güncellendi",
+    updated: "Talep güncellendi",
   },
   en: {
     title: "Request history",
@@ -823,6 +822,89 @@ function dispatchStateLabel(
   return (table as Record<string, string>)[state] ?? table.pending
 }
 
+// Localized ticket-workflow command (transition button) labels. The shared
+// ticketCommandLabels map in lib/ticket-workflow.ts is English-only, so rendering
+// it raw leaked untranslated buttons (e.g. "Cancel ticket") into the Turkish UI.
+// The command enum stays authoritative in logic; only the button text is
+// localized here (kept inline in 4 locales like the sibling copy objects).
+const ticketCommandLabelCopy: Record<
+  keyof typeof ticketDispatchStateCopy,
+  Record<TicketCommand, string>
+> = {
+  tr: {
+    triage: "Triyaja başla",
+    accept: "Talebi kabul et",
+    assign: "Sorumlu ata",
+    acknowledge: "Atamayı teyit et",
+    start_work: "İşe başla",
+    wait_for_resident: "Sakini bekle",
+    resume_work: "İşe devam et",
+    submit_for_review: "Yönetici onayına gönder",
+    approve_resolution: "Çözümü onayla",
+    request_rework: "Yeniden çalışma iste",
+    close: "Talebi kapat",
+    reopen: "Talebi yeniden aç",
+    cancel: "Talebi iptal et",
+    request_owner_approval: "Malik onayı iste",
+    approve_owner_request: "Malik talebini onayla",
+    reject_owner_request: "Malik talebini reddet",
+  },
+  en: {
+    triage: "Start triage",
+    accept: "Accept request",
+    assign: "Assign responder",
+    acknowledge: "Acknowledge assignment",
+    start_work: "Start work",
+    wait_for_resident: "Wait for resident",
+    resume_work: "Resume work",
+    submit_for_review: "Submit for manager review",
+    approve_resolution: "Approve resolution",
+    request_rework: "Request rework",
+    close: "Close ticket",
+    reopen: "Reopen ticket",
+    cancel: "Cancel ticket",
+    request_owner_approval: "Request owner approval",
+    approve_owner_request: "Approve owner request",
+    reject_owner_request: "Reject owner request",
+  },
+  de: {
+    triage: "Triage starten",
+    accept: "Anfrage annehmen",
+    assign: "Verantwortlichen zuweisen",
+    acknowledge: "Zuweisung bestätigen",
+    start_work: "Arbeit beginnen",
+    wait_for_resident: "Auf Bewohner warten",
+    resume_work: "Arbeit fortsetzen",
+    submit_for_review: "Zur Managerprüfung senden",
+    approve_resolution: "Lösung genehmigen",
+    request_rework: "Nacharbeit anfordern",
+    close: "Ticket schließen",
+    reopen: "Ticket erneut öffnen",
+    cancel: "Ticket stornieren",
+    request_owner_approval: "Eigentümerfreigabe anfordern",
+    approve_owner_request: "Eigentümeranfrage genehmigen",
+    reject_owner_request: "Eigentümeranfrage ablehnen",
+  },
+  ru: {
+    triage: "Начать сортировку",
+    accept: "Принять заявку",
+    assign: "Назначить исполнителя",
+    acknowledge: "Подтвердить назначение",
+    start_work: "Начать работу",
+    wait_for_resident: "Ожидать жильца",
+    resume_work: "Возобновить работу",
+    submit_for_review: "Отправить на проверку менеджеру",
+    approve_resolution: "Одобрить решение",
+    request_rework: "Запросить доработку",
+    close: "Закрыть заявку",
+    reopen: "Открыть заявку снова",
+    cancel: "Отменить заявку",
+    request_owner_approval: "Запросить одобрение владельца",
+    approve_owner_request: "Одобрить запрос владельца",
+    reject_owner_request: "Отклонить запрос владельца",
+  },
+}
+
 // Human "assigned to" label. Avoids the operational-copy mapping where the
 // Turkish "Sorumlu" resolves to "Owner" in English and mislabels the assignee.
 const assignedToCopy = {
@@ -894,10 +976,45 @@ const clientRegisterCopy = {
   },
 } as const
 
+// Staff field-step (checklist) labels: the local seed stores these ASCII-stripped
+// (e.g. "Access log kontrolu"), which leaks broken Turkish into the staff task
+// panel. This map restores proper Turkish for the lead language; en/de/ru keep
+// resolving through the shared business-copy dictionary keyed on the raw value.
+const staffChecklistTrLabels: Record<string, string> = {
+  "Sorunu yerinde dogrula": "Sorunu yerinde doğrula",
+  "Oncesi fotograf yukle": "Öncesi fotoğraf yükle",
+  "Parca/islem notunu gir": "Parça/işlem notunu gir",
+  "Kapanis kaniti yukle": "Kapanış kanıtı yükle",
+  "Kimlik/yetki kontrolu": "Kimlik/yetki kontrolü",
+  "Kart/QR/plaka islem kaydi": "Kart/QR/plaka işlem kaydı",
+  "Access log kontrolu": "Erişim kaydı kontrolü",
+  "Kapanis onayi": "Kapanış onayı",
+  "Daire giris kontrolu": "Daire giriş kontrolü",
+  "Temizlik checklist": "Temizlik kontrol listesi",
+  "Fotograf kaniti": "Fotoğraf kanıtı",
+  "Hasar alanini isaretle": "Hasar alanını işaretle",
+  "Yonetici onayi al": "Yönetici onayı al",
+  "Kapanis raporu": "Kapanış raporu",
+  "Varis saatini dogrula": "Varış saatini doğrula",
+  "Tedarikciyi ata": "Tedarikçiyi ata",
+  "Misafir bildirimini gonder": "Misafir bildirimini gönder",
+  "Tamamlandi onayi": "Tamamlandı onayı",
+  "Yetki kapsamını dogrula": "Yetki kapsamını doğrula",
+  "Randevu uygunlugunu kontrol et": "Randevu uygunluğunu kontrol et",
+  "Bildirim gonder": "Bildirim gönder",
+  "Talebi dogrula": "Talebi doğrula",
+  "Medya kaniti yukle": "Medya kanıtı yükle",
+  "Kapanis onayi al": "Kapanış onayı al",
+}
+
 export default function TicketsPage() {
   const user = useUser()
   const locale = resolveDashboardLocale(useLocale())
   const t = (value: string) => localizeDashboardTextPart(value, locale)
+  // Staff field steps: restore proper Turkish diacritics for the lead language;
+  // other locales keep resolving the raw seed value through the dictionary.
+  const checklistLabel = (item: string) =>
+    locale === "tr" ? (staffChecklistTrLabels[item] ?? t(item)) : t(item)
   const workflowDisplay = workflowDisplayCopy[locale]
   const portfolioDisplayName = localizeOperationalValue(
     clientProfile.activePortfolio,
@@ -1308,14 +1425,16 @@ export default function TicketsPage() {
     priorityQueue.length > 0 ? priorityQueue : visibleTickets.slice(0, 5)
   const ticketStatusData = [
     {
-      label: "open",
+      // Donut legend labels match the service-status wording used in the tables
+      // on this page ("Açık"/"Kapandı"); the localizer renders the active locale.
+      label: t("Açık"),
       value: visibleTickets.filter(
         (ticket) => ticket.status !== "closed" && ticket.status !== "resolved"
       ).length,
       color: "var(--primary)",
     },
     {
-      label: "risk",
+      label: t("Risk"),
       value: visibleTickets.filter(
         (ticket) =>
           ticket.slaHoursRemaining < 0 ||
@@ -1324,7 +1443,7 @@ export default function TicketsPage() {
       color: "var(--destructive)",
     },
     {
-      label: "closed",
+      label: t("Kapandı"),
       value: visibleTickets.filter(
         (ticket) => ticket.status === "closed" || ticket.status === "resolved"
       ).length,
@@ -2678,10 +2797,7 @@ export default function TicketsPage() {
                             : "inline-flex min-h-10 items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-black text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-45"
                         }
                       >
-                        {t(
-                          serverWorkflow.allowedTransitionLabels?.[command] ??
-                            ticketCommandLabels[command]
-                        )}
+                        {ticketCommandLabelCopy[locale][command]}
                       </button>
                     )
                   })}
@@ -2693,7 +2809,7 @@ export default function TicketsPage() {
                     role="status"
                     aria-live="polite"
                   >
-                    {t("Is akisi adimi kaydediliyor...")}
+                    {t("İş akışı adımı kaydediliyor...")}
                   </p>
                 )}
                 {ticketTransitionState === "success" && (
@@ -2702,7 +2818,7 @@ export default function TicketsPage() {
                     role="status"
                     aria-live="polite"
                   >
-                    {t("Is akisi adimi kaydedildi.")}
+                    {t("İş akışı adımı kaydedildi.")}
                   </p>
                 )}
                 {ticketTransitionState === "error" && ticketTransitionError && (
@@ -3241,7 +3357,7 @@ export default function TicketsPage() {
                 {task.checklist.slice(0, 3).map((item) => (
                   <li key={`${task.id}-${item}`} className="flex gap-2">
                     <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    <span>{t(item)}</span>
+                    <span>{checklistLabel(item)}</span>
                   </li>
                 ))}
               </ul>

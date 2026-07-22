@@ -48,12 +48,41 @@ function formatCents(cents: number, currency = "TRY") {
   return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
+const shortMonthsTr = [
+  "Oca", "Şub", "Mar", "Nis", "May", "Haz",
+  "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara",
+]
+
 function shortDate(value: string | null, locale = "tr-TR") {
   if (!value) return "-"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "-"
+  // Turkish month abbreviations are rendered explicitly so the ledger date never
+  // shows an English month (e.g. under an ICU-minimal runtime). Other locales
+  // keep the Intl short-month formatting.
+  if (locale.startsWith("tr")) {
+    return `${String(date.getDate()).padStart(2, "0")} ${shortMonthsTr[date.getMonth()]}`
+  }
   return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
-  }).format(new Date(value))
+  }).format(date)
+}
+
+// Ledger category codes → Turkish business labels. The enum stays in the data;
+// only the displayed text is localized (the wrapping localizer handles other
+// locales via the shared dictionary).
+function entryTypeLabel(entryType: string) {
+  if (entryType === "dues") return "Aidat"
+  if (entryType === "payment") return "Ödeme"
+  if (entryType === "deposit") return "Depozito"
+  if (entryType === "penalty") return "Ceza"
+  if (entryType === "maintenance") return "Bakım"
+  if (entryType === "rent") return "Kira"
+  if (entryType === "fee") return "Ücret"
+  if (entryType === "refund") return "İade"
+  if (entryType === "adjustment") return "Düzeltme"
+  return entryType || "Kayıt"
 }
 
 function statusVariant(status: string) {
@@ -252,7 +281,7 @@ export function FinanceLiveLedger() {
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-foreground">{t(entryLabel(entry))}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {entry.entryType} / {entry.period ?? "-"} / {t("vade")} {shortDate(entry.dueDate, intlLocale)}
+                  {t(entryTypeLabel(entry.entryType))} / {entry.period ?? "-"} / {t("vade")} {shortDate(entry.dueDate, intlLocale)}
                 </p>
               </div>
               <p className="text-sm font-black text-foreground">

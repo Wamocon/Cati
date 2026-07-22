@@ -5,6 +5,12 @@
 // layer (lib/currency.ts) with no FX. This mirrors the migration 45 seed so the
 // activities workspace works fully offline in access-profile / QA mode, the same
 // way wallet-data.ts backs the wallet.
+//
+// The human-readable `name`/`description` are seeded in Turkish (the app's lead
+// language) to match the surrounding UI; the `id`, `category` enum, prices, age
+// bands, capacity and `imageKey` mirror the CROSS JOIN VALUES list in
+// supabase/migrations/00000000000045_activities.sql exactly (keys/enums are the
+// join/lookup identity — only display copy is localized here).
 
 import type { NativeCurrency } from "@/lib/currency"
 
@@ -23,13 +29,15 @@ export interface ActivitySeed {
   imageKey: string
 }
 
-// Kept in step with the CROSS JOIN VALUES list seeded in
-// supabase/migrations/00000000000045_activities.sql.
+// The id / category / price / ageBand / capacity / imageKey values are kept in
+// step with the CROSS JOIN VALUES list seeded in
+// supabase/migrations/00000000000045_activities.sql; only the display copy is
+// localized to Turkish here.
 export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   {
     id: "activity-local-spa-hammam",
-    name: "Spa & Hammam Session",
-    description: "Private spa and hammam session at the wellness centre.",
+    name: "Spa & Hamam Seansı",
+    description: "Sağlık merkezinde özel spa ve hamam seansı.",
     category: "wellness",
     ageBand: "adult",
     priceCents: 150_000,
@@ -39,8 +47,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-beach-cabana",
-    name: "Private Beach Cabana",
-    description: "Reserved beachfront cabana with sunbeds and service for the day.",
+    name: "Özel Plaj Kabini",
+    description: "Şezlong ve servis dahil, gün boyu size ayrılmış sahil kabini.",
     category: "leisure",
     ageBand: "all",
     priceCents: 250_000,
@@ -50,8 +58,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-airport-transfer",
-    name: "Airport Transfer",
-    description: "Private door-to-door transfer to or from the airport.",
+    name: "Havaalanı Transferi",
+    description: "Havaalanına gidiş-dönüş için özel kapıdan kapıya transfer.",
     category: "transport",
     ageBand: "all",
     priceCents: 90_000,
@@ -61,8 +69,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-tennis-court",
-    name: "Tennis Court (1 hour)",
-    description: "One-hour floodlit tennis court reservation, racquets included.",
+    name: "Tenis Kortu (1 saat)",
+    description: "Raketler dahil, bir saatlik ışıklandırılmış tenis kortu rezervasyonu.",
     category: "sports",
     ageBand: "adult",
     priceCents: 40_000,
@@ -72,8 +80,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-kids-club",
-    name: "Kids Club (day pass)",
-    description: "Supervised full-day kids club with games and craft sessions.",
+    name: "Çocuk Kulübü (günlük)",
+    description: "Oyun ve el sanatları etkinlikleriyle gözetimli tam gün çocuk kulübü.",
     category: "kids",
     ageBand: "under_18",
     priceCents: 30_000,
@@ -83,8 +91,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-swimming-lesson",
-    name: "Swimming Lesson",
-    description: "Group swimming lesson for children with a certified instructor.",
+    name: "Yüzme Dersi",
+    description: "Sertifikalı eğitmen eşliğinde çocuklar için grup yüzme dersi.",
     category: "kids",
     ageBand: "under_18",
     priceCents: 25_000,
@@ -94,8 +102,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-art-workshop",
-    name: "Art Workshop",
-    description: "Guided art and painting workshop for children.",
+    name: "Sanat Atölyesi",
+    description: "Çocuklar için rehberli sanat ve resim atölyesi.",
     category: "kids",
     ageBand: "under_18",
     priceCents: 18_000,
@@ -105,8 +113,8 @@ export const ACTIVITIES_LOCAL_SEED: ActivitySeed[] = [
   },
   {
     id: "activity-local-mini-golf",
-    name: "Mini-Golf Round",
-    description: "Family-friendly mini-golf round on the garden course.",
+    name: "Mini Golf Turu",
+    description: "Bahçe parkurunda aileye uygun mini golf turu.",
     category: "kids",
     ageBand: "under_18",
     priceCents: 12_000,
