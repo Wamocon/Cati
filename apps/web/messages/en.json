@@ -359,6 +359,8 @@
       "communications": "Communication",
       "wallet": "Wallet",
       "activities": "Activities",
+      "vendor_invoices": "Vendor Invoices",
+      "guardianship": "Guardianship",
       "users": "Users & Roles",
       "settings": "Settings"
     },

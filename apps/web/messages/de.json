@@ -363,6 +363,8 @@
       "communications": "Kommunikation",
       "wallet": "Guthaben",
       "activities": "Aktivitäten",
+      "vendor_invoices": "Lieferantenrechnungen",
+      "guardianship": "Vormundschaft",
       "users": "Benutzer & Rollen",
       "settings": "Einstellungen",
       "deals": "Workflows"

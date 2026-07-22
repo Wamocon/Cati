@@ -358,6 +358,8 @@
       "communications": "Коммуникации",
       "wallet": "Кошелёк",
       "activities": "Активности",
+      "vendor_invoices": "Счета поставщиков",
+      "guardianship": "Опекунство",
       "users": "Пользователи и роли",
       "settings": "Настройки",
       "deals": "Рабочие процессы"
