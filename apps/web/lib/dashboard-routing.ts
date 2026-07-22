@@ -18,6 +18,7 @@ export const dashboardRoutes: DashboardRoute[] = [
   { href: "/dashboard/communications", resource: "communications" },
   { href: "/dashboard/wallet", resource: "wallet" },
   { href: "/dashboard/activities", resource: "activities" },
+  { href: "/dashboard/children", resource: "guardianship" },
   { href: "/dashboard/vendor-invoices", resource: "vendor_invoices" },
   { href: "/dashboard/users", resource: "users" },
   { href: "/dashboard/settings", resource: "settings" },

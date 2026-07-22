@@ -43,6 +43,8 @@ import { TenantAccessLivePanel } from "@/components/tenant-access-live-panel"
 import { RoleFocusedLiveDashboard } from "@/components/role-focused-live-dashboard"
 import { GuestHomeDashboard } from "@/components/guest/guest-home-dashboard"
 import { VendorHomeDashboard } from "@/components/vendor/vendor-home-dashboard"
+import { KidHomeDashboard } from "@/components/kids/kid-home-dashboard"
+import { ChildrenSummaryCard } from "@/components/guardianship/children-summary-card"
 import { LiveErpSimulation, type SimulationQuickAction } from "@/components/live-erp-simulation"
 import { Link } from "@/app/navigation"
 import { cn } from "@/lib/utils"
@@ -774,6 +776,8 @@ function RoleFocusedDashboard({
         })}
       </div>
 
+      {role === "owner" || role === "tenant" ? <ChildrenSummaryCard /> : null}
+
       {role === "owner" || role === "tenant" ? <TenantAccessLivePanel /> : null}
     </div>
   )
@@ -1052,6 +1056,17 @@ export default function DashboardHomePage() {
   // jobs, invoice status, wallet, and quick links into the vendor surface.
   if (user.role === "service_provider") {
     return <VendorHomeDashboard role={user.role} roleLabel={roleLabel} />
+  }
+
+  // Supervised child accounts (Phase 6) get a warm, age-appropriate kid-mode home
+  // with an allowance card, a monthly goal ring, badges from real bookings, and
+  // the age-gated activities catalog. Branched before the lean fallback below.
+  if (
+    user.role === "child_owner" ||
+    user.role === "child_tenant" ||
+    user.role === "child_guest"
+  ) {
+    return <KidHomeDashboard role={user.role} roleLabel={roleLabel} />
   }
 
   // Additive Phase-1 roles get a lean, role-scoped landing instead of the admin

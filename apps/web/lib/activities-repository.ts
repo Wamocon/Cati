@@ -84,6 +84,10 @@ export interface BookingView {
   createdAt: string
   /** Dual ₺/€ label for the charged amount, when priced. */
   amountLabel: string | null
+  /** The profile that made the booking. Present on the child-bookings read so a
+   * guardian can attribute each booking to the right managed child; omitted from
+   * the actor's own bookings, where it is always the actor. */
+  bookerProfileId?: string | null
 }
 
 export interface BookingList {
@@ -359,6 +363,7 @@ function localBookingView(booking: LocalBooking): BookingView {
     walletTransactionId: booking.walletTransactionId,
     createdAt: booking.createdAt,
     amountLabel: amountLabel(booking.amountCents, booking.currency),
+    bookerProfileId: booking.bookerProfileId,
   }
 }
 
@@ -568,6 +573,7 @@ function mapBookingRow(row: unknown): BookingView {
     walletTransactionId: nullableStr(record.wallet_transaction_id),
     createdAt: str(record.created_at),
     amountLabel: amountLabel(amountCents, currency),
+    bookerProfileId: nullableStr(record.booker_profile_id),
   }
 }
 
@@ -598,7 +604,7 @@ function mapBookingJson(data: unknown): BookingMutationResult {
 }
 
 const BOOKING_SELECT =
-  "id, activity_id, party_size, scheduled_at, status, amount_cents, currency, wallet_transaction_id, created_at, activities:activity_id(name, category, age_band, image_key)"
+  "id, activity_id, booker_profile_id, party_size, scheduled_at, status, amount_cents, currency, wallet_transaction_id, created_at, activities:activity_id(name, category, age_band, image_key)"
 
 async function loadCatalogFromSupabase(
   supabase: SupabaseClient

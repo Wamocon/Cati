@@ -5,6 +5,7 @@ import { resetManualPaymentStateForTesting } from "@/lib/manual-payment-reposito
 import { resetWalletStateForTesting } from "@/lib/wallet-repository"
 import { resetActivitiesStateForTesting } from "@/lib/activities-repository"
 import { resetVendorInvoiceStateForTesting } from "@/lib/vendor-invoice-repository"
+import { resetGuardianshipStateForTesting } from "@/lib/guardianship-repository"
 
 export const dynamic = "force-dynamic"
 
@@ -20,6 +21,7 @@ export async function POST() {
   resetWalletStateForTesting()
   resetActivitiesStateForTesting()
   resetVendorInvoiceStateForTesting()
+  resetGuardianshipStateForTesting()
   return NextResponse.json(
     { ok: true },
     { headers: { "Cache-Control": "no-store" } }

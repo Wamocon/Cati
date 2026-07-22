@@ -370,6 +370,9 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("finance", "view"),
     permission("communications", "view"),
     permission("communications", "create"),
+    // A parent manages their own supervised child accounts (guardianship UI).
+    permission("guardianship", "view"),
+    permission("guardianship", "create"),
   ],
   tenant: [
     ...view("dashboard"),
@@ -381,6 +384,9 @@ export const rolePermissions: Record<Role, Permission[]> = {
     permission("documents", "create"),
     permission("communications", "view"),
     permission("communications", "create"),
+    // A parent manages their own supervised child accounts (guardianship UI).
+    permission("guardianship", "view"),
+    permission("guardianship", "create"),
   ],
   // --- Additive Phase-1 roles (guardianship / vendor / guest). ---
   // Deliberately narrow. Backing pages for wallet/activities/vendor_invoices land
@@ -396,6 +402,9 @@ export const rolePermissions: Record<Role, Permission[]> = {
     ...view("communications"),
     ...view("calendar"),
     ...view("documents"),
+    // A guest may still be a parent of a supervised child account.
+    permission("guardianship", "view"),
+    permission("guardianship", "create"),
   ],
   service_provider: [
     // Guest surface ...
