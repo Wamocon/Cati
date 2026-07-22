@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { Link } from "@/app/navigation"
+import { AdminApprovalsInbox } from "@/components/admin-approvals-inbox"
 import { UserAdministrationPanel } from "@/components/user-administration-panel"
 import { cn } from "@/lib/utils"
 
@@ -41,9 +42,7 @@ const copy = {
       },
       approvals: {
         title: "Onayınız gerekiyor",
-        desc: "Onay bekleyen istekler şu an servis kayıtlarında toplanıyor.",
-        body: "Yakında onay bekleyen tüm istekleri burada tek bir listede göreceksiniz.",
-        cta: "Servis kayıtlarını aç",
+        desc: "Onayınızı bekleyen istekleri tek yerden onaylayın veya reddedin.",
       },
       money: {
         title: "Para",
@@ -80,9 +79,7 @@ const copy = {
       },
       approvals: {
         title: "Needs your approval",
-        desc: "Requests that need approval are gathered in service records for now.",
-        body: "Soon you'll see every request awaiting approval here in one list.",
-        cta: "Open service records",
+        desc: "Approve or decline everything waiting on your review, in one place.",
       },
       money: {
         title: "Money",
@@ -119,9 +116,7 @@ const copy = {
       },
       approvals: {
         title: "Ihre Freigabe erforderlich",
-        desc: "Freizugebende Anfragen werden vorerst in den Servicedaten gesammelt.",
-        body: "Bald sehen Sie hier alle Anfragen, die auf Freigabe warten, in einer Liste.",
-        cta: "Servicedaten öffnen",
+        desc: "Alles, was auf Ihre Prüfung wartet, an einem Ort freigeben oder ablehnen.",
       },
       money: {
         title: "Finanzen",
@@ -158,9 +153,7 @@ const copy = {
       },
       approvals: {
         title: "Требуется ваше согласование",
-        desc: "Запросы на согласование пока собираются в сервисных записях.",
-        body: "Скоро вы увидите здесь все запросы, ожидающие согласования, в одном списке.",
-        cta: "Открыть сервисные записи",
+        desc: "Согласуйте или отклоните всё, что ждёт вашей проверки, в одном месте.",
       },
       money: {
         title: "Финансы",
@@ -313,6 +306,10 @@ export function AdminControlCenter({ locale }: { locale: string }) {
   const [peopleState, setPeopleState] = useState<"loading" | "ready" | "error">(
     "loading"
   )
+  const [approvalsCount, setApprovalsCount] = useState<number | null>(null)
+  const [approvalsState, setApprovalsState] = useState<
+    "loading" | "ready" | "error"
+  >("loading")
 
   useEffect(() => {
     let cancelled = false
@@ -335,6 +332,29 @@ export function AdminControlCenter({ locale }: { locale: string }) {
     }
   }, [])
 
+  // Real count of items awaiting approval from the same endpoint the inbox uses.
+  // Honest number or "—"; never a fabricated figure.
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      try {
+        const response = await fetch("/api/site-management/approvals", {
+          cache: "no-store",
+        })
+        if (!response.ok) throw new Error("unavailable")
+        const payload = (await response.json()) as { items?: unknown[] }
+        if (cancelled) return
+        setApprovalsCount(Array.isArray(payload.items) ? payload.items.length : 0)
+        setApprovalsState("ready")
+      } catch {
+        if (!cancelled) setApprovalsState("error")
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const peopleDisplay =
     peopleState === "loading"
       ? "…"
@@ -342,13 +362,14 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         ? "—"
         : peopleCount.toLocaleString(localeKey(locale))
 
+  const approvalsDisplay =
+    approvalsState === "loading"
+      ? "…"
+      : approvalsCount === null
+        ? "—"
+        : approvalsCount.toLocaleString(localeKey(locale))
+
   const navTiles = [
-    {
-      key: "approvals",
-      Icon: ClipboardCheck,
-      href: "/dashboard/tickets",
-      ...c.tiles.approvals,
-    },
     {
       key: "money",
       Icon: CircleDollarSign,
@@ -387,6 +408,23 @@ export function AdminControlCenter({ locale }: { locale: string }) {
             </span>
           </a>
 
+          {/* Real pending-approval count from the same endpoint as the inbox
+              below; jumps to that section rather than fabricating a figure. */}
+          <a href="#admin-approvals" className={tileClass}>
+            <TileIcon Icon={ClipboardCheck} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {c.tiles.approvals.label}
+              </span>
+              <span className="mt-0.5 block text-2xl font-black leading-tight text-foreground">
+                {approvalsDisplay}
+              </span>
+              <span className="mt-1 block text-xs leading-4 text-muted-foreground">
+                {c.tiles.approvals.desc}
+              </span>
+            </span>
+          </a>
+
           {navTiles.map(({ key, Icon, href, label, desc }) => (
             <Link key={key} href={href} className={tileClass}>
               <TileIcon Icon={Icon} />
@@ -419,18 +457,17 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         <UserAdministrationPanel />
       </CollapsibleSection>
 
-      {/* 2. Needs your approval — Phase 4 replaces this with <AdminApprovalsInbox/>. */}
+      {/* 2. Needs your approval — the unified inbox. It fetches its own data,
+          self-hides for non-admins, and dispatches each decision to the existing
+          per-kind endpoint, so it needs no props. */}
       <CollapsibleSection
         id="admin-approvals"
         Icon={ClipboardCheck}
         title={c.sections.approvals.title}
         description={c.sections.approvals.desc}
+        defaultOpen
       >
-        <PlaceholderBody
-          body={c.sections.approvals.body}
-          cta={c.sections.approvals.cta}
-          href="/dashboard/tickets"
-        />
+        <AdminApprovalsInbox />
       </CollapsibleSection>
 
       {/* 3. Money — Phase 5 adds live oversight. */}

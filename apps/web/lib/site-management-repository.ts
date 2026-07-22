@@ -6619,6 +6619,103 @@ export async function getClientActionRequest(
   }
 }
 
+// Statuses a logged client-action request can carry while it is still awaiting a
+// human decision. Mirrors ACTION_PENDING_STATUSES in the actions route so the
+// approvals inbox and the decision endpoint agree on what "pending" means.
+const PENDING_ACTION_REQUEST_STATUSES = [
+  "submitted",
+  "queued",
+  "logged",
+  "locally-logged",
+  "pending",
+] as const
+
+const DECIDED_ACTION_REQUEST_STATUSES = new Set([
+  "approved",
+  "rejected",
+  "completed",
+  "failed",
+])
+
+/**
+ * True only for a request that (a) was gated on human approval when it was
+ * logged and (b) has not been decided yet. Log-only actions and already-decided
+ * requests are excluded, so the approvals inbox never surfaces something a human
+ * does not actually have to approve.
+ */
+function actionRequestAwaitsHumanApproval(
+  request: ClientActionRequestRecord
+): boolean {
+  const workflow = asRecord(request.metadata.workflow)
+  if (DECIDED_ACTION_REQUEST_STATUSES.has(String(workflow.decisionStatus))) {
+    return false
+  }
+  if (DECIDED_ACTION_REQUEST_STATUSES.has(request.status)) return false
+  return workflow.requiresHumanApproval === true
+}
+
+function localPendingActionRequests(limit: number): ClientActionRequestRecord[] {
+  return withLocalQaState(false, () =>
+    Array.from(localClientActionRequests.values())
+      .filter(actionRequestAwaitsHumanApproval)
+      .sort(
+        (a, b) => Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? "")
+      )
+      .slice(0, limit)
+  )
+}
+
+/**
+ * Company-scoped queue of client-action requests still awaiting a human
+ * decision. Supabase-first (RLS enforces the company boundary, exactly like the
+ * recent-action reads in this file) with a deterministic local-seed fallback so
+ * the approvals inbox renders under the access-profile QA path too. Every result
+ * carries `source` for honest live/offline disclosure upstream.
+ */
+export async function listPendingActionRequests({
+  limit = 20,
+  useLocalAccessProfile = false,
+}: {
+  limit?: number
+  useLocalAccessProfile?: boolean
+} = {}): Promise<{ requests: ClientActionRequestRecord[]; source: DataSource }> {
+  const safeLimit = Math.min(Math.max(Math.trunc(limit), 1), 50)
+
+  if (useLocalAccessProfile || !isSupabaseConfigured()) {
+    return {
+      requests: localPendingActionRequests(safeLimit),
+      source: "local-seed",
+    }
+  }
+
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from("client_action_requests")
+      .select(
+        "id, company_id, action_type, entity_table, entity_id, entity_external_id, title, status, requested_by, metadata, created_at"
+      )
+      .in("status", [...PENDING_ACTION_REQUEST_STATUSES])
+      .order("created_at", { ascending: false })
+      .limit(safeLimit)
+    if (error) throw error
+
+    const requests = (Array.isArray(data) ? data : [])
+      .map(normalizeActionRequestRow)
+      .filter((row): row is ClientActionRequestRecord => row !== null)
+      .filter(actionRequestAwaitsHumanApproval)
+    return { requests, source: "supabase" }
+  } catch (error) {
+    if (canUseLocalSeedFallback()) {
+      return {
+        requests: localPendingActionRequests(safeLimit),
+        source: "local-seed",
+      }
+    }
+    throw error
+  }
+}
+
 export async function materializeApprovedTicketRequest({
   request,
   actor,
