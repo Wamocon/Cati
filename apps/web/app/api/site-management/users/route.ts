@@ -3,12 +3,16 @@ import { getUserProfile } from "@/lib/auth"
 import { hasAnyPermission, isAdmin } from "@/lib/rbac"
 import { getPeopleDirectoryData } from "@/lib/site-management-repository"
 import {
+  anonymizeManagedUser,
   assignManagedUserRole,
   createManagedUser,
   getUserAdministration,
   revokeManagedUserRole,
   setManagedUserActive,
+  updateManagedUser,
+  updateManagedUserEmail,
   UserAdminError,
+  type UpdateManagedUserInput,
 } from "@/lib/user-role-admin-repository"
 import { mutationOriginAllowed } from "@/lib/request-security"
 
@@ -177,6 +181,9 @@ export async function PATCH(request: NextRequest) {
   try {
     let user
     if (action === "assign_role") {
+      // The repository's assertAssignableRole is the single allowlist (it now
+      // includes guest and service_provider); the route deliberately keeps no
+      // second allowlist so the two stay in sync.
       user = await assignManagedUserRole(profile, profileId, body.role)
     } else if (action === "revoke_role") {
       user = await revokeManagedUserRole(profile, profileId, body.role)
@@ -188,10 +195,46 @@ export async function PATCH(request: NextRequest) {
         )
       }
       user = await setManagedUserActive(profile, profileId, body.active)
+    } else if (action === "update_profile") {
+      // Name and/or language. At least one field must be present; the repository
+      // validates the actual values (2-120 char name, supported language).
+      const input: UpdateManagedUserInput = {}
+      if (typeof body.fullName === "string") input.fullName = body.fullName
+      if (typeof body.language === "string") input.language = body.language
+      if (input.fullName === undefined && input.language === undefined) {
+        return NextResponse.json(
+          {
+            error: "Provide a new name or language to save.",
+            code: "USER_ADMIN_NOTHING_TO_UPDATE",
+          },
+          { status: 400 }
+        )
+      }
+      user = await updateManagedUser(profile, profileId, input)
+    } else if (action === "update_email") {
+      // The repository validates format, checks for duplicates, and performs the
+      // service-role auth update; the sign-in address changes with it.
+      user = await updateManagedUserEmail(profile, profileId, body.email)
+    } else if (action === "remove") {
+      // Off-boarding: clears personal details while financial/activity history is
+      // retained. Require a written reason up front (kept for the record).
+      const reason = typeof body.reason === "string" ? body.reason.trim() : ""
+      if (reason.length < 10 || reason.length > 1000) {
+        return NextResponse.json(
+          {
+            error:
+              "Please note why this person is being removed — at least 10 characters, up to 1000.",
+            code: "USER_ADMIN_REASON_INVALID",
+          },
+          { status: 400 }
+        )
+      }
+      user = await anonymizeManagedUser(profile, profileId, reason)
     } else {
       return NextResponse.json(
         {
-          error: "Unsupported action. Use assign_role, revoke_role, or set_active.",
+          error:
+            "Unsupported action. Use assign_role, revoke_role, set_active, update_profile, update_email, or remove.",
           code: "USER_ADMIN_ACTION_INVALID",
         },
         { status: 400 }
