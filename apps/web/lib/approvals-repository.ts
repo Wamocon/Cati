@@ -39,6 +39,16 @@ export interface PendingApprovalDecision {
    * `approveBody.assignee` before calling. Decline never needs one.
    */
   approveRequiresResponder?: boolean
+  /**
+   * Owner-approval decisions on a real service ticket require a recorded reason
+   * on BOTH sides: declining runs `reject_owner_request` (a `reasonRequired`
+   * transition) and an administrator approving or declining is treated as an
+   * owner-approval override, which the workflow gates behind a mandatory reason
+   * too. When set, the inbox prompts the admin for a human-entered reason and
+   * merges it into the PATCH body as `reason` before calling.
+   */
+  approveRequiresReason?: boolean
+  declineRequiresReason?: boolean
 }
 
 /**
@@ -175,6 +185,12 @@ function ticketToPendingApproval(ticket: ServiceTicket): PendingApproval {
     decideVia: {
       endpoint: "/api/site-management/tickets",
       method: "PATCH",
+      // Both sides need a reason: reject_owner_request is a reasonRequired
+      // transition, and an admin approve/decline is an owner-approval override
+      // the workflow also gates on a mandatory reason. The inbox merges the
+      // admin's text into the PATCH body as `reason`.
+      approveRequiresReason: true,
+      declineRequiresReason: true,
       approveHeaders: { "Idempotency-Key": approveKey },
       declineHeaders: { "Idempotency-Key": declineKey },
       approveBody: {

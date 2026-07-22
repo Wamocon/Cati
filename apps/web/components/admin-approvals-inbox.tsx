@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
 import {
   Check,
@@ -32,6 +32,8 @@ interface Decision {
   approveHeaders?: Record<string, string>
   declineHeaders?: Record<string, string>
   approveRequiresResponder?: boolean
+  approveRequiresReason?: boolean
+  declineRequiresReason?: boolean
 }
 
 interface PendingItem {
@@ -71,6 +73,9 @@ const copy = {
     chooseResponder: "Sorumlu ekibi seçin",
     confirmApprove: "Onayla ve yönlendir",
     cancel: "Vazgeç",
+    reasonLabel: "Karar gerekçesi",
+    reasonPlaceholder: "Bu kararın gerekçesini kısaca yazın",
+    reasonRequired: "Devam etmek için bir gerekçe yazın.",
     kinds: {
       ai_suggestion: "Yapay zekâ önerisi",
       action_request: "İşlem isteği",
@@ -109,6 +114,9 @@ const copy = {
     chooseResponder: "Choose the responding team",
     confirmApprove: "Approve and route",
     cancel: "Cancel",
+    reasonLabel: "Reason for your decision",
+    reasonPlaceholder: "Briefly explain why you are making this decision",
+    reasonRequired: "Enter a reason to continue.",
     kinds: {
       ai_suggestion: "AI suggestion",
       action_request: "Action request",
@@ -147,6 +155,9 @@ const copy = {
     chooseResponder: "Zuständiges Team wählen",
     confirmApprove: "Freigeben und zuweisen",
     cancel: "Abbrechen",
+    reasonLabel: "Begründung Ihrer Entscheidung",
+    reasonPlaceholder: "Begründen Sie diese Entscheidung kurz",
+    reasonRequired: "Bitte geben Sie eine Begründung ein, um fortzufahren.",
     kinds: {
       ai_suggestion: "KI-Vorschlag",
       action_request: "Aktionsanfrage",
@@ -185,6 +196,9 @@ const copy = {
     chooseResponder: "Выберите ответственную команду",
     confirmApprove: "Согласовать и направить",
     cancel: "Отмена",
+    reasonLabel: "Причина решения",
+    reasonPlaceholder: "Кратко объясните причину этого решения",
+    reasonRequired: "Введите причину, чтобы продолжить.",
     kinds: {
       ai_suggestion: "Предложение ИИ",
       action_request: "Запрос действия",
@@ -241,6 +255,13 @@ export function AdminApprovalsInbox() {
   const [responderChoice, setResponderChoice] = useState<Record<string, string>>(
     {}
   )
+  // Which item is showing its reason input, for which decision, the typed text
+  // per item, and whether the current input failed the non-empty check.
+  const [reasonFor, setReasonFor] = useState("")
+  const [reasonAction, setReasonAction] = useState<"approve" | "decline">("approve")
+  const [reasonText, setReasonText] = useState<Record<string, string>>({})
+  const [reasonInvalid, setReasonInvalid] = useState(false)
+  const reasonInputRef = useRef<HTMLTextAreaElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -266,16 +287,27 @@ export function AdminApprovalsInbox() {
   }, [user.role, load])
 
   const decide = useCallback(
-    async (item: PendingItem, action: "approve" | "decline", responder?: string) => {
+    async (
+      item: PendingItem,
+      action: "approve" | "decline",
+      options?: { responder?: string; reason?: string }
+    ) => {
       setBusyId(item.id)
       setError("")
       setNotice("")
       const via = item.decideVia
       const isApprove = action === "approve"
       const extraHeaders = (isApprove ? via.approveHeaders : via.declineHeaders) ?? {}
-      const baseBody = isApprove ? via.approveBody : via.declineBody
-      const body =
-        isApprove && responder ? { ...baseBody, assignee: responder } : baseBody
+      let body: Record<string, unknown> = isApprove ? via.approveBody : via.declineBody
+      // A responder only ever applies to an approval (AI drafts); a reason
+      // applies to whichever side prompted for it. Both are merged in without
+      // touching the idempotency key the repository baked into the body/headers.
+      if (isApprove && options?.responder) {
+        body = { ...body, assignee: options.responder }
+      }
+      if (options?.reason) {
+        body = { ...body, reason: options.reason }
+      }
       try {
         const response = await fetch(via.endpoint, {
           method: via.method,
@@ -292,6 +324,8 @@ export function AdminApprovalsInbox() {
         // newly-arrived item appears and any race is corrected.
         setItems((current) => current.filter((row) => row.id !== item.id))
         setResponderFor("")
+        setReasonFor("")
+        setReasonInvalid(false)
         setNotice(isApprove ? t.approved : t.declined)
         await load()
       } catch (decideError) {
@@ -303,17 +337,65 @@ export function AdminApprovalsInbox() {
     [load, t.approved, t.declined, t.failed]
   )
 
+  // Move focus to the reason input whenever it is revealed, so a keyboard/screen-
+  // reader user lands directly on the field they must fill in.
+  useEffect(() => {
+    if (reasonFor) reasonInputRef.current?.focus()
+  }, [reasonFor])
+
+  const openReasonInput = useCallback(
+    (item: PendingItem, action: "approve" | "decline") => {
+      setError("")
+      setNotice("")
+      setReasonInvalid(false)
+      setResponderFor("")
+      // Toggle closed only when the same decision is re-clicked; switching
+      // between Approve and Decline keeps the panel open and swaps the action.
+      setReasonFor((current) =>
+        current === item.id && reasonAction === action ? "" : item.id
+      )
+      setReasonAction(action)
+    },
+    [reasonAction]
+  )
+
+  const submitReason = useCallback(
+    (item: PendingItem) => {
+      const value = (reasonText[item.id] ?? "").trim()
+      if (!value) {
+        setReasonInvalid(true)
+        reasonInputRef.current?.focus()
+        return
+      }
+      void decide(item, reasonAction, { reason: value })
+    },
+    [decide, reasonAction, reasonText]
+  )
+
   function onApproveClick(item: PendingItem) {
     if (item.decideVia.approveRequiresResponder) {
       setError("")
       setNotice("")
+      setReasonFor("")
       setResponderFor((current) => (current === item.id ? "" : item.id))
       setResponderChoice((current) =>
         current[item.id] ? current : { ...current, [item.id]: RESPONDER_VALUES[0] }
       )
       return
     }
+    if (item.decideVia.approveRequiresReason) {
+      openReasonInput(item, "approve")
+      return
+    }
     void decide(item, "approve")
+  }
+
+  function onDeclineClick(item: PendingItem) {
+    if (item.decideVia.declineRequiresReason) {
+      openReasonInput(item, "decline")
+      return
+    }
+    void decide(item, "decline")
   }
 
   if (user.role !== "admin") return null
@@ -364,6 +446,8 @@ export function AdminApprovalsInbox() {
             const summary = item.summary || t.summaryFallback[item.kind]
             const pickingResponder = responderFor === item.id
             const choice = responderChoice[item.id] ?? RESPONDER_VALUES[0]
+            const pickingReason = reasonFor === item.id
+            const reasonValue = reasonText[item.id] ?? ""
 
             return (
               <li
@@ -400,7 +484,9 @@ export function AdminApprovalsInbox() {
                       aria-expanded={
                         item.decideVia.approveRequiresResponder
                           ? pickingResponder
-                          : undefined
+                          : item.decideVia.approveRequiresReason
+                            ? pickingReason && reasonAction === "approve"
+                            : undefined
                       }
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-500/30 px-3 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -413,8 +499,13 @@ export function AdminApprovalsInbox() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void decide(item, "decline")}
+                      onClick={() => onDeclineClick(item)}
                       disabled={isBusy}
+                      aria-expanded={
+                        item.decideVia.declineRequiresReason
+                          ? pickingReason && reasonAction === "decline"
+                          : undefined
+                      }
                       className="inline-flex h-9 items-center gap-2 rounded-lg border border-rose-500/30 px-3 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -448,7 +539,7 @@ export function AdminApprovalsInbox() {
                     </label>
                     <button
                       type="button"
-                      onClick={() => void decide(item, "approve", choice)}
+                      onClick={() => void decide(item, "approve", { responder: choice })}
                       disabled={isBusy}
                       className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
                     >
@@ -467,6 +558,76 @@ export function AdminApprovalsInbox() {
                     >
                       {t.cancel}
                     </button>
+                  </div>
+                )}
+
+                {/* A real service ticket's owner-approval decision records a
+                    reason on both sides, so Approve and Decline first ask for
+                    one before replaying the tickets PATCH. */}
+                {pickingReason && (
+                  <div className="mt-3 grid gap-2 rounded-lg border border-border bg-muted/20 p-3">
+                    <label className="grid gap-1.5 text-xs font-bold text-foreground">
+                      {t.reasonLabel}
+                      <textarea
+                        ref={reasonInputRef}
+                        value={reasonValue}
+                        rows={2}
+                        onChange={(event) => {
+                          const value = event.target.value
+                          setReasonInvalid(false)
+                          setReasonText((current) => ({
+                            ...current,
+                            [item.id]: value,
+                          }))
+                        }}
+                        placeholder={t.reasonPlaceholder}
+                        aria-invalid={reasonInvalid}
+                        aria-describedby={
+                          reasonInvalid ? `${item.id}-reason-error` : undefined
+                        }
+                        className="min-h-16 w-full rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium"
+                      />
+                    </label>
+                    {reasonInvalid && (
+                      <p
+                        id={`${item.id}-reason-error`}
+                        className="text-xs font-semibold text-rose-600"
+                      >
+                        {t.reasonRequired}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => submitReason(item)}
+                        disabled={isBusy}
+                        className={`inline-flex h-9 items-center gap-2 rounded-lg px-3 text-xs font-bold text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50 ${
+                          reasonAction === "approve"
+                            ? "bg-emerald-600 hover:bg-emerald-600/90"
+                            : "bg-rose-600 hover:bg-rose-600/90"
+                        }`}
+                      >
+                        {isBusy ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        ) : reasonAction === "approve" ? (
+                          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : (
+                          <X className="h-3.5 w-3.5" aria-hidden="true" />
+                        )}
+                        {reasonAction === "approve" ? t.approve : t.decline}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReasonFor("")
+                          setReasonInvalid(false)
+                        }}
+                        disabled={isBusy}
+                        className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-xs font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                      >
+                        {t.cancel}
+                      </button>
+                    </div>
                   </div>
                 )}
               </li>
