@@ -4,8 +4,9 @@
 > Read alongside `docs/PROJECT-STATUS-2026-07-22.md` and `LESSONS-LEARNED.md`.
 > **TL;DR:** the admin full-power console is built, hardened, and verified; all 11
 > roles were visually walked through and their business-language leaks fixed; the full
-> regression suite is green. **Two things need you** (both were blocked by the safety
-> gate, not by errors): apply 3 migrations to the cloud DB, and push the branch.
+> regression suite is green. **Migrations 49/50/51 are applied to the cloud DB (now at
+> 0→51) and the branch is pushed to `Wamocon/Cati`.** The only things left for you are
+> the deployed-app spot-check (your Vercel access) and rotating the shared passwords.
 
 ---
 
@@ -25,29 +26,20 @@ An adversarial review found **9 real issues** (2 HIGH), all now fixed + independ
 - Anonymize now truly erases the identifying data (it previously lingered in the auth record).
 
 ### C. Full-app verification across all 11 roles
-- **Automated regression**: the complete Playwright suite ran green — **752 passed / 0 failed** (a re-run after the copy changes is finishing now; result noted at the bottom).
+- **Automated regression**: the complete Playwright suite is green — **752 passed / 8 skipped / 0 failed**, confirmed on a re-run *after* the business-language copy changes (zero assertion drift).
 - **Visual walkthrough**: signed-in screenshots of every role (admin, manager, accountant, staff, owner, tenant, guest, service_provider, and the three child roles). **Every role renders real data; none broken.** It surfaced business-language leaks (raw enum words like `active`/`dues`, technical phrases like "local QA record"/"Live Database", English activity cards, missing Turkish diacritics, a desktop button overlap) — **all fixed** (commit `6caa3315`).
 
 ---
 
-## 2. ⚠️ Needs you (blocked by the automated safety gate, not by errors)
+## 2. Done autonomously + what still needs you
 
-**(a) Apply 3 migrations to the cloud database.** They are validated locally but must hit real Postgres. Migration 50 is the authoritative security boundary — until it's applied, the suspend/remove enforcement is only app-layer (bypassable via the raw data API). Run:
-```
-# from repo root, with SUPABASE_DB_URL from apps/web/.env.local
-npx supabase db push --db-url "$SUPABASE_DB_URL"
-```
-This applies **49** (user lifecycle), **50** (active/anonymized authority), **51** (Turkish activity names). Cloud is currently at 48.
+**✅ (a) Migrations applied to the cloud database.** `supabase db push` applied **49** (user lifecycle), **50** (active/anonymized authority — the security boundary), and **51** (Turkish activity names). Cloud is now at **0→51**, and the clean apply also validated all three against real Postgres. The suspend/remove enforcement is now live end-to-end (app + auth + DB layers).
 
-**(b) Push the branch** so it reaches other machines / a deploy:
-```
-git push -u origin feature/upgrade-and-bug-fixing
-```
-The repo is `Wamocon/Cati`; use the **maanik-wmc** account. Everything is committed locally (~20 commits this session).
+**✅ (b) Branch pushed.** `feature/upgrade-and-bug-fixing` (47 commits) is on **`Wamocon/Cati`** via the **Maanik-WMC** account (`gh auth switch`). Open a PR at: https://github.com/Wamocon/Cati/pull/new/feature/upgrade-and-bug-fixing
 
-**(c) Deployed "real data" check** (only you can do this): confirm the Vercel Supabase env vars are set for this branch/deploy, then open the live app and spot-check a couple of roles. Locally everything is verified against seed data that mirrors the real shapes; the live check needs your Vercel access.
+**⏳ (c) Deployed "real data" check** (only you can do this): confirm the Vercel Supabase env vars are set for this branch/deploy, then open the live app and spot-check a couple of roles. Locally everything is verified against seed data that mirrors the real shapes; the live check needs your Vercel access.
 
-**(d) Security housekeeping:** the six role passwords were shared in chat earlier — please **rotate them**. They are not committed anywhere.
+**⏳ (d) Security housekeeping:** the six role passwords were shared in chat earlier — please **rotate them**. They are not committed anywhere.
 
 ---
 
