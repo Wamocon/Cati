@@ -15,6 +15,7 @@ import {
   hasStrongPromptInjectionSignal,
 } from "@/lib/ai-guardrails"
 import { getUserProfile } from "@/lib/auth"
+import { retrieveAiGroundingContext } from "@/lib/ai-retrieval"
 import { hasAnyPermission } from "@/lib/rbac"
 import { canAccessUnitForRole, isClientRole, normalizeUnitNo } from "@/lib/role-scoped-views"
 import {
@@ -315,6 +316,7 @@ function buildAiSafetyEvaluation({
   resource,
   ticketDraft,
   grounded,
+  liveGrounded,
 }: {
   message: string
   role: string
@@ -325,6 +327,10 @@ function buildAiSafetyEvaluation({
   // Explicit groundedness override. Defaults to the source-derived value; the
   // output-groundedness guard passes `false` when it redacts an ungrounded reply.
   grounded?: boolean
+  // Phase 3: true when the answer was grounded on LIVE, RLS-scoped rows retrieved
+  // under the caller's own JWT (vs the deterministic seed framing). Additive; it
+  // never changes the existing `grounded` semantics or any seed-path value.
+  liveGrounded?: boolean
 }) {
   // A strong probe is always flagged too, so a blocked request keeps its
   // injection flag even for phrasings the softer flag regex does not cover.
@@ -349,6 +355,8 @@ function buildAiSafetyEvaluation({
     resource: resource ?? "general",
     roleScoped: true,
     grounded: resolvedGrounded,
+    // Additive Phase-3 signal: was the answer grounded on live RLS-scoped rows?
+    liveGrounded: Boolean(liveGrounded),
     promptInjectionDetected,
     sensitiveActionRequested,
     humanApprovalRequired,
@@ -618,10 +626,30 @@ export async function POST(request: Request) {
     })
   }
 
+  // Phase 3: RLS-scoped live grounding. Access is ALLOWED and the probe is not a
+  // strong injection at this point, so fetch the caller's OWN authorized data via
+  // request-scoped (caller-JWT) readers. RLS filters rows in Postgres before this
+  // context is built, so the deterministic answer AND the LLM grounding reflect
+  // only what this role/relationship may see. When Supabase is not configured, RLS
+  // returns nothing authorized, or retrieval errors, `grounding.text` falls back
+  // to the deterministic seed framing (`deterministicContext`) unchanged, keeping
+  // the local/QA + e2e seed path byte-for-byte identical and the endpoint
+  // 5xx-proof. `baseAnswer` is that same role-safe deterministic framing.
+  const grounding = await retrieveAiGroundingContext({
+    profile,
+    role,
+    language,
+    message,
+    resource: accessDecision.resource,
+    baseAnswer: deterministicContext,
+  })
+  const groundedContext = grounding.text
+
   if (requestedTicketDraft) {
     return respondWithTrace({
-      reply: deterministicContext,
+      reply: groundedContext,
       source: "deterministic-fallback",
+      groundingSource: grounding.source,
       role,
       roleProfile,
       language,
@@ -634,6 +662,7 @@ export async function POST(request: Request) {
         source: "deterministic-fallback",
         resource: accessDecision.resource,
         ticketDraft,
+        liveGrounded: grounding.grounded,
       }),
     })
   }
@@ -664,8 +693,9 @@ export async function POST(request: Request) {
 
   if (!(await isLocalAiConfigured())) {
     return respondWithTrace({
-      reply: deterministicContext,
+      reply: groundedContext,
       source: "deterministic-fallback",
+      groundingSource: grounding.source,
       role,
       roleProfile,
       language,
@@ -678,6 +708,7 @@ export async function POST(request: Request) {
         source: "deterministic-fallback",
         resource: accessDecision.resource,
         ticketDraft,
+        liveGrounded: grounding.grounded,
       }),
     })
   }
@@ -701,7 +732,7 @@ export async function POST(request: Request) {
         },
         {
           role: "user",
-          content: `Active role: ${role}\nDetected language: ${language}\nSystem context: ${deterministicContext}\nUser question: ${message}`,
+          content: `Active role: ${role}\nDetected language: ${language}\nSystem context: ${groundedContext}\nUser question: ${message}`,
         },
       ],
     })
@@ -710,12 +741,15 @@ export async function POST(request: Request) {
     //   2. Groundedness / PII guard: reply contains a unit code, money amount,
     //      email or phone that is NOT in the authorized grounding context ->
     //      REDACT by falling back to the deterministic answer, so a hallucinated
-    //      or leaked specific never reaches the user. (The deterministic context
-    //      is today's grounding source; Phase 3 swaps it for RLS retrieval.)
+    //      or leaked specific never reaches the user. Phase 3: the grounding
+    //      context is now `groundedContext`, the RLS-scoped retrieval result (live
+    //      authorized rows when Supabase is configured, else the deterministic seed
+    //      framing). The guard therefore validates the model reply against exactly
+    //      the rows the caller's own auth may see.
     const languageOk = isLikelySameLanguage(completion.content, language)
     const ungrounded =
       languageOk &&
-      findUngroundedSpecifics(completion.content, deterministicContext).length > 0
+      findUngroundedSpecifics(completion.content, groundedContext).length > 0
 
     const source = !languageOk
       ? "deterministic-language-guard"
@@ -723,11 +757,12 @@ export async function POST(request: Request) {
         ? "guardrail-ungrounded"
         : "local-ai"
     const guardedContent =
-      source === "local-ai" ? completion.content : deterministicContext
+      source === "local-ai" ? completion.content : groundedContext
 
     return respondWithTrace({
       reply: guardedContent,
       source,
+      groundingSource: grounding.source,
       role,
       roleProfile,
       language,
@@ -743,12 +778,16 @@ export async function POST(request: Request) {
         resource: accessDecision.resource,
         ticketDraft,
         grounded: source === "guardrail-ungrounded" ? false : undefined,
+        // A redaction falls back to the grounded deterministic answer; a clean
+        // local-ai reply is live-grounded only when the retrieval was.
+        liveGrounded: source === "local-ai" ? grounding.grounded : false,
       }),
     })
   } catch {
     return respondWithTrace({
-      reply: deterministicContext,
+      reply: groundedContext,
       source: "deterministic-fallback",
+      groundingSource: grounding.source,
       role,
       roleProfile,
       language,
@@ -761,6 +800,7 @@ export async function POST(request: Request) {
         source: "deterministic-fallback",
         resource: accessDecision.resource,
         ticketDraft,
+        liveGrounded: grounding.grounded,
       }),
     })
   }
