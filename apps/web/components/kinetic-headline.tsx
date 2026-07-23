@@ -40,7 +40,7 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
 
   if (reduced) {
     return (
-      <h1 className={cn("perspective-1000 overflow-visible", className)}>
+      <h1 className={cn("kinetic-headline perspective-1000 overflow-visible", className)}>
         {words.map((word, index) => {
           const isHighlight = highlight && word.toLowerCase() === highlight.toLowerCase()
           return (
@@ -58,7 +58,7 @@ export function KineticHeadline({ text, className, highlight, highlightClassName
 
   return (
     <motion.h1
-      className={cn("perspective-1000 overflow-visible", className)}
+      className={cn("kinetic-headline perspective-1000 overflow-visible", className)}
       variants={container}
       initial="hidden"
       animate="visible"
