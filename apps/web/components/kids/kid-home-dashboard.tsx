@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocale } from "next-intl"
+import { FeatureInfo } from "@/components/feature-info"
 import {
   Award,
   Compass,
@@ -340,11 +341,14 @@ export function KidHomeDashboard({ roleLabel }: { role: Role; roleLabel: string 
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             {roleLabel}
           </p>
-          <h1 className="mt-3 text-2xl font-black text-foreground md:text-3xl">
-            {firstName
-              ? text.greeting.replace("{name}", firstName)
-              : text.greetingNoName}
-          </h1>
+          <div className="mt-3 flex items-center gap-2">
+            <h1 className="text-2xl font-black text-foreground md:text-3xl">
+              {firstName
+                ? text.greeting.replace("{name}", firstName)
+                : text.greetingNoName}
+            </h1>
+            <FeatureInfo featureKey="dashboard" side="bottom" />
+          </div>
           <p className="mt-1 max-w-xl text-sm leading-6 text-muted-foreground">
             {text.welcomeSub}
           </p>

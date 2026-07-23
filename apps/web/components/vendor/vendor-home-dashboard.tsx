@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { FeatureInfo } from "@/components/feature-info"
 import {
   ArrowUpRight,
   BarChart3,
@@ -246,9 +247,12 @@ export function VendorHomeDashboard({
             <ReceiptText className="h-3.5 w-3.5" aria-hidden="true" />
             {roleLabel}
           </p>
-          <h1 className="mt-3 text-2xl font-black text-foreground md:text-3xl">
-            {text.welcome}
-          </h1>
+          <div className="mt-3 flex items-center gap-2">
+            <h1 className="text-2xl font-black text-foreground md:text-3xl">
+              {text.welcome}
+            </h1>
+            <FeatureInfo featureKey="dashboard" side="bottom" />
+          </div>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
             {text.welcomeSub}
           </p>
