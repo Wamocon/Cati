@@ -23,9 +23,16 @@ qa_*.py
 qa/
 qa_output/
 quality/
+playwright-report/
+test-results/
+**/playwright-report/
+**/test-results/
 .tmp/
 .graphify/
 Microsoft/
+
+# Stray npm lockfile (this repo uses pnpm / pnpm-lock.yaml)
+package-lock.json
 
 # Local raw client/source folders copied beside the repo for extraction.
 # Curated app assets and generated datasets belong under apps/web/public,
