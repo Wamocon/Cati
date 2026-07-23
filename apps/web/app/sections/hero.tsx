@@ -11,7 +11,6 @@ import {
   LayoutDashboard,
   Map,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
 } from "lucide-react"
 import { KineticHeadline } from "@/components/kinetic-headline"
@@ -30,6 +29,13 @@ export function Hero() {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (reduced) return
 
+    // The scrub parallax stutters on touch devices (momentum scrolling + mobile
+    // URL-bar resize), so it is limited to fine-pointer, larger screens. Small /
+    // coarse-pointer devices keep the gentle intro fade over a static backdrop.
+    const enableParallax =
+      window.matchMedia("(min-width: 1024px)").matches &&
+      window.matchMedia("(pointer: fine)").matches
+
     let cleanup: (() => void) | undefined
 
     void (async () => {
@@ -44,22 +50,39 @@ export function Hero() {
         .fromTo(imageRef.current, { scale: 1.1, autoAlpha: 0.65 }, { scale: 1, autoAlpha: 1, duration: 1.1 })
         .fromTo(panelRef.current, { y: 28, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.7 }, "-=0.55")
 
-      const scrub = gsap.to(imageRef.current, {
-        yPercent: 8,
-        scale: 1.06,
-        ease: "none",
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      })
+      const scrub = enableParallax
+        ? gsap.to(imageRef.current, {
+            yPercent: 8,
+            scale: 1.06,
+            ease: "none",
+            scrollTrigger: {
+              trigger: root,
+              start: "top top",
+              end: "bottom top",
+              scrub: true,
+            },
+          })
+        : null
+
+      // The hero image loads eagerly; once it (and layout) settle, recompute all
+      // ScrollTrigger start/end offsets so every trigger on the page has correct
+      // positions on first paint. Also refresh on orientation change / resize.
+      const refresh = () => ScrollTrigger.refresh()
+      const imageEl = imageRef.current?.querySelector("img")
+      if (imageEl) {
+        if (imageEl.complete) refresh()
+        else imageEl.addEventListener("load", refresh, { once: true })
+      }
+      window.addEventListener("orientationchange", refresh)
+      window.addEventListener("resize", refresh)
 
       cleanup = () => {
         intro.kill()
-        scrub.scrollTrigger?.kill()
-        scrub.kill()
+        scrub?.scrollTrigger?.kill()
+        scrub?.kill()
+        imageEl?.removeEventListener("load", refresh)
+        window.removeEventListener("orientationchange", refresh)
+        window.removeEventListener("resize", refresh)
       }
     })().catch(() => undefined)
 
@@ -92,9 +115,9 @@ export function Hero() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/18 bg-white/12 px-4 py-2 text-xs font-black tracking-[0.06em] text-emerald-50 shadow-sm backdrop-blur sm:tracking-[0.08em]"
+              className="mb-5 inline-flex max-w-full items-center gap-2 text-xs font-medium tracking-[0.02em] text-emerald-100/80"
             >
-              <Sparkles className="h-3.5 w-3.5 text-emerald-200" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/80" />
               1Çatı ERP - {t("badge")}
             </motion.div>
 

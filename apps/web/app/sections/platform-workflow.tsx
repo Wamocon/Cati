@@ -42,7 +42,7 @@ export function PlatformWorkflow() {
         <div className="mx-auto mt-10 grid max-w-6xl items-center gap-8 md:mt-12 lg:grid-cols-5">
           {/* Left: interactive table */}
           <motion.div
-            initial={{ opacity: 1, y: 24 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -107,7 +107,7 @@ export function PlatformWorkflow() {
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={active}
-                      initial={{ opacity: 1, x: 10 }}
+                      initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
                       transition={{ duration: 0.2 }}

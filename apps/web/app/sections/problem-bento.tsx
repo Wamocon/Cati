@@ -41,6 +41,8 @@ const keys = [
   "permits",
 ] as const
 
+const flowSteps = ["lead", "unit", "decision", "report"] as const
+
 export function ProblemBento() {
   const t = useTranslations("problems")
 
@@ -82,18 +84,16 @@ export function ProblemBento() {
               />
             </svg>
             <div className="relative z-10 flex min-h-[470px] flex-col justify-between">
-              {[
-                ["01", "Lead", "WhatsApp / Web / Office"],
-                ["02", "Unit", "Block / Floor / Price"],
-                ["03", "Decision", "Debt / Document / SLA"],
-                ["04", "Report", "Owner / Team / Audit"],
-              ].map(([no, title, text]) => (
-                <div key={no} className="w-64 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-900/[0.08] backdrop-blur">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c94d3e]">{no}</p>
-                  <p className="mt-2 text-lg font-black text-foreground">{title}</p>
-                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{text}</p>
-                </div>
-              ))}
+              {flowSteps.map((step, i) => {
+                const no = String(i + 1).padStart(2, "0")
+                return (
+                  <div key={step} className="w-64 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-900/[0.08] backdrop-blur">
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#c94d3e]">{no}</p>
+                    <p className="mt-2 text-lg font-black text-foreground">{t(`flow.${step}.title`)}</p>
+                    <p className="mt-1 text-xs font-semibold text-muted-foreground">{t(`flow.${step}.text`)}</p>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
@@ -103,7 +103,7 @@ export function ProblemBento() {
               return (
                 <motion.div
                   key={key}
-                  initial={{ opacity: 1, y: 24 }}
+                  initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.04, duration: 0.45 }}

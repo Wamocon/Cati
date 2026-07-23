@@ -7,7 +7,6 @@ import {
   Building2,
   FileCheck2,
   Home,
-  Route,
   ShieldCheck,
   TicketCheck,
   type LucideIcon,
@@ -92,7 +91,7 @@ const copy = {
         label: "Karar motoru",
         title: "Finans, erişim ve AI aynı sonuca bakar",
         text:
-          "Aidat, borç, rezervasyon, belge ve SLA sinyali rol bazlı aksiyon olarak görünür.",
+          "Aidat, borç, rezervasyon, belge ve yanıt süresi sinyali rol bazlı aksiyon olarak görünür.",
         stat: "24/7",
         statLabel: "canlı kontrol",
         icon: ShieldCheck,
@@ -103,7 +102,7 @@ const copy = {
     eyebrow: "Operating map",
     title: "From aerial site to block, from unit interior to ERP decision",
     intro:
-      "The masterplan, building, unit and operating screen share one auditable model. Each point represents a real CRM, finance, service or access decision flow.",
+      "The masterplan, building, unit and operating screen share one traceable model. Each point represents a real CRM, finance, service or access decision flow.",
     cta: "Enter live workspace",
     secondary: "Open unit matrix",
     dashboardTitle: "Role-based operating map",
@@ -156,7 +155,7 @@ const copy = {
         label: "Decision engine",
         title: "Finance, access and AI read the same signal",
         text:
-          "Dues, debt, reservations, documents and SLA become role-based actions.",
+          "Dues, debt, reservations, documents and response time become role-based actions.",
         stat: "24/7",
         statLabel: "live control",
         icon: ShieldCheck,
@@ -220,7 +219,7 @@ const copy = {
         label: "Entscheidung",
         title: "Finanzen, Zugang und AI lesen dasselbe Signal",
         text:
-          "Beiträge, Schulden, Reservierungen, Dokumente und SLA werden rollenbasierte Aktionen.",
+          "Beiträge, Schulden, Reservierungen, Dokumente und Reaktionszeit werden rollenbasierte Aktionen.",
         stat: "24/7",
         statLabel: "Live-Kontrolle",
         icon: ShieldCheck,
@@ -284,7 +283,7 @@ const copy = {
         label: "Решение",
         title: "Финансы, доступ и AI смотрят на один сигнал",
         text:
-          "Взносы, долг, бронирования, документы и SLA становятся действиями по роли.",
+          "Взносы, долг, бронирования, документы и время отклика становятся действиями по роли.",
         stat: "24/7",
         statLabel: "живой контроль",
         icon: ShieldCheck,
@@ -528,44 +527,96 @@ export function IsometricErpWorld({
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const desktop = window.matchMedia("(min-width: 1024px)").matches
-    if (compact || reduced || !desktop) {
+
+    // Dashboard-compact and reduced-motion stay static: the full route is drawn
+    // and the scene rests on the first step.
+    if (compact || reduced) {
       path.style.strokeDashoffset = "0"
       return
     }
 
     let cleanup: (() => void) | undefined
 
-    void (async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import("gsap"),
-        import("gsap/ScrollTrigger"),
-      ])
-      gsap.registerPlugin(ScrollTrigger)
+    if (desktop) {
+      void (async () => {
+        const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+          import("gsap"),
+          import("gsap/ScrollTrigger"),
+        ])
+        gsap.registerPlugin(ScrollTrigger)
 
-      const trigger = ScrollTrigger.create({
-        trigger: root,
-        start: "top 70%",
-        end: "bottom 35%",
-        scrub: 0.3,
-        onUpdate: (self) => {
-          const nextStep = Math.min(
-            steps.length - 1,
-            Math.floor(self.progress * steps.length)
-          )
-          setActiveStep(nextStep)
-          gsap.to(path, {
-            strokeDashoffset: length * (1 - self.progress),
-            duration: 0.08,
-            ease: "none",
-            overwrite: "auto",
-          })
-        },
+        const trigger = ScrollTrigger.create({
+          trigger: root,
+          start: "top 70%",
+          end: "bottom 35%",
+          scrub: 0.3,
+          onUpdate: (self) => {
+            const nextStep = Math.min(
+              steps.length - 1,
+              Math.floor(self.progress * steps.length)
+            )
+            setActiveStep(nextStep)
+            gsap.to(path, {
+              strokeDashoffset: length * (1 - self.progress),
+              duration: 0.08,
+              ease: "none",
+              overwrite: "auto",
+            })
+          },
+        })
+
+        cleanup = () => trigger.kill()
+      })().catch(() => {
+        path.style.strokeDashoffset = "0"
       })
 
-      cleanup = () => trigger.kill()
-    })().catch(() => {
-      path.style.strokeDashoffset = "0"
-    })
+      return () => cleanup?.()
+    }
+
+    // Mobile / tablet (below the desktop GSAP breakpoint): advance the scene as
+    // the section scrolls through the viewport, without loading GSAP. An
+    // IntersectionObserver gates a rAF-throttled scroll reader that mirrors the
+    // desktop start/end offsets, so the route draws and the active step tracks
+    // the scroll on touch devices. Passive listener + one write per frame keeps
+    // it smooth; it is torn down whenever the section leaves the viewport.
+    let frame = 0
+
+    const applyProgress = () => {
+      frame = 0
+      const rect = root.getBoundingClientRect()
+      const viewportHeight = window.innerHeight || 1
+      const startTop = viewportHeight * 0.7
+      const endTop = viewportHeight * 0.35 - rect.height
+      const span = startTop - endTop
+      const progress =
+        span <= 0 ? 0 : Math.min(1, Math.max(0, (startTop - rect.top) / span))
+
+      path.style.strokeDashoffset = `${length * (1 - progress)}`
+      setActiveStep(Math.min(steps.length - 1, Math.floor(progress * steps.length)))
+    }
+
+    const requestApply = () => {
+      if (!frame) frame = window.requestAnimationFrame(applyProgress)
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          window.addEventListener("scroll", requestApply, { passive: true })
+          requestApply()
+        } else {
+          window.removeEventListener("scroll", requestApply)
+        }
+      },
+      { threshold: 0 }
+    )
+    observer.observe(root)
+
+    cleanup = () => {
+      observer.disconnect()
+      window.removeEventListener("scroll", requestApply)
+      if (frame) window.cancelAnimationFrame(frame)
+    }
 
     return () => cleanup?.()
   }, [compact, steps.length])
@@ -604,8 +655,8 @@ export function IsometricErpWorld({
           )}
         >
           <div className={cn(compact ? "rounded-2xl border border-border bg-card p-4 shadow-xl shadow-black/[0.04]" : "")}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#ff6b57]/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-[#c94d3e] shadow-sm dark:bg-white/[0.06] dark:text-[#ff9a86]">
-              <Route className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.02em] text-[#c94d3e] dark:text-[#ff9a86]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#ff6b57]" />
               {compact ? localized.dashboardTitle : localized.eyebrow}
             </span>
             <h2

@@ -31,7 +31,7 @@ const navItems = [
   { label: "services", href: "/#workflows" },
   { label: "reviews", href: "/reviews" },
   { label: "contacts", href: "/#contact" },
-  { label: "videos", href: "/videos", pulse: true },
+  { label: "videos", href: "/videos", highlight: true },
 ]
 
 const dialogFocusableSelector =
@@ -164,7 +164,7 @@ export function Navbar() {
                   )}
                   aria-current={active ? "page" : undefined}
                 >
-                  {item.pulse ? <DemoPulse /> : null}
+                  {item.highlight ? <NavItemDot /> : null}
                   {t(item.label)}
                 </Link>
               )
@@ -284,7 +284,7 @@ export function Navbar() {
                         onClick={closeMobileMenu}
                       >
                         <span className="inline-flex items-center gap-2">
-                          {item.pulse ? <DemoPulse /> : null}
+                          {item.highlight ? <NavItemDot /> : null}
                           {t(item.label)}
                         </span>
                       </Link>
@@ -314,15 +314,12 @@ export function Navbar() {
   )
 }
 
-function DemoPulse() {
+function NavItemDot() {
   return (
     <span
-      className="relative inline-flex h-2.5 w-2.5 shrink-0"
+      className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-primary/80"
       aria-hidden="true"
-    >
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-65" />
-      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_14px_color-mix(in_srgb,var(--primary)_68%,transparent)]" />
-    </span>
+    />
   )
 }
 

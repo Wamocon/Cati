@@ -3,15 +3,14 @@
 import Image from "next/image"
 import { useLocale } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import {
-  BadgeCheck,
   Building2,
   CircleDollarSign,
   FileCheck2,
   Gauge,
   LayoutDashboard,
   MessageSquareText,
-  Network,
   ShieldCheck,
   Smartphone,
   TicketCheck,
@@ -27,45 +26,45 @@ type LocaleKey = "tr" | "en" | "de" | "ru"
 
 const copy = {
   tr: {
-    eyebrow: "Operasyon flipbook",
-    title: "Satis, site yonetimi, finans ve servis ayni ERP kaydinda bulusur",
+    eyebrow: "Operasyon akışı",
+    title: "Satış, site yönetimi, finans ve servis aynı ERP kaydında buluşur",
     subtitle:
-      "Bu bolum kart listesi degil; Ataberk Estate ekibinin gunluk isi nasil okudugunu gosterir: kisi, daire, servis, finans, belge ve rol kararlari tek kayit uzerinde farkli akislar olarak calisir.",
-    primaryCta: "Canli calisma alanina gir",
+      "Bu bölüm kart listesi değil; Ataberk Estate ekibinin günlük işi nasıl okuduğunu gösterir: kişi, daire, servis, finans, belge ve rol kararları tek kayıt üzerinde farklı akışlar olarak çalışır.",
+    primaryCta: "Canlı çalışma alanına gir",
     secondaryCta: "Site modelini incele",
-    scrollHint: "Kaydirarak urun akislarini ac",
+    scrollHint: "Kaydırarak ürün akışlarını aç",
     flowText:
-      "Kisi, daire, finans, servis, belge ve AI ozetleri, her ekibi tek bir dogrusal akisa zorlamadan birbirine bagli kalir.",
-    liveLabel: "Tek sistem kaydi",
-    workspaceLabel: "Baglantili calisma alani",
-    recordLabel: "Operasyon kaydi",
-    currentViewLabel: "Guncel gorunum",
-    teamAccessLabel: "Ekip erisimi",
+      "Kişi, daire, finans, servis, belge ve AI özetleri, her ekibi tek bir doğrusal akışa zorlamadan birbirine bağlı kalır.",
+    liveLabel: "Tek sistem kaydı",
+    workspaceLabel: "Bağlantılı çalışma alanı",
+    recordLabel: "Operasyon kaydı",
+    currentViewLabel: "Güncel görünüm",
+    teamAccessLabel: "Ekip erişimi",
     chapters: [
       {
         label: "CRM",
-        title: "Lead, malik ve sakin tek kisi profilinde baslar",
+        title: "Lead, malik ve sakin tek kişi profilinde başlar",
         text:
-          "WhatsApp, telefon, e-posta ve ofis gorusmeleri ayni kisi kaydinda toplanir. Dil, butce, kanal, sorumlu ekip ve sonraki aksiyon kaybolmaz.",
+          "WhatsApp, telefon, e-posta ve ofis görüşmeleri aynı kişi kaydında toplanır. Dil, bütçe, kanal, sorumlu ekip ve sonraki aksiyon kaybolmaz.",
         image: "/new-level-premium/resort-exterior.jpg",
         alt: "New Level Premium exterior and shared facilities",
         icon: Users,
         metrics: [
-          ["150", "kisi profili"],
+          ["150", "kişi profili"],
           ["4", "dil"],
-          ["1", "musteri kaydi"],
+          ["1", "müşteri kaydı"],
         ],
         modules: [
-          ["CRM kaydi", "Lead, malik, kiraci ve misafir iliskisi"],
-          ["Iletisim akisi", "WhatsApp, e-posta ve bildirim baglami"],
-          ["Rol filtresi", "Herkes yalnizca isine gereken ekrani gorur"],
+          ["CRM kaydı", "Lead, malik, kiracı ve misafir ilişkisi"],
+          ["İletişim akışı", "WhatsApp, e-posta ve bildirim bağlamı"],
+          ["Rol filtresi", "Herkes yalnızca işine gereken ekranı görür"],
         ],
       },
       {
         label: "Daire matrisi",
-        title: "Blok, kat ve daire durumu canli envantere donusur",
+        title: "Blok, kat ve daire durumu canlı envantere dönüşür",
         text:
-          "769 daire, blok-kat mantigi, doluluk, borc, bakim, rezervasyon ve yayin hazirligi ile birlikte filtrelenir. Excel yerine tek kaynak kullanilir.",
+          "769 daire, blok-kat mantığı, doluluk, borç, bakım, rezervasyon ve yayın hazırlığı ile birlikte filtrelenir. Excel yerine tek kaynak kullanılır.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium masterplan aerial view",
         icon: Building2,
@@ -75,72 +74,72 @@ const copy = {
           ["51%", "doluluk"],
         ],
         modules: [
-          ["Daire matrisi", "Blok, kat, durum ve fiyat gorunurlugu"],
-          ["Portfoy hazirligi", "EIDS, belge ve yayin kontrolu"],
-          ["Saha modeli", "Site, sosyal alan ve ortak alan baglantisi"],
+          ["Daire matrisi", "Blok, kat, durum ve fiyat görünürlüğü"],
+          ["Portföy hazırlığı", "EİDS, belge ve yayın kontrolü"],
+          ["Saha modeli", "Site, sosyal alan ve ortak alan bağlantısı"],
         ],
       },
       {
         label: "Servis",
-        title: "Servis talebi sohbetten cikarak kanitli ise donusur",
+        title: "Servis talebi sohbetten çıkarak kanıtlı işe dönüşür",
         text:
-          "Temizlik, transfer, bakim ve ozel talepler SLA, sorumlu kisi, fotograf kaniti, borc kontrolu ve kapatma onayi ile takip edilir.",
+          "Temizlik, transfer, bakım ve özel talepler termin, sorumlu kişi, fotoğraf kanıtı, borç kontrolü ve kapatma onayı ile takip edilir.",
         image: "/new-level-premium/site-progress-2026.jpg",
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
         metrics: [
-          ["89", "acik is"],
-          ["4", "SLA riski"],
-          ["2", "kanit adimi"],
+          ["89", "açık iş"],
+          ["4", "termin riski"],
+          ["2", "kanıt adımı"],
         ],
         modules: [
-          ["Servis katalogu", "Fiyat, SLA ve ekip atamasi"],
-          ["Mobil saha", "Foto, not ve durum guncellemesi"],
-          ["Takvim", "Giris, cikis, temizlik ve ziyaret plani"],
+          ["Servis kataloğu", "Fiyat, termin ve ekip ataması"],
+          ["Mobil saha", "Foto, not ve durum güncellemesi"],
+          ["Takvim", "Giriş, çıkış, temizlik ve ziyaret planı"],
         ],
       },
       {
         label: "Finans",
-        title: "Aidat, depozito ve erisim karari tek kontrol motorunda calisir",
+        title: "Aidat, depozito ve erişim kararı tek kontrol motorunda çalışır",
         text:
-          "Tahsilat, borc, depozito, iade, kur farki ve erisim kisiti ayni karar zeminine baglanir. Servis oncesi finans riski gorulur.",
+          "Tahsilat, borç, depozito, iade, kur farkı ve erişim kısıtı aynı karar zeminine bağlanır. Servis öncesi finans riski görülür.",
         image: "/new-level-premium/showroom-bedroom.jpg",
         alt: "New Level Premium furnished showroom bedroom",
         icon: WalletCards,
         metrics: [
           ["1.4M ₺", "tahsilat"],
-          ["6", "erisim kisiti"],
+          ["6", "erişim kısıtı"],
           ["0", "kopuk tablo"],
         ],
         modules: [
           ["Finans defteri", "Aidat, tahsilat ve bakiye"],
-          ["Depozito akisi", "Iade, kesinti ve onay"],
-          ["Erisim motoru", "QR, kart, plaka ve borc sinyali"],
+          ["Depozito akışı", "İade, kesinti ve onay"],
+          ["Erişim motoru", "QR, kart, plaka ve borç sinyali"],
         ],
       },
       {
-        label: "Yonetim AI",
-        title: "AI her rol icin farkli sonraki aksiyonu aciklar",
+        label: "Yönetim AI",
+        title: "AI her rol için farklı sonraki aksiyonu açıklar",
         text:
-          "Yonetim, muhasebe, saha ekibi, malik ve kiraci ayni veriden farkli cevap alir. Raporlar, belgeler ve audit izi karar guvenini korur.",
+          "Yönetim, muhasebe, saha ekibi, malik ve kiracı aynı veriden farklı cevap alır. Raporlar, belgeler ve denetim izi karar güvenini korur.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium site plan used for management reporting",
         icon: Gauge,
         metrics: [
           ["8", "AI riski"],
-          ["15", "modul plani"],
-          ["24/7", "rol baglami"],
+          ["15", "modül planı"],
+          ["24/7", "rol bağlamı"],
         ],
         modules: [
-          ["AI rapor merkezi", "Risk, borc, SLA ve aksiyon ozeti"],
-          ["Belge merkezi", "TAPU, DASK, sozlesme ve KYC"],
-          ["Erisim gecmisi", "Kimin hangi karar ve kaydi acabilecegi nettir"],
+          ["AI rapor merkezi", "Risk, borç, termin ve aksiyon özeti"],
+          ["Belge merkezi", "TAPU, DASK, sözleşme ve kimlik doğrulama"],
+          ["Erişim geçmişi", "Kimin hangi karar ve kaydı açabileceği nettir"],
         ],
       },
     ],
   },
   en: {
-    eyebrow: "Operational flipbook",
+    eyebrow: "Operational walkthrough",
     title: "Sales, site management, finance and service meet on one ERP record",
     subtitle:
       "This is not a list of cards. It is the operating model Ataberk Estate uses every day: people, units, service, finance, documents and role decisions run as connected workflows on one record.",
@@ -197,17 +196,17 @@ const copy = {
         label: "Service",
         title: "A service request becomes evidence-based work, not chat noise",
         text:
-          "Cleaning, transfer, maintenance and special requests are tracked with SLA, assignee, photo proof, debt context and closure approval.",
+          "Cleaning, transfer, maintenance and special requests are tracked with response time, assignee, photo proof, debt context and closure approval.",
         image: "/new-level-premium/site-progress-2026.jpg",
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
         metrics: [
           ["89", "open work"],
-          ["4", "SLA risks"],
+          ["4", "deadline risks"],
           ["2", "proof steps"],
         ],
         modules: [
-          ["Service catalogue", "Price, SLA and team assignment"],
+          ["Service catalogue", "Price, response time and team assignment"],
           ["Mobile field", "Photo, note and status update"],
           ["Calendar", "Move-in, checkout, cleaning and visits"],
         ],
@@ -235,7 +234,7 @@ const copy = {
         label: "Management AI",
         title: "AI explains the next action differently for every role",
         text:
-          "Management, accounting, field staff, owners and tenants receive different answers from the same data. Reports, documents and audit trails preserve decision trust.",
+          "Management, accounting, field staff, owners and tenants receive different answers from the same data. Reports, documents and activity history preserve decision trust.",
         image: "/new-level-premium/masterplan-aerial.jpg",
         alt: "New Level Premium site plan used for management reporting",
         icon: Gauge,
@@ -245,15 +244,15 @@ const copy = {
           ["24/7", "role context"],
         ],
         modules: [
-          ["AI report center", "Risk, debt, SLA and action summary"],
-          ["Document center", "TAPU, DASK, contract and KYC"],
+          ["AI report center", "Risk, debt, response time and action summary"],
+          ["Document center", "TAPU, DASK, contract and identity check"],
           ["Access history", "Who can open each record and decision is clear"],
         ],
       },
     ],
   },
   de: {
-    eyebrow: "Operationales Flipbook",
+    eyebrow: "Operativer Ablauf",
     title: "Vertrieb, Standortbetrieb, Finanzen und Service treffen sich im ERP-Datensatz",
     subtitle:
       "Nicht als Kartenliste, sondern als Betriebsmodell: Personen, Einheiten, Service, Finanzen, Dokumente und Rollenentscheidungen laufen als verbundene Abläufe.",
@@ -294,12 +293,12 @@ const copy = {
         label: "Service",
         title: "Service wird belegbare Arbeit statt Chat-Verlauf",
         text:
-          "Reinigung, Transfer, Wartung und Sonderwünsche laufen mit SLA, Zuständigkeit, Fotobeweis, Schuldbezug und Abschlussfreigabe.",
+          "Reinigung, Transfer, Wartung und Sonderwünsche laufen mit Reaktionszeit, Zuständigkeit, Fotobeweis, Schuldbezug und Abschlussfreigabe.",
         image: "/new-level-premium/site-progress-2026.jpg",
         alt: "New Level Premium June 2026 site progress",
         icon: TicketCheck,
-        metrics: [["89", "offene Arbeiten"], ["4", "SLA-Risiken"], ["2", "Beweisschritte"]],
-        modules: [["Katalog", "Preis, SLA und Team"], ["Mobil", "Foto, Notiz und Status"], ["Kalender", "Einzug, Auszug, Reinigung und Besuch"]],
+        metrics: [["89", "offene Arbeiten"], ["4", "Terminrisiken"], ["2", "Beweisschritte"]],
+        modules: [["Katalog", "Preis, Reaktionszeit und Team"], ["Mobil", "Foto, Notiz und Status"], ["Kalender", "Einzug, Auszug, Reinigung und Besuch"]],
       },
       {
         label: "Finanzen",
@@ -321,12 +320,12 @@ const copy = {
         alt: "New Level Premium site plan used for management reporting",
         icon: Gauge,
         metrics: [["8", "KI-Risiken"], ["15", "Module"], ["24/7", "Rollenbezug"]],
-        modules: [["KI-Berichte", "Risiko, Schuld, SLA und Aktion"], ["Dokumente", "TAPU, DASK, Vertrag und KYC"], ["Zugriffsverlauf", "Rollen und Freigaben bleiben sichtbar"]],
+        modules: [["KI-Berichte", "Risiko, Schuld, Reaktionszeit und Aktion"], ["Dokumente", "TAPU, DASK, Vertrag und Identitätsprüfung"], ["Zugriffsverlauf", "Rollen und Freigaben bleiben sichtbar"]],
       },
     ],
   },
   ru: {
-    eyebrow: "Operational flipbook",
+    eyebrow: "Операционный обзор",
     title: "Sales, site work, finance and service share one ERP record",
     subtitle:
       "The public product story shows how people, units, service, finance, documents and role decisions run as connected workflows.",
@@ -410,6 +409,20 @@ export function SolutionGrid() {
   const imageRefs = useRef<Array<HTMLDivElement | null>>([])
   const pageRefs = useRef<Array<HTMLDivElement | null>>([])
   const [activeChapter, setActiveChapter] = useState(0)
+  const [isMobile, setIsMobile] = useState(false)
+  const reduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 1023px)")
+    const update = () => setIsMobile(query.matches)
+    update()
+    query.addEventListener("change", update)
+    return () => query.removeEventListener("change", update)
+  }, [])
+
+  // On mobile the GSAP flipbook is skipped; each stacked card gets a lightweight
+  // fade + slide-up reveal instead. Desktop keeps the scroll-driven GSAP flow.
+  const mobileReveal = isMobile && !reduceMotion
 
   useEffect(() => {
     const root = rootRef.current
@@ -516,8 +529,8 @@ export function SolutionGrid() {
       <div className="container py-12 md:py-16">
         <ScrollReveal className="grid gap-6 lg:grid-cols-[0.82fr_1fr] lg:items-end">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-primary shadow-sm">
-              <Network className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-primary/80">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
               {localized.eyebrow}
             </span>
             <h2 className="mt-5 max-w-3xl text-3xl font-black leading-tight tracking-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -561,8 +574,8 @@ export function SolutionGrid() {
 
           <div className="relative z-10 container grid gap-8 py-10 lg:min-h-svh lg:grid-cols-[minmax(0,0.78fr)_minmax(520px,1fr)_220px] lg:items-center lg:py-12 xl:grid-cols-[260px_minmax(620px,1fr)_240px]">
             <div className="max-w-lg">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/10 px-4 py-2 text-xs font-black text-emerald-100 shadow-sm backdrop-blur">
-                <BadgeCheck className="h-4 w-4" />
+              <div className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-emerald-100/80">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/70" />
                 {localized.liveLabel}
               </div>
               <h3 className="mt-5 text-2xl font-black leading-tight text-white sm:text-3xl lg:text-4xl">
@@ -595,11 +608,23 @@ export function SolutionGrid() {
                 const SignalIcon = chapterIcons[index] ?? ShieldCheck
 
                 return (
-                  <div
+                  <motion.div
                     key={chapter.label}
                     ref={(node) => {
                       pageRefs.current[index] = node
                     }}
+                    initial={mobileReveal ? { opacity: 0, y: 24 } : false}
+                    whileInView={mobileReveal ? { opacity: 1, y: 0 } : undefined}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={
+                      mobileReveal
+                        ? {
+                            duration: 0.5,
+                            ease: [0.22, 1, 0.36, 1],
+                            delay: Math.min(index * 0.06, 0.24),
+                          }
+                        : undefined
+                    }
                     className={cn(
                       "mb-5 rounded-[1.75rem] border border-white/14 bg-[#071b18]/86 p-4 shadow-2xl shadow-black/30 backdrop-blur-2xl lg:absolute lg:inset-0 lg:mb-0 lg:p-5",
                       index > 0 && "lg:opacity-0"
@@ -692,7 +717,7 @@ export function SolutionGrid() {
                         ))}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 )
               })}
             </div>

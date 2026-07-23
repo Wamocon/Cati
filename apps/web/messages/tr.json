@@ -237,7 +237,7 @@
   },
   "problems": {
     "title": "Türkiye'de emlak yönetimi neden zor",
-    "subtitle": "Bir property manager'ın her gün karşılaştığı gerçek rakamlar ve süreçler, özellikle 2026'daki yeni düzenlemelerle.",
+    "subtitle": "Bir mülk yöneticisinin her gün karşılaştığı gerçek rakamlar ve süreçler, özellikle 2026'daki yeni düzenlemelerle.",
     "leads": {
       "title": "Müşteri adayları mesajlaşmalarda kayboluyor",
       "desc": "Alıcı aynı anda WhatsApp, Instagram ve web sitesinden yazıyor. 30 dakikadan sonra dönüşüm yüzde altmış düşüyor. Tek bir CRM olmadan geçmiş personel değiştiğinde yok oluyor."
@@ -268,13 +268,19 @@
     },
     "fraud": {
       "title": "Sahte TAPU ve sahte ilanlar",
-      "desc": "Sahte TAPU, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef, her işlemde due-diligence şart."
+      "desc": "Sahte TAPU, sahte sözleşmeler, yetkisiz emlakçılar. Yabancı alıcılar özellikle hedef, her işlemde detaylı ön inceleme şart."
     },
     "permits": {
       "title": "Oturum izni kuralları sıkılaştı",
       "desc": "200.000 $ minimum değer, SPK onaylı ekspertiz, gelir/ sigorta belgesi ve Antalya/Alanya'da %25 yabancı kota sınırı. Her dosya farklı."
     },
-    "sectionBadge": "2026 Gerçekliği"
+    "sectionBadge": "2026 Gerçekliği",
+    "flow": {
+      "lead": { "title": "Talep", "text": "WhatsApp / Web / Ofis" },
+      "unit": { "title": "Daire", "text": "Blok / Kat / Fiyat" },
+      "decision": { "title": "Karar", "text": "Borç / Belge / Termin" },
+      "report": { "title": "Rapor", "text": "Malik / Ekip / Denetim" }
+    }
   },
   "solution": {
     "title": "1Çatı, emlağın tek işletim sistemi",
@@ -304,7 +310,7 @@
         "tag": "Aktif"
       },
       "dueDiligence": {
-        "title": "TAPU & sözleşme due-diligence",
+        "title": "TAPU & sözleşme ön incelemesi",
         "desc": "Satış öncesi zorunlu kontrol listesi: TAPU, DASK, imar, fotoğraf, yetki belgesi. Sadece yönetici 'sözleşmeye hazır' yapabilir.",
         "tag": "Aktif"
       },

@@ -196,7 +196,7 @@
   "hero": {
     "badge": "real estate operations platform",
     "headline": "Run your real estate operation from one ERP center",
-    "subheadline": "1Cati connects sales, portfolio, owners, tenants, dues, service, documents, EIDS and reporting in a fast, role-based and auditable workspace.",
+    "subheadline": "1Cati connects sales, portfolio, owners, tenants, dues, service, documents, EIDS and reporting in a fast, role-based and traceable workspace.",
     "ctaPrimary": "Explore product flow",
     "ctaSecondary": "Enter workspace",
     "searchCity": "City",
@@ -268,13 +268,19 @@
     },
     "fraud": {
       "title": "Fake title deeds and fake listings",
-      "desc": "Forged title deeds, fake contracts and unauthorized agents. Foreign buyers are especially targeted, due diligence is a must in every transaction."
+      "desc": "Forged title deeds, fake contracts and unauthorized agents. Foreign buyers are especially targeted, a thorough background check is a must in every transaction."
     },
     "permits": {
       "title": "Residence permit rules have tightened",
       "desc": "$200,000 minimum value, SPK-approved appraisal, income/insurance documents and a 25% foreign quota limit in Antalya/Alanya. Every file is different."
     },
-    "sectionBadge": "2026 Reality"
+    "sectionBadge": "2026 Reality",
+    "flow": {
+      "lead": { "title": "Lead", "text": "WhatsApp / Web / Office" },
+      "unit": { "title": "Unit", "text": "Block / Floor / Price" },
+      "decision": { "title": "Decision", "text": "Debt / Document / Deadline" },
+      "report": { "title": "Report", "text": "Owner / Team / History" }
+    }
   },
   "solution": {
     "title": "1Çatı, the operating system for real estate",
@@ -304,7 +310,7 @@
         "tag": "Active"
       },
       "dueDiligence": {
-        "title": "Title deed & contract due diligence",
+        "title": "Title deed & contract verification",
         "desc": "Mandatory pre-sale checklist: title deed, DASK, zoning, photos, authorization document. Only a manager can mark 'ready for contract'.",
         "tag": "Active"
       },

@@ -9,7 +9,6 @@ import {
   CalendarCheck,
   CircleDollarSign,
   FileText,
-  MessageSquareText,
   ShieldCheck,
   TicketCheck,
   Users,
@@ -30,52 +29,52 @@ interface Flow {
 
 const copy = {
   tr: {
-    eyebrow: "Bagli is akislari",
-    title: "Tek ERP kaydi, birden fazla is akisi",
+    eyebrow: "Bağlı iş akışları",
+    title: "Tek ERP kaydı, birden fazla iş akışı",
     subtitle:
-      "Sistem tek bir dogruluk kaynagi kurar; satis, site yonetimi, finans, servis, rezervasyon ve raporlama kendi akisinda calisir.",
-    center: "Ortak ERP kaydi",
+      "Sistem tek bir doğruluk kaynağı kurar; satış, site yönetimi, finans, servis, rezervasyon ve raporlama kendi akışında çalışır.",
+    center: "Ortak ERP kaydı",
     centerKicker: "Proje merkezi",
     centerProject: "Yeni Seviye Premium",
     centerStats: [
       ["769", "daire"],
       ["7", "blok"],
-      ["52k", "m2 alan"],
+      ["52k", "m² alan"],
     ],
     flows: [
       {
         title: "Site ve daire modeli",
-        text: "Blok, kat, daire, durum, fiyat, belge ve ortak alan verisi ayni envantere baglanir.",
+        text: "Blok, kat, daire, durum, fiyat, belge ve ortak alan verisi aynı envantere bağlanır.",
         icon: Building2,
         accent: "bg-teal-500",
       },
       {
-        title: "Kisi ve rol baglantisi",
-        text: "Malik, kiraci, personel, muhasebe ve yonetim yalnizca gerekli ekrani gorur.",
+        title: "Kişi ve rol bağlantısı",
+        text: "Malik, kiracı, personel, muhasebe ve yönetim yalnızca gerekli ekranı görür.",
         icon: Users,
         accent: "bg-sky-500",
       },
       {
-        title: "Finans ve karar kapisi",
-        text: "Aidat, depozito, borc, mutabakat ve erisim karari ayni kontrol zemininde okunur.",
+        title: "Finans ve karar kapısı",
+        text: "Aidat, depozito, borç, mutabakat ve erişim kararı aynı kontrol zemininde okunur.",
         icon: CircleDollarSign,
         accent: "bg-amber-500",
       },
       {
-        title: "Servis ve saha isi",
-        text: "Talep, borc kontrolu, ekip atama, fotograf kaniti ve kapanis raporu birlikte ilerler.",
+        title: "Servis ve saha işi",
+        text: "Talep, borç kontrolü, ekip atama, fotoğraf kanıtı ve kapanış raporu birlikte ilerler.",
         icon: TicketCheck,
         accent: "bg-rose-500",
       },
       {
         title: "Rezervasyon ve teslim",
-        text: "Musaitlik, depozito, temizlik, kontrol, move-in ve checkout ayni zaman cizelgesine baglanir.",
+        text: "Müsaitlik, depozito, temizlik, kontrol, giriş ve çıkış aynı zaman çizelgesine bağlanır.",
         icon: CalendarCheck,
         accent: "bg-violet-500",
       },
       {
-        title: "Belge, iletisim ve rapor",
-        text: "TAPU, DASK, sozlesme, mesaj ve AI ozeti kaynak kayda bagli kalir.",
+        title: "Belge, iletişim ve rapor",
+        text: "TAPU, DASK, sözleşme, mesaj ve AI özeti kaynak kayda bağlı kalır.",
         icon: FileText,
         accent: "bg-emerald-500",
       },
@@ -274,8 +273,8 @@ export function HowItWorks() {
       <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-[size:42px_42px]" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-[#ff6b57]/20 bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-[#c94d3e] shadow-sm">
-            <MessageSquareText className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-[#c94d3e]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#ff6b57]/70" />
             {localized.eyebrow}
           </span>
           <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -288,7 +287,7 @@ export function HowItWorks() {
 
         <div className="relative mt-9 overflow-hidden rounded-[2rem] border border-slate-200 bg-white/86 p-4 shadow-2xl shadow-slate-900/[0.07] md:p-7">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(circle_at_50%_0%,rgba(20,184,166,0.16),transparent_58%)]" />
-          <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
+          <svg className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
             <path
               d="M150 150 C300 70 425 220 500 310 C575 400 705 545 850 470 M150 470 C300 545 425 400 500 310 C575 220 710 70 850 150"
               fill="none"

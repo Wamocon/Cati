@@ -32,7 +32,7 @@ export function ScrollReveal({
 
   return (
     <motion.div
-      initial={{ opacity: 1, ...directionOffset[direction] }}
+      initial={{ opacity: 0, ...directionOffset[direction] }}
       whileInView={{ opacity: 1, y: 0, x: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{

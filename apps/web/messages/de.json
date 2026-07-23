@@ -268,13 +268,19 @@
     },
     "fraud": {
       "title": "Gefälschte Grundbücher und gefälschte Anzeigen",
-      "desc": "Gefälschte Grundbücher, gefälschte Verträge und unbefugte Makler. Ausländische Käufer sind besonders gefährdet, Due Diligence ist in jeder Transaktion Pflicht."
+      "desc": "Gefälschte Grundbücher, gefälschte Verträge und unbefugte Makler. Ausländische Käufer sind besonders gefährdet, eine sorgfältige Prüfung ist in jeder Transaktion Pflicht."
     },
     "permits": {
       "title": "Aufenthaltsgenehmigungsregeln wurden verschärft",
       "desc": "Mindestwert 200.000 $, von der SPK genehmigte Bewertung, Einkommens-/Versicherungsnachweise und eine 25%ige Ausländerkontingentgrenze in Antalya/Alanya. Jede Akte ist anders."
     },
-    "sectionBadge": "Realität 2026"
+    "sectionBadge": "Realität 2026",
+    "flow": {
+      "lead": { "title": "Anfrage", "text": "WhatsApp / Web / Büro" },
+      "unit": { "title": "Wohnung", "text": "Block / Etage / Preis" },
+      "decision": { "title": "Entscheidung", "text": "Schuld / Dokument / Termin" },
+      "report": { "title": "Bericht", "text": "Eigentümer / Team / Verlauf" }
+    }
   },
   "solution": {
     "title": "1Çatı, das Betriebssystem für Immobilien",
@@ -304,7 +310,7 @@
         "tag": "Aktiv"
       },
       "dueDiligence": {
-        "title": "Grundbuch- & Vertragsdue Diligence",
+        "title": "Grundbuch- & Vertragsprüfung",
         "desc": "Verpflichtende Vorverkaufs-Checkliste: Grundbuch, DASK, Zonierung, Fotos, Autorisierungsdokument. Nur ein Manager kann 'vertragsbereit' markieren.",
         "tag": "Aktiv"
       },

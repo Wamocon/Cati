@@ -1,7 +1,7 @@
 "use client"
 
 import { useLocale, useTranslations } from "next-intl"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import {
   Bell,
   CircleDollarSign,
@@ -26,13 +26,13 @@ const icons = {
 
 const mapCopy = {
   tr: {
-    label: "Turkiye kontrol akisi",
-    title: "Uyumluluk bir etiket degil, karar kapisidir.",
+    label: "Türkiye kontrol akışı",
+    title: "Uyumluluk bir etiket değil, karar kapısıdır.",
     text:
-      "EIDS, tapu inceleme, oturum uygunlugu, vergi riski ve kiralama bildirimi; ilan, servis veya teslim ilerlemeden once ayni onay kuyruguna baglanir.",
+      "EİDS, tapu inceleme, oturum uygunluğu, vergi riski ve kiralama bildirimi; ilan, servis veya teslim ilerlemeden önce aynı onay kuyruğuna bağlanır.",
     lanes: [
-      ["EIDS", "Malik yetkisi"],
-      ["TAPU", "Belge kontrolu"],
+      ["EİDS", "Malik yetkisi"],
+      ["TAPU", "Belge kontrolü"],
       ["KBS/e-GUEST", "Kiralama bildirimi"],
     ],
   },
@@ -77,6 +77,7 @@ const mapCopy = {
 export function ComplianceFeatures() {
   const t = useTranslations("compliance")
   const locale = useLocale()
+  const reduce = useReducedMotion()
   const map = mapCopy[(locale as LocaleKey) in mapCopy ? (locale as LocaleKey) : "tr"]
   const keys = [
     "eids",
@@ -95,8 +96,8 @@ export function ComplianceFeatures() {
       <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/[0.025] to-background" />
       <div className="relative z-10 container">
         <ScrollReveal className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1 text-xs font-extrabold tracking-widest text-primary uppercase shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-wide text-primary/80">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/60" />
             {t("sectionBadge")}
           </span>
           <h2 className="mt-5 text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
@@ -140,10 +141,14 @@ export function ComplianceFeatures() {
             return (
               <motion.div
                 key={key}
-                initial={{ opacity: 1, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05, duration: 0.5 }}
+                initial={reduce ? false : { opacity: 0, y: 24 }}
+                whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={
+                  reduce
+                    ? undefined
+                    : { delay: index * 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }
+                }
                 className="min-w-0"
               >
                 <GlassCard className="group h-full min-w-0 p-4 sm:p-6" hover>

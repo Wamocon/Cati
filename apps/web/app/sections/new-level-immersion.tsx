@@ -9,9 +9,7 @@ import {
   BedDouble,
   Building2,
   FileCheck2,
-  Landmark,
   Map,
-  ShieldCheck,
   Waves,
 } from "lucide-react"
 import { ScrollReveal } from "@/components/scroll-reveal"
@@ -27,12 +25,12 @@ const copy = {
       "1Çatı, Yeni Seviye Premium gibi büyük bir siteyi sadece görsel portföy olarak değil; daire, hizmet, aidat, rezervasyon, belge ve erişim kararlarıyla birlikte yönetilen ticari operasyon olarak ele alır.",
     ctaPrimary: "Daire matrisini aç",
     ctaSecondary: "Platform akışını incele",
-    liveLabel: "Yeni Seviye Premium kontrol gorunumu",
+    liveLabel: "Yeni Seviye Premium kontrol görünümü",
     metrics: [
-      ["52k m2", "proje alani"],
+      ["52k m2", "proje alanı"],
       ["900 m", "plaj mesafesi"],
-      ["5*", "otel altyapisi"],
-      ["3 yil", "kira garantisi"],
+      ["5*", "otel altyapısı"],
+      ["3 yıl", "kira garantisi"],
     ],
     stages: [
       {
@@ -45,7 +43,7 @@ const copy = {
         label: "Dış yaşam",
         title: "Satış vaadi operasyon verisine dönüşür",
         text:
-          "Spor alanı, havuz, peyzaj, servis ve ortak alan vaatleri; görev, SLA, bütçe ve malik iletişimi olarak takip edilir.",
+          "Spor alanı, havuz, peyzaj, servis ve ortak alan vaatleri; görev, yanıt süresi, bütçe ve malik iletişimi olarak takip edilir.",
       },
       {
         label: "Saha gerçekliği",
@@ -86,7 +84,7 @@ const copy = {
         label: "Resort life",
         title: "The sales promise becomes operating data",
         text:
-          "Sports, pool, landscape, service and common-area commitments become tasks, SLA, budget and owner communication.",
+          "Sports, pool, landscape, service and common-area commitments become tasks, response time, budget and owner communication.",
       },
       {
         label: "Site reality",
@@ -111,7 +109,7 @@ const copy = {
     ctaSecondary: "Plattformablauf prüfen",
     liveLabel: "Neues Niveau Premium Kontrollansicht",
     metrics: [
-      ["52k m2", "Projektflache"],
+      ["52k m2", "Projektfläche"],
       ["900 m", "zum Strand"],
       ["5*", "Hotelstruktur"],
       ["3 Jahre", "Mietgarantie"],
@@ -127,7 +125,7 @@ const copy = {
         label: "Resortleben",
         title: "Das Verkaufsversprechen wird Betriebsdaten",
         text:
-          "Sport, Pool, Landschaft, Service und Gemeinschaftsflächen werden zu Aufgaben, SLA, Budget und Eigentümerkommunikation.",
+          "Sport, Pool, Landschaft, Service und Gemeinschaftsflächen werden zu Aufgaben, Reaktionszeit, Budget und Eigentümerkommunikation.",
       },
       {
         label: "Baurealität",
@@ -168,7 +166,7 @@ const copy = {
         label: "Жизнь комплекса",
         title: "Продажное обещание становится операционными данными",
         text:
-          "Спорт, бассейн, ландшафт, сервис и общие зоны превращаются в задачи, SLA, бюджет и коммуникацию с владельцами.",
+          "Спорт, бассейн, ландшафт, сервис и общие зоны превращаются в задачи, время отклика, бюджет и коммуникацию с владельцами.",
       },
       {
         label: "Реальный статус",
@@ -320,6 +318,37 @@ export function NewLevelImmersion() {
     return () => cleanup?.()
   }, [stages])
 
+  // Mobile / tablet (below the xl pinned-scrub experience): a lightweight
+  // IntersectionObserver advances the active stage as each card crosses the
+  // vertical centre of the viewport, which crossfades the full-bleed background
+  // layer and moves the active-card highlight. Desktop is handled by the GSAP
+  // effect above; reduced-motion is skipped so the scene stays static.
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
+    if (reduced || desktop) return
+
+    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[]
+    if (cards.length === 0) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue
+          const index = cards.indexOf(entry.target as HTMLDivElement)
+          if (index >= 0) {
+            activeStageRef.current = index
+            setActiveStage(index)
+          }
+        }
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
+    )
+
+    cards.forEach((card) => observer.observe(card))
+    return () => observer.disconnect()
+  }, [stages])
+
   const jumpToStage = (stageIndex: number) => {
     const nextIndex = Math.max(0, Math.min(stages.length - 1, stageIndex))
     const transitionStage = stageTransitionRef.current
@@ -334,10 +363,19 @@ export function NewLevelImmersion() {
     const root = rootRef.current
     if (!root) return
 
-    const desktop = window.matchMedia("(min-width: 1280px)").matches
-    if (!desktop) return
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const desktop = window.matchMedia("(min-width: 1280px)").matches
+
+    if (!desktop) {
+      // Bring the chosen stage card to the centre of the viewport; the
+      // IntersectionObserver above then keeps the active state in sync.
+      cardRefs.current[nextIndex]?.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "center",
+      })
+      return
+    }
+
     const scrollable = Math.max(0, root.offsetHeight - window.innerHeight)
     const segmentProgress = (nextIndex + 0.5) / stages.length
     const sectionTop = root.getBoundingClientRect().top + window.scrollY
@@ -352,8 +390,8 @@ export function NewLevelImmersion() {
     <section ref={rootRef} id="new-level" data-testid="new-level-section" className="relative bg-[#f7faf8] text-[#061a17]">
       <div className="container pt-8 pb-12 md:pt-10 md:pb-16">
         <ScrollReveal className="max-w-4xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-700/20 bg-white px-3 py-1 text-xs font-extrabold tracking-[0.18em] text-emerald-800 uppercase shadow-sm">
-            <Landmark className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.02em] text-emerald-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
             {t.eyebrow}
           </span>
           <h2 className="mt-5 max-w-3xl text-3xl leading-tight font-black text-[#061a17] md:text-5xl">
@@ -398,8 +436,8 @@ export function NewLevelImmersion() {
 
           <div className="relative z-10 container grid min-h-svh items-start gap-8 py-14 sm:py-16 xl:grid-cols-[0.92fr_1.08fr] xl:items-center xl:py-10 2xl:py-20">
             <div className="max-w-xl">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white/90 backdrop-blur">
-                <ShieldCheck className="h-4 w-4 text-emerald-200" />
+              <div className="mb-6 inline-flex items-center gap-2 text-xs font-medium tracking-[0.02em] text-white/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/80" />
                 {t.liveLabel}
               </div>
 
@@ -414,9 +452,9 @@ export function NewLevelImmersion() {
                         cardRefs.current[index] = node
                       }}
                       className={cn(
-                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-opacity duration-300 xl:absolute xl:mb-0 xl:p-8",
+                        "relative inset-x-0 top-0 rounded-[1.75rem] border border-white/16 bg-[#061a17]/72 p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-all duration-300 xl:absolute xl:mb-0 xl:border-white/16 xl:p-8 xl:ring-0",
                         index === activeStage
-                          ? "xl:opacity-100"
+                          ? "border-emerald-200/40 ring-1 ring-emerald-200/25 xl:opacity-100"
                           : "xl:pointer-events-none xl:opacity-0"
                       )}
                     >

@@ -38,7 +38,7 @@ test.describe("Landing page journey", () => {
     const solution = page.locator("[data-testid='solution-grid']")
     await expect(
       solution.getByRole("heading", {
-        name: /Satis, site yonetimi, finans ve servis ayni ERP kaydinda bulusur/i,
+        name: /Satış, site yönetimi, finans ve servis aynı ERP kaydında buluşur/i,
       })
     ).toBeVisible()
     await expect(solution.getByText(/02\s*\/?\s*Daire matrisi/i).filter({ visible: true }).first()).toBeVisible()
@@ -48,7 +48,7 @@ test.describe("Landing page journey", () => {
     await scrollToSection(page, "[data-testid='compliance-features']")
     const compliance = page.locator("[data-testid='compliance-features']")
     await expect(compliance.locator("> div > div.grid > div")).toHaveCount(6)
-    await expect(compliance.getByText("Turkiye kontrol akisi")).toBeVisible()
+    await expect(compliance.getByText("Türkiye kontrol akışı")).toBeVisible()
     await expect(compliance.getByText("KBS/e-GUEST", { exact: true })).toBeVisible()
     await screenshot(page, testInfo, "05-compliance")
 
@@ -59,7 +59,7 @@ test.describe("Landing page journey", () => {
     await screenshot(page, testInfo, "06-platform-workflow")
 
     await scrollToSection(page, "section#how-it-works")
-    await expect(page.getByRole("heading", { name: "Tek ERP kaydi, birden fazla is akisi" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Tek ERP kaydı, birden fazla iş akışı" })).toBeVisible()
     await expect(page.getByText("Site ve daire modeli")).toBeVisible()
     await screenshot(page, testInfo, "07-connected-workflows")
 
