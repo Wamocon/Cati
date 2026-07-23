@@ -165,6 +165,10 @@ export function AiAssistant() {
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const requestInFlightRef = useRef(false)
   const messageIdRef = useRef(0)
+  // Phase 4: keep one conversation thread per widget session so the assistant can
+  // resume prior context. The server owns the id (RLS-scoped); we only echo it
+  // back on the next request. Stays null when memory is a no-op (e.g. seed/e2e).
+  const conversationIdRef = useRef<string | null>(null)
   const suggestions = getAiSuggestions(user.role, locale)
   const dialogTitleId = useId()
   const dialogDescriptionId = useId()
@@ -270,7 +274,11 @@ export function AiAssistant() {
       const result = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, locale }),
+        body: JSON.stringify({
+          message: text,
+          locale,
+          conversationId: conversationIdRef.current,
+        }),
       })
       if (result.ok) {
         const payload = (await result.json()) as {
@@ -285,6 +293,10 @@ export function AiAssistant() {
             requiresHumanApproval?: unknown
           } | null
           language?: unknown
+          conversationId?: unknown
+        }
+        if (typeof payload.conversationId === "string") {
+          conversationIdRef.current = payload.conversationId
         }
         if (typeof payload.reply === "string" && payload.reply.trim()) {
           response = payload.reply
