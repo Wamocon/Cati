@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { FeatureInfo } from "@/components/feature-info"
 import {
   AlertTriangle,
   CalendarClock,
@@ -602,7 +603,7 @@ function shortId(value: string) {
 }
 function friendlyRef(value: string) {
   const compact = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
-  return compact ? `#${compact.slice(0, 6)}` : "—"
+  return compact ? `#${compact.slice(0, 6)}` : "-"
 }
 
 const resourceCategoryLabels: Record<Locale, Record<string, string>> = {
@@ -1037,7 +1038,10 @@ export function BookingLifecycleExperience() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">{t.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-foreground">{t.title}</h1>
+            <FeatureInfo featureKey="calendar" side="bottom" />
+          </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {t.subtitle}
           </p>

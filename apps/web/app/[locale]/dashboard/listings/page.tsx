@@ -24,6 +24,7 @@ import { Card3D } from "@/components/3d-card"
 import { DashboardActionButton } from "@/components/dashboard-action-button"
 import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
+import { FeatureInfo } from "@/components/feature-info"
 import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
 import { cn } from "@/lib/utils"
@@ -305,7 +306,10 @@ export default function ListingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">{copy.page.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground">{copy.page.title}</h1>
+          <FeatureInfo featureKey="listings" side="bottom" />
+        </div>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {interpolate(copy.page.subtitle, {
             location: clientProfile.activeLocation,

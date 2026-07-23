@@ -18,6 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { Card3D } from "@/components/3d-card"
+import { ComingSoon } from "@/components/coming-soon"
+import { FeatureInfo } from "@/components/feature-info"
 import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
@@ -448,9 +450,9 @@ function parseTaxRate(value: string): number | null {
 }
 
 function formatDate(value: string | null, locale: VendorLocale) {
-  if (!value) return "—"
+  if (!value) return "-"
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "—"
+  if (Number.isNaN(date.getTime())) return "-"
   return new Intl.DateTimeFormat(intlLocales[locale], {
     day: "2-digit",
     month: "short",
@@ -722,6 +724,7 @@ export function VendorInvoicingWorkspace() {
           <div className="flex items-center gap-2">
             <ReceiptText className="h-5 w-5 text-primary" aria-hidden="true" />
             <h2 className="text-base font-black text-foreground">{text.title}</h2>
+            <FeatureInfo featureKey="vendor_invoices" side="bottom" />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{text.subtitle}</p>
         </div>
@@ -785,10 +788,10 @@ export function VendorInvoicingWorkspace() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="text-xs font-black uppercase tracking-[0.06em] text-muted-foreground">
-                          {job.orderNo ?? "—"}
+                          {job.orderNo ?? "-"}
                         </p>
                         <p className="mt-1 text-sm font-bold text-card-foreground">
-                          {job.title ?? "—"}
+                          {job.title ?? "-"}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {text.quoted}: {job.quotedLabel}
@@ -828,6 +831,7 @@ export function VendorInvoicingWorkspace() {
             >
               <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
               {text.formTitle}
+              <ComingSoon featureKey="e_invoice" variant="inline" />
             </h3>
 
             {message ? (

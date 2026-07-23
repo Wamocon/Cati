@@ -146,8 +146,8 @@ function localUnits(role: "owner" | "tenant") {
 async function localAccountantSnapshot(): Promise<RoleDashboardSnapshot> {
   // "Open" is every unit that still carries an outstanding balance (dues not
   // yet settled); "overdue" is the genuinely past-due subset (overdue + legal
-  // aging). getDebtAccounts() only returns the top ~32 debtors — which are all
-  // already overdue/legal — so it must NOT double as the "open" population, or
+  // aging). getDebtAccounts() only returns the top ~32 debtors, which are all
+  // already overdue/legal, so it must NOT double as the "open" population, or
   // the open and overdue tiles collapse into the same figure.
   const openAccounts = flats.filter((flat) => flat.balanceTry > 0)
   const overdueAccounts = openAccounts.filter(

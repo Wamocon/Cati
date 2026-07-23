@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
+import { FeatureInfo } from "@/components/feature-info"
 import { DashboardSection } from "@/components/dashboard-section"
 import { DataTable } from "@/components/data-table"
 import { DashboardActionMenu } from "@/components/dashboard-action-menu"
@@ -1888,6 +1889,7 @@ export default function TicketsPage() {
             <h1 className="text-2xl font-black text-foreground">
               {t("Servis Talepleri")}
             </h1>
+            <FeatureInfo featureKey="tickets" side="bottom" />
           </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {pageIntro}

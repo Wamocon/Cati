@@ -863,7 +863,7 @@ export async function setManagedUserActive(
 
     // Ban on suspend / unban on restore. The RPC (already committed) is the
     // source of truth; surfacing a ban failure as a retryable error lets the
-    // operator retry — admin_set_user_active is idempotent. This SDK version has
+    // operator retry, admin_set_user_active is idempotent. This SDK version has
     // no signOut-by-user-id (admin.signOut requires the user's own JWT), so an
     // already-issued access token lapses at expiry while the migration-50 RLS
     // guard + getUserProfile deny it immediately.
@@ -1072,7 +1072,7 @@ export async function anonymizeManagedUser(
     //
     // Interaction: the mig-38 on_auth_user_email_updated trigger mirrors this
     // placeholder onto profiles.email, overwriting the RPC's NULL. That is
-    // acceptable — the placeholder carries no PII, so the scrub's intent (remove
+    // acceptable, the placeholder carries no PII, so the scrub's intent (remove
     // identifying data) still holds; the UI suppresses email for removed rows.
     // email_confirm:true applies the placeholder immediately (like
     // updateManagedUserEmail) instead of staging it in email_change, which on a

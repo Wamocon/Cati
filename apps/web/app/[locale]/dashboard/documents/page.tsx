@@ -18,6 +18,7 @@ import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
 import { DashboardActionMenu } from "@/components/dashboard-action-menu"
 import { DataTable } from "@/components/data-table"
+import { FeatureInfo } from "@/components/feature-info"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { clientProfile } from "@/lib/client-context"
@@ -543,7 +544,10 @@ export default function DocumentsPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground">{t("TAPU & Belge Kasası")}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-foreground">{t("TAPU & Belge Kasası")}</h1>
+            <FeatureInfo featureKey="documents" side="bottom" />
+          </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{pageIntro}</p>
         </div>
         <DashboardActionMenu

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test"
 import { openDashboardAs, resetQaState } from "../support/flows"
 
 // Phase 6 coverage for the Admin Control Center hub. Assertions stay on stable
-// markup — section ids, a test id, hrefs and localized headings — never volatile
+// markup, section ids, a test id, hrefs and localized headings, never volatile
 // copy, so intentional wording changes don't cause assertion drift (LESSONS #6).
 
 test.beforeEach(async ({ page }) => {
@@ -60,26 +60,26 @@ test.describe("Admin Control Center", () => {
   }) => {
     await openDashboardAs(page, "admin", "/tr/dashboard/admin")
 
-    // 1. People & access (open by default) — with the working admin panel inside.
+    // 1. People & access (open by default), with the working admin panel inside.
     await expect(page.locator("#admin-people")).toBeVisible()
     await expect(
       page.getByRole("heading", { name: /Kişiler ve erişim/ })
     ).toBeVisible()
 
-    // 2. Needs your approval — the unified inbox root carries the test id.
+    // 2. Needs your approval, the unified inbox root carries the test id.
     await expect(
       page.getByRole("heading", { name: /Onayınız gerekiyor/ })
     ).toBeVisible()
     await expect(page.getByTestId("admin-approvals-inbox")).toBeVisible()
 
-    // 3. Money — section header present, then expand to prove its content renders.
+    // 3. Money, section header present, then expand to prove its content renders.
     const money = page.locator("#admin-money")
     await expect(money).toBeVisible()
     await expect(page.getByRole("heading", { name: /Para/ })).toBeVisible()
     await money.getByRole("button").first().click()
     await expect(money.getByText("Açık bakiye")).toBeVisible()
 
-    // 4. Property & services — section header present, then expand to prove content.
+    // 4. Property & services, section header present, then expand to prove content.
     const property = page.locator("#admin-property")
     await expect(property).toBeVisible()
     await expect(
@@ -90,7 +90,7 @@ test.describe("Admin Control Center", () => {
     // "Daireleri aç" link, so only the units label is targeted here.
     await expect(property.getByText("Daireler", { exact: true })).toBeVisible()
 
-    // Business language only — the hub must never leak schema/table names.
+    // Business language only, the hub must never leak schema/table names.
     const main = page.locator("main")
     await expect(main).not.toContainText("finance_ledger_entries")
     await expect(main).not.toContainText("service_tickets")

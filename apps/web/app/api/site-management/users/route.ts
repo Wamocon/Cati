@@ -223,7 +223,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json(
           {
             error:
-              "Please note why this person is being removed — at least 10 characters, up to 1000.",
+              "Please note why this person is being removed, at least 10 characters, up to 1000.",
             code: "USER_ADMIN_REASON_INVALID",
           },
           { status: 400 }

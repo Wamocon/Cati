@@ -681,7 +681,7 @@ function pickLocaleHalf(raw: string, locale: Locale): string {
 }
 function friendlyRef(value: string) {
   const compact = value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase()
-  return compact ? `#${compact.slice(0, 6)}` : "—"
+  return compact ? `#${compact.slice(0, 6)}` : "-"
 }
 
 export function MoveHandoverExperience() {

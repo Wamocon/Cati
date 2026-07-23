@@ -22,6 +22,8 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react"
+import { ComingSoon } from "@/components/coming-soon"
+import { FeatureInfo } from "@/components/feature-info"
 import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
@@ -545,6 +547,7 @@ export function WalletOverview() {
           <div className="flex items-center gap-2">
             <Wallet className="h-5 w-5 text-primary" aria-hidden="true" />
             <h2 className="text-base font-black text-foreground">{text.title}</h2>
+            <FeatureInfo featureKey="wallet" side="bottom" />
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{text.subtitle}</p>
         </div>
@@ -586,6 +589,7 @@ export function WalletOverview() {
               <h3 className="flex items-center gap-2 text-sm font-black text-foreground">
                 <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
                 {text.topUpTitle}
+                <ComingSoon featureKey="payments" variant="inline" />
               </h3>
 
               {stage === "idle" ? (

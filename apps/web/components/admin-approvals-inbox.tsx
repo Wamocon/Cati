@@ -54,7 +54,7 @@ const RESPONDER_VALUES = ticketAssigneeOptions.filter(
   (value) => value !== "Operations triage queue"
 )
 
-// Business language only — no table names, enums, permission strings or UUIDs
+// Business language only: no table names, enums, permission strings or UUIDs
 // surface here. Turkish leads; en is the fallback for other locales.
 const copy = {
   tr: {

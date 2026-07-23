@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { Link } from "@/app/navigation"
 import { AdminApprovalsInbox } from "@/components/admin-approvals-inbox"
+import { ComingSoon } from "@/components/coming-soon"
 import { UserAdministrationPanel } from "@/components/user-administration-panel"
 import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
@@ -27,11 +28,12 @@ function localeKey(value: string): LocaleKey {
 }
 
 // Business language only. No table names, roles, permission strings, or platform
-// internals appear here — this hub speaks to an administrator, not to the schema.
+// internals appear here. This hub speaks to an administrator, not to the schema.
 const copy = {
   tr: {
     overview: "Genel bakış",
     open: "Aç",
+    noValue: "Yok",
     tiles: {
       people: { label: "Kişiler", desc: "Ekip ve sakinler tek yerde." },
       approvals: { label: "Onay bekleyenler", desc: "İncelemenizi bekleyen istekler." },
@@ -82,6 +84,7 @@ const copy = {
   en: {
     overview: "Overview",
     open: "Open",
+    noValue: "None",
     tiles: {
       people: { label: "People", desc: "Team and residents in one place." },
       approvals: { label: "Awaiting approval", desc: "Requests waiting for your review." },
@@ -132,6 +135,7 @@ const copy = {
   de: {
     overview: "Überblick",
     open: "Öffnen",
+    noValue: "Keine",
     tiles: {
       people: { label: "Personen", desc: "Team und Bewohner an einem Ort." },
       approvals: { label: "Warten auf Freigabe", desc: "Anfragen, die auf Ihre Prüfung warten." },
@@ -182,6 +186,7 @@ const copy = {
   ru: {
     overview: "Обзор",
     open: "Открыть",
+    noValue: "Нет",
     tiles: {
       people: { label: "Люди", desc: "Команда и жители в одном месте." },
       approvals: { label: "Ждут согласования", desc: "Запросы, ожидающие вашей проверки." },
@@ -240,7 +245,7 @@ interface UsersEndpointResponse {
   administration?: { available?: boolean; users?: unknown[] }
 }
 
-// GET /api/site-management/finance — summary is a full-dataset aggregate (it is not
+// GET /api/site-management/finance: summary is a full-dataset aggregate (it is not
 // affected by the row limit), so a minimal limit keeps the payload small while the
 // figures stay honest.
 interface FinanceEndpointResponse {
@@ -254,7 +259,7 @@ interface FinanceEndpointResponse {
   }
 }
 
-// GET /api/site-management/phase4 — likewise the summary counts are aggregates.
+// GET /api/site-management/phase4: likewise the summary counts are aggregates.
 interface Phase4EndpointResponse {
   summary?: {
     totalUnits?: number
@@ -265,7 +270,7 @@ interface Phase4EndpointResponse {
   }
 }
 
-// GET /api/site-management/dashboard — the aggregate snapshot. openTickets /
+// GET /api/site-management/dashboard: the aggregate snapshot. openTickets /
 // overdueTickets here are true counts (unlike the ticket-queue summary, which is
 // computed over a limited page), so this is the honest source for the service total.
 interface DashboardEndpointResponse {
@@ -273,7 +278,7 @@ interface DashboardEndpointResponse {
   recentActions?: unknown[]
 }
 
-// GET /api/site-management/activities — the catalog array length is the count of
+// GET /api/site-management/activities: the catalog array length is the count of
 // bookable extra services available.
 interface ActivitiesEndpointResponse {
   catalog?: unknown[]
@@ -281,7 +286,7 @@ interface ActivitiesEndpointResponse {
 
 // A recent administrator action reduced to plain business language. We deliberately
 // read only human-readable fields (a message/title, an actor label, a timestamp) and
-// never the raw action type, entity table, id or status — no schema text leaks here.
+// never the raw action type, entity table, id or status, so no schema text leaks here.
 interface AuditItem {
   text: string
   actor: string | null
@@ -363,25 +368,26 @@ function TileIcon({ Icon }: { Icon: LucideIcon }) {
   )
 }
 
-// A number that is honest about its state: an unobtrusive ellipsis while loading, an
-// em dash when the figure is genuinely unavailable, never a fabricated zero.
+// A number that is honest about its state: an unobtrusive ellipsis while loading, a
+// short "no value" word when the figure is genuinely unavailable, never a fabricated zero.
 function displayCount(
   state: LoadState,
   value: number | null | undefined,
   locale: LocaleKey
 ): string {
   if (state === "loading") return "…"
-  if (state !== "ready" || typeof value !== "number") return "—"
+  if (state !== "ready" || typeof value !== "number") return copy[locale].noValue
   return value.toLocaleString(locale)
 }
 
 function displayMoney(
   state: LoadState,
   cents: number | null | undefined,
-  currency: string | undefined
+  currency: string | undefined,
+  locale: LocaleKey
 ): string {
   if (state === "loading") return "…"
-  if (state !== "ready" || typeof cents !== "number") return "—"
+  if (state !== "ready" || typeof cents !== "number") return copy[locale].noValue
   return formatDualFromCents(cents, currency === "EUR" ? "EUR" : "TRY")
 }
 
@@ -541,7 +547,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
   }, [])
 
   // Real count of items awaiting approval from the same endpoint the inbox uses.
-  // Honest number or "—"; never a fabricated figure.
+  // Honest number or a short "no value" word; never a fabricated figure.
   useEffect(() => {
     let cancelled = false
     void (async () => {
@@ -564,7 +570,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
   }, [])
 
   // Phase 5 summaries fetched together so the hub fills in one pass, not in cascade.
-  // Each response is validated independently; a missing feed degrades to "—".
+  // Each response is validated independently; a missing feed degrades to a "no value" word.
   useEffect(() => {
     let cancelled = false
     async function load<T>(url: string): Promise<T | null> {
@@ -658,7 +664,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
   return (
     <div className="space-y-6">
       {/* At-a-glance overview. Every tile shows a real, aggregate figure (or an honest
-          "—"); People and Approvals jump in-page, Money and Services deep-link out. */}
+          "no value" word); People and Approvals jump in-page, Money and Services deep-link out. */}
       <section aria-labelledby="admin-overview-heading">
         <h2 id="admin-overview-heading" className="sr-only">
           {c.overview}
@@ -696,7 +702,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
             </span>
           </a>
 
-          {/* Money — open finance items awaiting collection (aggregate count). */}
+          {/* Money: open finance items awaiting collection (aggregate count). */}
           <Link href="/dashboard/finance" className={tileClass}>
             <TileIcon Icon={CircleDollarSign} />
             <span className="min-w-0 flex-1">
@@ -712,7 +718,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
             </span>
           </Link>
 
-          {/* Service jobs — open ticket count from the aggregate snapshot. */}
+          {/* Service jobs: open ticket count from the aggregate snapshot. */}
           <Link href="/dashboard/tickets" className={tileClass}>
             <TileIcon Icon={Wrench} />
             <span className="min-w-0 flex-1">
@@ -730,7 +736,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         </div>
       </section>
 
-      {/* 1. People & access — the fully working Phase 3 section. The panel fetches
+      {/* 1. People & access: the fully working Phase 3 section. The panel fetches
           its own data and self-hides for non-admins, so it needs no props. */}
       <CollapsibleSection
         id="admin-people"
@@ -742,7 +748,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         <UserAdministrationPanel />
       </CollapsibleSection>
 
-      {/* 2. Needs your approval — the unified inbox. It fetches its own data,
+      {/* 2. Needs your approval: the unified inbox. It fetches its own data,
           self-hides for non-admins, and dispatches each decision to the existing
           per-kind endpoint, so it needs no props. */}
       <CollapsibleSection
@@ -752,10 +758,16 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         description={c.sections.approvals.desc}
         defaultOpen
       >
+        {/* The assistant only drafts suggestions today; a person approves every
+            item here. This quiet badge explains that automatic AI actions are on
+            the way, without pulling focus from the inbox itself. */}
+        <div className="mb-4">
+          <ComingSoon featureKey="ai_automation" side="bottom" />
+        </div>
         <AdminApprovalsInbox />
       </CollapsibleSection>
 
-      {/* 3. Money — Phase 5 live oversight: outstanding, overdue and collected-this-
+      {/* 3. Money: Phase 5 live oversight: outstanding, overdue and collected-this-
           month figures in dual currency, with a deep-link into finance. */}
       <CollapsibleSection
         id="admin-money"
@@ -770,7 +782,8 @@ export function AdminControlCenter({ locale }: { locale: string }) {
               value={displayMoney(
                 finance.state,
                 fin?.openLedgerCents,
-                fin?.currency
+                fin?.currency,
+                lk
               )}
               caption={openItemsCaption}
             />
@@ -779,7 +792,8 @@ export function AdminControlCenter({ locale }: { locale: string }) {
               value={displayMoney(
                 finance.state,
                 fin?.overdueLedgerCents,
-                fin?.currency
+                fin?.currency,
+                lk
               )}
               caption={overdueItemsCaption}
             />
@@ -788,7 +802,8 @@ export function AdminControlCenter({ locale }: { locale: string }) {
               value={displayMoney(
                 finance.state,
                 fin?.paidThisMonthCents,
-                fin?.currency
+                fin?.currency,
+                lk
               )}
             />
           </div>
@@ -796,7 +811,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         </div>
       </CollapsibleSection>
 
-      {/* 4. Property & services — Phase 5: unit, service-job and activity counts,
+      {/* 4. Property & services: Phase 5 unit, service-job and activity counts,
           each opening its own workspace. */}
       <CollapsibleSection
         id="admin-property"
@@ -857,7 +872,7 @@ export function AdminControlCenter({ locale }: { locale: string }) {
         </div>
       </CollapsibleSection>
 
-      {/* 5. Activity & audit — Phase 5 surfaces the most recent admin/system actions
+      {/* 5. Activity & audit: Phase 5 surfaces the most recent admin/system actions
           in plain language. No raw action types, tables, ids or statuses are shown. */}
       <CollapsibleSection
         id="admin-audit"

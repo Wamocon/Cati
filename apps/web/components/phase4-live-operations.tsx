@@ -73,7 +73,7 @@ const liveMetaCopy = {
     matrix: "Live block / floor matrix",
     matrixHint: "Every visible square comes from the same API result as the table below.",
     selected: "Selected unit",
-    priceEmpty: "—",
+    priceEmpty: "-",
   },
   tr: {
     sourceLive: "Canlı",
@@ -92,7 +92,7 @@ const liveMetaCopy = {
     matrix: "Canlı blok / kat matrisi",
     matrixHint: "Görünen her kutu aşağıdaki tabloyla aynı API sonucundan gelir.",
     selected: "Seçili daire",
-    priceEmpty: "—",
+    priceEmpty: "-",
   },
   de: {
     sourceLive: "Live",
@@ -111,7 +111,7 @@ const liveMetaCopy = {
     matrix: "Live-Block-/Etagenmatrix",
     matrixHint: "Jedes sichtbare Feld stammt aus demselben API-Ergebnis wie die Tabelle darunter.",
     selected: "Ausgewählte Einheit",
-    priceEmpty: "—",
+    priceEmpty: "-",
   },
   ru: {
     sourceLive: "Live",
@@ -130,7 +130,7 @@ const liveMetaCopy = {
     matrix: "Live-матрица блоков и этажей",
     matrixHint: "Каждая ячейка получена из того же ответа API, что и таблица ниже.",
     selected: "Выбранный объект",
-    priceEmpty: "—",
+    priceEmpty: "-",
   },
 } as const
 

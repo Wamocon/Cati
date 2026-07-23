@@ -126,7 +126,7 @@ export function useLiveDashboardSnapshot({
   useEffect(() => {
     // `refresh` rejects on a failed fetch (e.g. a 403 from the dashboard API) so
     // the explicit refresh button can surface an error. Background/auto refreshes
-    // must never leave that rejection unhandled — it would bubble up as an
+    // must never leave that rejection unhandled, it would bubble up as an
     // `unhandledRejection`. Swallow it here: the hook already flips requestState
     // to "error" and callers transparently fall back to the seed snapshot.
     const safeRefresh = () => {

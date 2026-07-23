@@ -35,7 +35,7 @@ const variants: Record<StatusVariant, string> = {
 // variant carries a distinct icon *shape* (check / triangle / circle) next to
 // its text, so the meaning survives greyscale and colour-blind rendering.
 // "neutral" and "accent" are informational count chips, not states, so they
-// stay icon-free. The icon is decorative — the text remains the source of truth.
+// stay icon-free. The icon is decorative. The text remains the source of truth.
 const variantIcons: Partial<Record<StatusVariant, LucideIcon>> = {
   success: CheckCircle2,
   warning: AlertTriangle,

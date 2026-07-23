@@ -10,7 +10,7 @@
 // language) to match the surrounding UI; the `id`, `category` enum, prices, age
 // bands, capacity and `imageKey` mirror the CROSS JOIN VALUES list in
 // supabase/migrations/00000000000045_activities.sql exactly (keys/enums are the
-// join/lookup identity — only display copy is localized here).
+// join/lookup identity, only display copy is localized here).
 
 import type { NativeCurrency } from "@/lib/currency"
 

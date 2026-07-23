@@ -26,6 +26,8 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useLocale } from "next-intl"
+import { ComingSoon } from "@/components/coming-soon"
+import { FeatureInfo } from "@/components/feature-info"
 import { getCommunicationsCopy } from "@/lib/communications-copy"
 import type { CommunicationWorkspace } from "@/lib/communications-repository"
 import { createClient } from "@/lib/supabase/client"
@@ -122,7 +124,7 @@ function StatusPill({
   className?: string
 }) {
   // The label is a direct text child (the icon is a text-less SVG sibling) so the
-  // pill has exactly one element whose text content is the status string — this
+  // pill has exactly one element whose text content is the status string. This
   // keeps exact getByText() matches unambiguous.
   return (
     <span
@@ -588,7 +590,10 @@ export function CommunicationsCenter() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">1Çatı</p>
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-foreground sm:text-3xl">{copy.title}</h1>
+            <div className="mt-2 flex items-center gap-2">
+              <h1 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl">{copy.title}</h1>
+              <FeatureInfo featureKey="communications" side="bottom" />
+            </div>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{copy.intro}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -619,6 +624,7 @@ export function CommunicationsCenter() {
             <StatusPill tone="neutral" icon={Clock}>{copy.portalUnavailable}</StatusPill>
           )}
           <StatusPill tone="warning" icon={Unplug}>{copy.externalNotConnected}</StatusPill>
+          <ComingSoon featureKey="messaging" />
         </div>
       </header>
 

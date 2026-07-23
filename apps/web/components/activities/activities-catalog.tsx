@@ -25,6 +25,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { Link } from "@/app/navigation"
+import { FeatureInfo } from "@/components/feature-info"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { formatDualFromCents } from "@/lib/currency"
@@ -38,7 +39,7 @@ import type {
 import type { WalletOverview as WalletOverviewPayload } from "@/lib/wallet-repository"
 
 // ---------------------------------------------------------------------------
-// Locale copy — self-contained, no backend / provider names.
+// Locale copy: self-contained, no backend or provider names.
 // ---------------------------------------------------------------------------
 
 export type ActivitiesLocale = "tr" | "en" | "de" | "ru"
@@ -248,7 +249,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
 }
 
 // ---------------------------------------------------------------------------
-// Category visuals — a deterministic gradient + icon stands in when there is no
+// Category visuals: a deterministic gradient plus icon stands in when there is no
 // real image asset (activity.imageKey points at storage that is not wired yet).
 // ---------------------------------------------------------------------------
 
@@ -854,6 +855,7 @@ export function ActivitiesCatalog() {
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
             <h2 className="text-base font-black text-foreground">{text.title}</h2>
+            <FeatureInfo featureKey="activities" side="bottom" />
           </div>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{text.subtitle}</p>
         </div>

@@ -20,6 +20,7 @@ import {
   BookingsList,
   resolveActivitiesLocale,
 } from "@/components/activities/activities-catalog"
+import { FeatureInfo } from "@/components/feature-info"
 import { formatDualFromCents } from "@/lib/currency"
 import { cn } from "@/lib/utils"
 import type {
@@ -913,6 +914,7 @@ export function ChildrenWorkspace() {
             <h1 className="text-xl font-black text-foreground md:text-2xl">
               {text.title}
             </h1>
+            <FeatureInfo featureKey="guardianship" side="bottom" />
           </div>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {text.subtitle}

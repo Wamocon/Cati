@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { AdminControlCenter } from "@/components/admin-control-center"
+import { FeatureInfo } from "@/components/feature-info"
 import { getUserProfile } from "@/lib/auth"
 import { isAdmin } from "@/lib/rbac"
 
@@ -51,7 +52,10 @@ export default async function AdminControlCenterPage({
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-black text-foreground">{t.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground">{t.title}</h1>
+          <FeatureInfo featureKey="admin" side="bottom" />
+        </div>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{t.subtitle}</p>
       </header>
 

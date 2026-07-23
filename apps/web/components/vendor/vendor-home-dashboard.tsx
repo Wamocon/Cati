@@ -211,22 +211,22 @@ export function VendorHomeDashboard({
     {
       icon: Wallet,
       label: text.metricBalance,
-      value: wallet ? formatDualFromCents(wallet.balanceCents, wallet.currency) : "—",
+      value: wallet ? formatDualFromCents(wallet.balanceCents, wallet.currency) : "-",
     },
     {
       icon: Briefcase,
       label: text.metricJobs,
-      value: summary ? String(summary.jobCount) : "—",
+      value: summary ? String(summary.jobCount) : "-",
     },
     {
       icon: Clock3,
       label: text.metricPending,
-      value: summary ? String(summary.pendingCount) : "—",
+      value: summary ? String(summary.pendingCount) : "-",
     },
     {
       icon: CheckCircle2,
       label: text.metricApproved,
-      value: summary ? String(summary.approvedCount) : "—",
+      value: summary ? String(summary.approvedCount) : "-",
     },
   ]
 

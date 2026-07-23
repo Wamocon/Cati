@@ -32,6 +32,7 @@ import type {
   ReportingData,
   ReportType,
 } from "@/lib/reporting-repository"
+import { FeatureInfo } from "@/components/feature-info"
 
 const reportingApi = "/api/site-management/reports"
 
@@ -378,9 +379,12 @@ export function ReportingWorkspace() {
                 <Archive className="h-4 w-4" />
                 {ic.kicker}
               </div>
-              <h1 className="mt-3 text-3xl font-black tracking-[-0.035em] text-foreground sm:text-4xl">
-                {copy.title}
-              </h1>
+              <div className="mt-3 flex items-center gap-2">
+                <h1 className="text-3xl font-black tracking-[-0.035em] text-foreground sm:text-4xl">
+                  {copy.title}
+                </h1>
+                <FeatureInfo featureKey="reports" side="bottom" />
+              </div>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
                 {ic.intro}
               </p>

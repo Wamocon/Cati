@@ -218,7 +218,7 @@ export function GuestHomeDashboard({
     {
       icon: Wallet,
       label: text.metricBalance,
-      value: wallet ? formatDualFromCents(wallet.balanceCents, wallet.currency) : "—",
+      value: wallet ? formatDualFromCents(wallet.balanceCents, wallet.currency) : "-",
     },
     {
       icon: CalendarCheck,

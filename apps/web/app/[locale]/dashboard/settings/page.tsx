@@ -4,6 +4,7 @@ import { Bell, CheckCircle2, Eye, FileClock, Globe, Shield, ShieldCheck, Sliders
 import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
+import { FeatureInfo } from "@/components/feature-info"
 import { IntegrationHealthPanel } from "@/components/integration-health-panel"
 import { StatusBadge } from "@/components/status-badge"
 import { LocaleSwitcher } from "@/components/locale-switcher"
@@ -422,7 +423,10 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
+          <FeatureInfo featureKey="settings" side="bottom" />
+        </div>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {copy.subtitle}
         </p>

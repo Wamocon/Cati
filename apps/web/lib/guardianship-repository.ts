@@ -6,17 +6,17 @@
 // Every response carries a `source: "supabase" | "local-seed"` field.
 //
 // Backend model reused from earlier phases (all additive, nothing loosened):
-//   * guardianships / delegated_grants (migration 43) — writes are admin-only via
+//   * guardianships / delegated_grants (migration 43), writes are admin-only via
 //     RLS; this module performs the parent flows with the SERVICE-ROLE client
 //     after validating the caller is a parent owner/tenant/guest, mirroring
 //     createManagedUser. The admin-only direct RLS stays intact; no migration 47
 //     is introduced.
-//   * wallet_transfer RPC (migration 44) — parent -> child allowance; the RPC
+//   * wallet_transfer RPC (migration 44), parent -> child allowance; the RPC
 //     re-enforces that the caller owns the source wallet AND is the active
 //     guardian of the destination owner.
-//   * client_action_requests (migration 3) — the approval queue a child action
+//   * client_action_requests (migration 3), the approval queue a child action
 //     lands in; the guardian approves / declines by transitioning the row.
-//   * getChildBookings + the wallets read — reused for each child's activity and
+//   * getChildBookings + the wallets read, reused for each child's activity and
 //     balance.
 //
 // Consent is DEMO-grade: the parent creates the child, self-declares the date of
@@ -882,7 +882,7 @@ export async function addManagedChild(
       }
       state.children.push(child)
       // Seed one demo pending request so the approve / decline flow is
-      // demonstrable in controlled QA (no dark pattern — a neutral activity ask).
+      // demonstrable in controlled QA (no dark pattern, a neutral activity ask).
       state.approvals.push({
         id: randomUUID(),
         childProfileId,
@@ -915,7 +915,7 @@ export async function addManagedChild(
 
   let childProfileId: string
   if (created.error || !created.data?.user) {
-    // Idempotent replay: the deterministic email already exists — resolve the
+    // Idempotent replay: the deterministic email already exists, resolve the
     // existing child profile and re-run the (idempotent) linking steps.
     const existing = await service
       .from("profiles")

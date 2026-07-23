@@ -5,6 +5,7 @@ import { useLocale } from "next-intl"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
 import { DataTable } from "@/components/data-table"
+import { FeatureInfo } from "@/components/feature-info"
 import { PeopleDirectoryLive } from "@/components/people-directory-live"
 import { RoleGovernancePanel } from "@/components/role-governance-panel"
 import { RegistrationReviewPanel } from "@/components/registration-review-panel"
@@ -211,7 +212,10 @@ export default function UsersPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground">{copy.title}</h1>
+          <FeatureInfo featureKey="users" side="bottom" />
+        </div>
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {copy.subtitle}
         </p>

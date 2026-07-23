@@ -72,7 +72,7 @@ export const VENDOR_LOCAL_SEED: VendorLocalSeed = {
     {
       id: "vendor-job-plumbing",
       orderNo: "ORD-2402",
-      title: "Daire içi su kaçağı — acil tesisat müdahalesi",
+      title: "Daire içi su kaçağı, acil tesisat müdahalesi",
       status: "assigned",
       quotedPriceCents: 1_240_000,
       currency: "TRY",

@@ -59,7 +59,7 @@ const kidCopy: Record<KidLocale, KidCopy> = {
     lowBody: "When you're ready, ask a parent to top it up.",
     goalTitle: "This month",
     goalProgress: "{count} of {goal} activities",
-    goalReached: "Amazing — you reached your goal!",
+    goalReached: "Amazing, you reached your goal!",
     goalStart: "Pick something fun to start!",
     badgesTitle: "Your badges",
     badgeLockedHint: "Keep exploring to unlock",
@@ -75,7 +75,7 @@ const kidCopy: Record<KidLocale, KidCopy> = {
     lowBody: "Hazır olduğunda bir büyüğünden yüklemesini isteyebilirsin.",
     goalTitle: "Bu ay",
     goalProgress: "{goal} etkinlikten {count} tanesi",
-    goalReached: "Harika — hedefine ulaştın!",
+    goalReached: "Harika, hedefine ulaştın!",
     goalStart: "Başlamak için eğlenceli bir şey seç!",
     badgesTitle: "Rozetlerin",
     badgeLockedHint: "Keşfetmeye devam et, açılsın",
@@ -91,7 +91,7 @@ const kidCopy: Record<KidLocale, KidCopy> = {
     lowBody: "Bitte ein Elternteil, es aufzuladen, wenn du bereit bist.",
     goalTitle: "Diesen Monat",
     goalProgress: "{count} von {goal} Aktivitäten",
-    goalReached: "Super — du hast dein Ziel erreicht!",
+    goalReached: "Super, du hast dein Ziel erreicht!",
     goalStart: "Wähle etwas Schönes zum Starten!",
     badgesTitle: "Deine Abzeichen",
     badgeLockedHint: "Entdecke weiter, um freizuschalten",
@@ -107,7 +107,7 @@ const kidCopy: Record<KidLocale, KidCopy> = {
     lowBody: "Когда будешь готов, попроси родителя пополнить.",
     goalTitle: "В этом месяце",
     goalProgress: "{count} из {goal} активностей",
-    goalReached: "Отлично — ты достиг цели!",
+    goalReached: "Отлично, ты достиг цели!",
     goalStart: "Выбери что-нибудь интересное для начала!",
     badgesTitle: "Твои значки",
     badgeLockedHint: "Продолжай исследовать, чтобы открыть",
@@ -160,7 +160,7 @@ function isThisMonth(value: string | null): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// Progress ring — decorative SVG donut with an accessible text label.
+// Progress ring: decorative SVG donut with an accessible text label.
 // ---------------------------------------------------------------------------
 
 function ProgressRing({ value, goal }: { value: number; goal: number }) {
@@ -211,7 +211,7 @@ function ProgressRing({ value, goal }: { value: number; goal: number }) {
 }
 
 // ---------------------------------------------------------------------------
-// Allowance card — kid-specific copy; calm low-balance, no top-up button.
+// Allowance card: kid-specific copy; calm low-balance, no top-up button.
 // ---------------------------------------------------------------------------
 
 function KidAllowanceCard({ wallet, text }: { wallet: WalletSummary; text: KidCopy }) {

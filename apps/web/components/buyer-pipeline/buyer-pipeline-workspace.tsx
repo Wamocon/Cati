@@ -44,6 +44,7 @@ import type {
   BuyerStageEvent,
 } from "@/lib/buyer-pipeline-repository"
 import { createClient } from "@/lib/supabase/client"
+import { FeatureInfo } from "@/components/feature-info"
 
 const buyerApi = "/api/site-management/buyer-pipeline"
 const uuidPattern =
@@ -703,9 +704,12 @@ export function BuyerPipelineWorkspace() {
             <p className="text-[11px] font-black tracking-[0.24em] text-cyan-300 uppercase">
               {copy.kicker}
             </p>
-            <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] sm:text-4xl">
-              {copy.title}
-            </h1>
+            <div className="mt-3 flex items-center gap-2">
+              <h1 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                {copy.title}
+              </h1>
+              <FeatureInfo featureKey="leads" side="bottom" />
+            </div>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
               {copy.intro}
             </p>

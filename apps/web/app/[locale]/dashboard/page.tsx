@@ -29,6 +29,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { useUser } from "@/components/user-provider"
+import { FeatureInfo } from "@/components/feature-info"
 import { hasPermission, roleDefinitions, type Resource, type Role } from "@/lib/rbac"
 import { dashboardRoutes, resourceForDashboardPath } from "@/lib/dashboard-routing"
 import { Card3D } from "@/components/3d-card"
@@ -740,9 +741,12 @@ function RoleFocusedDashboard({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-foreground md:text-3xl">
-          {workspaceCopy.title}
-        </h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-black text-foreground md:text-3xl">
+            {workspaceCopy.title}
+          </h1>
+          <FeatureInfo featureKey="dashboard" side="bottom" />
+        </div>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
           {workspaceCopy.description}
         </p>
@@ -1266,9 +1270,12 @@ function OperationsDashboard({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-foreground md:text-3xl">
-            {copyText(copy.hero.title, { client: clientProfile.clientName })}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black text-foreground md:text-3xl">
+              {copyText(copy.hero.title, { client: clientProfile.clientName })}
+            </h1>
+            <FeatureInfo featureKey="dashboard" side="bottom" />
+          </div>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
             {copyText(copy.hero.subtitle, {
               role: roleLabel,
@@ -1697,7 +1704,7 @@ function OperationsDashboard({
               <div className="rounded-xl border border-border bg-muted/30 p-3 transition-colors hover:border-primary/40 hover:bg-primary/[0.035]">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-xs font-bold text-foreground">{booking.flatNumber}</p>
-                  {/* Booking source is metadata, not an SLA status — render it as a
+                  {/* Booking source is metadata, not an SLA status. Render it as a
                       subtle muted label so it never reads as a coloured status pill. */}
                   <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
                     {booking.channel}
