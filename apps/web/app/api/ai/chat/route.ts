@@ -20,6 +20,7 @@ import {
   buildWorkflowMetadata,
   resolveWorkflowAction,
 } from "@/lib/action-catalog"
+import { recordAiRequestTrace } from "@/lib/ai-observability"
 
 const LOCAL_ACCESS_PROFILE_ID = "00000000-0000-0000-0000-000000000000"
 
@@ -400,6 +401,7 @@ function buildTicketDraft(message: string) {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now()
   let body: { message?: unknown; locale?: unknown; uiLocale?: unknown }
   try {
     body = await request.json()
@@ -432,6 +434,42 @@ export async function POST(request: Request) {
   const accessDecision = getAiAccessDecision(message, role, language)
   const deterministicContext = generateAiResponse(message, role, language)
   const requestedTicketDraft = wantsTicketDraft(message)
+
+  // Best-effort observability. Records one metadata trace per AI call (no raw
+  // prompt/PII) via the service role client, then returns the UNCHANGED payload.
+  // Any trace failure is swallowed inside recordAiRequestTrace, so this can never
+  // alter or break the response body (it stays byte-identical to before).
+  async function respondWithTrace(payload: Record<string, unknown>) {
+    const evaluation = payload.evaluation as
+      | { promptInjectionDetected?: boolean; grounded?: boolean }
+      | undefined
+    const usage = payload.usage as
+      | { prompt_tokens?: number | null; completion_tokens?: number | null }
+      | null
+      | undefined
+    const source = String(payload.source)
+
+    await recordAiRequestTrace({
+      surface: "dashboard",
+      userId: profile?.id ?? null,
+      companyId: profile?.company_id ?? null,
+      role,
+      language,
+      source,
+      model: typeof payload.model === "string" ? payload.model : null,
+      promptTokens: usage?.prompt_tokens ?? null,
+      completionTokens: usage?.completion_tokens ?? null,
+      latencyMs: Date.now() - startedAt,
+      injectionDetected: Boolean(evaluation?.promptInjectionDetected),
+      grounded:
+        typeof evaluation?.grounded === "boolean" ? evaluation.grounded : null,
+      outOfScope: false,
+      refused: source === "rbac-guard",
+      messageChars: message.length,
+    })
+
+    return NextResponse.json(payload)
+  }
 
   let ticketDraft:
     | {
@@ -490,7 +528,7 @@ export async function POST(request: Request) {
   }
 
   if (!accessDecision.allowed) {
-    return NextResponse.json({
+    return respondWithTrace({
       reply: deterministicContext,
       source: "rbac-guard",
       role,
@@ -510,7 +548,7 @@ export async function POST(request: Request) {
   }
 
   if (requestedTicketDraft) {
-    return NextResponse.json({
+    return respondWithTrace({
       reply: deterministicContext,
       source: "deterministic-fallback",
       role,
@@ -530,7 +568,7 @@ export async function POST(request: Request) {
   }
 
   if (!(await isLocalAiConfigured())) {
-    return NextResponse.json({
+    return respondWithTrace({
       reply: deterministicContext,
       source: "deterministic-fallback",
       role,
@@ -576,7 +614,7 @@ export async function POST(request: Request) {
       ? completion.content
       : deterministicContext
 
-    return NextResponse.json({
+    return respondWithTrace({
       reply: guardedContent,
       source: guardedContent === completion.content ? "local-ai" : "deterministic-language-guard",
       role,
@@ -596,7 +634,7 @@ export async function POST(request: Request) {
       }),
     })
   } catch {
-    return NextResponse.json({
+    return respondWithTrace({
       reply: deterministicContext,
       source: "deterministic-fallback",
       role,
