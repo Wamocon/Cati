@@ -510,6 +510,26 @@ export function answerPublicAiQuestion(
   }
 }
 
+// Blocking answer for a STRONG prompt-injection / jailbreak probe on the public
+// concierge. The public surface is data-blind by construction, so it can never
+// leak a record; this makes the refusal explicit and observable (refused +
+// escalated) instead of letting an injected instruction ride on a normal answer.
+// It reuses the private-data refusal copy, which already states the assistant
+// only covers product information and routes personal matters to a human.
+export function answerPublicAiInjectionProbe(
+  locale: PublicAiLocale
+): PublicAiAnswer {
+  return {
+    reply: answers[locale]["private-data"],
+    topic: "private-data",
+    confidence: topicConfidence["private-data"],
+    outcome: "refused_private_data",
+    shouldEscalate: true,
+    escalationReason: escalationCopy[locale].refused_private_data,
+    sources: getPublicAiSources("private-data"),
+  }
+}
+
 // Suggested starter questions shown as chips in the concierge widget.
 export const publicAiSuggestions: Record<PublicAiLocale, string[]> = {
   tr: [

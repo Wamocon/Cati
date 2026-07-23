@@ -1,7 +1,12 @@
 // Deterministic AI response generator for the 1Cati site-management workspace.
 // External LLM output is optional; this fallback always stays role-aware.
 
-import { hasPermission, type Resource, type Role } from "./rbac"
+import {
+  getAccessibleResources,
+  hasPermission,
+  type Resource,
+  type Role,
+} from "./rbac"
 import {
   bookings,
   formatTry,
@@ -263,60 +268,116 @@ function detectRequestedResource(prompt: string): Resource | undefined {
   )?.resource
 }
 
+// Single source of truth for localized resource labels. Reused by the RBAC
+// denial copy (denialForRole) and the graceful out-of-scope decline
+// (buildOutOfScopeDecline) so both stay consistent across languages.
+const resourceLabels: Record<Resource, Record<AiLanguage, string>> = {
+  calendar: { tr: "rezervasyon ve takvim", en: "booking and calendar", de: "Buchung und Kalender", ru: "бронирования и календаря" },
+  communications: { tr: "iletişim", en: "communication", de: "Kommunikation", ru: "коммуникации" },
+  dashboard: { tr: "genel panel", en: "dashboard", de: "Dashboard", ru: "панели" },
+  deals: { tr: "iş akışı", en: "workflow", de: "Workflow", ru: "рабочего процесса" },
+  documents: { tr: "belge", en: "documents", de: "Dokumente", ru: "документов" },
+  eids_compliance: { tr: "erişim ve uyum", en: "access and compliance", de: "Zugang und Compliance", ru: "доступа и соответствия" },
+  finance: { tr: "finans defteri", en: "finance ledger", de: "Finanzbuch", ru: "финансового журнала" },
+  leads: { tr: "sakin ve CRM", en: "resident and CRM", de: "Bewohner und CRM", ru: "жителей и CRM" },
+  listings: { tr: "daire matrisi ve portföy", en: "unit matrix and portfolio", de: "Wohnungsmatrix und Portfolio", ru: "матрицы квартир и портфеля" },
+  reports: { tr: "rapor ve analiz", en: "reports and analytics", de: "Berichte und Analysen", ru: "отчетов и аналитики" },
+  settings: { tr: "platform ayarları", en: "platform settings", de: "Plattformeinstellungen", ru: "настроек платформы" },
+  tickets: { tr: "servis talebi", en: "service tickets", de: "Servicetickets", ru: "сервисных заявок" },
+  users: { tr: "kullanıcı ve rol yönetimi", en: "user and role management", de: "Benutzer- und Rollenverwaltung", ru: "пользователей и ролей" },
+  wallet: { tr: "cüzdan", en: "wallet", de: "Wallet", ru: "кошелька" },
+  activities: { tr: "etkinlikler", en: "activities", de: "Aktivitäten", ru: "активностей" },
+  guardianship: { tr: "vasilik", en: "guardianship", de: "Vormundschaft", ru: "опекунства" },
+  vendor_invoices: { tr: "tedarikçi faturaları", en: "vendor invoices", de: "Lieferantenrechnungen", ru: "счетов поставщиков" },
+}
+
 function denialForRole(resource: Resource, role: Role, language: AiLanguage = "tr") {
-  const labels: Record<Resource, Record<AiLanguage, string>> = {
-    calendar: { tr: "rezervasyon ve takvim", en: "booking and calendar", de: "Buchung und Kalender", ru: "бронирования и календаря" },
-    communications: { tr: "iletişim", en: "communication", de: "Kommunikation", ru: "коммуникации" },
-    dashboard: { tr: "genel panel", en: "dashboard", de: "Dashboard", ru: "панели" },
-    deals: { tr: "iş akışı", en: "workflow", de: "Workflow", ru: "рабочего процесса" },
-    documents: { tr: "belge", en: "documents", de: "Dokumente", ru: "документов" },
-    eids_compliance: { tr: "erişim ve uyum", en: "access and compliance", de: "Zugang und Compliance", ru: "доступа и соответствия" },
-    finance: { tr: "finans defteri", en: "finance ledger", de: "Finanzbuch", ru: "финансового журнала" },
-    leads: { tr: "sakin ve CRM", en: "resident and CRM", de: "Bewohner und CRM", ru: "жителей и CRM" },
-    listings: { tr: "daire matrisi ve portföy", en: "unit matrix and portfolio", de: "Wohnungsmatrix und Portfolio", ru: "матрицы квартир и портфеля" },
-    reports: { tr: "rapor ve analiz", en: "reports and analytics", de: "Berichte und Analysen", ru: "отчетов и аналитики" },
-    settings: { tr: "platform ayarları", en: "platform settings", de: "Plattformeinstellungen", ru: "настроек платформы" },
-    tickets: { tr: "servis talebi", en: "service tickets", de: "Servicetickets", ru: "сервисных заявок" },
-    users: { tr: "kullanıcı ve rol yönetimi", en: "user and role management", de: "Benutzer- und Rollenverwaltung", ru: "пользователей и ролей" },
-    wallet: { tr: "cüzdan", en: "wallet", de: "Wallet", ru: "кошелька" },
-    activities: { tr: "etkinlikler", en: "activities", de: "Aktivitäten", ru: "активностей" },
-    guardianship: { tr: "vasilik", en: "guardianship", de: "Vormundschaft", ru: "опекунства" },
-    vendor_invoices: { tr: "tedarikçi faturaları", en: "vendor invoices", de: "Lieferantenrechnungen", ru: "счетов поставщиков" },
-  }
+  const label = resourceLabels[resource][language]
 
   if (language === "en") {
-    return `This request needs ${labels[resource].en} permission. Your active role (${role}) cannot view that data. I can only help with modules visible to your role and records inside your allowed scope.`
+    return `This request needs ${label} permission. Your active role (${role}) cannot view that data. I can only help with modules visible to your role and records inside your allowed scope.`
   }
 
   if (language === "de") {
-    return `Diese Anfrage benötigt die Berechtigung für ${labels[resource].de}. Deine aktive Rolle (${role}) darf diese Daten nicht sehen. Ich kann nur bei Modulen helfen, die für deine Rolle sichtbar sind.`
+    return `Diese Anfrage benötigt die Berechtigung für ${label}. Deine aktive Rolle (${role}) darf diese Daten nicht sehen. Ich kann nur bei Modulen helfen, die für deine Rolle sichtbar sind.`
   }
 
   if (language === "ru") {
-    return `Для этого запроса нужны права на ${labels[resource].ru}. Ваша активная роль (${role}) не может видеть эти данные. Я могу помогать только с модулями и записями в рамках вашей роли.`
+    return `Для этого запроса нужны права на ${label}. Ваша активная роль (${role}) не может видеть эти данные. Я могу помогать только с модулями и записями в рамках вашей роли.`
   }
 
-  const trLabels: Record<Resource, string> = {
-    calendar: "rezervasyon ve takvim",
-    communications: "iletişim",
-    dashboard: "genel panel",
-    deals: "iş akışı",
-    documents: "belge",
-    eids_compliance: "erişim ve uyum",
-    finance: "finans defteri",
-    leads: "sakin ve CRM",
-    listings: "daire matrisi ve portföy",
-    reports: "rapor ve analiz",
-    settings: "platform ayarları",
-    tickets: "servis talebi",
-    users: "kullanıcı ve rol yönetimi",
-    wallet: "cüzdan",
-    activities: "etkinlikler",
-    guardianship: "vasilik",
-    vendor_invoices: "tedarikçi faturaları",
-  }
+  return `Bu istek ${label} yetkisi gerektirir. Aktif rolünüz (${role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.`
+}
 
-  return `Bu istek ${trLabels[resource]} yetkisi gerektirir. Aktif rolünüz (${role}) için bu veri kapalıdır; yalnızca sol menüde görünen modüller ve kendi yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.`
+// Curated order of the modules the assistant actually helps with, used to build
+// a friendly, deterministic capability list for the out-of-scope decline.
+const AI_CAPABILITY_ORDER: Resource[] = [
+  "tickets",
+  "calendar",
+  "finance",
+  "documents",
+  "reports",
+  "communications",
+  "listings",
+  "wallet",
+  "activities",
+  "users",
+  "settings",
+  "eids_compliance",
+]
+
+// Help-topic keywords that are NOT tied to a specific resource but are still a
+// recognized assistant intent (operational summaries, planning, automation, help
+// requests, ...). Kept multilingual and >=4 chars to avoid accidental substring
+// matches. Resource-scoped intents are covered separately by
+// detectRequestedResource(); this list only adds the non-resource help topics.
+const DASHBOARD_HELP_TERMS: string[] = [
+  "summar", "özet", "ozet", "zusammenfass", "übersicht", "ubersicht", "обзор", "сводк",
+  "operation", "operasyon", "betrieb",
+  "plan", "план",
+  "roadmap", "phase", "faz", "фаз",
+  "automation", "otomasyon", "automatisier", "автоматиз",
+  "route", "rota", "маршрут", "technician", "teknisyen", "techniker",
+  "risk", "priorit", "öncelik", "oncelik", "приоритет",
+  "overview", "genel bak", "durum", "status",
+  "help me", "yardımcı", "yardimci", "hilfe", "помощь", "помоги",
+]
+
+/**
+ * True when the dashboard message maps to a recognized assistant intent: either a
+ * known resource (detectRequestedResource) or one of the non-resource help topics
+ * above. When this is false AND the role cannot otherwise act on the request, the
+ * route returns the graceful out-of-scope decline instead of a generic answer.
+ */
+export function isRecognizedDashboardIntent(message: string): boolean {
+  if (detectRequestedResource(message)) return true
+  const lower = message.toLocaleLowerCase("tr-TR")
+  return DASHBOARD_HELP_TERMS.some((term) => lower.includes(term))
+}
+
+/**
+ * Friendly, plain-language out-of-scope decline. Lists what the assistant CAN do
+ * for this role (localized capability labels) instead of guessing at an
+ * off-topic request. Distinct from the RBAC denial (denialForRole), which fires
+ * for an allowed *topic* the role simply cannot view.
+ */
+export function buildOutOfScopeDecline(role: Role, language: AiLanguage = "tr"): string {
+  const accessible = new Set(getAccessibleResources(role))
+  const labelList = AI_CAPABILITY_ORDER.filter((resource) => accessible.has(resource))
+    .slice(0, 6)
+    .map((resource) => resourceLabels[resource][language])
+    .join(", ")
+
+  if (language === "en") {
+    return `I could not map that request to a module you can use. I can help with ${labelList}. For anything outside this, please use the matching module or contact management.`
+  }
+  if (language === "de") {
+    return `Ich konnte diese Anfrage keinem für Sie verfügbaren Modul zuordnen. Ich kann bei ${labelList} helfen. Für alles andere nutzen Sie bitte das passende Modul oder wenden Sie sich an die Verwaltung.`
+  }
+  if (language === "ru") {
+    return `Я не смог сопоставить этот запрос с доступным вам модулем. Я могу помочь с: ${labelList}. По остальным вопросам используйте соответствующий модуль или обратитесь в управление.`
+  }
+  return `Bu isteği kullanabileceğiniz bir modüle eşleştiremedim. Şu konularda yardımcı olabilirim: ${labelList}. Bunun dışındaki konular için lütfen ilgili modülü kullanın veya yönetimle iletişime geçin.`
 }
 
 export function getAiRoleProfile(role: Role): AiRoleProfile {

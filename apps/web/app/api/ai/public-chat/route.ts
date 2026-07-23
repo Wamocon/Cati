@@ -36,15 +36,20 @@ export async function POST(request: Request) {
   // raw prompt/PII, always anonymous) via the service role client, then returns
   // the UNCHANGED payload. Any failure is swallowed inside recordAiRequestTrace,
   // preserving the endpoint's 5xx-proof, data-blind guarantee.
+  const injectionBlocked = finalized.evaluation.flags.includes(
+    "prompt_injection_blocked"
+  )
   await recordAiRequestTrace({
     surface: "public",
     source: finalized.source,
     language: finalized.language,
     latencyMs: finalized.responseMs ?? Date.now() - startedAt,
-    injectionDetected: finalized.evaluation.flags.includes("prompt_injection_probe"),
+    injectionDetected:
+      finalized.evaluation.flags.includes("prompt_injection_probe") ||
+      injectionBlocked,
     grounded: finalized.evaluation.grounded,
     outOfScope: finalized.outcome === "uncertain",
-    refused: finalized.outcome === "refused_private_data",
+    refused: finalized.outcome === "refused_private_data" || injectionBlocked,
     messageChars: parsed.value.message.length,
   })
 

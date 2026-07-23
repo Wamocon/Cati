@@ -1,4 +1,5 @@
 import {
+  answerPublicAiInjectionProbe,
   answerPublicAiQuestion,
   resolvePublicAiLocale,
   resolvePublicAiResponseLocale,
@@ -7,6 +8,10 @@ import {
   type PublicAiSource,
   type PublicAiTopic,
 } from "@/lib/public-ai-knowledge"
+import {
+  hasPromptInjectionSignal,
+  hasStrongPromptInjectionSignal,
+} from "@/lib/ai-guardrails"
 import {
   logPublicAiEscalation,
   logPublicAiInterest,
@@ -76,12 +81,6 @@ function cacheKey(message: string, locale: PublicAiLocale) {
   return `${locale}:${message.toLocaleLowerCase("tr").replace(/\s+/g, " ")}`
 }
 
-function hasPromptInjectionSignal(message: string) {
-  return /(ignore|forget) (all )?(previous|above|system|rules|instructions)|system prompt|developer message|jailbreak|bypass|reveal (your )?(prompt|instructions)|act as admin|forget your rules/i.test(
-    message
-  )
-}
-
 function hasPrivateDataLeakSignal(text: string) {
   return (
     /\b[A-G]-\d{2,4}\b/i.test(text) ||
@@ -105,7 +104,11 @@ function evaluatePublicAiSafety(
   locale: PublicAiLocale
 ): PublicAiSafetyEvaluation {
   const flags: string[] = []
-  const promptInjection = hasPromptInjectionSignal(input.message)
+  const strongInjection = hasStrongPromptInjectionSignal(input.message)
+  // A strong probe is always flagged as a probe too (some strong phrasings are
+  // outside the softer flag regex).
+  const promptInjection =
+    hasPromptInjectionSignal(input.message) || strongInjection
   const privateLeakSignal = hasPrivateDataLeakSignal(answer.reply)
   const sourceCount = answer.sources.length
   const grounded = sourceCount > 0 && answer.outcome !== "uncertain"
@@ -113,6 +116,8 @@ function evaluatePublicAiSafety(
     answer.outcome === "refused_private_data" || !privateLeakSignal
 
   if (promptInjection) flags.push("prompt_injection_probe")
+  // The probe was ACTED on (the answer was overridden to the injection refusal).
+  if (strongInjection) flags.push("prompt_injection_blocked")
   if (!grounded) flags.push("low_grounding")
   if (!privateDataSafe) flags.push("possible_private_data_leak")
   if (answer.outcome !== "answered") flags.push(`handoff_${answer.outcome}`)
@@ -181,7 +186,17 @@ export function createPublicAiChatPayload(
   startedAt = Date.now()
 ): PublicAiChatPayload {
   const locale = resolvePublicAiResponseLocale(input.message, input.locale)
-  const answer = cachedAnswer(input.message, locale)
+  const classified = cachedAnswer(input.message, locale)
+  // Guardrail (act, not flag): a STRONG prompt-injection / jailbreak probe is
+  // blocked with the explicit refusal answer, unless the private-data guard has
+  // already refused it (that precedence is kept intact). The public surface is
+  // data-blind, so this cannot leak a record; it makes the refusal observable
+  // (refused_private_data + escalation) rather than answering the probe.
+  const answer =
+    hasStrongPromptInjectionSignal(input.message) &&
+    classified.outcome !== "refused_private_data"
+      ? answerPublicAiInjectionProbe(locale)
+      : classified
   const evaluation = evaluatePublicAiSafety(input, answer, locale)
 
   return {

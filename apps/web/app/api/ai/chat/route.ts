@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server"
 import {
+  buildOutOfScopeDecline,
   detectAiLanguage,
   generateAiResponse,
   getAiAccessDecision,
   getAiRoleProfile,
   getAiRoleSystemInstruction,
+  isRecognizedDashboardIntent,
   resolveAiLanguage,
 } from "@/lib/ai-responses"
+import {
+  findUngroundedSpecifics,
+  hasPromptInjectionSignal,
+  hasStrongPromptInjectionSignal,
+} from "@/lib/ai-guardrails"
 import { getUserProfile } from "@/lib/auth"
 import { hasAnyPermission } from "@/lib/rbac"
 import { canAccessUnitForRole, isClientRole, normalizeUnitNo } from "@/lib/role-scoped-views"
@@ -278,10 +285,20 @@ function containsAny(text: string, terms: string[]) {
   return terms.some((term) => lower.includes(term))
 }
 
-function hasPromptInjectionSignal(message: string) {
-  return /(ignore|forget) (all )?(previous|above|system|rules|instructions)|system prompt|developer message|jailbreak|bypass|reveal (your )?(prompt|instructions)|act as admin|forget your rules/i.test(
-    message
-  )
+// Short, localized decline note prepended to the grounded deterministic answer
+// when a STRONG prompt-injection probe is blocked. It states the boundary (the
+// assistant will not follow instructions embedded in a request) without
+// weakening the recommend-never-act guarantee.
+const injectionDeclineNote: Record<string, string> = {
+  en: "For your safety I cannot follow instructions embedded inside a request. I can only help with your role's modules and records inside your allowed scope.",
+  tr: "Güvenlik gereği bir mesajın içine gömülü talimatları uygulayamam. Yalnızca rolünüzün modülleri ve yetki kapsamınızdaki kayıtlar hakkında yardımcı olabilirim.",
+  de: "Aus Sicherheitsgründen befolge ich keine in eine Anfrage eingebetteten Anweisungen. Ich helfe nur bei den Modulen Ihrer Rolle und Datensätzen in Ihrem zulässigen Bereich.",
+  ru: "В целях безопасности я не выполняю инструкции, встроенные в запрос. Я могу помогать только с модулями вашей роли и записями в пределах вашего доступа.",
+}
+
+function buildInjectionBlockedReply(context: string, language: string): string {
+  const note = injectionDeclineNote[language] ?? injectionDeclineNote.en
+  return `${note}\n\n${context}`
 }
 
 function sensitiveActionSignal(message: string) {
@@ -297,6 +314,7 @@ function buildAiSafetyEvaluation({
   source,
   resource,
   ticketDraft,
+  grounded,
 }: {
   message: string
   role: string
@@ -304,11 +322,24 @@ function buildAiSafetyEvaluation({
   source: string
   resource?: string
   ticketDraft: { requiresHumanApproval: boolean } | null
+  // Explicit groundedness override. Defaults to the source-derived value; the
+  // output-groundedness guard passes `false` when it redacts an ungrounded reply.
+  grounded?: boolean
 }) {
-  const promptInjectionDetected = hasPromptInjectionSignal(message)
+  // A strong probe is always flagged too, so a blocked request keeps its
+  // injection flag even for phrasings the softer flag regex does not cover.
+  const promptInjectionDetected =
+    hasPromptInjectionSignal(message) || hasStrongPromptInjectionSignal(message)
   const sensitiveActionRequested = sensitiveActionSignal(message)
   const humanApprovalRequired =
     Boolean(ticketDraft?.requiresHumanApproval) || sensitiveActionRequested
+  const injectionBlocked = source === "guardrail-injection"
+  const outOfScope = source === "guardrail-out-of-scope"
+  const ungroundedRedacted = source === "guardrail-ungrounded"
+  const resolvedGrounded =
+    typeof grounded === "boolean"
+      ? grounded
+      : source !== "local-ai" || Boolean(resource)
 
   return {
     version: "operations-ai-safety-v2",
@@ -317,7 +348,7 @@ function buildAiSafetyEvaluation({
     source,
     resource: resource ?? "general",
     roleScoped: true,
-    grounded: source !== "local-ai" || Boolean(resource),
+    grounded: resolvedGrounded,
     promptInjectionDetected,
     sensitiveActionRequested,
     humanApprovalRequired,
@@ -329,8 +360,11 @@ function buildAiSafetyEvaluation({
           : "privileged_role_scope",
     flags: [
       ...(promptInjectionDetected ? ["prompt_injection_probe"] : []),
+      ...(injectionBlocked ? ["prompt_injection_blocked"] : []),
       ...(humanApprovalRequired ? ["human_approval_required"] : []),
       ...(source === "rbac-guard" ? ["rbac_guard_applied"] : []),
+      ...(outOfScope ? ["out_of_scope_declined"] : []),
+      ...(ungroundedRedacted ? ["ungrounded_output_redacted"] : []),
     ],
   }
 }
@@ -433,12 +467,22 @@ export async function POST(request: Request) {
   const roleProfile = getAiRoleProfile(role)
   const accessDecision = getAiAccessDecision(message, role, language)
   const deterministicContext = generateAiResponse(message, role, language)
+  const strongInjection = hasStrongPromptInjectionSignal(message)
   const requestedTicketDraft = wantsTicketDraft(message)
 
   // Best-effort observability. Records one metadata trace per AI call (no raw
   // prompt/PII) via the service role client, then returns the UNCHANGED payload.
   // Any trace failure is swallowed inside recordAiRequestTrace, so this can never
   // alter or break the response body (it stays byte-identical to before).
+  // Sources that represent the assistant ACTIVELY declining (not just answering):
+  // the RBAC guard, a blocked prompt-injection probe, and a graceful
+  // out-of-scope decline all count as refusals for observability.
+  const refusingSources = new Set([
+    "rbac-guard",
+    "guardrail-injection",
+    "guardrail-out-of-scope",
+  ])
+
   async function respondWithTrace(payload: Record<string, unknown>) {
     const evaluation = payload.evaluation as
       | { promptInjectionDetected?: boolean; grounded?: boolean }
@@ -463,8 +507,8 @@ export async function POST(request: Request) {
       injectionDetected: Boolean(evaluation?.promptInjectionDetected),
       grounded:
         typeof evaluation?.grounded === "boolean" ? evaluation.grounded : null,
-      outOfScope: false,
-      refused: source === "rbac-guard",
+      outOfScope: source === "guardrail-out-of-scope",
+      refused: refusingSources.has(source),
       messageChars: message.length,
     })
 
@@ -483,7 +527,9 @@ export async function POST(request: Request) {
       }
     | null = null
 
-  if (requestedTicketDraft) {
+  // A strong prompt-injection probe must never produce a side effect: skip the
+  // request-only ticket draft entirely (the probe is blocked below).
+  if (requestedTicketDraft && !strongInjection) {
     const workflowAction = resolveWorkflowAction("ticket.create.ai_draft", "service_tickets")
     const ticketAccess = getAiAccessDecision("service ticket create", role, language)
     const canCreateTicketDraft = hasAnyPermission(role, workflowAction.resource, workflowAction.requiredActions)
@@ -547,6 +593,31 @@ export async function POST(request: Request) {
     })
   }
 
+  // Guardrail (act, not flag): a STRONG prompt-injection / jailbreak probe skips
+  // the LLM gateway entirely and returns the grounded deterministic answer plus a
+  // short decline note. The RBAC guard above still wins when the requested
+  // resource is denied, so a denied+injection request stays "rbac-guard". The
+  // prompt_injection_probe flag stays set (tests assert it).
+  if (strongInjection) {
+    return respondWithTrace({
+      reply: buildInjectionBlockedReply(deterministicContext, language),
+      source: "guardrail-injection",
+      role,
+      roleProfile,
+      language,
+      resource: accessDecision.resource,
+      ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "guardrail-injection",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
+    })
+  }
+
   if (requestedTicketDraft) {
     return respondWithTrace({
       reply: deterministicContext,
@@ -561,6 +632,30 @@ export async function POST(request: Request) {
         role,
         language,
         source: "deterministic-fallback",
+        resource: accessDecision.resource,
+        ticketDraft,
+      }),
+    })
+  }
+
+  // Guardrail (act, not flag): when the request maps to no resource/intent the
+  // role can use AND is not a known help topic, decline gracefully and list what
+  // the assistant CAN help with for this role. Distinct from the RBAC denial
+  // above (which fires for an allowed topic the role simply cannot view).
+  if (!isRecognizedDashboardIntent(message)) {
+    return respondWithTrace({
+      reply: buildOutOfScopeDecline(role, language),
+      source: "guardrail-out-of-scope",
+      role,
+      roleProfile,
+      language,
+      resource: accessDecision.resource,
+      ticketDraft,
+      evaluation: buildAiSafetyEvaluation({
+        message,
+        role,
+        language,
+        source: "guardrail-out-of-scope",
         resource: accessDecision.resource,
         ticketDraft,
       }),
@@ -610,13 +705,29 @@ export async function POST(request: Request) {
         },
       ],
     })
-    const guardedContent = isLikelySameLanguage(completion.content, language)
-      ? completion.content
-      : deterministicContext
+    // Output guardrails on the model reply, in order:
+    //   1. Language guard: reply not in the detected language -> deterministic.
+    //   2. Groundedness / PII guard: reply contains a unit code, money amount,
+    //      email or phone that is NOT in the authorized grounding context ->
+    //      REDACT by falling back to the deterministic answer, so a hallucinated
+    //      or leaked specific never reaches the user. (The deterministic context
+    //      is today's grounding source; Phase 3 swaps it for RLS retrieval.)
+    const languageOk = isLikelySameLanguage(completion.content, language)
+    const ungrounded =
+      languageOk &&
+      findUngroundedSpecifics(completion.content, deterministicContext).length > 0
+
+    const source = !languageOk
+      ? "deterministic-language-guard"
+      : ungrounded
+        ? "guardrail-ungrounded"
+        : "local-ai"
+    const guardedContent =
+      source === "local-ai" ? completion.content : deterministicContext
 
     return respondWithTrace({
       reply: guardedContent,
-      source: guardedContent === completion.content ? "local-ai" : "deterministic-language-guard",
+      source,
       role,
       roleProfile,
       language,
@@ -628,9 +739,10 @@ export async function POST(request: Request) {
         message,
         role,
         language,
-        source: guardedContent === completion.content ? "local-ai" : "deterministic-language-guard",
+        source,
         resource: accessDecision.resource,
         ticketDraft,
+        grounded: source === "guardrail-ungrounded" ? false : undefined,
       }),
     })
   } catch {
