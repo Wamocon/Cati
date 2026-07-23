@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useLocale, useTranslations } from "next-intl"
 import { motion, AnimatePresence } from "framer-motion"
+import { ComingSoon } from "@/components/coming-soon"
 import {
   Sparkles,
   Send,
@@ -573,6 +574,10 @@ export function AiAssistant() {
                         {s.label}
                       </button>
                     ))}
+                  </div>
+
+                  <div className="flex items-center border-b border-border px-4 py-1.5">
+                    <ComingSoon featureKey="ai_semantic_search" />
                   </div>
 
                   {/* Input */}

@@ -380,6 +380,35 @@ export const FEATURE_GUIDE: Record<string, FeatureGuideEntry> = {
     },
   },
 
+  ai_semantic_search: {
+    title: {
+      tr: "Belgelerde akıllı arama",
+      en: "Smart search inside documents",
+      de: "Intelligente Dokumentensuche",
+      ru: "Умный поиск по документам",
+    },
+    whatItDoes: {
+      tr: "Sözleşme, tapu ve notlar gibi belgelerin içinde anlam bazlı arama yapar ve sorunuza en uygun bölümü bulup gösterir.",
+      en: "It searches inside documents such as contracts, title deeds and notes by meaning, and shows the passage that best answers your question.",
+      de: "Sie durchsucht Dokumente wie Verträge, Grundbuchauszüge und Notizen nach Bedeutung und zeigt den passendsten Abschnitt zu Ihrer Frage.",
+      ru: "Она ищет по смыслу внутри документов, таких как договоры, выписки и заметки, и показывает фрагмент, который лучше всего отвечает на ваш вопрос.",
+    },
+    comingSoon: {
+      summary: {
+        tr: "Belgelerin içinde akıllı arama yakında geliyor. Şu anda yardımcı yalnızca yetkiniz dahilindeki kayıtlı verilere göre yanıt veriyor.",
+        en: "Smart search inside documents is coming soon. For now, the assistant answers only from the records you are authorized to see.",
+        de: "Die intelligente Suche in Dokumenten kommt bald. Derzeit antwortet der Assistent nur anhand der Daten, die Sie sehen dürfen.",
+        ru: "Умный поиск по документам скоро появится. Пока помощник отвечает только по данным, которые вам разрешено видеть.",
+      },
+      whatsNeeded: {
+        tr: "Devreye almak için kurum içi yapay zeka servisinin belge gömme (embedding) özelliğini desteklemesi gerekiyor. Bu sağlandığında belge araması açılacak.",
+        en: "To switch it on, the on-prem AI service needs to support document embeddings. Once that is available, document search will be enabled.",
+        de: "Zur Freischaltung muss der interne KI-Dienst Dokument-Embeddings unterstützen. Sobald das verfügbar ist, wird die Dokumentensuche aktiviert.",
+        ru: "Чтобы включить это, внутренний ИИ-сервис должен поддерживать эмбеддинги документов. Когда это станет доступно, поиск по документам будет включён.",
+      },
+    },
+  },
+
   access_control: {
     title: {
       tr: "Otomatik kapı ve geçiş kontrolü",
