@@ -152,3 +152,58 @@
 
 19. **When a background task might be masking its result, read its OUTPUT FILE, not
     the notification's summary alone** (see #1).
+
+20. **A "stopped" background agent usually FINISHED its files — check, don't redo.**
+    When the process exits mid-run, agents are reported "stopped" with no completion
+    record, but their edits are on disk. `git status` + run the gate: typically the
+    files are complete and just need one leftover error fixed (e.g. a null-narrowing
+    miss) + validation, not a full re-run. Also delete any temp spec the agent left
+    under `e2e/` (it will wrongly run in the next suite).
+
+21. **`pnpm test:e2e -- <name>` does NOT reliably filter** — Playwright frequently
+    runs the WHOLE suite anyway (seen repeatedly). Don't trust it for a "quick"
+    targeted run; check the `Running N tests` line, and if you truly need a subset use
+    `pnpm exec playwright test <path> --project=<p>` and verify N is small.
+
+22. **Bash relative-path redirect footgun.** A redirect like `> "../../.tmp/…"`
+    computed for `apps/web` fails silently when the command runs from the repo root
+    (the dir resolves outside the repo → the whole command exits 1 and the real work
+    never runs — looks like a test failure, isn't). Use absolute paths, or run in
+    `run_in_background` and let the runner capture output (no redirect).
+
+## AI / LLM assistant
+
+23. **Cloud-only features must be a NO-OP when Supabase is blanked.** The AI trace +
+    memory writers do `if (!isSupabaseConfigured()) return` + swallow all errors, so
+    the local-seed e2e env is byte-identical and the 5xx-proof guarantee holds. This
+    is THE pattern for adding a DB/cloud feature without breaking the local-seed suite
+    (`lib/ai-observability.ts`, `lib/ai-memory.ts`).
+
+24. **No-leak for an LLM = enforce at RETRIEVAL time (RLS under the caller's JWT),
+    never the prompt.** Ground the model only on rows a query returns under the user's
+    own auth, so a leak is impossible even under prompt injection. And NOT every
+    `SECURITY DEFINER` RPC is safe to ground on: the company-only-scoped DEFINER RPCs
+    (`get_site_dashboard_snapshot`, `get_phase4_site_data`, `search_operational_records`)
+    BYPASS RLS and return cross-unit rows. Ground only on readers whose output equals
+    the caller's RLS (direct-RLS tables, or a DEFINER projection that re-applies the
+    per-row predicate). Verify each reader's scoping before feeding it to a model.
+    (`lib/ai-retrieval.ts` reuses only the finance-ledger + safe-ticket readers.)
+
+25. **RLS-scoped behavior can only be verified with REAL logins.** The blanked-
+    Supabase harness/e2e can't exercise the live RLS path; run an adversarial cloud
+    test with real per-role accounts (`<role>@cati-demo.com`) sending cross-scope leak
+    probes. Gotcha: a local dev server pointed at cloud treats an *unauthenticated*
+    AI call as the `manager` access-profile (dev-only; hard-disabled in
+    production/Vercel via `access-profile-policy.ts`).
+
+26. **Reproduce a SQL function against its LATEST body.** `admin_anonymize_user`'s
+    current definition was in migration 49, not 50 — grep ALL migrations for the
+    function name and reproduce the newest before `CREATE OR REPLACE`, or you silently
+    revert later fixes.
+
+27. **Layer AI guardrails so they ACT, not just flag.** Strong prompt-injection →
+    skip the model, return the grounded deterministic answer + a decline note (keep
+    the injection flag). Scan the model's OUTPUT and redact any unit code / amount /
+    email / phone not present in the authorized grounding (groundedness gate). Keep a
+    versioned golden set with heavy NEGATIVE cases (cross-role, injection, out-of-
+    scope, private-data) as a harness that exits non-zero on any leak.
