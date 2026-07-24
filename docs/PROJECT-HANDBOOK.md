@@ -195,4 +195,10 @@ The following are useful for history but should not drive current scope without 
 - generated QA screenshots without matching report context,
 - duplicate DOCX exports,
 - old extracted client text without a linked requirement,
-- local ignored artifacts under `.tmp`, `.graphify`, `quality`, `playwright-report` or `test-results`.
+- local ignored artifacts under `.tmp`, `.graphify`, `quality`, `playwright-report` or `test-results`,
+- local dependency/build folders such as `node_modules`, `.next`, `.turbo`, `.vercel`, Supabase `.temp/.branches` and editor/browser caches.
+
+Use `pnpm clean:workspace -- --dry-run` from the repository root to preview
+generated artifact cleanup. Run `pnpm clean:workspace` to remove ignored
+generated artifacts while keeping dependency installs, or add `--include-deps`
+only when a fresh dependency install is intended.
