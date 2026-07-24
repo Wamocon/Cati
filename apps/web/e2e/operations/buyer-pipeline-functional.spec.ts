@@ -222,7 +222,6 @@ test.describe("UC24 persistent buyer sales room", () => {
     await createForm
       .getByRole("combobox", { name: /^Source/ })
       .selectOption("referral")
-    await createForm.getByLabel("KVKK consent").selectOption("pending")
     await createForm.getByLabel("Primary unit").selectOption(unitId)
     await createForm
       .getByRole("button", { name: "Create persistent record" })
@@ -258,7 +257,6 @@ test.describe("UC24 persistent buyer sales room", () => {
     const createForm = page.getByRole("form", { name: "Scoped buyer record" })
     await createForm.getByLabel("Full name").fill("Ada Buyer")
     await createForm.getByLabel("Email").fill("ada@example.test")
-    await createForm.getByLabel("KVKK consent").selectOption("pending")
     await createForm.getByLabel("Primary unit").selectOption(unitId)
     await createForm
       .getByRole("button", { name: "Create persistent record" })

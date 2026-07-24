@@ -320,6 +320,21 @@ export const FEATURE_GUIDE: Record<string, FeatureGuideEntry> = {
     },
   },
 
+  public_reports: {
+    title: {
+      tr: "Herkese açık sorun bildirimleri",
+      en: "Public problem reports",
+      de: "Öffentliche Problemmeldungen",
+      ru: "Публичные сообщения о проблемах",
+    },
+    whatItDoes: {
+      tr: "Sakinlerin ve ziyaretçilerin QR kod veya afiş üzerinden gönderdiği sorun bildirimlerini burada görür ve incelersiniz. Uygun olanları onaylayıp iş emrine dönüştürür, uygunsuz veya tekrarlı olanları gerekçesiyle geri çevirirsiniz. Böylece gerçek talepler kayda geçer ve doğru ekibe ulaşır.",
+      en: "Here you see and review the problem reports that residents and visitors send in through a QR code or poster. You approve the suitable ones and turn them into a work order, and turn down the unsuitable or duplicate ones with a reason. This way genuine requests are recorded and reach the right team.",
+      de: "Hier sehen und prüfen Sie die Problemmeldungen, die Bewohner und Besucher über einen QR-Code oder ein Plakat senden. Passende Meldungen geben Sie frei und wandeln sie in einen Auftrag um, unpassende oder doppelte lehnen Sie mit einer Begründung ab. So werden echte Anliegen erfasst und erreichen das richtige Team.",
+      ru: "Здесь вы видите и проверяете сообщения о проблемах, которые жильцы и посетители отправляют через QR-код или плакат. Подходящие вы одобряете и превращаете в заявку, а неподходящие или повторные отклоняете с указанием причины. Так реальные обращения фиксируются и попадают к нужной команде.",
+    },
+  },
+
   // --- Not-live features (coming soon) --------------------------------------
 
   payments: {
@@ -521,6 +536,64 @@ export const FEATURE_GUIDE: Record<string, FeatureGuideEntry> = {
         en: "To switch it on, we need automatic approvals to be turned on and clear rules on which actions may run without a person's approval.",
         de: "Zur Freischaltung müssen automatische Freigaben aktiviert und klare Regeln festgelegt werden, welche Aktionen ohne die Freigabe einer Person laufen dürfen.",
         ru: "Чтобы включить это, нужно включить автоматические одобрения и установить чёткие правила, какие действия можно выполнять без одобрения человека.",
+      },
+    },
+  },
+
+  settings_notification_rules: {
+    title: {
+      tr: "Bildirim kuralları",
+      en: "Notification rules",
+      de: "Benachrichtigungsregeln",
+      ru: "Правила уведомлений",
+    },
+    whatItDoes: {
+      tr: "Borç, son tarih, giriş, çıkış ve eksik belge gibi durumlarda kimin ne zaman uyarı alacağını belirlemenizi sağlar. Böylece önemli hiçbir konu gözden kaçmaz.",
+      en: "It lets you decide who gets an alert, and when, for things like dues, deadlines, check-in, check-out and missing documents. This way nothing important is missed.",
+      de: "Damit legen Sie fest, wer wann eine Benachrichtigung erhält, etwa bei Beiträgen, Fristen, Check-in, Check-out und fehlenden Dokumenten. So geht nichts Wichtiges verloren.",
+      ru: "Позволяет задать, кто и когда получает уведомление о взносах, сроках, заезде, выезде и недостающих документах. Так ничего важного не упускается.",
+    },
+    comingSoon: {
+      summary: {
+        tr: "Bildirim kurallarını buradan kendiniz düzenleme özelliği yakında geliyor. Şu anda bu kartta gösterilen kurallar sabittir ve bu ekrandan değiştirilemez.",
+        en: "The option to set these notification rules yourself is coming soon. For now, the rules shown on this card are fixed and cannot be changed from this screen.",
+        de: "Die Möglichkeit, diese Benachrichtigungsregeln selbst festzulegen, kommt bald. Derzeit sind die auf dieser Karte gezeigten Regeln fest und über diesen Bildschirm nicht änderbar.",
+        ru: "Возможность самостоятельно настраивать эти правила уведомлений скоро появится. Пока правила на этой карточке зафиксированы и с этого экрана не меняются.",
+      },
+      whatsNeeded: {
+        tr: "Devreye almak için önce dış bildirim kanallarının (WhatsApp, SMS, e-posta) bağlanması ve kural düzenleme ekranının açılması gerekiyor.",
+        en: "To switch it on, the outside notification channels (WhatsApp, SMS, email) need to be connected first, and the rule editor needs to be opened up.",
+        de: "Zur Freischaltung müssen zuerst die externen Kanäle (WhatsApp, SMS, E-Mail) verbunden und der Regel-Editor freigeschaltet werden.",
+        ru: "Чтобы включить это, сначала нужно подключить внешние каналы (WhatsApp, SMS, e-mail) и открыть редактор правил.",
+      },
+    },
+  },
+
+  settings_security_policy: {
+    title: {
+      tr: "Güvenlik politikası",
+      en: "Security policy",
+      de: "Sicherheitsrichtlinie",
+      ru: "Политика безопасности",
+    },
+    whatItDoes: {
+      tr: "Kimin hangi bilgileri görebileceğini, hassas finans işlemlerinin nasıl korunacağını ve yapay zekâ kararlarının insan onayından geçmesini düzenler. Amacı verilerinizi güvende tutmaktır.",
+      en: "It governs who can see which information, how sensitive finance actions are protected and that AI decisions pass through human approval. Its purpose is to keep your data safe.",
+      de: "Sie regelt, wer welche Informationen sehen darf, wie sensible Finanzaktionen geschützt sind und dass KI-Entscheidungen eine menschliche Freigabe durchlaufen. Ihr Zweck ist es, Ihre Daten sicher zu halten.",
+      ru: "Определяет, кто какую информацию может видеть, как защищены чувствительные финансовые действия и что решения ИИ проходят одобрение человеком. Она нужна, чтобы сохранить ваши данные в безопасности.",
+    },
+    comingSoon: {
+      summary: {
+        tr: "Güvenlik politikasını bu ekrandan düzenleme özelliği yakında geliyor. Şu anda bu kurallar sistem tarafından uygulanır ve bu karttan değiştirilemez.",
+        en: "The option to edit the security policy from this screen is coming soon. For now, these rules are applied by the system and cannot be changed from this card.",
+        de: "Die Möglichkeit, die Sicherheitsrichtlinie über diesen Bildschirm zu bearbeiten, kommt bald. Derzeit werden diese Regeln vom System angewendet und sind über diese Karte nicht änderbar.",
+        ru: "Возможность настраивать политику безопасности с этого экрана скоро появится. Пока эти правила применяются системой и с этой карточки не меняются.",
+      },
+      whatsNeeded: {
+        tr: "Devreye almak için yönetici onaylı bir güvenlik ayarları ekranı ve her değişikliği kayıt altına alan bir onay akışı gerekiyor.",
+        en: "To switch it on, we need an admin-approved security settings screen and an approval flow that records every change.",
+        de: "Zur Freischaltung brauchen wir einen von der Verwaltung freigegebenen Sicherheitseinstellungs-Bildschirm und einen Freigabeablauf, der jede Änderung protokolliert.",
+        ru: "Чтобы включить это, нужны экран настроек безопасности с одобрением администратора и порядок согласования, фиксирующий каждое изменение.",
       },
     },
   },

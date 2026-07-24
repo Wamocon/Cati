@@ -29,7 +29,7 @@ import { FeatureInfo } from "@/components/feature-info"
 import { StatusBadge } from "@/components/status-badge"
 import { useUser } from "@/components/user-provider"
 import { formatDualFromCents } from "@/lib/currency"
-import { hasAnyRolePermission } from "@/lib/rbac"
+import { hasAnyRolePermission, roleScope } from "@/lib/rbac"
 import { cn } from "@/lib/utils"
 import type {
   ActivityView,
@@ -60,6 +60,8 @@ interface ActivitiesCopy {
   subtitle: string
   creditLabel: string
   book: string
+  bookUnavailableAdult: string
+  bookUnavailableChild: string
   bookTitle: string
   partySize: string
   total: string
@@ -73,6 +75,7 @@ interface ActivitiesCopy {
   bookError: string
   insufficientTitle: string
   insufficientBody: string
+  insufficientBodyChild: string
   goToWallet: string
   myBookingsTitle: string
   myBookingsEmpty: string
@@ -95,6 +98,8 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     subtitle: "Discover on-site experiences and book them with your wallet credit.",
     creditLabel: "Your credit",
     book: "Book",
+    bookUnavailableAdult: "Booking is not available for your account",
+    bookUnavailableChild: "Ask a parent to book this",
     bookTitle: "Book {name}",
     partySize: "How many people?",
     total: "Total",
@@ -108,6 +113,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     bookError: "The booking could not be completed. Please try again.",
     insufficientTitle: "Not enough credit",
     insufficientBody: "Top up your wallet to book this experience.",
+    insufficientBodyChild: "Ask a parent to add credit.",
     goToWallet: "Go to wallet",
     myBookingsTitle: "My bookings",
     myBookingsEmpty: "You have no bookings yet. Explore the experiences above.",
@@ -134,6 +140,8 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     subtitle: "Tesis içi deneyimleri keşfedin ve cüzdan kredinizle rezerve edin.",
     creditLabel: "Krediniz",
     book: "Rezerve et",
+    bookUnavailableAdult: "Rezervasyon bu hesap için kullanılamıyor",
+    bookUnavailableChild: "Rezervasyon için bir büyüğüne sor",
     bookTitle: "{name} rezerve et",
     partySize: "Kaç kişi?",
     total: "Toplam",
@@ -147,6 +155,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     bookError: "Rezervasyon tamamlanamadı. Lütfen tekrar deneyin.",
     insufficientTitle: "Yeterli kredi yok",
     insufficientBody: "Bu deneyimi rezerve etmek için cüzdanınıza kredi yükleyin.",
+    insufficientBodyChild: "Kredi eklemek için bir büyüğüne sor.",
     goToWallet: "Cüzdana git",
     myBookingsTitle: "Rezervasyonlarım",
     myBookingsEmpty: "Henüz rezervasyonunuz yok. Yukarıdaki deneyimleri keşfedin.",
@@ -173,6 +182,8 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     subtitle: "Entdecken Sie Erlebnisse vor Ort und buchen Sie sie mit Ihrem Guthaben.",
     creditLabel: "Ihr Guthaben",
     book: "Buchen",
+    bookUnavailableAdult: "Buchen ist für Ihr Konto nicht verfügbar",
+    bookUnavailableChild: "Frag ein Elternteil, das zu buchen",
     bookTitle: "{name} buchen",
     partySize: "Wie viele Personen?",
     total: "Gesamt",
@@ -186,6 +197,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     bookError: "Die Buchung konnte nicht abgeschlossen werden. Bitte erneut versuchen.",
     insufficientTitle: "Nicht genug Guthaben",
     insufficientBody: "Laden Sie Ihr Guthaben auf, um dieses Erlebnis zu buchen.",
+    insufficientBodyChild: "Frag ein Elternteil, Guthaben hinzuzufügen.",
     goToWallet: "Zum Guthaben",
     myBookingsTitle: "Meine Buchungen",
     myBookingsEmpty: "Sie haben noch keine Buchungen. Entdecken Sie die Erlebnisse oben.",
@@ -212,6 +224,8 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     subtitle: "Откройте для себя впечатления на территории и бронируйте их балансом кошелька.",
     creditLabel: "Ваш баланс",
     book: "Забронировать",
+    bookUnavailableAdult: "Бронирование недоступно для вашего аккаунта",
+    bookUnavailableChild: "Попроси родителя забронировать это",
     bookTitle: "Забронировать: {name}",
     partySize: "Сколько человек?",
     total: "Итого",
@@ -225,6 +239,7 @@ const activitiesCopy: Record<ActivitiesLocale, ActivitiesCopy> = {
     bookError: "Бронирование не удалось. Пожалуйста, попробуйте снова.",
     insufficientTitle: "Недостаточно средств",
     insufficientBody: "Пополните кошелёк, чтобы забронировать это впечатление.",
+    insufficientBodyChild: "Попроси родителя добавить средства.",
     goToWallet: "В кошелёк",
     myBookingsTitle: "Мои бронирования",
     myBookingsEmpty: "У вас пока нет бронирований. Изучите впечатления выше.",
@@ -424,11 +439,13 @@ function ActivityCard({
   activity,
   locale,
   canBook,
+  isChild,
   onBook,
 }: {
   activity: ActivityView
   locale: ActivitiesLocale
   canBook: boolean
+  isChild: boolean
   onBook: (activity: ActivityView) => void
 }) {
   const text = activitiesCopy[locale]
@@ -492,7 +509,14 @@ function ActivityCard({
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               {text.book}
             </button>
-          ) : null}
+          ) : (
+            <span
+              data-testid="activity-book-unavailable"
+              className="max-w-36 text-right text-[11px] font-semibold leading-4 text-muted-foreground"
+            >
+              {isChild ? text.bookUnavailableChild : text.bookUnavailableAdult}
+            </span>
+          )}
         </div>
       </div>
     </article>
@@ -530,12 +554,14 @@ function BookingDialog({
   activity,
   locale,
   walletBalanceCents,
+  isChild,
   onClose,
   onBooked,
 }: {
   activity: ActivityView
   locale: ActivitiesLocale
   walletBalanceCents: number | null
+  isChild: boolean
   onClose: () => void
   onBooked: () => void
 }) {
@@ -674,14 +700,18 @@ function BookingDialog({
               className="rounded-xl border border-amber-500/25 bg-amber-500/10 p-3 text-amber-800 dark:text-amber-200"
             >
               <p className="text-sm font-black">{text.insufficientTitle}</p>
-              <p className="mt-0.5 text-xs leading-5">{text.insufficientBody}</p>
-              <Link
-                href="/dashboard/wallet"
-                className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-900 outline-none transition hover:bg-amber-500/25 focus-visible:ring-2 focus-visible:ring-amber-500 dark:text-amber-100"
-              >
-                <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
-                {text.goToWallet}
-              </Link>
+              <p className="mt-0.5 text-xs leading-5">
+                {isChild ? text.insufficientBodyChild : text.insufficientBody}
+              </p>
+              {isChild ? null : (
+                <Link
+                  href="/dashboard/wallet"
+                  className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-xs font-black text-amber-900 outline-none transition hover:bg-amber-500/25 focus-visible:ring-2 focus-visible:ring-amber-500 dark:text-amber-100"
+                >
+                  <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+                  {text.goToWallet}
+                </Link>
+              )}
             </div>
           ) : null}
 
@@ -735,6 +765,11 @@ export function ActivitiesCatalog() {
   const text = activitiesCopy[locale]
   const user = useUser()
   const canBook = hasAnyRolePermission(user.roles, "activities", "create")
+  // A managed-minor (child) account books through a guardian. Detect it from the
+  // role scope so the copy and wallet affordances stay age-appropriate.
+  const isChild = user.roles.some(
+    (role) => roleScope(role) === "managed_minor"
+  )
   const [data, setData] = useState<ActivitiesResponse | null>(null)
   const [walletBalanceCents, setWalletBalanceCents] = useState<number | null>(null)
   const [requestState, setRequestState] = useState<RequestState>("loading")
@@ -905,6 +940,7 @@ export function ActivitiesCatalog() {
               activity={activity}
               locale={locale}
               canBook={canBook}
+              isChild={isChild}
               onBook={(selected) => {
                 setBanner(null)
                 setBookingActivity(selected)
@@ -934,6 +970,7 @@ export function ActivitiesCatalog() {
           activity={bookingActivity}
           locale={locale}
           walletBalanceCents={walletBalanceCents}
+          isChild={isChild}
           onClose={() => setBookingActivity(null)}
           onBooked={handleBooked}
         />

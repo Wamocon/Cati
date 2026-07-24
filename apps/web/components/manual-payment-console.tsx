@@ -48,6 +48,17 @@ const REALTIME_TABLES = [
   "payment_transactions",
 ]
 
+// Plain-language labels for the "recorded by hand, not yet matched to the bank"
+// state. The underlying reconciliation status VALUES stay the same; only the
+// wording shown to managers, accountants and owners is softened away from
+// accounting jargon like "unreconciled" / "mutabakat".
+const RECON_LABELS = {
+  tr: { badge: "Manuel / banka ile eşleşmedi", awaiting: "Banka eşleşmesi bekleyen" },
+  en: { badge: "Manual / not yet matched to bank", awaiting: "Awaiting bank match" },
+  de: { badge: "Manuell / noch nicht mit Bank abgeglichen", awaiting: "Warten auf Bankabgleich" },
+  ru: { badge: "Вручную / ещё не сверено с банком", awaiting: "Ожидает сверки с банком" },
+} as const
+
 function hasSupabasePublicEnv() {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -354,7 +365,7 @@ export function ManualPaymentConsole() {
           <div className="flex flex-wrap items-center gap-2">
             <CircleDollarSign className="h-5 w-5 text-primary" aria-hidden="true" />
             <h2 className="text-base font-black text-foreground">{t("title")}</h2>
-            <StatusBadge variant="warning">{t("unreconciledBadge")}</StatusBadge>
+            <StatusBadge variant="warning">{RECON_LABELS[locale].badge}</StatusBadge>
             {data?.capabilities.readOnly && (
               <StatusBadge variant="info">{t("readOnlyBadge")}</StatusBadge>
             )}
@@ -397,7 +408,7 @@ export function ManualPaymentConsole() {
           <p className="mt-1 text-2xl font-black text-foreground">{postedCount}</p>
         </div>
         <div className="rounded-xl border border-border/70 bg-muted/25 p-3">
-          <p className="text-xs font-bold uppercase text-muted-foreground">{t("unreconciledTotal")}</p>
+          <p className="text-xs font-bold uppercase text-muted-foreground">{RECON_LABELS[locale].awaiting}</p>
           <p className="mt-1 text-2xl font-black text-foreground">
             {formatMoney(unreconciledCents, summaryCurrency)}
           </p>
@@ -584,7 +595,7 @@ export function ManualPaymentConsole() {
                   <StatusBadge variant={payment.status === "posted" ? "success" : "neutral"}>
                     {t(`status.${payment.status}`)}
                   </StatusBadge>
-                  <StatusBadge variant="warning">{t("unreconciledBadge")}</StatusBadge>
+                  <StatusBadge variant="warning">{RECON_LABELS[locale].badge}</StatusBadge>
                   <span className="text-xs font-bold text-muted-foreground">v{payment.version}</span>
                 </div>
                 {payment.reversalReason && (

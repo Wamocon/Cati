@@ -9,7 +9,9 @@ import {
   FileCheck2,
   FileClock,
   FileText,
+  FolderOpen,
   Gavel,
+  Inbox,
   ShieldAlert,
   ShieldCheck,
   UploadCloud,
@@ -27,6 +29,7 @@ import {
   resolveDashboardLocale,
 } from "@/lib/operational-copy"
 import { hasPermission, type Role } from "@/lib/rbac"
+import type { DashboardLocale } from "@/lib/unit-matrix-copy"
 import {
   isClientRole,
   isFieldRole,
@@ -103,6 +106,159 @@ function signatureVariant(status: DocumentPacketRecord["signatureStatus"]) {
   return "danger"
 }
 
+// Plain-language wording for governance fields (signature state, storage
+// duration) plus first-run empty-state and packet-detail copy. Kept local so the
+// stored enum values and shared copy libraries stay untouched.
+const docsCopy: Record<
+  DashboardLocale,
+  {
+    readyToHandOver: string
+    signature: Record<DocumentPacketRecord["signatureStatus"], string>
+    storageDuration: Record<DocumentPacketRecord["retentionClass"], string>
+    retentionFieldLabel: string
+    retentionFieldHelp: string
+    packetOpen: string
+    packetClose: string
+    packetDetailTitle: string
+    packetAudience: string
+    packetRelated: string
+    packetProgress: string
+    packetStorage: string
+    packetSignature: string
+    packetStatus: string
+    packetNext: string
+    vaultEmptyTitle: string
+    vaultEmptyBodyUpload: string
+    vaultEmptyBodyView: string
+    vaultEmptyCta: string
+  }
+> = {
+  en: {
+    readyToHandOver: "ready to hand over",
+    signature: {
+      not_required: "No signature needed",
+      sent: "Sent for signing",
+      signed: "Signed",
+      blocked: "On hold",
+    },
+    storageDuration: {
+      legal: "Kept long term (legal)",
+      finance: "Kept for accounting",
+      service: "Kept for service records",
+      guest: "Kept short term (guest)",
+    },
+    retentionFieldLabel: "How long we keep it",
+    retentionFieldHelp: "Sets how long the file stays stored after the case is closed.",
+    packetOpen: "Open packet",
+    packetClose: "Close packet",
+    packetDetailTitle: "Packet details",
+    packetAudience: "Who it is for",
+    packetRelated: "Linked to",
+    packetProgress: "Documents ready",
+    packetStorage: "How long we keep it",
+    packetSignature: "Signatures",
+    packetStatus: "Status",
+    packetNext: "Next step",
+    vaultEmptyTitle: "No documents yet",
+    vaultEmptyBodyUpload: "Upload your first document to start the secure vault.",
+    vaultEmptyBodyView: "Documents linked to your record will appear here once they are added.",
+    vaultEmptyCta: "Upload your first document",
+  },
+  tr: {
+    readyToHandOver: "teslime hazır",
+    signature: {
+      not_required: "İmza gerekmiyor",
+      sent: "İmzaya gönderildi",
+      signed: "İmzalandı",
+      blocked: "Beklemede",
+    },
+    storageDuration: {
+      legal: "Uzun süre saklanır (yasal)",
+      finance: "Muhasebe için saklanır",
+      service: "Servis kaydı için saklanır",
+      guest: "Kısa süre saklanır (misafir)",
+    },
+    retentionFieldLabel: "Ne kadar saklanır",
+    retentionFieldHelp: "Dosyanın işlem kapandıktan sonra ne kadar süre saklanacağını belirler.",
+    packetOpen: "Paketi aç",
+    packetClose: "Paketi kapat",
+    packetDetailTitle: "Paket ayrıntıları",
+    packetAudience: "Kimin için",
+    packetRelated: "Bağlı olduğu",
+    packetProgress: "Hazır belgeler",
+    packetStorage: "Ne kadar saklanır",
+    packetSignature: "İmzalar",
+    packetStatus: "Durum",
+    packetNext: "Sonraki adım",
+    vaultEmptyTitle: "Henüz belge yok",
+    vaultEmptyBodyUpload: "Güvenli kasayı başlatmak için ilk belgenizi yükleyin.",
+    vaultEmptyBodyView: "Kaydınıza bağlı belgeler eklendiğinde burada görünür.",
+    vaultEmptyCta: "İlk belgenizi yükleyin",
+  },
+  de: {
+    readyToHandOver: "übergabebereit",
+    signature: {
+      not_required: "Keine Unterschrift nötig",
+      sent: "Zur Unterschrift gesendet",
+      signed: "Unterschrieben",
+      blocked: "Angehalten",
+    },
+    storageDuration: {
+      legal: "Langfristig aufbewahrt (rechtlich)",
+      finance: "Für die Buchhaltung aufbewahrt",
+      service: "Für Serviceunterlagen aufbewahrt",
+      guest: "Kurzfristig aufbewahrt (Gast)",
+    },
+    retentionFieldLabel: "Wie lange wir sie aufbewahren",
+    retentionFieldHelp: "Legt fest, wie lange die Datei nach Abschluss des Vorgangs gespeichert bleibt.",
+    packetOpen: "Paket öffnen",
+    packetClose: "Paket schließen",
+    packetDetailTitle: "Paketdetails",
+    packetAudience: "Für wen",
+    packetRelated: "Verknüpft mit",
+    packetProgress: "Fertige Dokumente",
+    packetStorage: "Wie lange wir sie aufbewahren",
+    packetSignature: "Unterschriften",
+    packetStatus: "Status",
+    packetNext: "Nächster Schritt",
+    vaultEmptyTitle: "Noch keine Dokumente",
+    vaultEmptyBodyUpload: "Laden Sie Ihr erstes Dokument hoch, um den sicheren Tresor zu starten.",
+    vaultEmptyBodyView: "Mit Ihrem Datensatz verknüpfte Dokumente erscheinen hier, sobald sie hinzugefügt werden.",
+    vaultEmptyCta: "Erstes Dokument hochladen",
+  },
+  ru: {
+    readyToHandOver: "готово к передаче",
+    signature: {
+      not_required: "Подпись не требуется",
+      sent: "Отправлено на подпись",
+      signed: "Подписано",
+      blocked: "Приостановлено",
+    },
+    storageDuration: {
+      legal: "Хранится долго (юридически)",
+      finance: "Хранится для бухгалтерии",
+      service: "Хранится для сервисных записей",
+      guest: "Хранится недолго (гость)",
+    },
+    retentionFieldLabel: "Как долго мы храним",
+    retentionFieldHelp: "Определяет, как долго файл хранится после закрытия дела.",
+    packetOpen: "Открыть пакет",
+    packetClose: "Закрыть пакет",
+    packetDetailTitle: "Детали пакета",
+    packetAudience: "Для кого",
+    packetRelated: "Связано с",
+    packetProgress: "Готовые документы",
+    packetStorage: "Как долго мы храним",
+    packetSignature: "Подписи",
+    packetStatus: "Статус",
+    packetNext: "Следующий шаг",
+    vaultEmptyTitle: "Документов пока нет",
+    vaultEmptyBodyUpload: "Загрузите первый документ, чтобы начать защищённое хранилище.",
+    vaultEmptyBodyView: "Документы, связанные с вашей записью, появятся здесь после добавления.",
+    vaultEmptyCta: "Загрузить первый документ",
+  },
+}
+
 function summarizeDocuments(documents: DocumentVaultRecord[]) {
   return {
     total: documents.length,
@@ -135,10 +291,12 @@ function DocumentUploadPanel({
   role,
   onUploaded,
   t,
+  locale,
 }: {
   role: Role
   onUploaded: (document: DocumentVaultRecord) => void
   t: (value: string) => string
+  locale: DashboardLocale
 }) {
   const [state, setState] = useState<UploadState>("idle")
   const [message, setMessage] = useState("")
@@ -277,7 +435,7 @@ function DocumentUploadPanel({
               <input type="hidden" name="retentionClass" value="general" />
             ) : (
               <label className="text-xs font-semibold text-muted-foreground">
-                {t("Saklama sınıfı")}
+                {docsCopy[locale].retentionFieldLabel}
                 <select
                   className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus-visible:border-primary"
                   name="retentionClass"
@@ -289,6 +447,9 @@ function DocumentUploadPanel({
                     </option>
                   ))}
                 </select>
+                <span className="mt-1 block text-[11px] font-medium leading-4 text-muted-foreground/80">
+                  {docsCopy[locale].retentionFieldHelp}
+                </span>
               </label>
             )}
           </div>
@@ -476,11 +637,13 @@ export default function DocumentsPage() {
   const restrictedView = clientView || fieldView
   const canUpload = hasPermission(user.role, "documents", "create")
   const [pendingUploads, setPendingUploads] = useState<DocumentVaultRecord[]>([])
+  const [selectedPacketId, setSelectedPacketId] = useState<string | null>(null)
   const baseVisibleDocuments = visibleDocumentsForRole(user.role, documentVault)
   const visibleDocuments = pendingUploads.length > 0
     ? [...pendingUploads, ...baseVisibleDocuments]
     : baseVisibleDocuments
   const visiblePackets = visibleDocumentPacketsForRole(user.role, documentPackets)
+  const selectedPacket = visiblePackets.find((packet) => packet.id === selectedPacketId) ?? null
   const baseSummary = restrictedView ? summarizeDocuments(baseVisibleDocuments) : getDocumentSummary()
   const summary = pendingUploads.length > 0
     ? {
@@ -570,16 +733,19 @@ export default function DocumentsPage() {
       </div>
 
       {canUpload ? (
-        <DocumentUploadPanel
-          role={user.role}
-          t={t}
-          onUploaded={(document) =>
-            setPendingUploads((current) => [
-              document,
-              ...current.filter((item) => item.id !== document.id),
-            ])
-          }
-        />
+        <div id="document-upload-panel">
+          <DocumentUploadPanel
+            role={user.role}
+            t={t}
+            locale={locale}
+            onUploaded={(document) =>
+              setPendingUploads((current) => [
+                document,
+                ...current.filter((item) => item.id !== document.id),
+              ])
+            }
+          />
+        </div>
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -633,7 +799,7 @@ export default function DocumentsPage() {
             </p>
           </div>
           <StatusBadge variant={packetSummary.missingOrReview > 0 ? "warning" : "success"}>
-            {packetSummary.completionRate}% {t("packet completion")}
+            {packetSummary.completionRate}% {docsCopy[locale].readyToHandOver}
           </StatusBadge>
         </div>
         <DataTable
@@ -659,9 +825,11 @@ export default function DocumentsPage() {
             },
             {
               key: "signature",
-              header: t("Signature"),
+              header: docsCopy[locale].packetSignature,
               render: (packet) => (
-                <StatusBadge variant={signatureVariant(packet.signatureStatus)}>{t(packet.signatureStatus)}</StatusBadge>
+                <StatusBadge variant={signatureVariant(packet.signatureStatus)}>
+                  {docsCopy[locale].signature[packet.signatureStatus]}
+                </StatusBadge>
               ),
             },
             { key: "next", header: t("Next action"), render: (packet) => packet.nextAction },
@@ -670,34 +838,86 @@ export default function DocumentsPage() {
               header: t("Action"),
               headerClassName: "text-right",
               cellClassName: "text-right",
-              render: (packet) => (
-                <DashboardActionMenu
-                  compact
-                  label={t("Paket aksiyonlari")}
-                  ariaLabel={`${packet.id} ${t("belge paketi aksiyonlari")}`}
-                  items={[
-                    {
-                      key: "prepare",
-                      label: t("Paketi hazirla"),
-                      description: `${packet.completedDocuments}/${packet.requiredDocuments} ${t("belge tamam")}.`,
-                      icon: <FileText />,
-                      actionType: "document.packet.prepare",
-                      ariaLabel: t("Belge paketini hazirla"),
-                      entityTable: "document_packets",
-                      entityExternalId: packet.id,
-                      title: packet.title,
-                      metadata: {
-                        relatedEntity: packet.relatedEntity,
-                        status: packet.status,
-                        role: user.role,
-                      },
-                    },
-                  ]}
-                />
-              ),
+              render: (packet) => {
+                const open = packet.id === selectedPacketId
+                return (
+                  <button
+                    type="button"
+                    aria-expanded={open}
+                    onClick={() => setSelectedPacketId(open ? null : packet.id)}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-black text-foreground shadow-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+                  >
+                    <FolderOpen className="h-3.5 w-3.5" aria-hidden="true" />
+                    {open ? docsCopy[locale].packetClose : docsCopy[locale].packetOpen}
+                  </button>
+                )
+              },
             },
           ]}
         />
+
+        {selectedPacket ? (
+          <div className="mt-4 rounded-xl border border-primary/25 bg-primary/5 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    {docsCopy[locale].packetDetailTitle}
+                  </p>
+                  <h3 className="mt-0.5 text-sm font-black text-foreground">{t(selectedPacket.title)}</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPacketId(null)}
+                className="inline-flex min-h-9 items-center rounded-lg border border-border bg-card px-3 py-2 text-xs font-black text-foreground shadow-sm transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+              >
+                {docsCopy[locale].packetClose}
+              </button>
+            </div>
+            <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetAudience}</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">{t(selectedPacket.audience)}</dd>
+              </div>
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetRelated}</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">{selectedPacket.relatedEntity}</dd>
+              </div>
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetProgress}</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {selectedPacket.completedDocuments}/{selectedPacket.requiredDocuments}
+                </dd>
+              </div>
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetStatus}</dt>
+                <dd className="mt-1">
+                  <StatusBadge variant={packetVariant(selectedPacket.status)}>{t(selectedPacket.status)}</StatusBadge>
+                </dd>
+              </div>
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetSignature}</dt>
+                <dd className="mt-1">
+                  <StatusBadge variant={signatureVariant(selectedPacket.signatureStatus)}>
+                    {docsCopy[locale].signature[selectedPacket.signatureStatus]}
+                  </StatusBadge>
+                </dd>
+              </div>
+              <div className="rounded-lg bg-background/70 p-3">
+                <dt className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetStorage}</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {docsCopy[locale].storageDuration[selectedPacket.retentionClass]}
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-3 rounded-lg bg-muted/50 p-3">
+              <p className="text-[11px] font-bold uppercase text-muted-foreground">{docsCopy[locale].packetNext}</p>
+              <p className="mt-1 text-sm font-semibold text-foreground">{t(selectedPacket.nextAction)}</p>
+            </div>
+          </div>
+        ) : null}
       </Card3D>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -797,6 +1017,31 @@ export default function DocumentsPage() {
         </Card3D>
       )}
 
+      {localizedVisibleDocuments.length === 0 ? (
+        <Card3D glow={false}>
+          <div className="rounded-xl border border-dashed border-border p-8 text-center">
+            <Inbox className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
+            <h2 className="mt-3 text-sm font-black text-foreground">{docsCopy[locale].vaultEmptyTitle}</h2>
+            <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">
+              {canUpload ? docsCopy[locale].vaultEmptyBodyUpload : docsCopy[locale].vaultEmptyBodyView}
+            </p>
+            {canUpload ? (
+              <button
+                type="button"
+                onClick={() =>
+                  document
+                    .getElementById("document-upload-panel")
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
+                }
+                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                <UploadCloud className="h-4 w-4" />
+                {docsCopy[locale].vaultEmptyCta}
+              </button>
+            ) : null}
+          </div>
+        </Card3D>
+      ) : (
       <DataTable
         data={localizedVisibleDocuments}
         searchValue={(document) =>
@@ -837,6 +1082,7 @@ export default function DocumentsPage() {
           },
         ]}
       />
+      )}
     </div>
   )
 }

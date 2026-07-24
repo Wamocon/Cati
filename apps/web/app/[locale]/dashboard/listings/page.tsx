@@ -1,139 +1,133 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useState } from "react"
 import {
-  Building2,
   CheckCircle2,
+  ChevronDown,
   Database,
-  DoorOpen,
-  Eye,
   FileWarning,
-  Home,
-  KeyRound,
-  LockKeyhole,
-  MoreHorizontal,
-  RefreshCw,
+  PackageOpen,
   UploadCloud,
-  WalletCards,
-  Wrench,
-  type LucideIcon,
 } from "lucide-react"
 import { useLocale } from "next-intl"
-import { AnimatedCounter } from "@/components/animated-counter"
 import { Card3D } from "@/components/3d-card"
-import { DashboardActionButton } from "@/components/dashboard-action-button"
-import { DashboardActionMenu } from "@/components/dashboard-action-menu"
-import { DataTable } from "@/components/data-table"
 import { FeatureInfo } from "@/components/feature-info"
 import { Phase4LiveOperations } from "@/components/phase4-live-operations"
 import { StatusBadge } from "@/components/status-badge"
 import { cn } from "@/lib/utils"
 import { clientProfile } from "@/lib/client-context"
-import { formatDual, formatDualShort } from "@/lib/currency"
 import { localizeDashboardTextPart } from "@/lib/operational-copy"
 import {
-  flats,
-  getBlockOverview,
   getImportSummary,
-  getSummary,
   importBatches,
   importFindings,
-  type AccessStatus,
-  type FlatRecord,
-  type FlatStatus,
   type ImportBatch,
   type ImportFinding,
-  type PaymentStatus,
 } from "@/lib/site-management-data"
-import type { NewLevelPremiumSaleStatus } from "@/lib/new-level-premium-data"
 import {
   interpolate,
   localizeOperationalValue,
   resolveDashboardLocale,
   unitMatrixCopy,
+  type DashboardLocale,
   type UnitMatrixCopy,
 } from "@/lib/unit-matrix-copy"
 
-type UnitSignalFilter = "all" | "occupied" | "vacant" | "restricted" | "debt" | "service"
-type UnitActionKey = "detail" | "debt" | "service"
-
-type UnitActionOption = {
-  actionType: string
-  description: string
-  icon: LucideIcon
-  key: UnitActionKey
-  label: string
-  toneClassName: string
-}
-
-type ActiveUnitAction = {
-  description: string
-  flatId: string
-  flatNumber: string
-  key: UnitActionKey
-  label: string
-}
-
-function getUnitActionOptions(copy: UnitMatrixCopy): UnitActionOption[] {
-  return [
-    {
-      actionType: "unit.detail.view",
-      description: copy.actions.detailHint,
-      icon: Eye,
-      key: "detail",
-      label: copy.actions.detailOpen,
-      toneClassName: "text-foreground",
-    },
-    {
-      actionType: "unit.debt.view",
-      description: copy.actions.debtHint,
-      icon: WalletCards,
-      key: "debt",
-      label: copy.actions.debtOpen,
-      toneClassName: "text-amber-700 dark:text-amber-300",
-    },
-    {
-      actionType: "unit.service.view",
-      description: copy.actions.serviceHint,
-      icon: Wrench,
-      key: "service",
-      label: copy.actions.serviceHistory,
-      toneClassName: "text-primary",
-    },
-  ]
-}
-
-function flatVariant(status: FlatStatus) {
-  if (status === "occupied") return "success"
-  if (status === "reserved") return "accent"
-  if (status === "vacant") return "info"
-  if (status === "maintenance") return "warning"
-  return "danger"
-}
-
-function accessVariant(status: AccessStatus) {
-  if (status === "active") return "success"
-  if (status === "pending") return "warning"
-  if (status === "restricted") return "danger"
-  return "neutral"
-}
-
-function paymentVariant(status: PaymentStatus) {
-  if (status === "clear") return "success"
-  if (status === "minor_debt") return "warning"
-  if (status === "overdue") return "danger"
-  return "danger"
-}
-
-function saleVariant(status: NewLevelPremiumSaleStatus) {
-  if (status === "available") return "success"
-  if (status === "sold") return "neutral"
-  if (status === "source_missing") return "warning"
-  return "info"
-}
-
-function saleLabel(status: NewLevelPremiumSaleStatus, copy: UnitMatrixCopy) {
-  return copy.labels.sale[status]
+// Plain, friendly copy for the import affordance. Kept local to this page so the
+// shared unit-matrix copy (also used by the live operations panel) stays untouched.
+const importFlowCopy: Record<
+  DashboardLocale,
+  {
+    startCta: string
+    panelTitle: string
+    panelIntro: string
+    step1: string
+    step2: string
+    step3: string
+    panelNote: string
+    emptyTitle: string
+    emptyBody: string
+    showDetail: string
+    hideDetail: string
+    preparedBy: string
+    checkedOn: string
+    recommended: string
+    noFindings: string
+  }
+> = {
+  en: {
+    startCta: "Start an import",
+    panelTitle: "Start an import",
+    panelIntro: "Here is how new units reach the matrix above.",
+    step1: "Prepare your unit list as an Excel file or price list.",
+    step2: "Every row is checked for errors and warnings before anything goes live.",
+    step3: "Once the check passes, a manager approves it and the units appear above.",
+    panelNote:
+      "Imports are set up together with the operations team. Share your file with your operations contact to begin.",
+    emptyTitle: "No units imported yet",
+    emptyBody: "Start your first import to fill the unit matrix with your own data.",
+    showDetail: "Show details",
+    hideDetail: "Hide details",
+    preparedBy: "Prepared by",
+    checkedOn: "Checked on",
+    recommended: "Recommended next step",
+    noFindings: "No data issues found yet.",
+  },
+  tr: {
+    startCta: "İçe aktarmayı başlat",
+    panelTitle: "İçe aktarmayı başlat",
+    panelIntro: "Yeni daireler yukarıdaki matrise şöyle ulaşır.",
+    step1: "Daire listenizi Excel dosyası veya fiyat listesi olarak hazırlayın.",
+    step2: "Her satır, yayına alınmadan önce hata ve uyarılar için kontrol edilir.",
+    step3: "Kontrol geçtikten sonra bir yönetici onaylar ve daireler yukarıda görünür.",
+    panelNote:
+      "İçe aktarma işlemleri operasyon ekibiyle birlikte kurulur. Başlamak için dosyanızı operasyon sorumlunuzla paylaşın.",
+    emptyTitle: "Henüz daire içe aktarılmadı",
+    emptyBody: "İlk içe aktarmanızı başlatın ve daire matrisini kendi verinizle doldurun.",
+    showDetail: "Ayrıntıları göster",
+    hideDetail: "Ayrıntıları gizle",
+    preparedBy: "Hazırlayan",
+    checkedOn: "Kontrol tarihi",
+    recommended: "Önerilen sonraki adım",
+    noFindings: "Henüz veri sorunu bulunmadı.",
+  },
+  de: {
+    startCta: "Import starten",
+    panelTitle: "Import starten",
+    panelIntro: "So gelangen neue Wohnungen in die Matrix oben.",
+    step1: "Bereiten Sie Ihre Wohnungsliste als Excel-Datei oder Preisliste vor.",
+    step2: "Jede Zeile wird auf Fehler und Warnungen geprüft, bevor etwas live geht.",
+    step3: "Nach bestandener Prüfung gibt ein Manager frei und die Wohnungen erscheinen oben.",
+    panelNote:
+      "Importe werden gemeinsam mit dem Betriebsteam eingerichtet. Teilen Sie Ihre Datei mit Ihrer Betriebskontaktperson, um zu starten.",
+    emptyTitle: "Noch keine Wohnungen importiert",
+    emptyBody:
+      "Starten Sie Ihren ersten Import, um die Wohnungsmatrix mit Ihren eigenen Daten zu füllen.",
+    showDetail: "Details anzeigen",
+    hideDetail: "Details ausblenden",
+    preparedBy: "Vorbereitet von",
+    checkedOn: "Geprüft am",
+    recommended: "Empfohlener nächster Schritt",
+    noFindings: "Noch keine Datenprobleme gefunden.",
+  },
+  ru: {
+    startCta: "Начать импорт",
+    panelTitle: "Начать импорт",
+    panelIntro: "Вот как новые квартиры попадают в матрицу выше.",
+    step1: "Подготовьте список квартир в виде файла Excel или прайс-листа.",
+    step2: "Каждая строка проверяется на ошибки и предупреждения перед публикацией.",
+    step3: "После успешной проверки менеджер подтверждает, и квартиры появляются выше.",
+    panelNote:
+      "Импорт настраивается вместе с операционной командой. Чтобы начать, передайте файл своему контактному лицу в операциях.",
+    emptyTitle: "Квартиры ещё не импортированы",
+    emptyBody: "Запустите первый импорт, чтобы заполнить матрицу квартир своими данными.",
+    showDetail: "Показать детали",
+    hideDetail: "Скрыть детали",
+    preparedBy: "Подготовил",
+    checkedOn: "Проверено",
+    recommended: "Рекомендуемый следующий шаг",
+    noFindings: "Проблем с данными пока не найдено.",
+  },
 }
 
 function importStatusVariant(status: ImportBatch["status"]) {
@@ -155,153 +149,19 @@ function findingLabel(severity: ImportFinding["severity"], copy: UnitMatrixCopy)
   return copy.labels.finding[severity]
 }
 
-function matchesSignalFilter(flat: FlatRecord, filter: UnitSignalFilter) {
-  if (filter === "all") return true
-  if (filter === "occupied") return flat.status === "occupied" || flat.status === "reserved"
-  if (filter === "vacant") return flat.status === "vacant"
-  if (filter === "restricted") return flat.accessStatus === "restricted" || flat.status === "blocked"
-  if (filter === "debt") return flat.balanceTry > 0
-  return flat.serviceOpen > 0
-}
-
-function UnitActionsMenu({
-  className,
-  compact = false,
-  copy,
-  flat,
-  onActionStart,
-}: {
-  className?: string
-  compact?: boolean
-  copy: UnitMatrixCopy
-  flat: FlatRecord
-  onActionStart?: (flat: FlatRecord, action: UnitActionOption) => void
-}) {
-  const options = getUnitActionOptions(copy)
-  const metadata = {
-    accessStatus: flat.accessStatus,
-    balanceTry: flat.balanceTry,
-    block: flat.block,
-    flatNumber: flat.number,
-    paymentStatus: flat.paymentStatus,
-    serviceOpen: flat.serviceOpen,
-  }
-
-  return (
-    <DashboardActionMenu
-      compact={compact}
-      label={copy.actions.menu}
-      ariaLabel={`${flat.number} ${copy.actions.menu}`}
-      buttonClassName={cn(
-        compact ? "bg-background text-primary" : "w-full min-h-11 text-sm",
-        className
-      )}
-      items={options.map((option) => {
-        const Icon = option.icon
-        return {
-          key: option.key,
-          actionType: option.actionType,
-          label: option.label,
-          description: option.description,
-          icon: <Icon className={option.toneClassName} />,
-          entityTable: "units",
-          entityExternalId: flat.id,
-          title: `${flat.number} ${option.label}`,
-          metadata,
-        }
-      })}
-      onActionStart={(item) => {
-        const action = options.find((option) => option.key === item.key)
-        if (action) onActionStart?.(flat, action)
-      }}
-    />
-  )
-}
-
 export default function ListingsPage() {
   const locale = resolveDashboardLocale(useLocale())
   const copy = unitMatrixCopy[locale]
+  const flow = importFlowCopy[locale]
   const tRecord = (value: string) => localizeDashboardTextPart(value, locale)
   const portfolioDisplayName = localizeOperationalValue(clientProfile.activePortfolio, locale)
-  const summary = getSummary()
   const importSummary = getImportSummary()
-  const blocks = getBlockOverview()
-  const [selectedBlock, setSelectedBlock] = useState("all")
-  const [selectedSignal, setSelectedSignal] = useState<UnitSignalFilter>("all")
-  const [selectedFlatId, setSelectedFlatId] = useState(flats[0]?.id ?? "")
-  const [activeUnitAction, setActiveUnitAction] = useState<ActiveUnitAction | null>(null)
-  const selectedUnitRef = useRef<HTMLDivElement>(null)
 
-  const filteredFlats = useMemo(
-    () =>
-      flats.filter((flat) => {
-        if (selectedBlock !== "all" && flat.block !== selectedBlock) return false
-        return matchesSignalFilter(flat, selectedSignal)
-      }),
-    [selectedBlock, selectedSignal]
-  )
+  const [importPanelOpen, setImportPanelOpen] = useState(false)
+  const [expandedBatchId, setExpandedBatchId] = useState<string | null>(null)
+  const [expandedFindingId, setExpandedFindingId] = useState<string | null>(null)
 
-  const matrixPreview = filteredFlats.slice(0, 192)
-  const selectedFlat = filteredFlats.find((flat) => flat.id === selectedFlatId) ?? filteredFlats[0] ?? null
-  const selectedAction =
-    selectedFlat && activeUnitAction?.flatId === selectedFlat.id ? activeUnitAction : null
-  const filtersActive = selectedBlock !== "all" || selectedSignal !== "all"
-
-  function handleUnitAction(flat: FlatRecord, action: UnitActionOption) {
-    setSelectedFlatId(flat.id)
-    setActiveUnitAction({
-      description: action.description,
-      flatId: flat.id,
-      flatNumber: flat.number,
-      key: action.key,
-      label: action.label,
-    })
-    window.requestAnimationFrame(() => {
-      selectedUnitRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-    })
-  }
-
-  const signalCards = [
-    {
-      key: "all",
-      label: copy.metrics.totalLabel,
-      value: summary.totalFlats,
-      helper: copy.metrics.totalHelper,
-      icon: Building2,
-      tone: "text-primary",
-    },
-    {
-      key: "occupied",
-      label: copy.metrics.occupancyLabel,
-      value: `%${summary.occupancyRate}`,
-      helper: copy.metrics.occupancyHelper,
-      icon: Home,
-      tone: "text-teal-600",
-    },
-    {
-      key: "restricted",
-      label: copy.metrics.restrictedLabel,
-      value: summary.restrictedAccess,
-      helper: copy.metrics.restrictedHelper,
-      icon: LockKeyhole,
-      tone: "text-rose-600",
-    },
-    {
-      key: "debt",
-      label: copy.metrics.debtLabel,
-      value: formatDualShort(summary.totalDebtTry),
-      helper: copy.metrics.debtHelper,
-      icon: WalletCards,
-      tone: "text-amber-600",
-    },
-  ] satisfies Array<{
-    helper: string
-    icon: typeof Building2
-    key: UnitSignalFilter
-    label: string
-    tone: string
-    value: number | string
-  }>
+  const hasImports = importBatches.length > 0
 
   return (
     <div className="space-y-6">
@@ -328,8 +188,8 @@ export default function ListingsPage() {
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {/* F05: reine Info-Karten (Projektumfang) - kein Navigationsziel, daher
-                bewusst nicht interaktiv (kein Audit-Write / kein irref. Ladezustand). */}
+            {/* Info-only project pillars: no navigation target, so intentionally
+                non-interactive (no audit write, no misleading loading state). */}
             {copy.pillars.map((pillar) => (
               <div
                 key={pillar.title}
@@ -346,264 +206,13 @@ export default function ListingsPage() {
         </div>
       </Card3D>
 
-      {/* Legacy seed-only KPI/matrix controls stay out of the business UI. The
-          live Phase4 projection below is now the single visible source. */}
-      <div hidden aria-hidden="true">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {signalCards.map((metric) => {
-          const Icon = metric.icon
-          const active = selectedSignal === metric.key
-
-          return (
-            <Card3D
-              key={metric.key}
-              glow={false}
-              innerClassName={cn(active && "ring-2 ring-primary/45")}
-            >
-              <button
-                type="button"
-                aria-pressed={active}
-                className="flex h-full min-h-20 w-full items-center justify-between gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                onClick={() => setSelectedSignal(metric.key)}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <Icon className={cn("h-8 w-8 shrink-0", metric.tone)} />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{metric.label}</p>
-                    {typeof metric.value === "number" ? (
-                      <AnimatedCounter value={metric.value} className="text-2xl font-black" />
-                    ) : (
-                      <p className="text-2xl font-black">{metric.value}</p>
-                    )}
-                    <p className="mt-1 text-xs text-muted-foreground">{metric.helper}</p>
-                  </div>
-                </div>
-                <Eye className={cn("h-4 w-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
-              </button>
-            </Card3D>
-          )
-        })}
-      </div>
-      </div>
-
+      {/* The live block/floor/unit matrix, search and table are the single source
+          of unit truth for the team. */}
       <Phase4LiveOperations />
-
-      <div hidden aria-hidden="true">
-      <Card3D glow={false}>
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-card-foreground">{copy.summary.blockSummaryTitle}</h2>
-            <p className="text-xs text-muted-foreground">{copy.summary.blockSummaryDescription}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge variant="accent">{blocks.length} {copy.summary.blocks}</StatusBadge>
-            <button
-              type="button"
-              disabled={!filtersActive}
-              onClick={() => {
-                setSelectedBlock("all")
-                setSelectedSignal("all")
-              }}
-              className="inline-flex min-h-8 items-center gap-2 rounded-lg border border-border px-3 py-1 text-xs font-bold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              {copy.filters.reset}
-            </button>
-          </div>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {blocks.map((block) => {
-            const active = selectedBlock === block.block
-
-            return (
-            <button
-              key={block.block}
-              type="button"
-              aria-pressed={active}
-              className={cn(
-                "rounded-xl border border-border bg-muted/30 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                active && "border-primary/60 bg-primary/10"
-              )}
-              onClick={() => setSelectedBlock((current) => (current === block.block ? "all" : block.block))}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">{copy.common.block} {block.block}</p>
-                <span className="text-xs font-semibold text-muted-foreground">{block.total} {copy.summary.units}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                <StatusBadge variant={block.priceSourceStatus === "parsed" ? "success" : "warning"}>
-                  {block.priceSourceStatus === "parsed" ? copy.summary.priceConnected : copy.summary.priceMissing}
-                </StatusBadge>
-                {block.minBuyNowEur ? (
-                  <StatusBadge variant="info">{formatDualShort(block.minBuyNowEur, "EUR")}+</StatusBadge>
-                ) : null}
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full bg-primary" style={{ width: `${Math.round((block.occupied / block.total) * 100)}%` }} />
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                <span>{copy.summary.availableForSale} {block.availableForSale}</span>
-                <span>{copy.summary.sold} {block.sold}</span>
-                <span>{copy.summary.missing} {block.sourceMissing}</span>
-                <span>{copy.labels.flat.blocked} {block.blocked}</span>
-              </div>
-            </button>
-            )
-          })}
-        </div>
-      </Card3D>
-
-      <Card3D glow={false}>
-        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-card-foreground">{copy.matrix.title}</h2>
-            <p className="text-xs text-muted-foreground">
-              {interpolate(copy.matrix.description, {
-                count: filteredFlats.length,
-                preview: matrixPreview.length,
-              })}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(copy.labels.flat).map(([status, label]) => (
-              <StatusBadge key={status} variant={flatVariant(status as FlatStatus)}>
-                {label}
-              </StatusBadge>
-            ))}
-          </div>
-        </div>
-        <div className="grid grid-cols-8 gap-1 sm:grid-cols-12 lg:grid-cols-16 xl:grid-cols-24">
-          {matrixPreview.map((flat) => {
-            const active = selectedFlat?.id === flat.id
-
-            return (
-              <button
-                key={flat.id}
-                type="button"
-                aria-label={`${flat.number} ${copy.actions.detailOpen}`}
-                aria-pressed={active}
-                className={cn(
-                  "flex aspect-square min-h-8 items-center justify-center rounded-md border text-[10px] font-bold transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  flat.status === "occupied" && "border-teal-500/20 bg-teal-500/10 text-teal-700 dark:text-teal-300",
-                  flat.status === "vacant" && "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-                  flat.status === "reserved" && "border-primary/20 bg-primary/10 text-primary",
-                  flat.status === "maintenance" && "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-                  flat.status === "blocked" && "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-300",
-                  active && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                )}
-                title={`${flat.number} - ${copy.labels.flat[flat.status]}`}
-                onClick={() => setSelectedFlatId(flat.id)}
-              >
-                {flat.number.split("-")[1]}
-              </button>
-            )
-          })}
-        </div>
-        {matrixPreview.length === 0 && (
-          <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm font-semibold text-muted-foreground">
-            {copy.matrix.empty}
-          </div>
-        )}
-        {selectedFlat && (
-          <div
-            ref={selectedUnitRef}
-            className="mt-5 grid scroll-mt-28 gap-4 border-t border-border/70 pt-5 lg:grid-cols-[1.2fr_0.8fr]"
-          >
-            <div
-              className={cn(
-                "rounded-xl border border-border/70 bg-muted/25 p-4",
-                selectedAction?.key === "detail" && "ring-2 ring-primary/35"
-              )}
-            >
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">{copy.matrix.selected}</p>
-                  <h3 className="mt-1 text-xl font-black text-foreground">{selectedFlat.number}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {interpolate(copy.selectedUnit.blockSummary, {
-                      block: selectedFlat.block,
-                      floor: selectedFlat.floorLabel,
-                      type: selectedFlat.type,
-                    })}
-                    {selectedFlat.areaText ? ` · ${selectedFlat.areaText}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusBadge variant={saleVariant(selectedFlat.saleStatus)}>{saleLabel(selectedFlat.saleStatus, copy)}</StatusBadge>
-                  <StatusBadge variant={flatVariant(selectedFlat.status)}>{copy.labels.flat[selectedFlat.status]}</StatusBadge>
-                  <StatusBadge variant={accessVariant(selectedFlat.accessStatus)}>
-                    {copy.labels.access[selectedFlat.accessStatus]}
-                  </StatusBadge>
-                </div>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-lg bg-background/70 p-3">
-                  <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.listPrice}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    {selectedFlat.buyNowEur ? formatDual(selectedFlat.buyNowEur, { currency: "EUR" }) : copy.selectedUnit.sourcePending}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-background/70 p-3">
-                  <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.priceSource}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    {selectedFlat.priceSource ? selectedFlat.priceSource.replace("6. PRICE LIST 💶\\", "") : selectedFlat.sourceNotes ?? copy.summary.missing}
-                  </p>
-                </div>
-                <div
-                  className={cn(
-                    "rounded-lg bg-background/70 p-3",
-                    selectedAction?.key === "debt" && "ring-2 ring-amber-500/45"
-                  )}
-                >
-                  <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.currentDebt}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">{formatDual(selectedFlat.balanceTry)}</p>
-                </div>
-                <div
-                  className={cn(
-                    "rounded-lg bg-background/70 p-3",
-                    selectedAction?.key === "service" && "ring-2 ring-primary/40"
-                  )}
-                >
-                  <p className="text-xs font-bold uppercase text-muted-foreground">{copy.selectedUnit.openService}</p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">{selectedFlat.serviceOpen}</p>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-xl border border-border/70 bg-background/70 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-black text-foreground">{copy.actions.title}</h3>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    {copy.actions.auditDescription}
-                  </p>
-                </div>
-                <MoreHorizontal className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-              </div>
-              <div className="mt-4 rounded-lg border border-border/70 bg-muted/30 p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-muted-foreground">
-                  {copy.actions.currentContext}
-                </p>
-                <p className="mt-1 text-sm font-black text-foreground">
-                  {selectedFlat.number} · {selectedAction?.label ?? copy.actions.detailOpen}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {selectedAction?.description ?? copy.actions.menuHint}
-                </p>
-              </div>
-              <UnitActionsMenu
-                className="mt-4"
-                copy={copy}
-                flat={selectedFlat}
-                onActionStart={handleUnitAction}
-              />
-            </div>
-          </div>
-        )}
-      </Card3D>
 
       <div className="grid gap-6 xl:grid-cols-3">
         <Card3D className="xl:col-span-2" glow={false}>
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="flex items-center gap-2">
                 <UploadCloud className="h-5 w-5 text-primary" />
@@ -613,75 +222,146 @@ export default function ListingsPage() {
                 {copy.import.centerDescription}
               </p>
             </div>
-            <StatusBadge variant={importSummary.rejectedRows === 0 ? "success" : "danger"}>
-              %{importSummary.readinessRate} {copy.import.ready}
-            </StatusBadge>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              [copy.import.totalRows, importSummary.totalRows],
-              [copy.import.valid, importSummary.validRows],
-              [copy.import.warning, importSummary.warningRows],
-              [copy.import.rejected, importSummary.rejectedRows],
-            ].map(([label, value]) => (
-              <DashboardActionButton
-                key={label}
-                actionType="import.summary.view"
-                ariaLabel={`${label} ${copy.import.summaryOpened}`}
-                className="rounded-xl border border-border bg-muted/30 p-3 text-left transition hover:border-primary/50 hover:bg-primary/5"
-                entityExternalId={String(label)}
-                entityTable="import_batches"
-                metadata={{ label, value }}
-                successLabel={copy.import.summaryOpened}
-                title={`${label} ${copy.import.summaryOpened}`}
+            <div className="flex flex-wrap items-center gap-2">
+              {hasImports ? (
+                <StatusBadge variant={importSummary.rejectedRows === 0 ? "success" : "danger"}>
+                  %{importSummary.readinessRate} {copy.import.ready}
+                </StatusBadge>
+              ) : null}
+              <button
+                type="button"
+                aria-expanded={importPanelOpen}
+                onClick={() => setImportPanelOpen((current) => !current)}
+                className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
               >
-                <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
-                <p className="mt-1 text-2xl font-black text-foreground">{value}</p>
-              </DashboardActionButton>
-            ))}
+                <UploadCloud className="h-4 w-4" />
+                {flow.startCta}
+              </button>
+            </div>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {importBatches.map((batch) => {
-              const batchSourceLabel = tRecord(batch.source)
 
-              return (
-                <DashboardActionButton
-                  key={batch.id}
-                  actionType="import.batch.view"
-                  ariaLabel={`${batchSourceLabel} ${copy.import.batchTitle}`}
-                  className="rounded-xl border border-border bg-background/60 p-4 text-left transition hover:border-primary/50 hover:bg-primary/5"
-                  entityExternalId={batch.id}
-                  entityTable="import_batches"
-                  metadata={{
-                    rejectedRows: batch.rejectedRows,
-                    source: batch.source,
-                    status: batch.status,
-                    totalRows: batch.totalRows,
-                    validRows: batch.validRows,
-                    warningRows: batch.warningRows,
-                  }}
-                  successLabel={copy.import.batchOpened}
-                  title={`${batchSourceLabel} ${copy.import.batchTitle}`}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
-                      <h3 className="mt-1 text-sm font-black text-foreground">{batchSourceLabel}</h3>
-                    </div>
-                    <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
+          {importPanelOpen ? (
+            <div className="mb-4 rounded-xl border border-primary/30 bg-primary/4 p-4">
+              <h3 className="text-sm font-black text-foreground">{flow.panelTitle}</h3>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{flow.panelIntro}</p>
+              <ol className="mt-3 space-y-2">
+                {[flow.step1, flow.step2, flow.step3].map((step, index) => (
+                  <li key={step} className="flex items-start gap-2 text-sm text-foreground">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-black text-primary">
+                      {index + 1}
+                    </span>
+                    <span className="leading-5">{step}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="mt-3 rounded-lg bg-muted/50 p-3 text-xs leading-5 text-muted-foreground">
+                {flow.panelNote}
+              </p>
+            </div>
+          ) : null}
+
+          {hasImports ? (
+            <>
+              {/* Summary figures are read-only counters, not actions. */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  [copy.import.totalRows, importSummary.totalRows],
+                  [copy.import.valid, importSummary.validRows],
+                  [copy.import.warning, importSummary.warningRows],
+                  [copy.import.rejected, importSummary.rejectedRows],
+                ].map(([label, value]) => (
+                  <div
+                    key={String(label)}
+                    className="rounded-xl border border-border bg-muted/30 p-3"
+                  >
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-2xl font-black text-foreground">{value}</p>
                   </div>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {interpolate(copy.import.rowsSummary, {
-                      rejected: batch.rejectedRows,
-                      total: batch.totalRows,
-                      valid: batch.validRows,
-                      warning: batch.warningRows,
-                    })}
-                  </p>
-                </DashboardActionButton>
-              )
-            })}
-          </div>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {importBatches.map((batch) => {
+                  const batchSourceLabel = tRecord(batch.source)
+                  const expanded = expandedBatchId === batch.id
+
+                  return (
+                    <div
+                      key={batch.id}
+                      className="rounded-xl border border-border bg-background/60 p-4"
+                    >
+                      <button
+                        type="button"
+                        aria-expanded={expanded}
+                        onClick={() =>
+                          setExpandedBatchId((current) => (current === batch.id ? null : batch.id))
+                        }
+                        className="flex w-full items-start justify-between gap-3 rounded-lg text-left transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-muted-foreground">{batch.id}</p>
+                          <h3 className="mt-1 text-sm font-black text-foreground">{batchSourceLabel}</h3>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <StatusBadge variant={importStatusVariant(batch.status)}>{importStatusLabel(batch.status, copy)}</StatusBadge>
+                          <ChevronDown
+                            className={cn(
+                              "h-4 w-4 text-muted-foreground transition",
+                              expanded && "rotate-180"
+                            )}
+                            aria-hidden="true"
+                          />
+                        </div>
+                      </button>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {interpolate(copy.import.rowsSummary, {
+                          rejected: batch.rejectedRows,
+                          total: batch.totalRows,
+                          valid: batch.validRows,
+                          warning: batch.warningRows,
+                        })}
+                      </p>
+                      {expanded ? (
+                        <dl className="mt-3 grid gap-2 border-t border-border/60 pt-3 text-xs sm:grid-cols-2">
+                          <div>
+                            <dt className="font-semibold uppercase text-muted-foreground">{flow.preparedBy}</dt>
+                            <dd className="mt-0.5 font-semibold text-foreground">{tRecord(batch.importedBy)}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase text-muted-foreground">{flow.checkedOn}</dt>
+                            <dd className="mt-0.5 font-semibold text-foreground">{batch.checkedAt}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase text-muted-foreground">{copy.import.valid}</dt>
+                            <dd className="mt-0.5 font-semibold text-foreground">{batch.validRows}</dd>
+                          </div>
+                          <div>
+                            <dt className="font-semibold uppercase text-muted-foreground">{copy.import.warning}</dt>
+                            <dd className="mt-0.5 font-semibold text-foreground">{batch.warningRows}</dd>
+                          </div>
+                        </dl>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-xl border border-dashed border-border p-8 text-center">
+              <PackageOpen className="mx-auto h-10 w-10 text-muted-foreground" aria-hidden="true" />
+              <h3 className="mt-3 text-sm font-black text-foreground">{flow.emptyTitle}</h3>
+              <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{flow.emptyBody}</p>
+              <button
+                type="button"
+                aria-expanded={importPanelOpen}
+                onClick={() => setImportPanelOpen(true)}
+                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+              >
+                <UploadCloud className="h-4 w-4" />
+                {flow.startCta}
+              </button>
+            </div>
+          )}
         </Card3D>
 
         <div className="space-y-4">
@@ -710,145 +390,61 @@ export default function ListingsPage() {
           <Card3D glow={false}>
             <div className="flex items-start gap-3">
               <FileWarning className="mt-0.5 h-5 w-5 text-amber-600" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <h2 className="text-sm font-bold text-card-foreground">{copy.import.findingSummary}</h2>
                 <div className="mt-2 space-y-2">
-                  {importFindings.slice(0, 3).map((finding) => {
-                    const area = tRecord(finding.area)
-                    return (
-                    <DashboardActionButton
-                      key={finding.id}
-                      actionType="import.finding.view"
-                      ariaLabel={`${area} ${copy.import.findingOpened}`}
-                      className="w-full rounded-lg bg-muted/40 p-2 text-left transition hover:bg-primary/10"
-                      entityExternalId={finding.id}
-                      entityTable="import_findings"
-                      metadata={{
-                        affectedRows: finding.affectedRows,
-                        area,
-                        severity: finding.severity,
-                      }}
-                      successLabel={copy.import.findingOpened}
-                      title={`${area} ${copy.import.findingSummary}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-semibold text-foreground">{area}</span>
-                        <StatusBadge variant={findingVariant(finding.severity)}>{findingLabel(finding.severity, copy)}</StatusBadge>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground">{finding.affectedRows} {copy.common.rows}</p>
-                    </DashboardActionButton>
-                  )})}
+                  {importFindings.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">{flow.noFindings}</p>
+                  ) : (
+                    importFindings.slice(0, 3).map((finding) => {
+                      const area = tRecord(finding.area)
+                      const expanded = expandedFindingId === finding.id
+
+                      return (
+                        <div key={finding.id} className="rounded-lg bg-muted/40 p-2">
+                          <button
+                            type="button"
+                            aria-expanded={expanded}
+                            onClick={() =>
+                              setExpandedFindingId((current) =>
+                                current === finding.id ? null : finding.id
+                              )
+                            }
+                            className="flex w-full items-center justify-between gap-2 text-left transition hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <span className="min-w-0 text-xs font-semibold text-foreground">{area}</span>
+                            <span className="flex shrink-0 items-center gap-1.5">
+                              <StatusBadge variant={findingVariant(finding.severity)}>{findingLabel(finding.severity, copy)}</StatusBadge>
+                              <ChevronDown
+                                className={cn(
+                                  "h-3.5 w-3.5 text-muted-foreground transition",
+                                  expanded && "rotate-180"
+                                )}
+                                aria-hidden="true"
+                              />
+                            </span>
+                          </button>
+                          <p className="mt-1 text-xs text-muted-foreground">{finding.affectedRows} {copy.common.rows}</p>
+                          {expanded ? (
+                            <div className="mt-2 space-y-2 border-t border-border/60 pt-2">
+                              <p className="text-xs leading-5 text-muted-foreground">{tRecord(finding.message)}</p>
+                              <div>
+                                <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                                  {flow.recommended}
+                                </p>
+                                <p className="mt-0.5 text-xs leading-5 text-foreground">{tRecord(finding.recommendedAction)}</p>
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </div>
             </div>
           </Card3D>
         </div>
-      </div>
-
-      <DataTable
-        data={filteredFlats}
-        searchValue={(flat) =>
-          `${flat.number} ${flat.displayNumber} ${flat.ownerName} ${flat.residentName} ${flat.phone} ${flat.type} ${flat.areaText ?? ""} ${flat.saleStatus} ${flat.priceSource ?? ""}`
-        }
-        columns={[
-          {
-            key: "number",
-            header: copy.table.unit,
-            sortable: true,
-            render: (flat) => (
-              <button
-                type="button"
-                onClick={() => setSelectedFlatId(flat.id)}
-                className="flex items-center gap-2 rounded-md text-left font-semibold text-foreground transition hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`${flat.number} ${copy.actions.detailOpen}`}
-              >
-                <DoorOpen className="h-4 w-4 text-primary" />
-                <span>{flat.number}</span>
-              </button>
-            ),
-          },
-          {
-            key: "sale",
-            header: copy.table.sale,
-            sortable: true,
-            sortValue: (flat) => flat.saleStatus,
-            render: (flat) => <StatusBadge variant={saleVariant(flat.saleStatus)}>{saleLabel(flat.saleStatus, copy)}</StatusBadge>,
-          },
-          {
-            key: "type",
-            header: copy.table.typeArea,
-            sortable: true,
-            render: (flat) => (
-              <div className="space-y-1">
-                <p className="font-semibold">{flat.type}</p>
-                <p className="text-xs text-muted-foreground">{flat.areaText ?? copy.common.sourcePending}</p>
-              </div>
-            ),
-          },
-          {
-            key: "price",
-            header: copy.table.price,
-            sortable: true,
-            sortValue: (flat) => flat.buyNowEur ?? 0,
-            render: (flat) => (
-              <div className="space-y-1">
-                <p className="font-semibold">{flat.buyNowEur ? formatDual(flat.buyNowEur, { currency: "EUR" }) : copy.common.sourcePending}</p>
-                <p className="text-xs text-muted-foreground">{flat.priceSource ? copy.selectedUnit.priceSourceConnected : flat.sourceNotes ?? copy.common.unknown}</p>
-              </div>
-            ),
-          },
-          { key: "owner", header: copy.table.owner, render: (flat) => localizeOperationalValue(flat.ownerName, locale) },
-          { key: "resident", header: copy.table.resident, render: (flat) => localizeOperationalValue(flat.residentName, locale) },
-          {
-            key: "status",
-            header: copy.table.status,
-            render: (flat) => <StatusBadge variant={flatVariant(flat.status)}>{copy.labels.flat[flat.status]}</StatusBadge>,
-          },
-          {
-            key: "balance",
-            header: copy.table.debt,
-            sortable: true,
-            sortValue: (flat) => flat.balanceTry,
-            render: (flat) => (
-              <div className="space-y-1">
-                <p className="font-semibold">{formatDual(flat.balanceTry)}</p>
-                <StatusBadge variant={paymentVariant(flat.paymentStatus)}>{copy.labels.payment[flat.paymentStatus]}</StatusBadge>
-              </div>
-            ),
-          },
-          {
-            key: "access",
-            header: copy.table.access,
-            render: (flat) => (
-              <div className="flex items-center gap-2">
-                <KeyRound className="h-4 w-4 text-muted-foreground" />
-                <StatusBadge variant={accessVariant(flat.accessStatus)}>{copy.labels.access[flat.accessStatus]}</StatusBadge>
-              </div>
-            ),
-          },
-          {
-            key: "service",
-            header: copy.table.service,
-            sortable: true,
-            sortValue: (flat) => flat.serviceOpen,
-            render: (flat) => `${flat.serviceOpen} ${copy.table.open}`,
-          },
-          {
-            key: "actions",
-            header: copy.actions.actionColumn,
-            sticky: "right",
-            cellClassName: "min-w-[128px]",
-            render: (flat) => (
-              <UnitActionsMenu
-                compact
-                copy={copy}
-                flat={flat}
-                onActionStart={handleUnitAction}
-              />
-            ),
-          },
-        ]}
-      />
       </div>
     </div>
   )

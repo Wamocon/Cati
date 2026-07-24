@@ -493,6 +493,15 @@ export function DataTable<T>({
               {t("count", { count: sorted.length })}
             </span>
             <button
+              type="button"
+              data-testid="data-table-export"
+              onClick={exportCsv}
+              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-black text-foreground transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:outline-none"
+            >
+              <Download className="h-3.5 w-3.5 text-primary" />
+              {t("exportCsv")}
+            </button>
+            <button
               ref={optionsButtonRef}
               type="button"
               aria-haspopup="dialog"

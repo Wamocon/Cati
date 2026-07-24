@@ -60,7 +60,9 @@ interface WalletCopy {
   lowTitle: string
   lowBody: string
   topUpTitle: string
+  topUpDemoNote: string
   amountLabel: string
+  quickAmountLabel: string
   reviewTopUp: string
   confirmTitle: string
   confirmBody: string
@@ -91,7 +93,9 @@ const walletCopy: Record<WalletLocale, WalletCopy> = {
     lowTitle: "Your credit is running low",
     lowBody: "Top up to keep booking activities and services.",
     topUpTitle: "Add credit",
+    topUpDemoNote: "Demo credit, no real payment is taken yet.",
     amountLabel: "Amount",
+    quickAmountLabel: "Quick amounts",
     reviewTopUp: "Review top-up",
     confirmTitle: "Confirm top-up",
     confirmBody: "Add {amount} to your wallet?",
@@ -126,7 +130,9 @@ const walletCopy: Record<WalletLocale, WalletCopy> = {
     lowTitle: "Krediniz azalıyor",
     lowBody: "Rezervasyona devam etmek için kredi yükleyin.",
     topUpTitle: "Kredi yükle",
+    topUpDemoNote: "Demo kredi, henüz gerçek bir ödeme alınmıyor.",
     amountLabel: "Tutar",
+    quickAmountLabel: "Hızlı tutarlar",
     reviewTopUp: "Yüklemeyi gözden geçir",
     confirmTitle: "Yüklemeyi onayla",
     confirmBody: "Cüzdanınıza {amount} eklensin mi?",
@@ -161,7 +167,9 @@ const walletCopy: Record<WalletLocale, WalletCopy> = {
     lowTitle: "Ihr Guthaben wird knapp",
     lowBody: "Laden Sie auf, um weiter buchen zu können.",
     topUpTitle: "Guthaben aufladen",
+    topUpDemoNote: "Demo-Guthaben, es wird noch keine echte Zahlung eingezogen.",
     amountLabel: "Betrag",
+    quickAmountLabel: "Schnellbeträge",
     reviewTopUp: "Aufladung prüfen",
     confirmTitle: "Aufladung bestätigen",
     confirmBody: "{amount} zu Ihrem Guthaben hinzufügen?",
@@ -196,7 +204,9 @@ const walletCopy: Record<WalletLocale, WalletCopy> = {
     lowTitle: "Баланс заканчивается",
     lowBody: "Пополните, чтобы продолжать бронировать.",
     topUpTitle: "Пополнить",
+    topUpDemoNote: "Демо-кредит, реальная оплата пока не взимается.",
     amountLabel: "Сумма",
+    quickAmountLabel: "Быстрые суммы",
     reviewTopUp: "Проверить пополнение",
     confirmTitle: "Подтвердите пополнение",
     confirmBody: "Добавить {amount} на ваш кошелёк?",
@@ -224,6 +234,10 @@ const walletCopy: Record<WalletLocale, WalletCopy> = {
     },
   },
 }
+
+// Quick-amount presets (in whole Lira) that fill the top-up field with one tap.
+// The manual input stays available for any other amount.
+const QUICK_AMOUNTS = [100, 250, 500, 1000] as const
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -591,6 +605,9 @@ export function WalletOverview() {
                 {text.topUpTitle}
                 <ComingSoon featureKey="payments" variant="inline" />
               </h3>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                {text.topUpDemoNote}
+              </p>
 
               {stage === "idle" ? (
                 <form
@@ -641,6 +658,37 @@ export function WalletOverview() {
                         {formatDualFromCents(amountCents, currency)}
                       </p>
                     ) : null}
+                  </div>
+                  <div
+                    role="group"
+                    aria-label={text.quickAmountLabel}
+                    className="flex flex-wrap gap-2"
+                  >
+                    {QUICK_AMOUNTS.map((value) => {
+                      const active = amount.trim() === String(value)
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          data-testid="wallet-quick-amount"
+                          aria-pressed={active}
+                          onClick={() => {
+                            topUpKey.current = null
+                            setMessage(null)
+                            setMutationState("idle")
+                            setAmount(String(value))
+                          }}
+                          className={cn(
+                            "inline-flex min-h-9 items-center rounded-lg border px-3 py-1.5 text-xs font-black outline-none transition focus-visible:ring-2 focus-visible:ring-primary",
+                            active
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border bg-background text-foreground hover:bg-muted"
+                          )}
+                        >
+                          ₺{value}
+                        </button>
+                      )
+                    })}
                   </div>
                   <button
                     type="submit"

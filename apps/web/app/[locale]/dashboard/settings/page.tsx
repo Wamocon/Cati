@@ -1,15 +1,15 @@
 "use client"
 
+import type { ReactNode } from "react"
 import { Bell, CheckCircle2, Eye, FileClock, Globe, Shield, ShieldCheck, SlidersHorizontal } from "lucide-react"
 import { useLocale } from "next-intl"
 import { Card3D } from "@/components/3d-card"
+import { ComingSoon } from "@/components/coming-soon"
 import { DataTable } from "@/components/data-table"
 import { FeatureInfo } from "@/components/feature-info"
 import { IntegrationHealthPanel } from "@/components/integration-health-panel"
 import { StatusBadge } from "@/components/status-badge"
 import { LocaleSwitcher } from "@/components/locale-switcher"
-import { useUser } from "@/components/user-provider"
-import { isAdmin } from "@/lib/rbac"
 import {
   auditEvents,
   getPlatformControlSummary,
@@ -36,7 +36,7 @@ const settingsCopy = {
     ],
     integrationsTitle: "Faz 13 entegrasyon hazırlığı",
     integrationsBody: "Temel platform bağlı ve çalışır durumdadır. Ödeme, banka, SMS, e-posta, erişim, kamera ve OAuth sağlayıcıları müşteri sözleşmeleri ve API anahtarları onaylanana kadar demo/sağlayıcı-hazır modunda kalır.",
-    viewOnlyNote: "Yalnızca görüntüleme. Yapılandırma değişiklikleri yöneticilere açıktır.",
+    viewOnlyNote: "Bu ekran şu an çoğunlukla görüntüleme içindir. Yalnızca dil tercihi hemen değiştirilebilir; diğer ayarlar yakında açılacaktır.",
     live: "Canlı",
     demo: "Demo",
     waitingClient: "Müşteri bekliyor",
@@ -79,7 +79,7 @@ const settingsCopy = {
     ],
     integrationsTitle: "Phase 13 integration readiness",
     integrationsBody: "The core platform is connected and operational. Payment, bank, SMS, email, access, camera and OAuth providers stay in demo/provider-ready mode until client contracts and API keys are approved.",
-    viewOnlyNote: "View only. Configuration changes are available to administrators.",
+    viewOnlyNote: "This screen is mostly view-only for now. Only the language preference can be changed today; the other settings are coming soon.",
     live: "Live",
     demo: "Demo",
     waitingClient: "Waiting for client",
@@ -122,7 +122,7 @@ const settingsCopy = {
     ],
     integrationsTitle: "Phase-13-Integrationsbereitschaft",
     integrationsBody: "Die Kernplattform ist angebunden und betriebsbereit. Zahlungs-, Bank-, SMS-, E-Mail-, Zugangs-, Kamera- und OAuth-Anbieter bleiben im Demo-/anbieterbereiten Modus, bis Verträge und API-Schlüssel freigegeben sind.",
-    viewOnlyNote: "Nur Ansicht. Konfigurationsänderungen sind Administratoren vorbehalten.",
+    viewOnlyNote: "Dieser Bildschirm dient derzeit überwiegend zur Ansicht. Nur die Sprachauswahl lässt sich schon ändern; die übrigen Einstellungen folgen bald.",
     live: "Live",
     demo: "Demo",
     waitingClient: "Wartet auf Kunde",
@@ -165,7 +165,7 @@ const settingsCopy = {
     ],
     integrationsTitle: "Готовность интеграций фазы 13",
     integrationsBody: "Базовая платформа подключена и работает. Провайдеры оплат, банка, SMS, e-mail, доступа, камер и OAuth остаются в demo/provider-ready режиме до одобрения договоров и API-ключей клиентом.",
-    viewOnlyNote: "Только просмотр. Изменения настроек доступны администраторам.",
+    viewOnlyNote: "Пока этот экран в основном предназначен для просмотра. Сейчас можно изменить только язык; остальные настройки появятся скоро.",
     live: "Live",
     demo: "Демо",
     waitingClient: "Ожидает клиента",
@@ -205,150 +205,150 @@ type PlatformControlDisplayCopy = {
 const platformControlDisplayCopy = {
   tr: {
     "CTL-AUTH-01": {
-      area: "Kimlik",
-      owner: "Platform",
-      title: "Rol profili ve oturum kontrolü",
+      area: "Giriş",
+      owner: "Sistem",
+      title: "Giriş ve rol erişimi",
       detail:
-        "Yerel çalışma ortamında yetki profili kullanılabilir; üretim ortamında doğrulanmış kullanıcı profili önceliklidir.",
+        "Her kişi kendi rolüyle giriş yapar ve yalnızca yetkili olduğu bilgileri görür.",
     },
     "CTL-RBAC-01": {
       area: "Erişim",
       owner: "Güvenlik",
-      title: "Rol bazlı menü ve yetki matrisi",
+      title: "Kim neyi görebilir ve yapabilir",
       detail:
-        "Her rol için görüntüleme, oluşturma, onay, dışa aktarma ve yönetim hakları açık tanımlanır.",
+        "Her rol için görüntüleme, ekleme, onaylama, dışa aktarma ve yönetim hakları açıkça belirlenir.",
     },
     "CTL-AUD-01": {
-      area: "Denetim",
+      area: "Kayıt",
       owner: "Uyum",
-      title: "Finans, erişim ve AI karar izi",
+      title: "Önemli kararların kaydı",
       detail:
-        "Hassas kararlar aktör, modül, sebep, risk ve zaman bilgisiyle izlenebilir şekilde modellenir.",
+        "Finans, erişim ve yapay zekâ ile ilgili önemli kararlar; kim, ne zaman ve neden bilgisiyle kayıt altına alınır.",
     },
     "CTL-DATA-01": {
       area: "Veri",
       owner: "Veri",
-      title: "Şirket/site izolasyon hazırlığı",
+      title: "Her firmanın ve sitenin verisini ayrı tutma",
       detail:
-        "Veri modeli şirket, site ve rol bağlamını güvenli erişim politikalarına hazırlayacak şekilde tasarlanmıştır.",
+        "Her firmanın ve sitenin bilgileri birbirinden ayrı ve güvenli kalacak şekilde düzenlenir.",
     },
     "CTL-AI-01": {
-      area: "AI",
-      owner: "AI yönetişimi",
-      title: "AI aksiyonlarında insan onayı",
+      area: "Yapay zekâ",
+      owner: "Yönetim",
+      title: "Yapay zekâ işlemlerinde insan onayı",
       detail:
-        "AI finans, erişim veya hassas verilerde doğrudan işlem yapmaz; öneri ve onay kuyruğu üretir.",
+        "Yapay zekâ finans, erişim veya hassas verilerde doğrudan işlem yapmaz; yalnızca öneri sunar ve bir kişi onaylar.",
     },
   },
   en: {
     "CTL-AUTH-01": {
-      area: "Auth",
-      owner: "Platform",
-      title: "Role profile and session control",
+      area: "Sign-in",
+      owner: "System",
+      title: "Sign-in and role access",
       detail:
-        "Access profiles can be used in local QA; verified user profiles take priority in production.",
+        "Each person signs in with their own role and sees only the information they are allowed to.",
     },
     "CTL-RBAC-01": {
       area: "Access",
       owner: "Security",
-      title: "Role-based menu and permission matrix",
+      title: "Who can see and do what",
       detail:
-        "View, create, approve, export and management rights are defined clearly for every role.",
+        "Viewing, adding, approving, exporting and managing rights are set clearly for every role.",
     },
     "CTL-AUD-01": {
-      area: "Audit",
+      area: "Records",
       owner: "Compliance",
-      title: "Finance, access and AI decision trail",
+      title: "Record of important decisions",
       detail:
-        "Sensitive decisions are modeled with actor, module, reason, risk and timestamp for traceability.",
+        "Important finance, access and AI decisions are recorded with who acted, when and why.",
     },
     "CTL-DATA-01": {
       area: "Data",
       owner: "Data",
-      title: "Company/site isolation readiness",
+      title: "Keeping each company and site's data separate",
       detail:
-        "The data model is prepared for secure access policies across company, site and role context.",
+        "Each company's and site's information is organized to stay separate from the others and secure.",
     },
     "CTL-AI-01": {
       area: "AI",
-      owner: "AI governance",
+      owner: "Management",
       title: "Human approval for AI actions",
       detail:
-        "AI does not directly act on finance, access or sensitive data; it creates recommendations and approval queues.",
+        "AI never acts directly on finance, access or sensitive data; it only suggests, and a person approves.",
     },
   },
   de: {
     "CTL-AUTH-01": {
-      area: "Auth",
-      owner: "Plattform",
-      title: "Rollenprofil- und Sitzungskontrolle",
+      area: "Anmeldung",
+      owner: "System",
+      title: "Anmeldung und Rollenzugriff",
       detail:
-        "In lokalen QA-Umgebungen können Zugriffsprofile genutzt werden; in Produktion haben verifizierte Benutzerprofile Vorrang.",
+        "Jede Person meldet sich mit der eigenen Rolle an und sieht nur die freigegebenen Informationen.",
     },
     "CTL-RBAC-01": {
       area: "Zugriff",
       owner: "Sicherheit",
-      title: "Rollenbasiertes Menü und Berechtigungsmatrix",
+      title: "Wer was sehen und tun darf",
       detail:
-        "Ansichts-, Erstellungs-, Freigabe-, Export- und Verwaltungsrechte sind für jede Rolle klar definiert.",
+        "Ansehen, Hinzufügen, Freigeben, Exportieren und Verwalten sind für jede Rolle klar festgelegt.",
     },
     "CTL-AUD-01": {
-      area: "Audit",
+      area: "Protokoll",
       owner: "Compliance",
-      title: "Finanz-, Zugangs- und KI-Entscheidungsspur",
+      title: "Aufzeichnung wichtiger Entscheidungen",
       detail:
-        "Sensible Entscheidungen werden mit Akteur, Modul, Grund, Risiko und Zeitpunkt nachvollziehbar modelliert.",
+        "Wichtige Finanz-, Zugangs- und KI-Entscheidungen werden mit Wer, Wann und Warum festgehalten.",
     },
     "CTL-DATA-01": {
       area: "Daten",
       owner: "Daten",
-      title: "Vorbereitung der Unternehmens-/Standortisolierung",
+      title: "Daten jedes Unternehmens und Standorts getrennt halten",
       detail:
-        "Das Datenmodell ist auf sichere Zugriffsrichtlinien nach Unternehmen, Standort und Rolle vorbereitet.",
+        "Die Informationen jedes Unternehmens und Standorts sind so organisiert, dass sie getrennt und sicher bleiben.",
     },
     "CTL-AI-01": {
       area: "KI",
-      owner: "KI-Governance",
+      owner: "Leitung",
       title: "Menschliche Freigabe für KI-Aktionen",
       detail:
-        "KI führt keine direkten Aktionen in Finanzen, Zugang oder sensiblen Daten aus; sie erstellt Empfehlungen und Freigabewarteschlangen.",
+        "Die KI handelt nie direkt bei Finanzen, Zugang oder sensiblen Daten; sie schlägt nur vor, und ein Mensch gibt frei.",
     },
   },
   ru: {
     "CTL-AUTH-01": {
-      area: "Auth",
-      owner: "Платформа",
-      title: "Контроль профиля роли и сессии",
+      area: "Вход",
+      owner: "Система",
+      title: "Вход и доступ по ролям",
       detail:
-        "В локальной QA-среде можно использовать профили доступа; в production приоритет имеют подтвержденные профили пользователей.",
+        "Каждый входит под своей ролью и видит только разрешённую ему информацию.",
     },
     "CTL-RBAC-01": {
       area: "Доступ",
       owner: "Безопасность",
-      title: "Ролевое меню и матрица прав",
+      title: "Кто что может видеть и делать",
       detail:
-        "Права просмотра, создания, одобрения, экспорта и управления четко определены для каждой роли.",
+        "Права на просмотр, добавление, одобрение, экспорт и управление чётко заданы для каждой роли.",
     },
     "CTL-AUD-01": {
-      area: "Аудит",
-      owner: "Compliance",
-      title: "След решений по финансам, доступу и AI",
+      area: "Записи",
+      owner: "Комплаенс",
+      title: "Запись важных решений",
       detail:
-        "Чувствительные решения моделируются с участником, модулем, причиной, риском и временем для прослеживаемости.",
+        "Важные решения по финансам, доступу и ИИ фиксируются: кто, когда и почему.",
     },
     "CTL-DATA-01": {
       area: "Данные",
       owner: "Данные",
-      title: "Готовность изоляции компании/объекта",
+      title: "Раздельное хранение данных каждой компании и объекта",
       detail:
-        "Модель данных подготовлена для безопасных политик доступа по контексту компании, объекта и роли.",
+        "Информация каждой компании и объекта организована так, чтобы оставаться отдельной и защищённой.",
     },
     "CTL-AI-01": {
-      area: "AI",
-      owner: "AI governance",
-      title: "Одобрение человеком для AI-действий",
+      area: "ИИ",
+      owner: "Руководство",
+      title: "Одобрение человеком действий ИИ",
       detail:
-        "AI не выполняет прямые действия с финансами, доступом или чувствительными данными; он создает рекомендации и очереди одобрения.",
+        "ИИ никогда не действует напрямую с финансами, доступом или чувствительными данными; он только предлагает, а решение принимает человек.",
     },
   },
 } satisfies Record<keyof typeof settingsCopy, Record<string, PlatformControlDisplayCopy>>
@@ -395,22 +395,28 @@ export default function SettingsPage() {
   const rawLocale = useLocale()
   const locale = resolveSettingsLocale(rawLocale)
   const copy = settingsCopy[locale]
-  const user = useUser()
-  const canConfigure = isAdmin(user.role)
   const localizeValue = (value: string) =>
     localizeDashboardTextPart(value, locale)
   const summary = getPlatformControlSummary()
 
-  const configurationItems = [
+  const configurationItems: Array<{
+    icon: typeof Bell
+    title: string
+    desc: string
+    action?: ReactNode
+    comingSoonKey?: string
+  }> = [
     {
       icon: Bell,
       title: copy.configuration[0].title,
       desc: copy.configuration[0].desc,
+      comingSoonKey: "settings_notification_rules",
     },
     {
       icon: Shield,
       title: copy.configuration[1].title,
       desc: copy.configuration[1].desc,
+      comingSoonKey: "settings_security_policy",
     },
     {
       icon: Globe,
@@ -430,12 +436,10 @@ export default function SettingsPage() {
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           {copy.subtitle}
         </p>
-        {!canConfigure ? (
-          <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
-            <Eye className="h-4 w-4 shrink-0" />
-            {copy.viewOnlyNote}
-          </p>
-        ) : null}
+        <p className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs font-semibold text-muted-foreground">
+          <Eye className="h-4 w-4 shrink-0" />
+          {copy.viewOnlyNote}
+        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -520,11 +524,16 @@ export default function SettingsPage() {
                 <div className="flex min-w-0 items-start gap-3">
                   <item.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                   <div className="min-w-0">
-                    <h3 className="text-sm font-bold text-card-foreground">{item.title}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-bold text-card-foreground">{item.title}</h3>
+                      {item.comingSoonKey ? (
+                        <ComingSoon featureKey={item.comingSoonKey} variant="inline" />
+                      ) : null}
+                    </div>
                     <p className="mt-1 text-xs text-muted-foreground">{item.desc}</p>
                   </div>
                 </div>
-                {"action" in item ? item.action : null}
+                {item.action ?? null}
               </div>
             </Card3D>
           ))}

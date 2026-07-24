@@ -57,25 +57,25 @@ const localizedLabels: Record<ThreadDraft["locale"], Record<string, string>> = {
   tr: {
     owner: "Malik", tenant: "Kiracı", staff: "Personel", accountant: "Muhasebe", manager: "Yönetici", admin: "Yönetici (admin)",
     open: "Açık", closed: "Kapalı", archived: "Arşivlendi", pending: "Bekliyor", resolved: "Çözüldü", snoozed: "Ertelendi", active: "Aktif",
-    queued: "Sırada", sent: "Gönderildi", delivered: "Teslim edildi", failed: "Başarısız", read: "Okundu", bounced: "Geri döndü", retrying: "Yeniden deneniyor", dead_letter: "Teslim edilemeyen",
+    queued: "Sırada", sent: "Gönderildi", delivered: "Teslim edildi", failed: "İletilmedi", read: "Okundu", bounced: "İletilemedi", retrying: "Gönderiliyor…", dead_letter: "İletilmedi",
     draft: "Taslak", disabled: "Devre dışı", published: "Yayında",
   },
   en: {
     owner: "Owner", tenant: "Tenant", staff: "Staff", accountant: "Accountant", manager: "Manager", admin: "Admin",
     open: "Open", closed: "Closed", archived: "Archived", pending: "Pending", resolved: "Resolved", snoozed: "Snoozed", active: "Active",
-    queued: "Queued", sent: "Sent", delivered: "Delivered", failed: "Failed", read: "Read", bounced: "Bounced", retrying: "Retrying", dead_letter: "Undeliverable",
+    queued: "Queued", sent: "Sent", delivered: "Delivered", failed: "Not delivered", read: "Read", bounced: "Could not be delivered", retrying: "Sending…", dead_letter: "Not delivered",
     draft: "Draft", disabled: "Disabled", published: "Published",
   },
   de: {
     owner: "Eigentümer", tenant: "Mieter", staff: "Mitarbeiter", accountant: "Buchhaltung", manager: "Manager", admin: "Administrator",
     open: "Offen", closed: "Geschlossen", archived: "Archiviert", pending: "Ausstehend", resolved: "Gelöst", snoozed: "Zurückgestellt", active: "Aktiv",
-    queued: "In Warteschlange", sent: "Gesendet", delivered: "Zugestellt", failed: "Fehlgeschlagen", read: "Gelesen", bounced: "Unzustellbar", retrying: "Wird wiederholt", dead_letter: "Unzustellbar",
+    queued: "In Warteschlange", sent: "Gesendet", delivered: "Zugestellt", failed: "Nicht zugestellt", read: "Gelesen", bounced: "Konnte nicht zugestellt werden", retrying: "Wird gesendet…", dead_letter: "Nicht zugestellt",
     draft: "Entwurf", disabled: "Deaktiviert", published: "Veröffentlicht",
   },
   ru: {
     owner: "Собственник", tenant: "Арендатор", staff: "Сотрудник", accountant: "Бухгалтерия", manager: "Менеджер", admin: "Администратор",
     open: "Открыт", closed: "Закрыт", archived: "В архиве", pending: "Ожидает", resolved: "Решён", snoozed: "Отложен", active: "Активно",
-    queued: "В очереди", sent: "Отправлено", delivered: "Доставлено", failed: "Ошибка", read: "Прочитано", bounced: "Возврат", retrying: "Повтор", dead_letter: "Недоставлено",
+    queued: "В очереди", sent: "Отправлено", delivered: "Доставлено", failed: "Не доставлено", read: "Прочитано", bounced: "Не удалось доставить", retrying: "Отправляется…", dead_letter: "Не доставлено",
     draft: "Черновик", disabled: "Отключён", published: "Опубликован",
   },
 }

@@ -51,6 +51,7 @@ type ReportsInlineCopy = {
   realAuthUnavailable: string
   companyUnavailable: string
   unavailableNote: string
+  details: string
 }
 
 function resolveReportsLocale(value: string): ReportsLocale {
@@ -69,6 +70,7 @@ const reportsInlineCopy: Record<ReportsLocale, ReportsInlineCopy> = {
     realAuthUnavailable: "Rapor oluşturma ve geçmiş, hesabınız tümüyle hazır olduğunda burada görünür.",
     companyUnavailable: "Bu hesap, rapor erişimi olan bir kuruluşa henüz bağlı değil.",
     unavailableNote: "Çalışma alanınız hazır olduğunda yetkili raporlarınız burada otomatik olarak yüklenir.",
+    details: "Ayrıntılar",
   },
   en: {
     kicker: "Operations reports",
@@ -81,10 +83,11 @@ const reportsInlineCopy: Record<ReportsLocale, ReportsInlineCopy> = {
     realAuthUnavailable: "Report generation and history will appear here once your account is fully set up.",
     companyUnavailable: "This account isn't linked to an organization with report access yet.",
     unavailableNote: "Once your workspace is ready, your authorized reports load here automatically.",
+    details: "Details",
   },
   de: {
     kicker: "Betriebsberichte",
-    intro: "Erstellen Sie Berichte aus Ihren autorisierten Daten – jede Zusammenfassung wird vor der Weitergabe von einem Menschen geprüft.",
+    intro: "Erstellen Sie Berichte aus Ihren autorisierten Daten. Jede Zusammenfassung wird vor der Weitergabe von einem Menschen geprüft.",
     internalEvidence: "Anfragen, Dateien und ihre Prüfhistorie werden sicher gespeichert.",
     providerReady: "Bald verfügbar",
     providerBoundary: "Große Massenexporte und externer Speicher folgen in einer späteren Version.",
@@ -93,6 +96,7 @@ const reportsInlineCopy: Record<ReportsLocale, ReportsInlineCopy> = {
     realAuthUnavailable: "Berichtserstellung und Verlauf erscheinen hier, sobald Ihr Konto vollständig eingerichtet ist.",
     companyUnavailable: "Dieses Konto ist noch keiner Organisation mit Berichtszugriff zugeordnet.",
     unavailableNote: "Sobald Ihr Arbeitsbereich bereit ist, werden Ihre autorisierten Berichte hier automatisch geladen.",
+    details: "Details",
   },
   ru: {
     kicker: "Операционные отчёты",
@@ -105,6 +109,7 @@ const reportsInlineCopy: Record<ReportsLocale, ReportsInlineCopy> = {
     realAuthUnavailable: "Создание отчётов и история появятся здесь после полной настройки вашей учётной записи.",
     companyUnavailable: "Эта учётная запись пока не связана с организацией, имеющей доступ к отчётам.",
     unavailableNote: "Как только рабочее пространство будет готово, ваши разрешённые отчёты загрузятся здесь автоматически.",
+    details: "Подробности",
   },
 }
 
@@ -656,14 +661,13 @@ export function ReportingWorkspace() {
                             <Download className="h-4 w-4" />{copy.download}
                           </a>
                           <p className="mt-1 text-xs leading-5 text-muted-foreground">{copy.downloadIntegrity}</p>
-                          <code className="mt-2 block truncate rounded-lg bg-background/80 px-2 py-1.5 font-mono text-[10px] text-foreground" title={artifact.sha256Hex}>SHA-256 · {artifact.sha256Hex}</code>
                         </div>
                       </div>
                     </div>
 
                     <details className="group rounded-2xl border border-border p-4">
                       <summary className="cursor-pointer list-none text-xs font-black uppercase tracking-[0.1em] text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                        {copy.metrics} · {copy.sourceTables}
+                        {ic.details}
                       </summary>
                       <div className="mt-4 space-y-4 text-xs">
                         <dl className="grid gap-2 sm:grid-cols-2">
@@ -673,6 +677,7 @@ export function ReportingWorkspace() {
                         </dl>
                         <div><p className="font-bold text-muted-foreground">{copy.sourceTables}</p><p className="mt-1 break-words font-mono text-[10px] text-foreground">{artifact.sourceTables.map(humanize).join(" · ")}</p></div>
                         {artifact.limitations.length > 0 && <div><p className="font-bold text-muted-foreground">{copy.limitations}</p><ul className="mt-1 list-disc space-y-1 pl-4 text-foreground">{artifact.limitations.map((item) => <li key={item}>{item}</li>)}</ul></div>}
+                        <div><p className="font-bold text-muted-foreground">SHA-256</p><code className="mt-1 block truncate rounded-lg bg-muted/40 px-2 py-1.5 font-mono text-[10px] text-foreground" title={artifact.sha256Hex}>{artifact.sha256Hex}</code></div>
                       </div>
                     </details>
 

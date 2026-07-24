@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Briefcase,
   CheckCircle2,
+  Clock,
   Clock3,
   FileText,
   Loader2,
@@ -99,7 +100,7 @@ interface VendorCopy {
   colIssued: string
   colDue: string
   colEfatura: string
-  efaturaPending: string
+  efaturaComingSoon: string
   status: Record<VendorSubmissionStatus, string>
 }
 
@@ -156,7 +157,7 @@ const vendorCopy: Record<VendorLocale, VendorCopy> = {
     colIssued: "Issued",
     colDue: "Due",
     colEfatura: "e-Fatura",
-    efaturaPending: "Not issued",
+    efaturaComingSoon: "Coming soon",
     status: {
       draft: "Draft",
       submitted: "Submitted",
@@ -217,7 +218,7 @@ const vendorCopy: Record<VendorLocale, VendorCopy> = {
     colIssued: "Kesim",
     colDue: "Vade",
     colEfatura: "e-Fatura",
-    efaturaPending: "Kesilmedi",
+    efaturaComingSoon: "Yakında",
     status: {
       draft: "Taslak",
       submitted: "Gönderildi",
@@ -280,7 +281,7 @@ const vendorCopy: Record<VendorLocale, VendorCopy> = {
     colIssued: "Ausgestellt",
     colDue: "Fällig",
     colEfatura: "e-Fatura",
-    efaturaPending: "Nicht ausgestellt",
+    efaturaComingSoon: "Bald verfügbar",
     status: {
       draft: "Entwurf",
       submitted: "Eingereicht",
@@ -341,7 +342,7 @@ const vendorCopy: Record<VendorLocale, VendorCopy> = {
     colIssued: "Выставлен",
     colDue: "Срок",
     colEfatura: "e-Fatura",
-    efaturaPending: "Не выставлен",
+    efaturaComingSoon: "Скоро",
     status: {
       draft: "Черновик",
       submitted: "Отправлен",
@@ -1141,7 +1142,12 @@ export function VendorInvoicingWorkspace() {
                       {formatDate(invoice.dueAt, locale)}
                     </td>
                     <td className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                      {invoice.externalRef ?? text.efaturaPending}
+                      {invoice.externalRef ?? (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/60 px-2 py-0.5 text-[0.7rem] font-medium text-muted-foreground">
+                          <Clock className="h-3 w-3" aria-hidden="true" />
+                          {text.efaturaComingSoon}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))}

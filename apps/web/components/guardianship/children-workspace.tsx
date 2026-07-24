@@ -61,6 +61,7 @@ interface ChildrenCopy {
   working: string
   giveAllowance: string
   amountLabel: string
+  quickAmountLabel: string
   reviewAllowance: string
   confirmAllowanceTitle: string
   confirmAllowanceBody: string
@@ -115,6 +116,7 @@ const childrenCopy: Record<ChildrenLocale, ChildrenCopy> = {
     working: "Working…",
     giveAllowance: "Give allowance",
     amountLabel: "Amount",
+    quickAmountLabel: "Quick amounts",
     reviewAllowance: "Review",
     confirmAllowanceTitle: "Confirm allowance",
     confirmAllowanceBody: "Send {amount} to {name}'s allowance?",
@@ -168,6 +170,7 @@ const childrenCopy: Record<ChildrenLocale, ChildrenCopy> = {
     working: "İşleniyor…",
     giveAllowance: "Harçlık ver",
     amountLabel: "Tutar",
+    quickAmountLabel: "Hızlı tutarlar",
     reviewAllowance: "Gözden geçir",
     confirmAllowanceTitle: "Harçlığı onayla",
     confirmAllowanceBody: "{name} için {amount} gönderilsin mi?",
@@ -221,6 +224,7 @@ const childrenCopy: Record<ChildrenLocale, ChildrenCopy> = {
     working: "Wird bearbeitet…",
     giveAllowance: "Taschengeld geben",
     amountLabel: "Betrag",
+    quickAmountLabel: "Schnellbeträge",
     reviewAllowance: "Prüfen",
     confirmAllowanceTitle: "Taschengeld bestätigen",
     confirmAllowanceBody: "{amount} an das Taschengeld von {name} senden?",
@@ -274,6 +278,7 @@ const childrenCopy: Record<ChildrenLocale, ChildrenCopy> = {
     working: "Обработка…",
     giveAllowance: "Выдать средства",
     amountLabel: "Сумма",
+    quickAmountLabel: "Быстрые суммы",
     reviewAllowance: "Проверить",
     confirmAllowanceTitle: "Подтвердите выдачу",
     confirmAllowanceBody: "Отправить {amount} на баланс {name}?",
@@ -298,6 +303,10 @@ const childrenCopy: Record<ChildrenLocale, ChildrenCopy> = {
     genericError: "Что-то пошло не так. Пожалуйста, попробуйте снова.",
   },
 }
+
+// Quick-amount presets (in whole Lira) that fill the allowance field with one
+// tap. The manual input stays available for any other amount.
+const QUICK_AMOUNTS = [100, 250, 500, 1000] as const
 
 function newIdempotencyKey(prefix: string) {
   const id =
@@ -729,6 +738,32 @@ function ChildCard({
                   {formatDualFromCents(amountCents, "TRY")}
                 </p>
               ) : null}
+              <div
+                role="group"
+                aria-label={text.quickAmountLabel}
+                className="mt-2 flex flex-wrap gap-1.5"
+              >
+                {QUICK_AMOUNTS.map((value) => {
+                  const active = amount.trim() === String(value)
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      data-testid="child-allowance-quick"
+                      aria-pressed={active}
+                      onClick={() => setAmount(String(value))}
+                      className={cn(
+                        "inline-flex min-h-9 items-center rounded-lg border px-3 py-1.5 text-xs font-black outline-none transition focus-visible:ring-2 focus-visible:ring-primary",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-foreground hover:bg-muted"
+                      )}
+                    >
+                      ₺{value}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
             <button
               type="submit"

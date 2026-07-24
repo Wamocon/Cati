@@ -49,7 +49,101 @@ import { FeatureInfo } from "@/components/feature-info"
 const buyerApi = "/api/site-management/buyer-pipeline"
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const digestPattern = /^[0-9a-f]{64}$/i
+
+// Stable identifier for the consent statement the operator confirms with the
+// checkbox. The evidence digest is derived from this version plus the localized
+// statement, so the server still receives a valid version + 64-character digest
+// pair without the user ever handling raw hashes.
+const CONSENT_VERSION = "kvkk-ui-checkbox-v1"
+
+const consentStatements: Record<"tr" | "en" | "de" | "ru", string> = {
+  tr: "Alıcı, kendisiyle iletişime geçilmesine onay verdiğini teyit etti.",
+  en: "The buyer confirmed consent to being contacted.",
+  de: "Der Käufer hat die Einwilligung zur Kontaktaufnahme bestätigt.",
+  ru: "Покупатель подтвердил согласие на то, чтобы с ним связывались.",
+}
+
+async function buildConsentEvidence(
+  locale: "tr" | "en" | "de" | "ru"
+): Promise<{ version: string; digest: string }> {
+  const material = `${CONSENT_VERSION}:${consentStatements[locale]}`
+  const bytes = new TextEncoder().encode(material)
+  const buffer = await crypto.subtle.digest("SHA-256", bytes)
+  const digest = Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+  return { version: CONSENT_VERSION, digest }
+}
+
+// Plain, business-facing copy kept inline (same pattern as the reports
+// workspace) so the screen never asks for raw hashes, UUIDs, or use-case codes.
+type BuyerInlineCopy = {
+  consentConfirm: string
+  consentConfirmHint: string
+  consentAutoNote: string
+  handoffReference: string
+  handoffReferenceHint: string
+  handoffReferencePlaceholder: string
+  noFabricationPlain: string
+}
+
+const buyerInlineCopy: Record<"tr" | "en" | "de" | "ru", BuyerInlineCopy> = {
+  tr: {
+    consentConfirm:
+      "Alıcının kendisiyle iletişime geçilmesine onay verdiğini onaylıyorum.",
+    consentConfirmHint:
+      "İşaretlerseniz onay kaydı otomatik olarak saklanır. Boş bırakırsanız izin beklemede kalır.",
+    consentAutoNote:
+      "Kaydettiğinizde onay kaydı otomatik olarak oluşturulur ve saklanır.",
+    handoffReference: "Mevcut kayıt referansı",
+    handoffReferenceHint:
+      "Bağlamak istediğiniz mevcut kaydın veya rezervasyonun referansını yapıştırın. Henüz bağlamıyorsanız boş bırakın.",
+    handoffReferencePlaceholder: "Referans kodu",
+    noFabricationPlain:
+      "Bu işlem hiçbir kayıt veya rezervasyon oluşturmaz. Yalnızca hâlihazırda var olan bir kaydı bağlar.",
+  },
+  en: {
+    consentConfirm: "I confirm the buyer consented to being contacted.",
+    consentConfirmHint:
+      "When ticked, the consent record is stored automatically. Leave it clear to keep consent pending.",
+    consentAutoNote:
+      "When you save, the consent record is created and stored automatically.",
+    handoffReference: "Existing record reference",
+    handoffReferenceHint:
+      "Paste the reference of the existing registration or reservation you want to link. Leave it blank if you are not linking one yet.",
+    handoffReferencePlaceholder: "Reference code",
+    noFabricationPlain:
+      "This never creates a registration or reservation. It only links one that already exists.",
+  },
+  de: {
+    consentConfirm:
+      "Ich bestätige, dass der Käufer der Kontaktaufnahme zugestimmt hat.",
+    consentConfirmHint:
+      "Wenn aktiviert, wird der Einwilligungsnachweis automatisch gespeichert. Ohne Häkchen bleibt die Einwilligung ausstehend.",
+    consentAutoNote:
+      "Beim Speichern wird der Einwilligungsnachweis automatisch erstellt und gespeichert.",
+    handoffReference: "Referenz des bestehenden Datensatzes",
+    handoffReferenceHint:
+      "Fügen Sie die Referenz der bestehenden Registrierung oder Reservierung ein, die Sie verknüpfen möchten. Lassen Sie das Feld leer, wenn Sie noch nichts verknüpfen.",
+    handoffReferencePlaceholder: "Referenzcode",
+    noFabricationPlain:
+      "Dieser Vorgang erstellt niemals eine Registrierung oder Reservierung. Er verknüpft nur eine bereits vorhandene.",
+  },
+  ru: {
+    consentConfirm:
+      "Подтверждаю, что покупатель согласился на то, чтобы с ним связывались.",
+    consentConfirmHint:
+      "При отметке запись согласия сохраняется автоматически. Оставьте пустым, чтобы согласие осталось в ожидании.",
+    consentAutoNote:
+      "При сохранении запись согласия создаётся и сохраняется автоматически.",
+    handoffReference: "Ссылка на существующую запись",
+    handoffReferenceHint:
+      "Вставьте ссылку на существующую регистрацию или бронь, которую хотите связать. Оставьте поле пустым, если пока ничего не связываете.",
+    handoffReferencePlaceholder: "Код ссылки",
+    noFabricationPlain:
+      "Эта операция никогда не создаёт регистрацию или бронь. Она только связывает уже существующую запись.",
+  },
+}
 
 const transitions: Record<BuyerStageKey, BuyerStageKey[]> = {
   new: ["contacted", "lost"],
@@ -75,8 +169,6 @@ type CreateDraft = {
   preferredLocale: "tr" | "en" | "de" | "ru"
   followUpAt: string
   consentStatus: BuyerConsentKey
-  consentVersion: string
-  consentTextDigest: string
   interestUnitIds: string[]
 }
 
@@ -88,8 +180,6 @@ type EditDraft = {
   followUpAt: string
   sourceDetail: string
   consentStatus: BuyerConsentKey
-  consentVersion: string
-  consentTextDigest: string
   interestUnitIds: string[]
 }
 
@@ -106,8 +196,6 @@ function initialCreate(locale: "tr" | "en" | "de" | "ru"): CreateDraft {
     preferredLocale: locale,
     followUpAt: "",
     consentStatus: "pending",
-    consentVersion: "",
-    consentTextDigest: "",
     interestUnitIds: [],
   }
 }
@@ -241,6 +329,7 @@ export function BuyerPipelineWorkspace() {
   const rawLocale = useLocale()
   const locale = resolveBuyerPipelineLocale(rawLocale)
   const copy = getBuyerPipelineCopy(locale)
+  const ic = buyerInlineCopy[locale]
   const [workspace, setWorkspace] = useState<BuyerPipelineData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -395,8 +484,6 @@ export function BuyerPipelineWorkspace() {
         followUpAt: localDateTime(selected.followUpAt),
         sourceDetail: selected.sourceDetail ?? "",
         consentStatus: selected.consentStatus,
-        consentVersion: "",
-        consentTextDigest: "",
         interestUnitIds: (workspace?.interests ?? [])
           .filter(
             (interest) =>
@@ -545,14 +632,12 @@ export function BuyerPipelineWorkspace() {
       setError(copy.validationContact)
       return
     }
-    if (
-      createDraft.consentStatus === "granted" &&
-      (!createDraft.consentVersion.trim() ||
-        !digestPattern.test(createDraft.consentTextDigest.trim()))
-    ) {
-      setError(copy.validationConsent)
-      return
-    }
+    // The user only ticks the consent checkbox; the version + digest evidence
+    // the server requires is generated here, never hand-entered.
+    const consentEvidence =
+      createDraft.consentStatus === "granted"
+        ? await buildConsentEvidence(createDraft.preferredLocale)
+        : null
     const created = await persist(
       "POST",
       {
@@ -566,9 +651,8 @@ export function BuyerPipelineWorkspace() {
         assignedManagerId: createDraft.assignedManagerId,
         followUpAt: isoDate(createDraft.followUpAt),
         consentStatus: createDraft.consentStatus,
-        consentVersion: createDraft.consentVersion.trim() || null,
-        consentTextDigest:
-          createDraft.consentTextDigest.trim().toLowerCase() || null,
+        consentVersion: consentEvidence?.version ?? null,
+        consentTextDigest: consentEvidence?.digest ?? null,
         preferredLocale: createDraft.preferredLocale,
       },
       "create",
@@ -591,15 +675,11 @@ export function BuyerPipelineWorkspace() {
       setError(copy.validationContact)
       return
     }
-    if (
-      selected.consentStatus === "pending" &&
-      editDraft.consentStatus === "granted" &&
-      (!editDraft.consentVersion.trim() ||
-        !digestPattern.test(editDraft.consentTextDigest.trim()))
-    ) {
-      setError(copy.validationConsent)
-      return
-    }
+    // Moving a pending buyer to granted records the evidence automatically;
+    // otherwise existing (immutable) evidence is left untouched.
+    const consentEvidence = needsConsentEvidence
+      ? await buildConsentEvidence(editDraft.preferredLocale)
+      : null
     await persist(
       "PATCH",
       {
@@ -611,12 +691,8 @@ export function BuyerPipelineWorkspace() {
         followUpAt: isoDate(editDraft.followUpAt),
         sourceDetail: editDraft.sourceDetail.trim() || null,
         consentStatus: editDraft.consentStatus,
-        consentVersion: needsConsentEvidence
-          ? editDraft.consentVersion.trim()
-          : null,
-        consentTextDigest: needsConsentEvidence
-          ? editDraft.consentTextDigest.trim().toLowerCase()
-          : null,
+        consentVersion: consentEvidence?.version ?? null,
+        consentTextDigest: consentEvidence?.digest ?? null,
         preferredLocale: editDraft.preferredLocale,
         interestUnitIds: editDraft.interestUnitIds,
       },
@@ -1046,66 +1122,32 @@ export function BuyerPipelineWorkspace() {
                     ))}
                   </select>
                 </label>
-                <label className={labelClass}>
+                <div className={`${labelClass} md:col-span-2 xl:col-span-4`}>
                   {copy.consent}
-                  <select
-                    className={fieldClass}
-                    value={createDraft.consentStatus}
-                    onChange={(event) =>
-                      setCreateDraft({
-                        ...createDraft,
-                        consentStatus: event.target.value as BuyerConsentKey,
-                      })
-                    }
-                  >
-                    {(["pending", "granted"] as const).map((value) => (
-                      <option key={value} value={value}>
-                        {copy.consentLabels[value]}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="tracking-normal text-muted-foreground normal-case">
-                    {createDraft.consentStatus === "granted"
-                      ? copy.consentEvidenceHint
-                      : copy.consentPendingHint}
-                  </span>
-                </label>
-                {createDraft.consentStatus === "granted" ? (
-                  <>
-                    <label className={labelClass}>
-                      {copy.consentVersion}
-                      <input
-                        className={fieldClass}
-                        value={createDraft.consentVersion}
-                        onChange={(event) =>
-                          setCreateDraft({
-                            ...createDraft,
-                            consentVersion: event.target.value,
-                          })
-                        }
-                        maxLength={80}
-                        required
-                      />
-                    </label>
-                    <label className={`${labelClass} md:col-span-2`}>
-                      {copy.consentDigest}
-                      <input
-                        className={`${fieldClass} font-mono text-xs`}
-                        value={createDraft.consentTextDigest}
-                        onChange={(event) =>
-                          setCreateDraft({
-                            ...createDraft,
-                            consentTextDigest: event.target.value,
-                          })
-                        }
-                        minLength={64}
-                        maxLength={64}
-                        pattern="[0-9a-fA-F]{64}"
-                        required
-                      />
-                    </label>
-                  </>
-                ) : null}
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3 tracking-normal normal-case">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-sky-600"
+                      checked={createDraft.consentStatus === "granted"}
+                      onChange={(event) =>
+                        setCreateDraft({
+                          ...createDraft,
+                          consentStatus: event.target.checked
+                            ? "granted"
+                            : "pending",
+                        })
+                      }
+                    />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-foreground">
+                        {ic.consentConfirm}
+                      </span>
+                      <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                        {ic.consentConfirmHint}
+                      </span>
+                    </span>
+                  </label>
+                </div>
               </div>
               <div className="mt-5 flex justify-end">
                 <button
@@ -1567,47 +1609,14 @@ export function BuyerPipelineWorkspace() {
                               </option>
                             ))}
                         </select>
+                        <span className="tracking-normal text-muted-foreground normal-case">
+                          {ic.consentConfirmHint}
+                        </span>
                       </label>
-                      {needsConsentEvidence ? (
-                        <>
-                          <label className={labelClass}>
-                            {copy.consentVersion}
-                            <input
-                              className={fieldClass}
-                              value={editDraft.consentVersion}
-                              onChange={(event) =>
-                                setEditDraft({
-                                  ...editDraft,
-                                  consentVersion: event.target.value,
-                                })
-                              }
-                              required
-                              maxLength={80}
-                            />
-                          </label>
-                          <label className={labelClass}>
-                            {copy.consentDigest}
-                            <input
-                              className={`${fieldClass} font-mono text-xs`}
-                              value={editDraft.consentTextDigest}
-                              onChange={(event) =>
-                                setEditDraft({
-                                  ...editDraft,
-                                  consentTextDigest: event.target.value,
-                                })
-                              }
-                              minLength={64}
-                              maxLength={64}
-                              pattern="[0-9a-fA-F]{64}"
-                              required
-                            />
-                          </label>
-                        </>
-                      ) : null}
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground">
                       {needsConsentEvidence
-                        ? copy.consentEvidenceHint
+                        ? ic.consentAutoNote
                         : selected.consentEvidenceRecorded
                           ? copy.consentEvidenceRetained
                           : copy.consentPendingHint}{" "}
@@ -1671,15 +1680,18 @@ export function BuyerPipelineWorkspace() {
                           </select>
                         </label>
                         <label className={labelClass}>
-                          {copy.targetId}
+                          {ic.handoffReference}
                           <input
-                            className={`${fieldClass} font-mono text-xs`}
+                            className={fieldClass}
                             value={targetId}
                             onChange={(event) =>
                               setTargetId(event.target.value)
                             }
-                            placeholder="00000000-0000-0000-0000-000000000000"
+                            placeholder={ic.handoffReferencePlaceholder}
                           />
+                          <span className="tracking-normal text-muted-foreground normal-case">
+                            {ic.handoffReferenceHint}
+                          </span>
                         </label>
                       </div>
                       <p className="mt-3 text-xs leading-5 text-muted-foreground">
@@ -1690,7 +1702,7 @@ export function BuyerPipelineWorkspace() {
                           className="mt-0.5 h-4 w-4 shrink-0"
                           aria-hidden
                         />
-                        {copy.noFabrication}
+                        {ic.noFabricationPlain}
                       </p>
                       <button
                         type="submit"

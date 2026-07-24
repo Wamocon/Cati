@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
+import { FeatureInfo } from "@/components/feature-info"
 import { createClient } from "@/lib/supabase/client"
 import type {
   PublicReportLocale,
@@ -132,7 +133,7 @@ export function PublicReportReviewPanel({ locale }: { locale: PublicReportLocale
 
   return (
     <div className="space-y-8">
-      <header><p className="text-sm font-semibold uppercase tracking-widest text-sky-700">{manager.kicker}</p><h1 className="mt-2 text-3xl font-bold text-slate-950">{manager.title}</h1><p className="mt-2 max-w-3xl text-slate-600">{manager.intro}</p></header>
+      <header><p className="text-sm font-semibold uppercase tracking-widest text-sky-700">{manager.kicker}</p><div className="mt-2 flex items-center gap-2"><h1 className="text-3xl font-bold text-slate-950">{manager.title}</h1><FeatureInfo featureKey="public_reports" side="bottom" /></div><p className="mt-2 max-w-3xl text-slate-600">{manager.intro}</p></header>
       {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
       {notice && <p role="status" className="rounded-xl bg-emerald-50 p-4 text-emerald-900">{notice}</p>}
 

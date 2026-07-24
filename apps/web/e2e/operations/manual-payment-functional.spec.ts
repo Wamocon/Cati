@@ -17,7 +17,7 @@ test("accountant posts through the accessible form and manager receives a truthf
   await page.goto("/en/dashboard/finance")
 
   await expect(page.getByTestId("manual-payment-console")).toBeVisible()
-  await expect(page.getByText("Manual / unreconciled", { exact: true }).first()).toBeVisible()
+  await expect(page.getByText("Manual / not yet matched to bank", { exact: true }).first()).toBeVisible()
   await expect(page.getByTestId("manual-payment-form")).toBeVisible()
   await expect(page.getByTestId("manual-payment-currency")).toHaveAttribute(
     "readonly",
