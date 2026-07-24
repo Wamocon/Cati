@@ -1,7 +1,7 @@
 /**
  * Access profiles are a deterministic local QA capability, never a production
- * authentication mode. A remote preview may opt in only when it is explicitly
- * isolated from every Supabase data plane.
+ * authentication mode. A remote preview may opt in only when the operator
+ * explicitly asserts the attached data plane holds demo records only.
  */
 export function accessProfilesEnabledForEnvironment(
   environment: Readonly<Record<string, string | undefined>> = process.env
@@ -22,19 +22,19 @@ export function accessProfilesEnabledForEnvironment(
   )
   const serverQaFlag = environment.ENABLE_ACCESS_PROFILES === "true"
 
+  // A non-production preview may attach a Supabase data plane and still expose
+  // the role switcher, but only when the operator asserts that plane holds demo
+  // records only. CATI_DEMO_DATA_ISOLATED is that assertion and it fails closed:
+  // absent or non-"true" keeps the switcher off. Point such a preview at a demo
+  // project only. Attaching a plane that holds real owner, tenant, identity or
+  // finance records makes those records readable by anyone with the URL and no
+  // password.
   if (remoteDeployment) {
     const explicitlyIsolated =
       environment.CATI_ALLOW_REMOTE_ACCESS_PROFILES === "true" &&
       environment.CATI_DEMO_DATA_ISOLATED === "true"
-    const hasSupabaseDataPlane = Boolean(
-      environment.NEXT_PUBLIC_SUPABASE_URL ||
-        environment.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-        environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-        environment.SUPABASE_URL ||
-        environment.SUPABASE_SERVICE_ROLE_KEY
-    )
 
-    return serverQaFlag && explicitlyIsolated && !hasSupabaseDataPlane
+    return serverQaFlag && explicitlyIsolated
   }
 
   return environment.NODE_ENV !== "production" || serverQaFlag
