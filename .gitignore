@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+**/node_modules/
 
 # Build outputs
 .next/
@@ -9,6 +10,9 @@ dist/
 out/
 *.tsbuildinfo
 .turbo/
+**/.next/
+**/.turbo/
+**/next-env.d.ts
 
 # Large local media (training videos are served from Supabase storage, not git)
 Videos/
@@ -30,6 +34,14 @@ test-results/
 .tmp/
 .graphify/
 Microsoft/
+**/qa/
+**/qa_output/
+**/quality/
+**/.tmp/
+**/.graphify/
+**/Microsoft/
+**/playwright-report/
+**/test-results/
 
 # Stray npm lockfile (this repo uses pnpm / pnpm-lock.yaml)
 package-lock.json
@@ -58,6 +70,7 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+.env.local.example
 
 # IDE
 .vscode/
