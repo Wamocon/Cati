@@ -34,7 +34,7 @@ test.describe("Functional tests - authentication and access profiles", () => {
     ).toBe(false)
   })
 
-  test("remote preview requires isolated synthetic data and no Supabase credentials", () => {
+  test("remote preview requires an explicit demo-data assertion", () => {
     const isolatedPreview = {
       NODE_ENV: "test",
       VERCEL_ENV: "preview",
@@ -51,17 +51,28 @@ test.describe("Functional tests - authentication and access profiles", () => {
         CATI_DEMO_DATA_ISOLATED: "false",
       })
     ).toBe(false)
+    // A preview may now attach a Supabase data plane and still switch roles.
+    // CATI_DEMO_DATA_ISOLATED is the operator's assertion that the attached
+    // project holds demo records only; the code cannot verify that claim.
     expect(
       accessProfilesEnabledForEnvironment({
         ...isolatedPreview,
         NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "public-key",
       })
-    ).toBe(false)
+    ).toBe(true)
     expect(
       accessProfilesEnabledForEnvironment({
         ...isolatedPreview,
         SUPABASE_SERVICE_ROLE_KEY: "server-secret",
+      })
+    ).toBe(true)
+    // The assertion must still be explicit, and production still fails closed.
+    expect(
+      accessProfilesEnabledForEnvironment({
+        ...isolatedPreview,
+        CATI_ALLOW_REMOTE_ACCESS_PROFILES: undefined,
+        NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
       })
     ).toBe(false)
     expect(
